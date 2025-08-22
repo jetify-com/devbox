@@ -161,13 +161,45 @@ func CreateEnvrc(ctx context.Context, opts devopt.EnvrcOpts) error {
 		flags = append(flags, fmt.Sprintf("--env-file %s", opts.EnvFile))
 	}
 
+	configDir, err := getRelativePathToConfig(opts.EnvrcDir, opts.ConfigDir)
+	if err != nil {
+		return err
+	}
+
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/envrc.tmpl"))
 
 	// write content into file
 	return t.Execute(file, map[string]string{
 		"EnvFlag":   strings.Join(flags, " "),
-		"ConfigDir": formatConfigDirArg(opts.ConfigDir),
+		"ConfigDir": formatConfigDirArg(configDir),
 	})
+}
+
+// Returns the relative path from sourceDir to configDir, or an error if it cannot be determined.
+func getRelativePathToConfig(sourceDir string, configDir string) (string, error) {
+	absConfigDir, err := filepath.Abs(configDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to get absolute path for config dir: %w", err)
+	}
+
+	absSourceDir, err := filepath.Abs(sourceDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to get absolute path for source dir: %w", err)
+	}
+
+	// We don't want the path if the config dir is a parent of the envrc dir. This way
+	// the config will be found when it recursively searches for it through the parent tree.
+	if strings.HasPrefix(absSourceDir, absConfigDir) {
+		return "", nil
+	}
+
+	relPath, err := filepath.Rel(absSourceDir, absConfigDir)
+	if err != nil {
+		// If a relative path cannot be computed, return the absolute path of configDir
+		return absConfigDir, nil
+	}
+
+	return relPath, nil
 }
 
 func (g *Options) getDevcontainerContent() *devcontainerObject {
@@ -221,8 +253,7 @@ func (g *Options) getDevcontainerContent() *devcontainerObject {
 }
 
 func EnvrcContent(w io.Writer, envFlags devopt.EnvFlags, configDir string) error {
-	tmplName := "envrcContent.tmpl"
-	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
+	t := template.Must(template.ParseFS(tmplFS, "tmpl/envrcContent.tmpl"))
 	envFlag := ""
 	if len(envFlags.EnvMap) > 0 {
 		for k, v := range envFlags.EnvMap {
@@ -231,8 +262,6 @@ func EnvrcContent(w io.Writer, envFlags devopt.EnvFlags, configDir string) error
 	}
 
 	return t.Execute(w, map[string]string{
-		"JSONPath":  filepath.Join(configDir, "devbox.json"),
-		"LockPath":  filepath.Join(configDir, "devbox.lock"),
 		"EnvFlag":   envFlag,
 		"EnvFile":   envFlags.EnvFile,
 		"ConfigDir": formatConfigDirArg(configDir),
@@ -240,10 +269,9 @@ func EnvrcContent(w io.Writer, envFlags devopt.EnvFlags, configDir string) error
 }
 
 func formatConfigDirArg(configDir string) string {
-	configDirArg := ""
-	if configDir != "" {
-		configDirArg = "--config " + configDir
+	if configDir == "" {
+		return ""
 	}
 
-	return configDirArg
+	return "--config " + configDir
 }

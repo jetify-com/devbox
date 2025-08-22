@@ -527,18 +527,25 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.Gen
 	}))
 }
 
-func PrintEnvrcContent(w io.Writer, opts devopt.EnvFlags, configDir string) error {
-	return generate.EnvrcContent(w, opts, configDir)
+func PrintEnvrcContent(w io.Writer, envFlags devopt.EnvFlags, configDir string) error {
+	return generate.EnvrcContent(w, envFlags, configDir)
 }
 
 // GenerateEnvrcFile generates a .envrc file that makes direnv integration convenient
-func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, opts devopt.EnvrcOpts) error {
+func (d *Devbox) GenerateEnvrcFile(ctx context.Context, opts devopt.EnvrcOpts) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateEnvrc")
 	defer task.End()
 
-	envrcfilePath := filepath.Join(opts.EnvrcDir, ".envrc")
-	filesExist := fileutil.Exists(envrcfilePath)
-	if !force && filesExist {
+	// If no envrcDir was specified, use the configDir. This is for backward compatibility
+	// where the .envrc was placed in the same location as specified by --config. Note that
+	// if that is also blank, the .envrc will be generated in the current working directory.
+	if opts.EnvrcDir == "" {
+		opts.EnvrcDir = opts.ConfigDir
+	}
+
+	envrcFilePath := filepath.Join(opts.EnvrcDir, ".envrc")
+	filesExist := fileutil.Exists(envrcFilePath)
+	if !opts.Force && filesExist {
 		return usererr.New(
 			"A .envrc is already present in %q. Remove it or use --force to overwrite it.",
 			opts.EnvrcDir,

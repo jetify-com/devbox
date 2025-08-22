@@ -1,14 +1,19 @@
 # Testscript to validate generating the contents of the .envrc file.
+# Note that since --envrc-dir was NOT specified, the .envrc will be in the `dir` directory and
+# the config will be found there, which means the `--print-env` doesn't need to specify the dir.
+# This matches the mode of operation prior to the addition of the --envrc-dir flag.
 
-exec devbox init
-exists devbox.json
+mkdir dir
+exec devbox init dir
+exists dir/devbox.json
 
-exec devbox generate direnv --env x=y
-grep 'eval "\$\(devbox generate direnv --print-envrc --env x=y\)"' .envrc
+exec devbox generate direnv --env x=y --config dir
+grep 'eval "\$\(devbox generate direnv --print-envrc --env x=y\)"' dir/.envrc
 
+cd dir
 exec devbox generate direnv --print-envrc --env x=y
 
-cmp stdout expected-results.txt
+cmp stdout ../expected-results.txt
 
 # Note: The contents of the following file ends with two blank lines. This is
 # necessary to match the blank line that follows "use devbox" in the actual output.

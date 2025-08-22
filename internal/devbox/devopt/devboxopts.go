@@ -36,6 +36,7 @@ type EnvFlags struct {
 
 type EnvrcOpts struct {
 	EnvFlags
+	Force     bool
 	EnvrcDir  string
 	ConfigDir string
 }

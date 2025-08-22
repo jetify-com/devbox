@@ -1,9 +1,27 @@
 # Testscript to validate generating a direnv .envrc in a specified location (./cfg) that also
-# references a devbox config in the same location (no --config needed)
+# contains a devbox config in the same location. --config is required as the
+# target dir is a subdir to the current dir which means the normal config-finding
+# would not find it.
 
 mkdir cfg
 exec devbox init cfg
 exists cfg/devbox.json
 
-exec devbox generate direnv --envrc-dir cfg
+exec devbox generate direnv --envrc-dir cfg --config cfg
 grep 'eval "\$\(devbox generate direnv --print-envrc\)"' cfg/.envrc
+! grep '--config' cfg/.envrc
+
+cd cfg
+exec devbox generate direnv --print-envrc
+
+cmp stdout ../expected-results.txt
+
+# Note: The contents of the following file ends with two blank lines. This is
+# necessary to match the blank line that follows "use devbox" in the actual output.
+-- expected-results.txt --
+use_devbox() {
+    eval "$(devbox shellenv --init-hook --install --no-refresh-alias)"
+    watch_file $DEVBOX_PROJECT_ROOT/devbox.json $DEVBOX_PROJECT_ROOT/devbox.lock
+}
+use devbox
+

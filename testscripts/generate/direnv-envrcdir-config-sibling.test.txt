@@ -8,3 +8,18 @@ exists cfg/devbox.json
 mkdir dir
 exec devbox generate direnv --envrc-dir dir --config cfg
 grep 'eval "\$\(devbox generate direnv --print-envrc --config ../cfg\)"' dir/.envrc
+
+cd dir
+exec devbox generate direnv --print-envrc --config ../cfg
+
+cmp stdout ../expected-results.txt
+
+# Note: The contents of the following file ends with two blank lines. This is
+# necessary to match the blank line that follows "use devbox" in the actual output.
+-- expected-results.txt --
+use_devbox() {
+    eval "$(devbox shellenv --init-hook --install --no-refresh-alias --config ../cfg)"
+    watch_file $DEVBOX_PROJECT_ROOT/devbox.json $DEVBOX_PROJECT_ROOT/devbox.lock
+}
+use devbox
+

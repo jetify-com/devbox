@@ -1,6 +1,6 @@
 use_devbox() {
-    watch_file {{ .JSONPath }} {{ .LockPath }}
-    eval "$(devbox shellenv --init-hook --install --no-refresh-alias{{ if .EnvFlag}} {{ .EnvFlag }}{{ end }}{{ if .ConfigDir }} {{ .ConfigDir }}{{ end }})"
+    eval "$(devbox shellenv --init-hook --install --no-refresh-alias{{ if .EnvFlag }} {{ .EnvFlag }}{{ end }}{{ if .ConfigDir }} {{ .ConfigDir }}{{ end }})"
+    watch_file $DEVBOX_PROJECT_ROOT/devbox.json $DEVBOX_PROJECT_ROOT/devbox.lock
 }
 use devbox
 {{ if .EnvFile }}

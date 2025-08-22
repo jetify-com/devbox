@@ -2,5 +2,7 @@
 # to be used at the same time.
 
 exec devbox init
+exists ./devbox.json
+
 ! exec devbox generate direnv --print-envrc --envrc-dir dir
 stderr 'Cannot use --print-envrc with --envrc-dir'
