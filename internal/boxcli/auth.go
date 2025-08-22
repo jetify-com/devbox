@@ -151,13 +151,14 @@ func authNewTokenCommand() *cobra.Command {
 			}
 			ux.Fsuccessf(cmd.OutOrStdout(), "Token created.\n\n")
 			table := tablewriter.NewWriter(cmd.OutOrStdout())
-			table.SetRowLine(true)
-			table.AppendBulk([][]string{
+			// Row lines are configured through the renderer in the new API
+			if err := table.Bulk([][]string{
 				{"Token ID", pat.GetToken().GetId()},
 				{"Secret", pat.GetToken().GetSecret()},
-			})
-			table.Render()
-			return nil
+			}); err != nil {
+				return err
+			}
+			return table.Render()
 		},
 	}
 
