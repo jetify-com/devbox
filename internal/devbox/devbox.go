@@ -527,21 +527,28 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.Gen
 	}))
 }
 
-func PrintEnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {
-	return generate.EnvrcContent(w, envFlags)
+func PrintEnvrcContent(w io.Writer, envFlags devopt.EnvFlags, configDir string) error {
+	return generate.EnvrcContent(w, envFlags, configDir)
 }
 
 // GenerateEnvrcFile generates a .envrc file that makes direnv integration convenient
-func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags devopt.EnvFlags) error {
+func (d *Devbox) GenerateEnvrcFile(ctx context.Context, opts devopt.EnvrcOpts) error {
 	ctx, task := trace.NewTask(ctx, "devboxGenerateEnvrc")
 	defer task.End()
 
-	envrcfilePath := filepath.Join(d.projectDir, ".envrc")
-	filesExist := fileutil.Exists(envrcfilePath)
-	if !force && filesExist {
+	// If no envrcDir was specified, use the configDir. This is for backward compatibility
+	// where the .envrc was placed in the same location as specified by --config. Note that
+	// if that is also blank, the .envrc will be generated in the current working directory.
+	if opts.EnvrcDir == "" {
+		opts.EnvrcDir = opts.ConfigDir
+	}
+
+	envrcFilePath := filepath.Join(opts.EnvrcDir, ".envrc")
+	filesExist := fileutil.Exists(envrcFilePath)
+	if !opts.Force && filesExist {
 		return usererr.New(
-			"A .envrc is already present in the current directory. " +
-				"Remove it or use --force to overwrite it.",
+			"A .envrc is already present in %q. Remove it or use --force to overwrite it.",
+			opts.EnvrcDir,
 		)
 	}
 
@@ -551,18 +558,18 @@ func (d *Devbox) GenerateEnvrcFile(ctx context.Context, force bool, envFlags dev
 	}
 
 	// .envrc file creation
-	err := generate.CreateEnvrc(ctx, d.projectDir, envFlags)
+	err := generate.CreateEnvrc(ctx, opts)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	ux.Fsuccessf(d.stderr, "generated .envrc file\n")
+	ux.Fsuccessf(d.stderr, "generated .envrc file in %q.\n", opts.EnvrcDir)
 	if cmdutil.Exists("direnv") {
-		cmd := exec.Command("direnv", "allow")
+		cmd := exec.Command("direnv", "allow", opts.EnvrcDir)
 		err := cmd.Run()
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		ux.Fsuccessf(d.stderr, "ran `direnv allow`\n")
+		ux.Fsuccessf(d.stderr, "ran `direnv allow %s`\n", opts.EnvrcDir)
 	}
 	return nil
 }
