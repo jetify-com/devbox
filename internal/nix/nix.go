@@ -112,7 +112,7 @@ func savePrintDevEnvCache(path string, out PrintDevEnvOut) error {
 func FlakeNixpkgs(commit string) string {
 	// Using nixpkgs/<commit> means:
 	// The nixpkgs entry in the flake registry, with its Git revision overridden to a specific value.
-	return "nixpkgs/" + commit
+	return "github:nixpkgs/" + commit
 }
 
 func ExperimentalFlags() []string {
