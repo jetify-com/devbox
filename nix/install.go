@@ -43,7 +43,7 @@ func (i *Installer) Download(ctx context.Context) error {
 		}
 	}
 
-	url := "https://install.determinate.systems/nix/nix-installer-" + system
+	url := "https://artifacts.nixos.org/experimental-installer-" + system
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("create request: %v", err)
