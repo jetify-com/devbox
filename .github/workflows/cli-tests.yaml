@@ -84,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.13.0
+        uses: jetify-com/devbox-install-action@219b7e17e2e804ef16f25d01285d63ac05b795ea
         with:
           enable-cache: true
       - name: Build flake
@@ -105,7 +105,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.13.0
+        uses: jetify-com/devbox-install-action@219b7e17e2e804ef16f25d01285d63ac05b795ea
         with:
           enable-cache: true
 
@@ -167,7 +167,7 @@ jobs:
             brew install dash zsh
           fi
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.13.0
+        uses: jetify-com/devbox-install-action@219b7e17e2e804ef16f25d01285d63ac05b795ea
         with:
           enable-cache: true
       - name: Run fast tests
