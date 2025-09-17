@@ -1,14 +1,13 @@
-# Testscript to validate generating the contents of the .envrc file.
+# Testscript to validate the output of --print-envrc
 
 exec devbox init
 exists ./devbox.json
 
-exec devbox generate direnv
-grep 'eval "\$\(devbox generate direnv --print-envrc\)"' .envrc
-
 exec devbox generate direnv --print-envrc
 
 cmp stdout expected-results.txt
+
+! exists .envrc
 
 # Note: The contents of the following file ends with two blank lines. This is
 # necessary to match the blank line that follows "use devbox" in the actual output.

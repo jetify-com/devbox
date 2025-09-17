@@ -1,0 +1,11 @@
+# Testscript to validate generating a direnv .envrc in the parent of the current
+# dir. The devbox config is located in a sub dir, so from the parent dir,
+# devbox will not be able to search "up" to find it.
+
+mkdir cfg
+exec devbox init cfg
+exists cfg/devbox.json
+
+mkdir dir
+! exec devbox generate direnv --envrc-dir dir
+stderr 'Error: no devbox.json found in the current directory \(or any parent directories\). Did you run `devbox init` yet\?'
