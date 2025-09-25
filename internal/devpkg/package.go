@@ -133,6 +133,26 @@ func PackageFromStringWithOptions(raw string, locker lock.Locker, opts devopt.Ad
 }
 
 func newPackage(raw string, isInstallable func() bool, locker lock.Locker) *Package {
+	// Trim and validate input
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		// Handle empty input gracefully, perhaps treat as invalid but proceed
+		raw = ""
+	}
+
+	// Parse name, version, and detect npm
+	name, version, isNpm := parsePackageInput(raw)
+
+	// Transform for npm packages (only with explicit npm: prefix)
+	if isNpm {
+		transformed := fmt.Sprintf(`nodePackages."%s"`, name)
+		if version != "" {
+			raw = transformed + "@" + version
+		} else {
+			raw = transformed
+		}
+	}
+
 	pkg := &Package{
 		Raw:           raw,
 		lockfile:      locker,
@@ -162,6 +182,31 @@ func newPackage(raw string, isInstallable func() bool, locker lock.Locker) *Pack
 	pkg.outputs = outputs{selectedNames: strings.Split(parsed.Outputs, ",")}
 	pkg.Patch = pkgNeedsPatch(pkg.CanonicalName(), configfile.PatchAuto)
 	return pkg
+}
+
+// parsePackageInput parses the raw package string into name, version, and detects if it's npm-related.
+// It only supports explicit npm: prefix for npm packages.
+func parsePackageInput(raw string) (name, version string, isNpm bool) {
+	if strings.HasPrefix(raw, "npm:") {
+		afterNpm := strings.TrimPrefix(raw, "npm:")
+		if lastAt := strings.LastIndex(afterNpm, "@"); lastAt > 0 {
+			name = afterNpm[:lastAt]
+			version = afterNpm[lastAt+1:]
+		} else {
+			name = afterNpm
+		}
+		isNpm = true
+	} else {
+		if lastAt := strings.LastIndex(raw, "@"); lastAt > 0 {
+			name = raw[:lastAt]
+			version = raw[lastAt+1:]
+		} else {
+			name = raw
+		}
+		// No implicit scoped detection; only explicit npm: prefix
+		isNpm = false
+	}
+	return
 }
 
 // resolve is the implementation of Package.resolve, where it is wrapped in a
