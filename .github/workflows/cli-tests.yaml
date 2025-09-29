@@ -149,6 +149,12 @@ jobs:
       DEVBOX_DEBUG: ${{ (matrix.run-project-tests == 'project-tests-off' || inputs.example-debug) && '1' || '0' }}
       DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '1h' || '30m' }}"
     steps:
+      - name: clear directories to reduce disk usage
+        # https://github.com/actions/runner-images/issues/2840#issuecomment-1284059930
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
       - uses: actions/checkout@v4
       - name: Mount golang cache
         uses: actions/cache@v4
