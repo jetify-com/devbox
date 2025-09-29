@@ -8,21 +8,22 @@ This website is built using [Docusaurus](https://docusaurus.io/), a modern stati
 ```bash
 cd docs/app     # from the devbox root directory
 devbox shell    # optional, develop inside a devbox
-yarn install    # run in devbox shell
+pnpm install    # run in devbox shell
 ```
 
 ### Local Development
 
 ```bash
-yarn start
+devbox run start
 ```
 
 This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+NOTE: this will open localhost:3000/docs that will show a 404 Not Found. Go to localhost:3000/docs/devbox instead to find the real docs.
 
 ### Build
 
 ```bash
-yarn build
+devbox run build
 ```
 
 This command generates static content into the `build` directory and can be served using any static contents hosting service.
