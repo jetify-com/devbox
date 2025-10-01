@@ -29,7 +29,7 @@ import (
 
 //go:embed shellrc.tmpl
 var shellrcText string
-var shellrcTmpl = template.Must(template.New("shellrc").Parse(shellrcText))
+var shellrcTmpl = template.Must(template.New("shellrc").Funcs(template.FuncMap{"dirPath": filepath.Dir}).Parse(shellrcText))
 
 //go:embed shellrc_fish.tmpl
 var fishrcText string
@@ -228,8 +228,8 @@ func (s *DevboxShell) Run() error {
 		return errors.WithStack(err)
 	}
 
-	// Link other files that affect the shell settings and environments.
-	s.linkShellStartupFiles(filepath.Dir(shellrc))
+	// Setup other files that affect the shell settings and environments.
+	s.setupShellStartupFiles(filepath.Dir(shellrc))
 	extraEnv, extraArgs := s.shellRCOverrides(shellrc)
 	env := s.env
 	for k, v := range extraEnv {
@@ -323,6 +323,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ShellStartTime   string
 		HistoryFile      string
 		ExportEnv        string
+		ShellName        string
 
 		RefreshAliasName   string
 		RefreshCmd         string
@@ -335,6 +336,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ShellStartTime:     telemetry.FormatShellStart(s.shellStartTime),
 		HistoryFile:        strings.TrimSpace(s.historyFile),
 		ExportEnv:          exportify(s.env),
+		ShellName:          string(s.name),
 		RefreshAliasName:   s.devbox.refreshAliasName(),
 		RefreshCmd:         s.devbox.refreshCmd(),
 		RefreshAliasEnvVar: s.devbox.refreshAliasEnvVar(),
@@ -347,12 +349,13 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 	return path, nil
 }
 
-// linkShellStartupFiles will link files used by the shell for initialization.
-// We choose to link instead of copy so that changes made outside can be reflected
-// within the devbox shell.
+// setupShellStartupFiles creates initialization files for the shell by sourcing the user's originals.
+// We do this instead of linking or copying, so that we can set correct ZDOTDIR when sourcing
+// user's config files which may use the ZDOTDIR env var inside them.
+// This also allows us to make sure any devbox config is run after correctly sourcing the user's config.
 //
 // We do not link the .{shell}rc files, since devbox modifies them. See writeDevboxShellrc
-func (s *DevboxShell) linkShellStartupFiles(shellSettingsDir string) {
+func (s *DevboxShell) setupShellStartupFiles(shellSettingsDir string) {
 	// For now, we only need to do this for zsh shell
 	if s.name == shZsh {
 		// List of zsh startup files: https://zsh.sourceforge.io/Intro/intro_3.html
@@ -375,10 +378,41 @@ func (s *DevboxShell) linkShellStartupFiles(shellSettingsDir string) {
 			}
 
 			fileNew := filepath.Join(shellSettingsDir, filename)
-			cmd := exec.Command("cp", fileOld, fileNew)
-			if err := cmd.Run(); err != nil {
-				// This is a best-effort operation. If there's an error then log it for visibility but continue.
-				slog.Error("error copying zsh setting file", "from", fileOld, "to", fileNew, "err", err)
+
+			// Create template content that sources the original file
+			templateContent := `if [[ -f "{{.FileOld}}" ]]; then
+    local OLD_ZDOTDIR="$ZDOTDIR"
+    export ZDOTDIR="{{.ZDOTDIR}}"
+    . "{{.FileOld}}"
+    export ZDOTDIR="$OLD_ZDOTDIR"
+fi`
+
+			// Parse and execute the template
+			tmpl, err := template.New("shellrc").Parse(templateContent)
+			if err != nil {
+				slog.Error("error parsing template for zsh setting file", "filename", filename, "err", err)
+				continue
+			}
+
+			// Create the new file with template content
+			file, err := os.Create(fileNew)
+			if err != nil {
+				slog.Error("error creating zsh setting file", "filename", filename, "err", err)
+				continue
+			}
+			defer file.Close()
+
+			// Execute template with data
+			data := struct {
+				FileOld string
+				ZDOTDIR string
+			}{
+				FileOld: fileOld,
+				ZDOTDIR: filepath.Dir(s.userShellrcPath),
+			}
+
+			if err := tmpl.Execute(file, data); err != nil {
+				slog.Error("error executing template for zsh setting file", "filename", filename, "err", err)
 				continue
 			}
 		}
