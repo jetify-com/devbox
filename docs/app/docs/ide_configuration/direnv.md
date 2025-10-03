@@ -14,7 +14,7 @@ ___
 
 #### New Project
 
-If you have direnv installed, Devbox will generate an .envrc file when you run `devbox generate direnv` and enables it by running `direnv allow` in the background:
+If you have direnv installed, Devbox will generate an .envrc file when you run `devbox generate direnv` and enable it by running `direnv allow` in the background:
 
 ```bash
 ➜  devbox generate direnv
