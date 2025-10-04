@@ -178,6 +178,11 @@ jobs:
         uses: jetify-com/devbox-install-action@jl/migrate-installer
         with:
           enable-cache: true
+      - name: Setup Nix GitHub authentication
+        run: |
+          # Setup github authentication to ensure Github's rate limits are not hit
+          mkdir -p ~/.config/nix
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
       - name: Run fast tests
         if: matrix.run-project-tests == 'project-tests-off'
         run: |
