@@ -1,0 +1,37 @@
+if [ -f testdata/shellrc/zsh_zdotdir/shellrc ]; then
+  local OLD_ZDOTDIR="$ZDOTDIR"
+  export ZDOTDIR="testdata/shellrc/zsh_zdotdir"
+  . "testdata/shellrc/zsh_zdotdir/shellrc"
+  export ZDOTDIR="$OLD_ZDOTDIR"
+fi
+# Begin Devbox Post-init Hook
+
+echo_simple () { echo "${simple}"; }
+export -f echo_simple
+export quote="they said, \"lasers\"";
+export simple="value";
+export space="quote me";
+export special="\$\`\"\\";
+
+# If the user hasn't specified they want to handle the prompt themselves,
+# prepend to the prompt to make it clear we're in a devbox shell.
+if [ -z "$DEVBOX_NO_PROMPT" ]; then
+  export PS1="(devbox) $PS1"
+fi
+
+# End Devbox Post-init Hook
+
+# Run plugin and user init hooks from the devbox.json directory.
+working_dir="$(pwd)"
+cd "/path/to/projectDir" || exit
+
+# Source the hooks file, which contains the project's init hooks and plugin hooks.
+. "/path/to/projectDir/.devbox/gen/scripts/.hooks.sh"
+
+cd "$working_dir" || exit
+
+# Add refresh alias (only if it doesn't already exist)
+if ! type refresh >/dev/null 2>&1; then
+  export DEVBOX_REFRESH_ALIAS_11c3c7a2e9a24e16e714a53a46351e31be8beac32de3f19854be1ef14e556903='eval "$(devbox shellenv --preserve-path-stack -c "/path/to/projectDir")" && hash -r'
+  alias refresh='eval "$(devbox shellenv --preserve-path-stack -c "/path/to/projectDir")" && hash -r'
+fi
