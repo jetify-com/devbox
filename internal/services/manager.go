@@ -150,8 +150,13 @@ func StartProcessManager(
 		fmt.Fprintf(w, "Starting all services: %s \n", strings.Join(services, ", "))
 	}
 
+	seenPCFiles := make(map[string]bool)
 	for _, s := range availableServices {
-		flags = append(flags, "-f", s.ProcessComposePath)
+		if !seenPCFiles[s.ProcessComposePath] {
+			// Only add -f flag if we haven't seen this file path before
+			flags = append(flags, "-f", s.ProcessComposePath)
+			seenPCFiles[s.ProcessComposePath] = true
+		}
 	}
 
 	flags = append(flags, processComposeConfig.ExtraFlags...)
