@@ -1,0 +1,8 @@
+# Testscript to validate that the --print-envrc and --envrc-dir params are not allowed
+# to be used at the same time.
+
+exec devbox init
+exists ./devbox.json
+
+! exec devbox generate direnv --print-envrc --envrc-dir dir
+stderr 'Cannot use --print-envrc with --envrc-dir'
