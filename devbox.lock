@@ -1,31 +1,31 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "apple-sdk_15@latest": {
+    "apple-sdk_12@latest": {
       "last_modified": "2025-09-18T16:33:27Z",
-      "resolved": "github:NixOS/nixpkgs/f4b140d5b253f5e2a1ff4e5506edbf8267724bde#apple-sdk_15",
+      "resolved": "github:NixOS/nixpkgs/f4b140d5b253f5e2a1ff4e5506edbf8267724bde#apple-sdk_12",
       "source": "devbox-search",
-      "version": "15.2",
+      "version": "12.3",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/3w6k7waxdw7bv0l6ip0azfaskm5ibk4p-apple-sdk-15.2",
+              "path": "/nix/store/ywb67nwhda4n7lww0dyw394hd7gqw1sr-apple-sdk-12.3",
               "default": true
             }
           ],
-          "store_path": "/nix/store/3w6k7waxdw7bv0l6ip0azfaskm5ibk4p-apple-sdk-15.2"
+          "store_path": "/nix/store/ywb67nwhda4n7lww0dyw394hd7gqw1sr-apple-sdk-12.3"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/jd692x02r6by0hckzqhjgjccj615dsn9-apple-sdk-15.2",
+              "path": "/nix/store/4fpxjs3ivdxdvys66hh24jpyczi5cwig-apple-sdk-12.3",
               "default": true
             }
           ],
-          "store_path": "/nix/store/jd692x02r6by0hckzqhjgjccj615dsn9-apple-sdk-15.2"
+          "store_path": "/nix/store/4fpxjs3ivdxdvys66hh24jpyczi5cwig-apple-sdk-12.3"
         }
       }
     },
