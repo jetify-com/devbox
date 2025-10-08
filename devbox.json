@@ -4,7 +4,12 @@
   "packages": {
     "fd":  "latest",
     "git": "latest",
-    "go":  "latest"
+    "go":  "latest",
+    "apple-sdk_15": {
+      "name":      "sdk_15",
+      "version":   "latest",
+      "platforms": ["aarch64-darwin", "x86_64-darwin"]
+    }
   },
   "env": {
     "GOENV": "off",

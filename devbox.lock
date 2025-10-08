@@ -1,6 +1,34 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "apple-sdk_15@latest": {
+      "last_modified": "2025-09-18T16:33:27Z",
+      "resolved": "github:NixOS/nixpkgs/f4b140d5b253f5e2a1ff4e5506edbf8267724bde#apple-sdk_15",
+      "source": "devbox-search",
+      "version": "15.2",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3w6k7waxdw7bv0l6ip0azfaskm5ibk4p-apple-sdk-15.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/3w6k7waxdw7bv0l6ip0azfaskm5ibk4p-apple-sdk-15.2"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/jd692x02r6by0hckzqhjgjccj615dsn9-apple-sdk-15.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/jd692x02r6by0hckzqhjgjccj615dsn9-apple-sdk-15.2"
+        }
+      }
+    },
     "fd@latest": {
       "last_modified": "2025-07-28T17:09:23Z",
       "resolved": "github:NixOS/nixpkgs/648f70160c03151bc2121d179291337ad6bc564b#fd",
