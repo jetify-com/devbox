@@ -50,7 +50,7 @@ env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   NIX_CONFIG: |
     access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-    
+
 jobs:
   build-devbox:
     strategy:
@@ -96,7 +96,7 @@ jobs:
             exit 1
           fi
       - run: ./result/bin/devbox version
-  
+
   golangci-lint:
     strategy:
       matrix:
@@ -141,7 +141,7 @@ jobs:
         exclude:
           # Only runs tests on macos if explicitly requested, or on a schedule
           - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-13' }}"
-            
+
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -238,7 +238,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-13]
-        nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0, 2.19.2, 2.24.7]
+        nix-version: [2.28.5, 2.29.2, 2.30.3, 2.31.2]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
