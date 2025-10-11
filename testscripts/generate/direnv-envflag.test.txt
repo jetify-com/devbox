@@ -1,12 +1,12 @@
 # Testscript to validate generating the contents of the .envrc file.
 
 exec devbox init
-exists ./devbox.json
+exists devbox.json
 
-exec devbox generate direnv
-grep 'eval "\$\(devbox generate direnv --print-envrc\)"' .envrc
+exec devbox generate direnv --env x=y
+grep 'eval "\$\(devbox generate direnv --print-envrc --env x=y\)"' .envrc
 
-exec devbox generate direnv --print-envrc
+exec devbox generate direnv --print-envrc --env x=y
 
 cmp stdout expected-results.txt
 
@@ -14,7 +14,7 @@ cmp stdout expected-results.txt
 # necessary to match the blank line that follows "use devbox" in the actual output.
 -- expected-results.txt --
 use_devbox() {
-    eval "$(devbox shellenv --init-hook --install --no-refresh-alias)"
+    eval "$(devbox shellenv --init-hook --install --no-refresh-alias --env x=y )"
     watch_file $DEVBOX_PROJECT_ROOT/devbox.json $DEVBOX_PROJECT_ROOT/devbox.lock
 }
 use devbox
