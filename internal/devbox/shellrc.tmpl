@@ -21,10 +21,10 @@ content readable.
 {{- if .OriginalInitPath -}}
 {{- if eq .ShellName "zsh" -}}
 if [ -f {{ .OriginalInitPath }} ]; then
-  local OLD_ZDOTDIR="$ZDOTDIR"
+  local DEVBOX_ZDOTDIR="$ZDOTDIR"
   export ZDOTDIR="{{dirPath .OriginalInitPath}}"
   . "{{ .OriginalInitPath }}"
-  export ZDOTDIR="$OLD_ZDOTDIR"
+  export ZDOTDIR="$DEVBOX_ZDOTDIR"
 fi
 {{ else -}}
 if [ -f {{ .OriginalInitPath }} ]; then

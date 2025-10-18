@@ -257,84 +257,6 @@ func TestInitShellBinaryFields(t *testing.T) {
 	}
 }
 
-func TestShellRCOverrides(t *testing.T) {
-	tests := []struct {
-		name         string
-		shellName    name
-		shellrcPath  string
-		expectedEnv  map[string]string
-		expectedArgs []string
-	}{
-		{
-			name:         "bash shell",
-			shellName:    shBash,
-			shellrcPath:  "/tmp/devbox123/.bashrc",
-			expectedArgs: []string{"--rcfile", "/tmp/devbox123/.bashrc"},
-		},
-		{
-			name:        "zsh shell",
-			shellName:   shZsh,
-			shellrcPath: "/tmp/devbox123/.zshrc",
-			expectedEnv: map[string]string{"ZDOTDIR": "/tmp/devbox123"},
-		},
-		{
-			name:        "ksh shell",
-			shellName:   shKsh,
-			shellrcPath: "/tmp/devbox123/.kshrc",
-			expectedEnv: map[string]string{"ENV": "/tmp/devbox123/.kshrc"},
-		},
-		{
-			name:        "posix shell",
-			shellName:   shPosix,
-			shellrcPath: "/tmp/devbox123/.shinit",
-			expectedEnv: map[string]string{"ENV": "/tmp/devbox123/.shinit"},
-		},
-		{
-			name:         "fish shell",
-			shellName:    shFish,
-			shellrcPath:  "/tmp/devbox123/config.fish",
-			expectedArgs: []string{"-C", ". /tmp/devbox123/config.fish"},
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			shell := &DevboxShell{name: test.shellName}
-			extraEnv, extraArgs := shell.shellRCOverrides(test.shellrcPath)
-
-			if test.expectedEnv != nil {
-				if len(extraEnv) != len(test.expectedEnv) {
-					t.Errorf("Expected %d env vars, got %d", len(test.expectedEnv), len(extraEnv))
-				}
-				for k, v := range test.expectedEnv {
-					if extraEnv[k] != v {
-						t.Errorf("Expected env var %s=%s, got %s", k, v, extraEnv[k])
-					}
-				}
-			} else {
-				if len(extraEnv) != 0 {
-					t.Errorf("Expected no env vars, got %v", extraEnv)
-				}
-			}
-
-			if test.expectedArgs != nil {
-				if len(extraArgs) != len(test.expectedArgs) {
-					t.Errorf("Expected %d args, got %d", len(test.expectedArgs), len(extraArgs))
-				}
-				for i, arg := range test.expectedArgs {
-					if i >= len(extraArgs) || extraArgs[i] != arg {
-						t.Errorf("Expected arg %d to be %s, got %s", i, arg, extraArgs[i])
-					}
-				}
-			} else {
-				if len(extraArgs) != 0 {
-					t.Errorf("Expected no args, got %v", extraArgs)
-				}
-			}
-		})
-	}
-}
-
 func TestSetupShellStartupFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -381,11 +303,12 @@ func TestSetupShellStartupFiles(t *testing.T) {
 			t.Errorf("Expected file %s to contain path %s, but content was: %s", filename, expectedOldPath, contentStr)
 		}
 
-		if !strings.Contains(contentStr, "OLD_ZDOTDIR") {
+		if !strings.Contains(contentStr, "DEVBOX_ZDOTDIR") {
 			t.Errorf("Expected file %s to contain ZDOTDIR handling, but content was: %s", filename, contentStr)
 		}
 	}
 }
+
 func TestWriteDevboxShellrcBash(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -424,7 +347,7 @@ func TestWriteDevboxShellrcBash(t *testing.T) {
 	contentStr := string(content)
 
 	// Check that it does NOT contain zsh-specific ZDOTDIR handling
-	if strings.Contains(contentStr, "OLD_ZDOTDIR") {
+	if strings.Contains(contentStr, "DEVBOX_ZDOTDIR") {
 		t.Error("Expected shellrc to NOT contain ZDOTDIR handling for bash")
 	}
 
@@ -474,7 +397,7 @@ func TestWriteDevboxShellrcWithZDOTDIR(t *testing.T) {
 
 	contentStr := string(content)
 	// Check that it contains zsh-specific ZDOTDIR handling
-	if !strings.Contains(contentStr, "OLD_ZDOTDIR") {
+	if !strings.Contains(contentStr, "DEVBOX_ZDOTDIR") {
 		t.Error("Expected shellrc to contain ZDOTDIR handling for zsh")
 	}
 

@@ -367,24 +367,24 @@ func (s *DevboxShell) setupShellStartupFiles(shellSettingsDir string) {
 
 		for _, filename := range filenames {
 			// The userShellrcPath should be set to ZDOTDIR already.
-			fileOld := filepath.Join(filepath.Dir(s.userShellrcPath), filename)
-			_, err := os.Stat(fileOld)
+			userFile := filepath.Join(filepath.Dir(s.userShellrcPath), filename)
+			_, err := os.Stat(userFile)
 			if errors.Is(err, fs.ErrNotExist) {
 				// this file may not be relevant for the user's setup.
 				continue
 			}
 			if err != nil {
-				slog.Debug("os.Stat error for %s is %v", fileOld, err)
+				slog.Debug("os.Stat error for %s is %v", userFile, err)
 			}
 
 			fileNew := filepath.Join(shellSettingsDir, filename)
 
 			// Create template content that sources the original file
-			templateContent := `if [[ -f "{{.FileOld}}" ]]; then
-    local OLD_ZDOTDIR="$ZDOTDIR"
+			templateContent := `if [[ -f "{{.UserFile}}" ]]; then
+    local DEVBOX_ZDOTDIR="$ZDOTDIR"
     export ZDOTDIR="{{.ZDOTDIR}}"
-    . "{{.FileOld}}"
-    export ZDOTDIR="$OLD_ZDOTDIR"
+    . "{{.UserFile}}"
+    export ZDOTDIR="$DEVBOX_ZDOTDIR"
 fi`
 
 			// Parse and execute the template
@@ -404,11 +404,11 @@ fi`
 
 			// Execute template with data
 			data := struct {
-				FileOld string
-				ZDOTDIR string
+				UserFile string
+				ZDOTDIR  string
 			}{
-				FileOld: fileOld,
-				ZDOTDIR: filepath.Dir(s.userShellrcPath),
+				UserFile: userFile,
+				ZDOTDIR:  filepath.Dir(s.userShellrcPath),
 			}
 
 			if err := tmpl.Execute(file, data); err != nil {
