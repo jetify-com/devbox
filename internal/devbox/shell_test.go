@@ -270,7 +270,7 @@ func TestSetupShellStartupFiles(t *testing.T) {
 	startupFiles := []string{".zshenv", ".zprofile", ".zlogin", ".zlogout", ".zimrc"}
 	for _, filename := range startupFiles {
 		filePath := filepath.Join(tmpDir, filename)
-		err := os.WriteFile(filePath, []byte("# Test content for "+filename), 0644)
+		err := os.WriteFile(filePath, []byte("# Test content for "+filename), 0o644)
 		if err != nil {
 			t.Fatalf("Failed to create test file %s: %v", filename, err)
 		}
@@ -315,7 +315,7 @@ func TestWriteDevboxShellrcBash(t *testing.T) {
 	// Create a test bash rc file
 	bashrcPath := filepath.Join(tmpDir, ".bashrc")
 	bashrcContent := "# Test bash configuration\nexport TEST_VAR=value"
-	err := os.WriteFile(bashrcPath, []byte(bashrcContent), 0644)
+	err := os.WriteFile(bashrcPath, []byte(bashrcContent), 0o644)
 	if err != nil {
 		t.Fatalf("Failed to create test .bashrc: %v", err)
 	}
@@ -366,7 +366,7 @@ func TestWriteDevboxShellrcWithZDOTDIR(t *testing.T) {
 	// Create a test zsh rc file in the custom ZDOTDIR
 	customZshrcPath := filepath.Join(tmpDir, ".zshrc")
 	zshrcContent := "# Custom zsh configuration\nexport CUSTOM_VAR=value"
-	err := os.WriteFile(customZshrcPath, []byte(zshrcContent), 0644)
+	err := os.WriteFile(customZshrcPath, []byte(zshrcContent), 0o644)
 	if err != nil {
 		t.Fatalf("Failed to create test .zshrc: %v", err)
 	}
