@@ -47,7 +47,7 @@ curl -fsSL https://get.jetify.com/devbox | bash
 ```
 
 Read more on the
-[Devbox docs](https://www.jetify.com/devbox/docs/installing_devbox/).
+[Devbox docs](https://www.jetify.com/devbox/docs/installing-devbox/).
 
 ## Benefits
 
