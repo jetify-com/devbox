@@ -7,7 +7,7 @@ Inspired by [This Example](https://litchipi.github.io/nix/2023/01/12/build-jekyl
 
 ## How to Use
 
-1. Install [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/)
+1. Install [Devbox](https://www.jetify.com/docs/devbox/installing-devbox/index)
 1. Create a new project with:
 
     ```bash

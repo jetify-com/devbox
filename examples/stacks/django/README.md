@@ -5,7 +5,7 @@
 
 ## How to Use
 
-1. Install [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/)
+1. Install [Devbox](https://www.jetify.com/docs/devbox/installing-devbox/index)
 1. Run `devbox shell` to install your packages and run the init_hook. This will activate your virtual environment and install Django.
 1. Initialize PostgreSQL with `devbox run initdb`.
 1. Start the Postgres service by running `devbox services up postgresql`. You can start it in the background using `devbox services up -b postgresql`.
@@ -16,7 +16,7 @@
 
 ### Setting up the Project
 
-1. Install [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/).
+1. Install [Devbox](https://www.jetify.com/docs/devbox/installing-devbox/index).
 1. Run `devbox create --template django` to create a new Devbox project in your directory.
 1. Install Python and PostgreSQL with `devbox install`. This will also install the Devbox plugins for pip (which sets up your .venv directory) and PostgreSQL.
 1. Copy the requirements.txt and `todo_project` directory into the root folder of your project
