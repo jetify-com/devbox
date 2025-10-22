@@ -181,6 +181,17 @@ jobs:
       - name: Setup Nix GitHub authentication
         run: |
           # Setup github authentication to ensure Github's rate limits are not hit
+          # For macOS, we need to configure the system-wide nix.conf because the Nix daemon
+          # runs as a different user and doesn't read the user's ~/.config/nix/nix.conf
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            echo "Configuring system-wide Nix config for macOS daemon"
+            echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" | sudo tee -a /etc/nix/nix.conf
+            # Restart nix daemon to pick up the new configuration
+            sudo launchctl stop org.nixos.nix-daemon || true
+            sudo launchctl start org.nixos.nix-daemon || true
+            sleep 2  # Give daemon time to restart
+          fi
+          # For Linux and as a backup for macOS, also configure user config
           mkdir -p ~/.config/nix
           echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
       - name: Run fast tests
@@ -223,7 +234,16 @@ jobs:
           export DEVBOX_FEATURE_DETSYS_INSTALLER=${{ matrix.use-detsys }}
 
           # Setup github authentication to ensure Github's rate limits are not hit.
-          # If this works, we can consider refactoring this into a reusable github action helper.
+          # For macOS, configure system-wide nix.conf for the daemon
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            echo "Configuring system-wide Nix config for macOS daemon"
+            echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" | sudo tee -a /etc/nix/nix.conf
+            # Restart nix daemon to pick up the new configuration
+            sudo launchctl stop org.nixos.nix-daemon || true
+            sudo launchctl start org.nixos.nix-daemon || true
+            sleep 2  # Give daemon time to restart
+          fi
+          # Also configure user config
           mkdir -p ~/.config/nix
           echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
 
