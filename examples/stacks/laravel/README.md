@@ -7,7 +7,7 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 
 ## How to Run
 
-1. Install [Devbox](https://www.jetify.com/devbox/docs/installing_devbox/)
+1. Install [Devbox](https://www.jetify.com/docs/devbox/installing-devbox/index)
 
 1. Create a new Laravel App by running `devbox create --template laravel`. This will create a new Laravel project in your current directory.
 
