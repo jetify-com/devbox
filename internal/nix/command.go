@@ -1,9 +1,18 @@
 package nix
 
+import "os"
+
 func init() {
 	Default.ExtraArgs = Args{
 		"--extra-experimental-features", "ca-derivations",
 		"--option", "experimental-features", "nix-command flakes fetch-closure",
+	}
+
+	// Add GitHub access token if available to avoid rate limiting
+	// This is a backup in case the config file isn't picked up properly
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		Default.ExtraArgs = append(Default.ExtraArgs,
+			"--option", "access-tokens", "github.com="+token)
 	}
 }
 
