@@ -25,8 +25,9 @@ func BinaryInstalled() bool {
 	return cmdutil.Exists("nix")
 }
 
-func dirExists() bool {
-	return fileutil.Exists("/nix")
+func dirExistsAndIsNotEmpty(dir string) bool {
+	empty, err := fileutil.IsDirEmpty(dir)
+	return err == nil && !empty
 }
 
 var ensured = false
@@ -57,7 +58,7 @@ func EnsureNixInstalled(ctx context.Context, writer io.Writer, withDaemonFunc fu
 	if BinaryInstalled() {
 		return nil
 	}
-	if dirExists() {
+	if dirExistsAndIsNotEmpty("/nix") {
 		if _, err = SourceProfile(); err != nil {
 			return err
 		} else if BinaryInstalled() {

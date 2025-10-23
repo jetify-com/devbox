@@ -167,6 +167,8 @@ func StartProcessManager(
 }
 
 func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeConfig, port int, projectDir string, w io.Writer) error {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start process-compose: %w", err)
 	}
@@ -309,8 +311,8 @@ func AttachToProcessManager(ctx context.Context, w io.Writer, projectDir string,
 		return err
 	}
 
-	defer configFile.Close()
 	config := readGlobalProcessComposeJSON(configFile)
+	configFile.Close() // release the lock as this command is long running
 
 	project, ok := config.Instances[projectDir]
 	if !ok {

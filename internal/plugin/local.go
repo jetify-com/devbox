@@ -55,7 +55,7 @@ func (l *LocalPlugin) LockfileKey() string {
 }
 
 func (l *LocalPlugin) Path() string {
-	path := l.ref.Path
+	path := os.ExpandEnv(l.ref.Path)
 	if !strings.HasSuffix(path, pluginConfigName) {
 		path = filepath.Join(path, pluginConfigName)
 	}

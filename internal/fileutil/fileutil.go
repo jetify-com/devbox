@@ -51,6 +51,14 @@ func Exists(path string) bool {
 	return err == nil
 }
 
+func IsDirEmpty(path string) (bool, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return false, err
+	}
+	return len(entries) == 0, nil
+}
+
 // FileContains checks if a given file at 'path' contains the 'substring'
 func FileContains(path, substring string) (bool, error) {
 	data, err := os.ReadFile(path)

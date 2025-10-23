@@ -108,7 +108,7 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		// PATH after VSCode opens and resets it to global shellenv. This causes the VSCode
 		// terminal to not be able to find devbox packages after the reopen in devbox
 		// environment action is called.
-		return ok && (strings.HasPrefix(k, "DEVBOX_OG_PATH") || k == "HOME" || k == "NODE_CHANNEL_FD")
+		return ok && (strings.HasPrefix(k, "DEVBOX_OG_PATH") || k == "NODE_CHANNEL_FD")
 	})
 
 	// Send message to parent process to terminate
