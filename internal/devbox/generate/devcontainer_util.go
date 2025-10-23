@@ -176,7 +176,7 @@ func CreateEnvrc(ctx context.Context, opts devopt.EnvrcOpts) error {
 }
 
 // Returns the relative path from sourceDir to configDir, or an error if it cannot be determined.
-func getRelativePathToConfig(sourceDir string, configDir string) (string, error) {
+func getRelativePathToConfig(sourceDir, configDir string) (string, error) {
 	absConfigDir, err := filepath.Abs(configDir)
 	if err != nil {
 		return "", fmt.Errorf("failed to get absolute path for config dir: %w", err)
@@ -196,7 +196,7 @@ func getRelativePathToConfig(sourceDir string, configDir string) (string, error)
 	relPath, err := filepath.Rel(absSourceDir, absConfigDir)
 	if err != nil {
 		// If a relative path cannot be computed, return the absolute path of configDir
-		return absConfigDir, nil
+		return absConfigDir, err
 	}
 
 	return relPath, nil
