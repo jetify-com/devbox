@@ -108,7 +108,10 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		// PATH after VSCode opens and resets it to global shellenv. This causes the VSCode
 		// terminal to not be able to find devbox packages after the reopen in devbox
 		// environment action is called.
-		return ok && (strings.HasPrefix(k, "DEVBOX_OG_PATH") || k == "NODE_CHANNEL_FD")
+		//
+		// ELECTRON_RUN_AS_NODE being set causes this error in WSL:
+		// "Remote Extension host terminated unexpectedly 3 times within the last 5 minutes."
+		return ok && (strings.HasPrefix(k, "DEVBOX_OG_PATH") || k == "ELECTRON_RUN_AS_NODE" || k == "NODE_CHANNEL_FD")
 	})
 
 	// Send message to parent process to terminate
@@ -121,7 +124,13 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		return err
 	}
 	// Open editor with devbox shell environment
-	cmnd := exec.Command(flags.ideName, message.ConfigDir)
+	cmndName := flags.ideName
+	cwd, ok := os.LookupEnv("VSCODE_CWD")
+	if ok {
+		// Specify full path to avoid running the `code` shell script from VS Code Server, which fails under WSL
+		cmndName = cwd + "/bin/" + cmndName
+	}
+	cmnd := exec.Command(cmndName, message.ConfigDir)
 	cmnd.Env = append(cmnd.Env, envVars...)
 	var outb, errb bytes.Buffer
 	cmnd.Stdout = &outb
