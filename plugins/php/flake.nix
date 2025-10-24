@@ -13,11 +13,16 @@
         {{- end }}
       ]);
 
-      php = nixpkgs.legacyPackages.{{ .System }}.{{ .PackageAttributePath }}.withExtensions (
-        { enabled, all }: enabled ++ (with all; 
+      php = (nixpkgs.legacyPackages.{{ .System }}.{{ .PackageAttributePath }}.withExtensions (
+        { enabled, all }: enabled ++ (with all;
           map (ext: all.${ext}) extensions
         )
-      );
+      )).overrideAttrs (oldAttrs: {
+        # Skip tests in PHP and extensions to avoid flaky upstream tests
+        # See: https://github.com/NixOS/nixpkgs/issues/...
+        doCheck = false;
+        doInstallCheck = false;
+      });
     in
     {
       packages.{{ .System }} = {
