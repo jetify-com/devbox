@@ -11,7 +11,7 @@
     }
   },
   "include": [
-    // Installs the php plugin using php82 as trigger package
-    "plugin:php82"
+    // Installs the php plugin using php83 as trigger package
+    "plugin:php83"
   ]
 }
