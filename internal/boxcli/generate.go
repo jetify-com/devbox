@@ -24,6 +24,7 @@ type generateCmdFlags struct {
 	force             bool
 	printEnvrcContent bool
 	rootUser          bool
+	envrcDir          string // only used by generate direnv command
 }
 
 type generateDockerfileCmdFlags struct {
@@ -147,9 +148,21 @@ func direnvCmd() *cobra.Command {
 	command.Flags().BoolVarP(
 		&flags.force, "force", "f", false, "force overwrite existing files")
 	command.Flags().BoolVarP(
-		&flags.printEnvrcContent, "print-envrc", "p", false, "output contents of devbox configuration to use in .envrc")
+		&flags.printEnvrcContent, "print-envrc", "p", false,
+		"output contents of devbox configuration to use in .envrc")
 	// this command marks a flag as hidden. Error handling for it is not necessary.
 	_ = command.Flags().MarkHidden("print-envrc")
+
+	// --envrc-dir allows users to specify a directory where the .envrc file should be generated
+	// separately from the devbox config directory. Without this flag, the .envrc file
+	// will be generated in the same directory as the devbox config file (i.e., either the current
+	// directory or the directory specified by --config). This flag is useful for users who want to
+	// keep their .envrc and devbox config files in different locations.
+	command.Flags().StringVar(
+		&flags.envrcDir, "envrc-dir", "",
+		"path to directory where the .envrc file should be generated.\n"+
+			"If not specified, the .envrc file will be generated in the same directory as\n"+
+			"the devbox.json.")
 
 	flags.config.register(command)
 	return command
@@ -266,9 +279,17 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 }
 
 func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
+	// --print-envrc is used within the .envrc file and therefore doesn't make sense to also
+	// use it with --envrc-dir, which specifies a directory where the .envrc file should be generated.
+	if flags.printEnvrcContent && flags.envrcDir != "" {
+		return usererr.New(
+			"Cannot use --print-envrc with --envrc-dir. " +
+				"Use --envrc-dir to specify the directory where the .envrc file should be generated.")
+	}
+
 	if flags.printEnvrcContent {
 		return devbox.PrintEnvrcContent(
-			cmd.OutOrStdout(), devopt.EnvFlags(flags.envFlag))
+			cmd.OutOrStdout(), devopt.EnvFlags(flags.envFlag), flags.config.path)
 	}
 
 	box, err := devbox.Open(&devopt.Opts{
@@ -280,6 +301,12 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	return box.GenerateEnvrcFile(
-		cmd.Context(), flags.force, devopt.EnvFlags(flags.envFlag))
+	generateEnvrcOpts := devopt.EnvrcOpts{
+		EnvFlags:  devopt.EnvFlags(flags.envFlag),
+		Force:     flags.force,
+		EnvrcDir:  flags.envrcDir,
+		ConfigDir: flags.config.path,
+	}
+
+	return box.GenerateEnvrcFile(cmd.Context(), generateEnvrcOpts)
 }
