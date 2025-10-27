@@ -39,20 +39,23 @@ defaults:
     shell: bash
 
 env:
-  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  DEVBOX_DEBUG: 1
   DEVBOX_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   HOMEBREW_NO_ANALYTICS: 1
   HOMEBREW_NO_AUTO_UPDATE: 1
   HOMEBREW_NO_EMOJI: 1
   HOMEBREW_NO_ENV_HINTS: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
-  DEVBOX_DEBUG: 1
-
+  NIX_CONFIG: |
+    access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+    
 jobs:
   build-devbox:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-13]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -76,17 +79,35 @@ jobs:
       - uses: actions/checkout@v4
       - uses: crate-ci/typos@v1.16.26
 
+  flake-test:
+    name: Test Flake Build
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install devbox
+        uses: jetify-com/devbox-install-action@jl/migrate-installer
+        with:
+          enable-cache: true
+      - name: Build flake
+        run: |
+          if ! devbox run build-flake; then
+            echo "::warning::If this fails, you probably have to run 'devbox run update-hash'"
+            exit 1
+          fi
+      - run: ./result/bin/devbox version
+  
   golangci-lint:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-13]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
       - name: Install devbox
-        uses: jetpack-io/devbox-install-action@v0.8.0
+        uses: jetify-com/devbox-install-action@jl/migrate-installer
         with:
           enable-cache: true
 
@@ -107,7 +128,7 @@ jobs:
       matrix:
         is-main:
           - ${{ github.ref == 'refs/heads/main' && 'is-main' || 'not-main' }}
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-13]
         # This is an optimization that runs tests twice, with and without
         # the devbox.json tests. We can require the other tests to complete before
         # merging, while keeping the others as an additional non-required signal
@@ -116,10 +137,10 @@ jobs:
         # 1. the oldest supported nix version (which is 2.9.0? But determinate-systems installer has 2.12.0)
         # 2. nix 2.19.2: version before nix profile changes
         # 2. latest nix version (note, 2.20.1 introduced a new profile change)
-        nix-version: ["2.12.0", "2.19.2", "2.20.1"]
+        nix-version: ["2.12.0", "2.19.2", "2.30.2"]
         exclude:
           # Only runs tests on macos if explicitly requested, or on a schedule
-          - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-latest' }}"
+          - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-13' }}"
             
 
     runs-on: ${{ matrix.os }}
@@ -130,16 +151,12 @@ jobs:
       DEVBOX_DEBUG: ${{ (matrix.run-project-tests == 'project-tests-off' || inputs.example-debug) && '1' || '0' }}
       DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '1h' || '30m' }}"
     steps:
-      - name: Maximize build disk space
-        uses: easimon/maximize-build-space@v10
-        if: matrix.os == 'ubuntu-latest'
-        with:
-          root-reserve-mb: 32768
-          temp-reserve-mb: 10000
-          remove-dotnet: true
-          remove-android: true
-          remove-haskell: true
-          remove-codeql: true
+      - name: clear directories to reduce disk usage
+        # https://github.com/actions/runner-images/issues/2840#issuecomment-1284059930
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
       - uses: actions/checkout@v4
       - name: Mount golang cache
         uses: actions/cache@v4
@@ -158,9 +175,33 @@ jobs:
             brew install dash zsh
           fi
       - name: Install devbox
-        uses: jetpack-io/devbox-install-action@v0.8.0
+        uses: jetify-com/devbox-install-action@jl/migrate-installer
         with:
           enable-cache: true
+      - name: Setup Nix GitHub authentication
+        run: |
+          # Setup github authentication to ensure Github's rate limits are not hit
+          # For macOS, we need to configure the system-wide nix.conf because the Nix daemon
+          # runs as a different user and doesn't read the user's ~/.config/nix/nix.conf
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            echo "Configuring system-wide Nix config for macOS daemon"
+            # Ensure /etc/nix directory exists
+            if [ ! -d /etc/nix ]; then
+              sudo mkdir -p /etc/nix
+            fi
+            # Check if file exists, create it if not
+            if [ ! -f /etc/nix/nix.conf ]; then
+              echo "# Nix configuration" | sudo tee /etc/nix/nix.conf > /dev/null
+            fi
+            echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" | sudo tee -a /etc/nix/nix.conf
+            # Restart nix daemon to pick up the new configuration
+            sudo launchctl stop org.nixos.nix-daemon || true
+            sudo launchctl start org.nixos.nix-daemon || true
+            sleep 2  # Give daemon time to restart
+          fi
+          # For Linux and as a backup for macOS, also configure user config
+          mkdir -p ~/.config/nix
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
       - name: Run fast tests
         if: matrix.run-project-tests == 'project-tests-off'
         run: |
@@ -182,7 +223,8 @@ jobs:
     needs: build-devbox
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-13]
+        use-detsys: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -197,24 +239,41 @@ jobs:
       - name: Install nix and devbox packages
         run: |
           export NIX_INSTALLER_NO_CHANNEL_ADD=1
+          export DEVBOX_FEATURE_DETSYS_INSTALLER=${{ matrix.use-detsys }}
 
-          # Setup github authentication to ensure Github's rate limits are not hit.
-          # If this works, we can consider refactoring this into a reusable github action helper.
+          # Setup github authentication BEFORE running devbox to ensure Github's rate limits are not hit.
+          # Configure user config first (Nix installer will respect this)
           mkdir -p ~/.config/nix
           echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
 
+          # Run devbox which will auto-install Nix if needed
           devbox run echo "Installing packages..."
+
+          # After Nix is installed, configure system-wide config for the daemon on macOS
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            echo "Configuring system-wide Nix config for macOS daemon"
+            # Check if file exists, create directory if needed
+            if [ ! -f /etc/nix/nix.conf ]; then
+              sudo mkdir -p /etc/nix
+              echo "# Nix configuration" | sudo tee /etc/nix/nix.conf > /dev/null
+            fi
+            echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" | sudo tee -a /etc/nix/nix.conf
+            # Restart nix daemon to pick up the new configuration
+            sudo launchctl stop org.nixos.nix-daemon || true
+            sudo launchctl start org.nixos.nix-daemon || true
+            sleep 2  # Give daemon time to restart
+          fi
       - name: Test removing package
         run: devbox rm go
 
   # Run a sanity test to make sure Devbox can install and remove packages with
-  # the last 3 Nix releases.
+  # the last few Nix releases.
   test-nix-versions:
     needs: build-devbox
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0, 2.19.2]
+        os: [ubuntu-latest, macos-13]
+        nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0, 2.19.2, 2.24.7]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

@@ -1,0 +1,26 @@
+# Testscript to validate generating a direnv .envrc in the parent of the current
+# dir, which is where the devbox config is located.
+
+mkdir cfg
+exec devbox init cfg
+exists cfg/devbox.json
+
+cd cfg
+
+exec devbox generate direnv --envrc-dir ..
+grep 'eval "\$\(devbox generate direnv --print-envrc --config cfg\)"' ../.envrc
+
+cd ..
+exec devbox generate direnv --print-envrc --config cfg
+
+cmp stdout expected-results.txt
+
+# Note: The contents of the following file ends with two blank lines. This is
+# necessary to match the blank line that follows "use devbox" in the actual output.
+-- expected-results.txt --
+use_devbox() {
+    eval "$(devbox shellenv --init-hook --install --no-refresh-alias --config cfg)"
+    watch_file $DEVBOX_PROJECT_ROOT/devbox.json $DEVBOX_PROJECT_ROOT/devbox.lock
+}
+use devbox
+

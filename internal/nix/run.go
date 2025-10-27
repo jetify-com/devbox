@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package nix
@@ -6,12 +6,12 @@ package nix
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cmdutil"
-	"go.jetpack.io/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/cmdutil"
 )
 
 func RunScript(projectDir, cmdWithArgs string, env map[string]string) error {
@@ -33,7 +33,7 @@ func RunScript(projectDir, cmdWithArgs string, env map[string]string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	debug.Log("Executing: %v", cmd.Args)
+	slog.Debug("executing script", "cmd", cmd.Args)
 	// Report error as exec error when executing scripts.
 	return usererr.NewExecError(cmd.Run())
 }

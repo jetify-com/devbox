@@ -1,38 +1,32 @@
 {
-  description = "A devbox shell";
+   description = "A devbox shell";
 
-  inputs = {
-    {{/* nixpkgs could be removed once we turn php/haskell planners into flakes */ -}}
-    nixpkgs.url = "{{ .NixpkgsInfo.URL }}";
-    flake-utils.url = "github:numtide/flake-utils";
-    {{- range .FlakeInputs }}
-    {{.Name}}.url = "{{.URLWithCaching}}";
-    {{- end }}
-  };
+   inputs = {
+     nixpkgs.url = "{{ .Stdenv }}";
 
-  outputs = {
-    self,
-    nixpkgs,
-    {{- range .FlakeInputs }}
-    {{.Name}},
-    {{- end }}
-    flake-utils
-  }:
-    flake-utils.lib.eachDefaultSystem (system:
+     {{- range .FlakeInputs }}
+     {{.Name}}.url = "{{.URLWithCaching}}";
+     {{- end }}
+   };
+
+   outputs = {
+     self,
+     nixpkgs,
+     {{- range .FlakeInputs }}
+     {{.Name}},
+     {{- end }}
+   }:
       let
-        pkgs = (import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
-        });
+        pkgs = nixpkgs.legacyPackages.{{ .System }};
         {{- range $_, $flake := .FlakeInputs }}
-        {{- if .IsNixpkgs }}
+        {{- if $flake.Ref.IsNixpkgs }}
         {{.PkgImportName}} = (import {{.Name}} {
-          inherit system;
+          system = "{{ $.System }}";
           config.allowUnfree = true;
           config.permittedInsecurePackages = [
             {{- range $flake.Packages }}
-            {{- if .AllowInsecure }}
-            "{{ .StoreName }}"
+            {{- range .AllowInsecure }}
+            "{{ . }}"
             {{- end }}
             {{- end }}
           ];
@@ -41,15 +35,42 @@
         {{- end }}
       in
       {
-        devShell = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            {{- range $_, $flake := .FlakeInputs }}
-            {{- range $flake.BuildInputs }}
-            {{.}}
+        devShells.{{ .System }}.default = pkgs.mkShell {
+          buildInputs = [
+            {{- range $_, $pkg := .Packages }}
+            {{- range $_, $output := $pkg.GetOutputsWithCache }}
+            {{ if $output.CacheURI -}}
+            (builtins.trace "downloading {{ $pkg.Versioned }}" (builtins.fetchClosure {
+              {{/*
+                HACK HACK HACK! fetchClosure only supports http(s) caches and not
+                s3 caches. Until we implement that, we put a fake store here.
+                Since we pre-build everything, fetchClosure will not actually
+                fetch anything and just use the local version. This may break
+                if user somehow removes the local store path.
+              */}}
+              fromStore = "https://cache.nixos.org";
+              fromPath = "{{ $pkg.InputAddressedPathForOutput $output.Name }}";
+              inputAddressed = true;
+            }))
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- range $_, $flakeInput := .FlakeInputs }}
+            {{- range .BuildInputsForSymlinkJoin }}
+            (pkgs.symlinkJoin {
+              name = "{{.Name}}";
+              paths = [
+                {{- range .Paths }}
+                (builtins.trace "evaluating {{.}}" {{.}})
+                {{- end }}
+              ];
+            })
+            {{- end }}
+            {{- range .BuildInputs }}
+            (builtins.trace "evaluating {{.}}" {{.}})
             {{- end }}
             {{- end }}
           ];
         };
-      }
-    );
-}
+      };
+ }

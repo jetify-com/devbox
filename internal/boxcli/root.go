@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -11,16 +11,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/boxcli/midcobra"
-	"go.jetpack.io/devbox/internal/cloud/openssh/sshshim"
-	"go.jetpack.io/devbox/internal/cmdutil"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/vercheck"
+	"go.jetify.com/devbox/internal/boxcli/featureflag"
+	"go.jetify.com/devbox/internal/boxcli/midcobra"
+	"go.jetify.com/devbox/internal/cmdutil"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/telemetry"
+	"go.jetify.com/devbox/internal/vercheck"
 )
 
 type cobraFunc func(cmd *cobra.Command, args []string) error
@@ -69,19 +67,20 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(initCmd())
 	command.AddCommand(installCmd())
 	command.AddCommand(integrateCmd())
+	command.AddCommand(listCmd())
 	command.AddCommand(logCmd())
+	command.AddCommand(patchCmd())
 	command.AddCommand(removeCmd())
-	command.AddCommand(runCmd())
+	command.AddCommand(runCmd(runFlagDefaults{}))
 	command.AddCommand(searchCmd())
 	command.AddCommand(servicesCmd())
 	command.AddCommand(setupCmd())
-	command.AddCommand(shellCmd())
-	// True to always recompute environment if needed.
-	command.AddCommand(shellEnvCmd(lo.ToPtr(true)))
+	command.AddCommand(shellCmd(shellFlagDefaults{}))
+	command.AddCommand(shellEnvCmd(shellenvFlagDefaults{
+		recomputeEnv: true,
+	}))
 	command.AddCommand(updateCmd())
 	command.AddCommand(versionCmd())
-	// Preview commands
-	command.AddCommand(cloudCmd())
 	// Internal commands
 	command.AddCommand(genDocsCmd())
 
@@ -118,10 +117,6 @@ func Main() {
 	timer := debug.Timer(strings.Join(os.Args, " "))
 	setSystemBinaryPaths()
 	ctx := context.Background()
-	if strings.HasSuffix(os.Args[0], "ssh") ||
-		strings.HasSuffix(os.Args[0], "scp") {
-		os.Exit(sshshim.Execute(ctx, os.Args))
-	}
 
 	if len(os.Args) > 1 && os.Args[1] == "upload-telemetry" {
 		// This subcommand is hidden and only run by devbox itself as a

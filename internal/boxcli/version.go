@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/vercheck"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/vercheck"
 )
 
 type versionFlags struct {

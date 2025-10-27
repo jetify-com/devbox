@@ -1,20 +1,22 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package telemetry
 
 import (
+	"cmp"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/samber/lo"
 	segment "github.com/segmentio/analytics-go"
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetify.com/devbox/nix"
 
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/envir"
 )
 
 var segmentClient segment.Client
@@ -33,20 +35,20 @@ func initSegmentClient() bool {
 }
 
 func newTrackMessage(name string, meta Metadata) *segment.Track {
-	nixVersion, err := nix.Version()
-	if err != nil {
-		nixVersion = "unknown"
-	}
+	nixVersion := cmp.Or(nix.Version(), "unknown")
 
 	dur := time.Since(procStartTime)
-	if !meta.CommandStart.IsZero() {
-		dur = time.Since(meta.CommandStart)
+	if !meta.EventStart.IsZero() {
+		dur = time.Since(meta.EventStart)
 	}
-	return &segment.Track{
-		MessageId:   newEventID(),
-		Type:        "track",
-		AnonymousId: deviceID,
-		UserId:      userID,
+	uid := userID()
+	track := &segment.Track{
+		MessageId: newEventID(),
+		Type:      "track",
+		// Only set anonymous ID if user ID is not set. Otherwise segment will
+		// drop the UserId.
+		AnonymousId: lo.Ternary(uid == "", deviceID, ""),
+		UserId:      uid,
 		Timestamp:   time.Now(),
 		Event:       name,
 		Context: &segment.Context{
@@ -62,16 +64,30 @@ func newTrackMessage(name string, meta Metadata) *segment.Track {
 			},
 		},
 		Properties: segment.Properties{
-			"cloud_region": meta.CloudRegion,
 			"command":      meta.Command,
 			"command_args": meta.CommandFlags,
 			"duration":     dur.Milliseconds(),
+			"nix_version":  nixVersion,
+			"org_id":       orgID(),
 			"packages":     meta.Packages,
 			"shell":        os.Getenv(envir.Shell),
 			"shell_access": shellAccess(),
-			"nix_version":  nixVersion,
 		},
 	}
+
+	// Property keys match the API events.
+	insertEnv := func(envKey, propKey string) {
+		v, ok := os.LookupEnv(envKey)
+		if ok {
+			track.Properties[propKey] = v
+		}
+	}
+	insertEnv("_JETIFY_SANDBOX_ID", "devspace")
+	insertEnv("_JETIFY_GH_REPO", "repo")
+	insertEnv("_JETIFY_GIT_REF", "ref")
+	insertEnv("_JETIFY_GIT_SUBDIR", "subdir")
+
+	return track
 }
 
 // bufferSegmentMessage buffers a Segment message to disk so that Report can

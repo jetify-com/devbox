@@ -15,6 +15,6 @@ We import the ory CLI in our project by adding it to our packages in `devbox.jso
 }
 ```
 
-Note: you will need [Devbox 0.4.7](https://www.jetpack.io/blog/devbox-0-4-7/) or later for this to work. You can use this as an example to create your own templates.
+Note: you will need [Devbox 0.4.7](https://www.jetify.com/blog/devbox-0-4-7/) or later for this to work. You can use this as an example to create your own templates.
 
-For more details on using Flakes with Devbox, read our post on [Using Nix Flakes with Devbox](https://www.jetpack.io/blog/using-nix-flakes-with-devbox/)
+For more details on using Flakes with Devbox, read our post on [Using Nix Flakes with Devbox](https://www.jetify.com/blog/using-nix-flakes-with-devbox/)

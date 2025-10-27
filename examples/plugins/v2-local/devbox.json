@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json",
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox.schema.json",
   "packages": [],
   "env": {
     "PLUGIN1_ENV2": "override"

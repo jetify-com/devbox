@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/nix"
 )
 
 func (p *Package) ValidateExists(ctx context.Context) (bool, error) {

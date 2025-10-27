@@ -1,0 +1,29 @@
+{{- if .RootUser }}FROM jetpackio/devbox-root-user:latest
+{{- else }}FROM jetpackio/devbox:latest
+{{- end}}
+
+# Installing your devbox project
+WORKDIR /code
+{{- if not .RootUser }}
+USER root:root
+RUN mkdir -p /code && chown ${DEVBOX_USER}:${DEVBOX_USER} /code
+USER ${DEVBOX_USER}:${DEVBOX_USER}
+COPY --chown=${DEVBOX_USER}:${DEVBOX_USER} devbox.json devbox.json
+COPY --chown=${DEVBOX_USER}:${DEVBOX_USER} devbox.lock devbox.lock
+{{- else}}
+COPY devbox.json devbox.json
+COPY devbox.lock devbox.lock
+{{- end}}
+
+{{if len .LocalFlakeDirs}}
+# Copying local flakes directories
+{{- end}}
+{{range $i, $element := .LocalFlakeDirs -}}
+COPY {{$element}} {{$element}}
+{{end}}
+RUN devbox run -- echo "Installed Packages." && nix-store --gc && nix-store --optimise
+{{if .IsDevcontainer}}
+RUN devbox shellenv --init-hook >> ~/.profile
+{{- else}}
+CMD ["devbox", "shell"]
+{{- end}}

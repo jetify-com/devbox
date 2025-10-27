@@ -2,7 +2,6 @@
 
 Most NodeJS Projects will install their dependencies locally using NPM or Yarn, and thus can work with Devbox with minimal additional configuration. Per project packages can be managed via NPM or Yarn.
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/node-npm)
 
 ## Adding NodeJS to your Shell
 
@@ -18,14 +17,20 @@ This will install NodeJS 18, and comes bundled with `npm`. You can find other in
 
 ## Adding pnpm as your Package Manager
 
-`devbox add nodePackages@pnpm`, or in your `devbox.json` add:
+We recommend using Corepack to install and manage your Node Package Manager in Devbox. Corepack comes bundled with all recent Nodejs versions, and you can tell Devbox to automatically configure Corepack using a built-in plugin. When enabled, corepack binaries will be installed in your project's .devbox directory, and automatically added to your path.
+
+To enable Corepack, set DEVBOX_COREPACK_ENABLED to true in your devbox.json:
 
 ```json
-  "packages": [
-    "nodejs@18",
-    "nodePackages.pnpm@8.6.0"
-  ],
+{
+  "packages": ["nodejs@18"],
+  "env": {
+    "DEVBOX_COREPACK_ENABLED": "true"
+  }
+}
 ```
+
+To disable Corepack, remove the DEVBOX_COREPACK_ENABLED variable from your devbox.json
 
 ## Installing Global Packages
 

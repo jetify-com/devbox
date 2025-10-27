@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package devbox
@@ -8,32 +8,77 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime/trace"
 	"slices"
 	"strings"
+	"time"
 
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/devbox/bincache"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/devconfig"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/shellgen"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devbox/providers/nixcache"
+	"go.jetify.com/devbox/internal/devconfig"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/devpkg/pkgtype"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/setup"
+	"go.jetify.com/devbox/internal/shellgen"
+	"go.jetify.com/devbox/internal/telemetry"
+	"go.jetify.com/devbox/nix/flake"
+	"go.jetify.com/pkg/auth"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/plugin"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/plugin"
+	"go.jetify.com/devbox/internal/ux"
 )
+
+const StateOutOfDateMessage = "Your devbox environment may be out of date. Run %s to update it.\n"
 
 // packages.go has functions for adding, removing and getting info about nix
 // packages
+
+type UpdateVersion struct {
+	Current string
+	Latest  string
+}
+
+// Outdated returns a map of package names to their available latest version.
+func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error) {
+	lockfile := d.Lockfile()
+	outdatedPackages := map[string]UpdateVersion{}
+	var warnings []string
+
+	for _, pkg := range d.AllPackages() {
+		// For non-devbox packages, like flakes, we can skip for now
+		if !pkg.IsDevboxPackage {
+			continue
+		}
+
+		lockPackage, err := lockfile.FetchResolvedPackage(pkg.Versioned())
+		if err != nil {
+			warnings = append(warnings, fmt.Sprintf("Note: unable to check updates for %s", pkg.CanonicalName()))
+			continue
+		}
+		existingLockPackage := lockfile.Packages[pkg.Raw]
+		if lockPackage.Version == existingLockPackage.Version {
+			continue
+		}
+
+		outdatedPackages[pkg.Versioned()] = UpdateVersion{Current: existingLockPackage.Version, Latest: lockPackage.Version}
+	}
+
+	for _, warning := range warnings {
+		fmt.Fprintf(d.stderr, "%s\n", warning)
+	}
+
+	return outdatedPackages, nil
+}
 
 // Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this
 // devbox project
@@ -52,7 +97,10 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 	// names of added packages (even if they are already in config). We use this
 	// to know the exact name to mark as allowed insecure later on.
 	addedPackageNames := []string{}
-	existingPackageNames := d.PackageNames()
+	existingPackageNames := lo.Map(
+		d.cfg.Root.TopLevelPackages(), func(p configfile.Package, _ int) string {
+			return p.VersionedName()
+		})
 	for _, pkg := range pkgs {
 		// If exact versioned package is already in the config, we can skip the
 		// next loop that only deals with newPackages.
@@ -60,7 +108,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			// But we still need to add to addedPackageNames. See its comment.
 			addedPackageNames = append(addedPackageNames, pkg.Versioned())
 			unchangedPackageNames = append(unchangedPackageNames, pkg.Versioned())
-			ux.Finfo(d.stderr, "Package %q already in devbox.json\n", pkg.Versioned())
+			ux.Finfof(d.stderr, "Package %q already in devbox.json\n", pkg.Versioned())
 			continue
 		}
 
@@ -70,7 +118,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 		// match.
 		found, _ := d.findPackageByName(pkg.CanonicalName())
 		if found != nil {
-			ux.Finfo(d.stderr, "Replacing package %q in devbox.json\n", found.Raw)
+			ux.Finfof(d.stderr, "Replacing package %q in devbox.json\n", found.Raw)
 			if err := d.Remove(ctx, found.Raw); err != nil {
 				return err
 			}
@@ -91,13 +139,20 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			// This means it didn't validate and we don't want to fallback to legacy
 			// Just propagate the error.
 			return err
-		} else if _, err := nix.Search(d.lockfile.LegacyNixpkgsPath(pkg.Raw)); err != nil {
-			// This means it looked like a devbox package or attribute path, but we
-			// could not find it in search or in the legacy nixpkgs path.
-			return usererr.New("Package %s not found", pkg.Raw)
+		} else {
+			installable := flake.Installable{
+				Ref:      d.lockfile.Stdenv(),
+				AttrPath: pkg.Raw,
+			}
+			_, err := nix.Search(installable.String())
+			if err != nil {
+				// This means it looked like a devbox package or attribute path, but we
+				// could not find it in search or in the legacy nixpkgs path.
+				return usererr.New("Package %s not found", pkg.Raw)
+			}
 		}
 
-		ux.Finfo(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)
+		ux.Finfof(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)
 		d.cfg.PackageMutator().Add(packageNameForConfig)
 		addedPackageNames = append(addedPackageNames, packageNameForConfig)
 	}
@@ -132,9 +187,11 @@ func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
 			pkg, opts.DisablePlugin); err != nil {
 			return err
 		}
-		if err := d.cfg.PackageMutator().SetPatchGLibc(
-			pkg, opts.PatchGlibc); err != nil {
-			return err
+		if opts.Patch != "" {
+			if err := d.cfg.PackageMutator().SetPatch(
+				pkg, configfile.PatchMode(opts.Patch)); err != nil {
+				return err
+			}
 		}
 		if err := d.cfg.PackageMutator().SetOutputs(
 			d.stderr, pkg, opts.Outputs); err != nil {
@@ -169,9 +226,9 @@ func (d *Devbox) printPostAddMessage(
 
 	if len(opts.Platforms) == 0 && len(opts.ExcludePlatforms) == 0 && len(opts.Outputs) == 0 && len(opts.AllowInsecure) == 0 {
 		if len(unchangedPackageNames) == 1 {
-			ux.Finfo(d.stderr, "Package %q was already in devbox.json and was not modified\n", unchangedPackageNames[0])
+			ux.Finfof(d.stderr, "Package %q was already in devbox.json and was not modified\n", unchangedPackageNames[0])
 		} else if len(unchangedPackageNames) > 1 {
-			ux.Finfo(d.stderr, "Packages %s were already in devbox.json and were not modified\n",
+			ux.Finfof(d.stderr, "Packages %s were already in devbox.json and were not modified\n",
 				strings.Join(unchangedPackageNames, ", "),
 			)
 		}
@@ -198,7 +255,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	}
 
 	if len(missingPkgs) > 0 {
-		ux.Fwarning(
+		ux.Fwarningf(
 			d.stderr,
 			"the following packages were not found in your devbox.json: %s\n",
 			strings.Join(missingPkgs, ", "),
@@ -224,8 +281,9 @@ const (
 	install   installMode = "install"
 	uninstall installMode = "uninstall"
 	// update is both install new package version and uninstall old package version
-	update installMode = "update"
-	ensure installMode = "ensure"
+	update    installMode = "update"
+	ensure    installMode = "ensure"
+	noInstall installMode = "noInstall"
 )
 
 // ensureStateIsUpToDate ensures the Devbox project state is up to date.
@@ -257,7 +315,17 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		if upToDate {
 			return nil
 		}
-		ux.Finfo(d.stderr, "Ensuring packages are installed.")
+		ux.Finfof(d.stderr, "Ensuring packages are installed.\n")
+	}
+
+	if mode != ensure {
+		// Reload includes because added/removed packages might change plugins. Cases:
+		// * New package adds built-in plugin. We wanna make sure the plugin is in config.
+		// * Remove built-in plugin that installs multiple packages (e.g. nginx). We wanna clear them
+		// up so they get removed from lockfile in updateLockfile
+		if err = d.cfg.LoadRecursive(d.lockfile); err != nil {
+			return err
+		}
 	}
 
 	if mode == install || mode == update || mode == ensure {
@@ -277,10 +345,11 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	// be out of date after the user installs something. If have direnv active
 	// it should reload automatically so we don't need to refresh.
 	if d.IsEnvEnabled() && !upToDate && !d.IsDirenvActive() {
-		ux.Fwarning(
+		ux.FHidableWarning(
+			ctx,
 			d.stderr,
-			"Your shell environment may be out of date. Run `%s` to update it.\n",
-			d.refreshAliasOrCommand(),
+			StateOutOfDateMessage,
+			d.RefreshAliasOrCommand(),
 		)
 	}
 
@@ -288,14 +357,21 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 }
 
 // updateLockfile will ensure devbox.lock is up to date with the current state of the project.update
-// If recomputeState is true, then we will also update the local.lock file.
+// If recomputeState is true, then we will also update the state.json file.
 func (d *Devbox) updateLockfile(recomputeState bool) error {
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
 
 	// Update lockfile with new packages that are not to be installed
-	for _, pkg := range d.ConfigPackages() {
+	for _, pkg := range d.AllPackages() {
 		if err := pkg.EnsureUninstallableIsInLockfile(); err != nil {
+			return err
+		}
+	}
+
+	// Update plugin versions in lockfile.
+	for _, pluginConfig := range d.Config().IncludedPluginConfigs() {
+		if err := d.PluginManager().UpdateLockfileVersion(pluginConfig); err != nil {
 			return err
 		}
 	}
@@ -328,6 +404,7 @@ func (d *Devbox) updateLockfile(recomputeState bool) error {
 // - the generated flake
 // - the nix-profile
 func (d *Devbox) recomputeState(ctx context.Context) error {
+	defer debug.FunctionTimer().End()
 	if err := shellgen.GenerateForPrintEnv(ctx, d); err != nil {
 		return err
 	}
@@ -345,7 +422,7 @@ func (d *Devbox) profilePath() (string, error) {
 	absPath := filepath.Join(d.projectDir, nix.ProfilePath)
 
 	if err := resetProfileDirForFlakes(absPath); err != nil {
-		debug.Log("ERROR: resetProfileDirForFlakes error: %v\n", err)
+		slog.Error("resetProfileDirForFlakes error", "err", err)
 	}
 
 	return absPath, errors.WithStack(os.MkdirAll(filepath.Dir(absPath), 0o755))
@@ -386,6 +463,7 @@ func resetProfileDirForFlakes(profileDir string) (err error) {
 }
 
 func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
+	defer debug.FunctionTimer().End()
 	// Create plugin directories first because packages might need them
 	for _, pluginConfig := range d.Config().IncludedPluginConfigs() {
 		if err := d.PluginManager().CreateFilesForConfig(pluginConfig); err != nil {
@@ -394,10 +472,24 @@ func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
 	}
 
 	if err := d.installNixPackagesToStore(ctx, mode); err != nil {
+		if caches, _ := nixcache.CachedReadCaches(ctx); len(caches) > 0 {
+			err = d.handleInstallFailure(ctx, mode)
+		}
 		return err
 	}
 
 	return d.InstallRunXPackages(ctx)
+}
+
+func (d *Devbox) handleInstallFailure(ctx context.Context, mode installMode) error {
+	ux.Fwarningf(d.stderr, "Failed to build from cache, building from source.\n")
+	telemetry.Event(telemetry.EventNixBuildWithSubstitutersFailed, telemetry.Metadata{
+		Packages: lo.Map(
+			d.InstallablePackages(), func(p *devpkg.Package, _ int) string { return p.Raw }),
+	})
+	nixcache.DisableReadCaches()
+	devpkg.ClearNarInfoCache()
+	return d.installNixPackagesToStore(ctx, mode)
 }
 
 func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
@@ -422,57 +514,118 @@ func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 // packages will be available in the nix store when computing the devbox environment
 // and installing in the nix profile (even if offline).
 func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode) error {
+	defer debug.FunctionTimer().End()
 	packages, err := d.packagesToInstallInStore(ctx, mode)
+	if err != nil || len(packages) == 0 {
+		return err
+	}
+
+	// --no-link to avoid generating the result objects
+	flags := []string{"--no-link"}
+	if mode == update {
+		flags = append(flags, "--refresh")
+	}
+
+	args := &nix.BuildArgs{
+		Flags:  flags,
+		Writer: d.stderr,
+	}
+	err = d.appendExtraSubstituters(ctx, args)
 	if err != nil {
 		return err
 	}
 
-	stepNum := 0
-	total := len(packages)
+	packageNames := lo.Map(
+		packages,
+		func(p *devpkg.Package, _ int) string { return p.Raw },
+	)
+	ux.Finfof(
+		d.stderr,
+		"Installing the following packages to the nix store: %s\n",
+		strings.Join(packageNames, ", "),
+	)
+
+	installables := map[bool][]string{false: {}, true: {}}
 	for _, pkg := range packages {
-		stepNum += 1
-
-		stepMsg := fmt.Sprintf("[%d/%d] %s", stepNum, total, pkg)
-		fmt.Fprintf(d.stderr, stepMsg+"\n")
-
-		installables, err := pkg.Installables()
+		pkgInstallables, err := pkg.Installables()
 		if err != nil {
 			return err
 		}
-
-		// --no-link to avoid generating the result objects
-		flags := []string{"--no-link"}
-		if mode == update {
-			flags = append(flags, "--refresh")
-		}
-
-		extraSubstituter, err := bincache.ExtraSubstituter()
-		if err != nil {
-			return err
-		}
-
-		for _, installable := range installables {
-			args := &nix.BuildArgs{
-				AllowInsecure:    pkg.HasAllowInsecure(),
-				Flags:            flags,
-				Writer:           d.stderr,
-				ExtraSubstituter: extraSubstituter,
-			}
-			err = nix.Build(ctx, args, installable)
-			if err != nil {
-				fmt.Fprintf(d.stderr, "%s: ", stepMsg)
-				color.New(color.FgRed).Fprintf(d.stderr, "Fail\n")
-				return packageInstallErrorHandler(err, pkg, installable)
-			}
-		}
-
-		fmt.Fprintf(d.stderr, "%s: ", stepMsg)
-		color.New(color.FgGreen).Fprintf(d.stderr, "Success\n")
+		installables[pkg.HasAllowInsecure()] = append(
+			installables[pkg.HasAllowInsecure()],
+			pkgInstallables...,
+		)
 	}
-	return err
+
+	for allowInsecure, installables := range installables {
+		if len(installables) == 0 {
+			continue
+		}
+		eventStart := time.Now()
+		args.AllowInsecure = allowInsecure
+		err = nix.Build(ctx, args, installables...)
+		if err != nil {
+			return err
+		}
+		telemetry.Event(telemetry.EventNixBuildSuccess, telemetry.Metadata{
+			EventStart: eventStart,
+			Packages:   packageNames,
+		})
+	}
+
+	return nil
+}
+
+func (d *Devbox) appendExtraSubstituters(ctx context.Context, args *nix.BuildArgs) error {
+	creds, err := nixcache.CachedCredentials(ctx)
+	if errors.Is(err, auth.ErrNotLoggedIn) {
+		return nil
+	}
+	if err != nil {
+		ux.Fwarningf(d.stderr, "Devbox was unable to authenticate with the Jetify Nix cache. Some packages might be built from source.\n")
+		return nil //nolint:nilerr
+	}
+
+	caches, err := nixcache.CachedReadCaches(ctx)
+	if err != nil {
+		slog.Error("error getting list of caches from the Jetify API, assuming the user doesn't have access to any", "err", err)
+		return nil
+	}
+	if len(caches) == 0 {
+		return nil
+	}
+
+	err = nixcache.Configure(ctx)
+	if errors.Is(err, setup.ErrAlreadyRefused) {
+		slog.Debug("user previously refused to configure nix cache, not re-prompting")
+		return nil
+	}
+	if errors.Is(err, setup.ErrUserRefused) {
+		ux.Finfof(d.stderr, "Skipping cache setup. Run `devbox cache configure` to enable the cache at a later time.\n")
+		return nil
+	}
+	var daemonErr *nix.DaemonError
+	if errors.As(err, &daemonErr) {
+		// Error here to give the user a chance to restart the daemon.
+		return usererr.New("Devbox configured Nix to use a new cache. Please restart the Nix daemon and re-run Devbox.")
+	}
+	// Other errors indicate we couldn't update nix.conf, so just warn and
+	// continue by building from source if necessary.
+	if err != nil {
+		slog.Error("error configuring nix cache", "err", err)
+		ux.Fwarningf(d.stderr, "Devbox was unable to configure Nix to use the Jetify Nix cache. Some packages might be built from source.\n")
+		return nil
+	}
+
+	for _, cache := range caches {
+		args.ExtraSubstituters = append(args.ExtraSubstituters, cache.GetUri())
+	}
+	args.Env = append(args.Env, creds.Env()...)
+	return nil
 }
 
 func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode) ([]*devpkg.Package, error) {
+	defer debug.FunctionTimer().End()
 	// First, get and prepare all the packages that must be installed in this project
 	// and remove non-nix packages from the list
 	packages := lo.Filter(d.InstallablePackages(), devpkg.IsNix)
@@ -482,83 +635,35 @@ func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode)
 
 	// Second, check which packages are not in the nix store
 	packagesToInstall := []*devpkg.Package{}
+	storePathsForPackage := map[*devpkg.Package][]string{}
 	for _, pkg := range packages {
-		installables, err := pkg.Installables()
+		if mode == update {
+			packagesToInstall = append(packagesToInstall, pkg)
+			continue
+		}
+		var err error
+		storePathsForPackage[pkg], err = pkg.GetStorePaths(ctx, d.stderr)
 		if err != nil {
 			return nil, err
 		}
-		for _, installable := range installables {
-			if mode == update {
+	}
+
+	// Batch this for perf
+	storePathMap, err := nix.StorePathsAreInStore(ctx, lo.Flatten(lo.Values(storePathsForPackage)))
+	if err != nil {
+		return nil, err
+	}
+
+	for pkg, storePaths := range storePathsForPackage {
+		for _, storePath := range storePaths {
+			if !storePathMap[storePath] {
 				packagesToInstall = append(packagesToInstall, pkg)
-				continue
-			}
-			storePaths, err := nix.StorePathsFromInstallable(ctx, installable, pkg.HasAllowInsecure())
-			if err != nil {
-				return nil, packageInstallErrorHandler(err, pkg, installable)
-			}
-			isInStore, err := nix.StorePathsAreInStore(ctx, storePaths)
-			if err != nil {
-				return nil, err
-			}
-			if !isInStore {
-				packagesToInstall = append(packagesToInstall, pkg)
+				break
 			}
 		}
 	}
 
-	return packagesToInstall, nil
-}
-
-// packageInstallErrorHandler checks for two kinds of errors to print custom messages for so that Devbox users
-// can work around them:
-// 1. Packages that cannot be installed on the current system, but may be installable on other systems.packageInstallErrorHandler
-// 2. Packages marked insecure by nix
-func packageInstallErrorHandler(err error, pkg *devpkg.Package, installableOrEmpty string) error {
-	if err == nil {
-		return nil
-	}
-
-	// Check if the user is installing a package that cannot be installed on their platform.
-	// For example, glibcLocales on MacOS will give the following error:
-	// flake output attribute 'legacyPackages.x86_64-darwin.glibcLocales' is not a derivation or path
-	// This is because glibcLocales is only available on Linux.
-	// The user should try `devbox add` again with `--exclude-platform`
-	errMessage := strings.TrimSpace(err.Error())
-
-	// Sample error from `devbox add glibcLocales` on a mac:
-	// error: flake output attribute 'legacyPackages.x86_64-darwin.glibcLocales' is not a derivation or path
-	maybePackageSystemCompatibilityErrorType1 := strings.Contains(errMessage, "error: flake output attribute") &&
-		strings.Contains(errMessage, "is not a derivation or path")
-	// Sample error from `devbox add sublime4` on a mac:
-	// error: Package ‘sublimetext4-4169’ in /nix/store/nlbjx0mp83p2qzf1rkmzbgvq1wxfir81-source/pkgs/applications/editors/sublime/4/common.nix:168 is not available on the requested hostPlatform:
-	//     hostPlatform.config = "x86_64-apple-darwin"
-	//     package.meta.platforms = [
-	//       "aarch64-linux"
-	//       "x86_64-linux"
-	//    ]
-	maybePackageSystemCompatibilityErrorType2 := strings.Contains(errMessage, "is not available on the requested hostPlatform")
-
-	if maybePackageSystemCompatibilityErrorType1 || maybePackageSystemCompatibilityErrorType2 {
-		platform := nix.System()
-		return usererr.WithUserMessage(
-			err,
-			"package %s cannot be installed on your platform %s.\n"+
-				"If you know this package is incompatible with %[2]s, then "+
-				"you could run `devbox add %[1]s --exclude-platform %[2]s` and re-try.\n"+
-				"If you think this package should be compatible with %[2]s, then "+
-				"it's possible this particular version is not available yet from the nix registry. "+
-				"You could try `devbox add` with a different version for this package.\n\n"+
-				"Underlying Error from nix is:",
-			pkg.Versioned(),
-			platform,
-		)
-	}
-
-	if isInsecureErr, userErr := nix.IsExitErrorInsecurePackage(err, pkg.Versioned(), installableOrEmpty); isInsecureErr {
-		return userErr
-	}
-
-	return usererr.WithUserMessage(err, "error installing package %s", pkg.Raw)
+	return lo.Uniq(packagesToInstall), nil
 }
 
 // moveAllowInsecureFromLockfile will modernize a Devbox project by moving the allow_insecure: boolean
@@ -600,11 +705,57 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 		return err
 	}
 
-	ux.Finfo(
+	ux.Finfof(
 		writer,
 		"Modernized the allow_insecure setting for package %q by moving it from devbox.lock to devbox.json. Please commit the changes.\n",
 		strings.Join(insecurePackages, ", "),
 	)
 
 	return nil
+}
+
+func (d *Devbox) FixMissingStorePaths(ctx context.Context) error {
+	packages := d.InstallablePackages()
+	for _, pkg := range packages {
+		if !pkg.IsDevboxPackage || pkg.IsRunX() {
+			continue
+		}
+		existingStorePaths, err := pkg.GetResolvedStorePaths()
+		if err != nil {
+			return err
+		}
+
+		if len(existingStorePaths) > 0 {
+			continue
+		}
+
+		installables, err := pkg.Installables()
+		if err != nil {
+			return err
+		}
+
+		outputs := []lock.Output{}
+		for _, installable := range installables {
+			storePaths, err := nix.StorePathsFromInstallable(ctx, installable, pkg.HasAllowInsecure())
+			if err != nil {
+				return err
+			}
+			if len(storePaths) == 0 {
+				return fmt.Errorf("no store paths found for package %s", pkg.Raw)
+			}
+			for _, storePath := range storePaths {
+				parts := nix.NewStorePathParts(storePath)
+				outputs = append(outputs, lock.Output{
+					Path: storePath,
+					Name: parts.Output,
+					// Ugh, not sure this is true, but it's more true than not.
+					Default: true,
+				})
+			}
+		}
+		if err = d.lockfile.SetOutputsForPackage(pkg.Raw, outputs); err != nil {
+			return err
+		}
+	}
+	return d.lockfile.Save()
 }

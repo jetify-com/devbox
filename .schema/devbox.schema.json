@@ -1,12 +1,20 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$id": "https://github.com/jetpack-io/devbox",
+    "$id": "https://github.com/jetify-com/devbox",
     "title": "Devbox json definition",
     "description": "Defines fields and acceptable values of devbox.json",
     "type": "object",
     "properties": {
         "$schema": {
             "description": "The schema version of this devbox.json file.",
+            "type": "string"
+        },
+        "name": {
+            "description": "The name of the Devbox development environment.",
+            "type": "string"
+        },
+        "description": {
+            "description": "A description of the Devbox development environment.",
             "type": "string"
         },
         "packages": {
@@ -25,39 +33,53 @@
                     "patternProperties": {
                         ".*": {
                             "oneOf": [
-                            {
-                            "type": "object",
-                            "description": "Version number of the specified package in {\"version\": \"1.2.3\"} format.",
-                            "properties": {
-                                "version": {
+                                {
+                                    "type": "object",
+                                    "description": "Version number of the specified package in {\"version\": \"1.2.3\"} format.",
+                                    "properties": {
+                                        "version": {
+                                            "type": "string",
+                                            "description": "Version of the package"
+                                        },
+                                        "platforms": {
+                                            "type": "array",
+                                            "description": "Names of platforms to install the package on. This package will be skipped for any platforms not on this list",
+                                            "items": {
+                                                "enum": [
+                                                    "i686-linux",
+                                                    "aarch64-linux",
+                                                    "aarch64-darwin",
+                                                    "x86_64-darwin",
+                                                    "x86_64-linux",
+                                                    "armv7l-linux"
+                                                ]
+                                            }
+                                        },
+                                        "excluded_platforms": {
+                                            "type": "array",
+                                            "description": "Names of platforms to exclude the package on",
+                                            "items": {
+                                                "enum": [
+                                                    "i686-linux",
+                                                    "aarch64-linux",
+                                                    "aarch64-darwin",
+                                                    "x86_64-darwin",
+                                                    "x86_64-linux",
+                                                    "armv7l-linux"
+                                                ]
+                                            }
+                                        },
+                                        "glibc_patch": {
+                                            "type": "boolean",
+                                            "description": "Whether to patch glibc to the latest available version for this package"
+                                        }
+                                    }
+                                },
+                                {
                                     "type": "string",
-                                    "description": "Version of the package"
-                                },
-                                "platforms": {
-                                    "type": "array",
-                                    "description": "Names of platforms to install the package on. This package will be skipped for any platforms not on this list",
-                                    "items": {
-                                        "enum": ["i686-linux", "aarch64-linux", "aarch64-darwin", "x86_64-darwin", "x86_64-linux", "armv7l-linux"]
-                                    }
-                                },
-                                "excluded_platforms": {
-                                    "type": "array",
-                                    "description": "Names of platforms to exclude the package on",
-                                    "items": {
-                                        "enum": ["i686-linux", "aarch64-linux", "aarch64-darwin", "x86_64-darwin", "x86_64-linux", "armv7l-linux"]
-                                    }
-                                },
-                                "glibc_patch": {
-                                    "type":"boolean",
-                                    "description": "Whether to patch glibc to the latest available version for this package"
+                                    "description": "Version of the package to install."
                                 }
-                            }
-                        },
-                        {
-                            "type": "string",
-                            "description": "Version of the package to install."
-                        }
-                    ]
+                            ]
                         }
                     }
                 }
@@ -117,6 +139,15 @@
         },
         "env_from": {
             "type": "string"
+        },
+        "nixpkgs": {
+            "type": "object",
+            "properties": {
+                "commit": {
+                    "type": "string",
+                    "description": "The commit hash of the nixpkgs repository to use"
+                }
+            }
         }
     },
     "additionalProperties": false

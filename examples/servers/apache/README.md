@@ -2,9 +2,8 @@
 
 Apache can be automatically configured by Devbox via the built-in Apache Plugin. This plugin will activate automatically when you install Apache using `devbox add apache`.
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/servers/apache)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/servers/apache)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/apache)
 
 ### Adding Apache to your Shell
 
@@ -32,19 +31,19 @@ Use `devbox services start|stop apache` to start and stop httpd in the backgroun
 
 The following helper files will be created in your project directory:
 
-* {PROJECT_DIR}/devbox.d/apache/httpd.conf
+* {PROJECT_DIR}/devbox.d/apacheHttpd/httpd.conf
 * {PROJECT_DIR}/devbox.d/web/index.html
 
-Note that by default, Apache is configured with `./devbox.d/web` as the DocumentRoot. To change this, you should copy and modify the default `./devbox.d/apache/httpd.conf`.
+Note that by default, Apache is configured with `./devbox.d/web` as the DocumentRoot. To change this, you should copy and modify the default `./devbox.d/apacheHttpd/httpd.conf`.
 
 ### Environment Variables
 
 ```bash
-HTTPD_ACCESS_LOG_FILE={PROJECT_DIR}/.devbox/virtenv/apache/access.log
-HTTPD_ERROR_LOG_FILE={PROJECT_DIR}/.devbox/virtenv/apache/error.log
+HTTPD_ACCESS_LOG_FILE={PROJECT_DIR}/.devbox/virtenv/apacheHttpd/access.log
+HTTPD_ERROR_LOG_FILE={PROJECT_DIR}/.devbox/virtenv/apacheHttpd/error.log
 HTTPD_PORT=8080
 HTTPD_DEVBOX_CONFIG_DIR={PROJECT_DIR}
-HTTPD_CONFDIR={PROJECT_DIR}/devbox.d/apache
+HTTPD_CONFDIR={PROJECT_DIR}/devbox.d/apacheHttpd
 ```
 
 ### Notes

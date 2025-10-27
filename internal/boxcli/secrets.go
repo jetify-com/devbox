@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -6,11 +6,11 @@ package boxcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/fileutil"
-	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/envsec/pkg/envsec"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/fileutil"
+	"go.jetify.com/devbox/internal/ux"
+	"go.jetify.com/envsec/pkg/envsec"
 )
 
 type secretsFlags struct {
@@ -52,7 +52,7 @@ func secretsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "secrets",
 		Aliases:           []string{"envsec"},
-		Short:             "Interact with devbox secrets in jetpack cloud.",
+		Short:             "Interact with devbox secrets in jetify cloud.",
 		PersistentPreRunE: ensureNixInstalled,
 	}
 	cmd.AddCommand(secretsDownloadCmd(flags))
@@ -71,7 +71,7 @@ func secretsInitCmd(secretsFlags *secretsFlags) *cobra.Command {
 	flags := secretsInitCmdFlags{}
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize secrets management with jetpack cloud",
+		Short: "Initialize secrets management with jetify cloud",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return secretsInitFunc(cmd, flags, secretsFlags)
@@ -180,9 +180,6 @@ func secretsDownloadCmd(commonFlags *secretsFlags) *cobra.Command {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			if err != nil {
-				return errors.WithStack(err)
-			}
 			absPaths, err := fileutil.EnsureAbsolutePaths(args)
 			if err != nil {
 				return errors.WithStack(err)
@@ -208,9 +205,6 @@ func secretsUploadCmd(commonFlags *secretsFlags) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, paths []string) error {
 			secrets, err := commonFlags.envsec(cmd)
-			if err != nil {
-				return errors.WithStack(err)
-			}
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -250,7 +244,7 @@ func secretsInitFunc(
 		!box.Config().IsEnvsecEnabled() {
 		// Handle edge case where directory is already set up, but devbox.json is
 		// not configured to use jetpack-cloud.
-		ux.Finfo(
+		ux.Finfof(
 			cmd.ErrOrStderr(),
 			"Secrets already initialized. Adding to devbox config.\n",
 		)

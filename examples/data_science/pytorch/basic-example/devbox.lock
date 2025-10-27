@@ -7,6 +7,10 @@
       "source": "devbox-search",
       "version": "11.7.0"
     },
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2025-06-18T03:01:18Z",
+      "resolved": "github:NixOS/nixpkgs/5395fb3ab3f97b9b7abca147249fa2e8ed27b192?lastModified=1750215678&narHash=sha256-Rc%2FytpamXRf6z8UA2SGa4aaWxUXRbX2MAWIu2C8M%2Bok%3D"
+    },
     "poetry": {
       "plugin_version": "0.0.4",
       "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#poetry",

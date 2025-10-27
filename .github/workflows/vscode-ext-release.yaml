@@ -12,10 +12,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup NodeJS 16
-        uses: actions/setup-node@v3
+      - name: Setup NodeJS 18
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 18
       - name: Install dependencies
         run: |
           npm install -g yarn
@@ -29,6 +29,6 @@ jobs:
         working-directory: vscode-extension
       - name: publish-ovsx
         run: |
-          sed -i 's/"ms-vscode-remote.remote-ssh"//g' package.json
+          sed -i 's/"publisher": "jetpack-io"/"publisher": "Jetify"/g' package.json
           ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn --skip-duplicate
         working-directory: vscode-extension

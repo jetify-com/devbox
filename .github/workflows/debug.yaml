@@ -9,7 +9,7 @@ on:
         default: "ubuntu-latest"
         type: choice
         options:
-          - macos-12
+          - macos-latest
           - ubuntu-latest
 
 permissions:

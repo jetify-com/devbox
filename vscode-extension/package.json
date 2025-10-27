@@ -1,15 +1,15 @@
 {
   "name": "devbox",
-  "displayName": "devbox by jetpack.io",
+  "displayName": "devbox by Jetify",
   "description": "devbox integration for VSCode",
-  "version": "0.1.4",
+  "version": "0.1.7",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jetpack-io/devbox.git",
+    "url": "https://github.com/jetify-com/devbox.git",
     "directory": "vscode-extension"
   },
-  "author": "jetpack-io",
+  "author": "Jetify",
   "publisher": "jetpack-io",
   "engines": {
     "vscode": "^1.72.0"
@@ -21,9 +21,6 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
-  "extensionDependencies": [
-    "ms-vscode-remote.remote-ssh"
-  ],
   "contributes": {
     "commands": [
       {
@@ -118,7 +115,7 @@
     "jsonValidation": [
       {
         "fileMatch": "devbox.json",
-        "url": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json"
+        "url": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox.schema.json"
       }
     ],
     "configuration": {
@@ -162,7 +159,7 @@
   },
   "dependencies": {
     "@types/node": "16.x",
-    "form-data": "^4.0.0",
+    "form-data": "^4.0.4",
     "node-fetch": "^2",
     "which": "^3.0.0"
   }

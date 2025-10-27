@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package lock
@@ -6,18 +6,19 @@ package lock
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/devpkg/pkgtype"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/redact"
-	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetify.com/devbox/internal/boxcli/featureflag"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devpkg/pkgtype"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/searcher"
+	"go.jetify.com/devbox/nix/flake"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -29,7 +30,18 @@ import (
 // to update because it would be slow and wasteful.
 func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 	if pkgtype.IsFlake(pkg) {
-		return nil, nil
+		installable, err := flake.ParseInstallable(pkg)
+		if err != nil {
+			return nil, fmt.Errorf("package %q: %v", pkg, err)
+		}
+		installable.Ref, err = lockFlake(context.TODO(), installable.Ref)
+		if err != nil {
+			return nil, err
+		}
+		return &Package{
+			Resolved:     installable.String(),
+			LastModified: time.Unix(installable.Ref.LastModified, 0).UTC().Format(time.RFC3339),
+		}, nil
 	}
 
 	name, version, _ := searcher.ParseVersionedPackage(pkg)
@@ -56,12 +68,9 @@ func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
 		return nil, errors.Wrapf(nix.ErrPackageNotFound, "%s@%s", name, version)
 	}
 
-	sysInfos := map[string]*SystemInfo{}
-	if featureflag.RemoveNixpkgs.Enabled() {
-		sysInfos, err = buildLockSystemInfos(packageVersion)
-		if err != nil {
-			return nil, err
-		}
+	sysInfos, err := buildLockSystemInfos(packageVersion)
+	if err != nil {
+		return nil, err
 	}
 	packageInfo, err := selectForSystem(packageVersion.Systems)
 	if err != nil {
@@ -172,12 +181,7 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 			path, err := nix.StorePathFromHashPart(ctx, sysInfo.StoreHash, "https://cache.nixos.org")
 			if err != nil {
 				// Should we report this to sentry to collect data?
-				debug.Log(
-					"Failed to resolve store path for %s with storeHash %s. Error is %s.\n",
-					sysName,
-					sysInfo.StoreHash,
-					err,
-				)
+				slog.Error("failed to resolve store path", "system", sysName, "store_hash", sysInfo.StoreHash, "err", err)
 				// Instead of erroring, we can just skip this package. It can install via the slow path.
 				return nil
 			}
@@ -201,4 +205,43 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 		sysInfos[sysName] = sysInfo
 	}
 	return sysInfos, nil
+}
+
+func lockFlake(ctx context.Context, ref flake.Ref) (flake.Ref, error) {
+	if ref.Locked() {
+		return ref, nil
+	}
+
+	// Nix requires a NAR hash for GitHub flakes to be locked. A Devbox lock
+	// file is a bit more lenient and only requires a revision so that we
+	// don't need to download the nixpkgs source for cached packages. If the
+	// search index is ever able to return the NAR hash then we can remove
+	// this check.
+	if ref.Type == flake.TypeGitHub && (ref.Rev != "") {
+		return ref, nil
+	}
+
+	var meta nix.FlakeMetadata
+	var err error
+	// For nixpkgs, we cache resolutions (currently flakeCacheTTL=30 days) to avoid downloading
+	// new nixpkgs too often which is really slow and rarely changes anything.
+	//
+	// Ideally we can do something similar for all packages (flake and otherwise)
+	// Specifically, if user adds python@3.12 (or python@latest that resolves to 3.12) and that
+	// package is already installed, we should use it instead of using 3.12 from search service
+	// (which may have different store path). This would allow all devbox projects to share packages
+	// if the version resolution is the same.
+	//
+	// That said, the logic for caching resolved versions and non-locked flake references would not
+	// be the same.
+	if ref.IsNixpkgs() {
+		meta, err = nix.ResolveCachedFlake(ctx, ref)
+	} else {
+		meta, err = nix.ResolveFlake(ctx, ref)
+	}
+
+	if err != nil {
+		return ref, err
+	}
+	return meta.Locked, nil
 }

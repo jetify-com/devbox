@@ -1,8 +1,7 @@
 # Ruby
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/ruby)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/ruby)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/ruby)
 
 Ruby can be automatically configured by Devbox via the built-in Ruby Plugin. This plugin will activate automatically when you install Ruby 2.7 using `devbox add ruby`.
 
@@ -46,5 +45,5 @@ BUNDLE_BUILD__SASSC: "--disable-lto"
 
 ## Related Docs
 
-* [Rails + Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/stacks/rails/)
-* [Jekyll + Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/stacks/jekyll/)
+* [Rails + Devbox](https://www.jetify.com/devbox/docs/devbox_examples/stacks/rails/)
+* [Jekyll + Devbox](https://www.jetify.com/devbox/docs/devbox_examples/stacks/jekyll/)

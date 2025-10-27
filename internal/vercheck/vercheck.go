@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package vercheck
@@ -18,17 +18,17 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/mod/semver"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/cmdutil"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/ux"
-	"go.jetpack.io/devbox/internal/xdg"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/cmdutil"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/xdg"
 )
 
 // Keep this in-sync with latest version in launch.sh.
 // If this version is newer than the version in launch.sh, we'll print a notice.
-const expectedLauncherVersion = "v0.2.1"
+const expectedLauncherVersion = "v0.2.2"
 
 // envName determines whether the version check has already occurred.
 // We set this env-var so that this devbox command invoking other devbox commands
@@ -174,7 +174,7 @@ type updatedVersions struct {
 func triggerUpdate(stdErr io.Writer) (*updatedVersions, error) {
 	exePath := os.Getenv(envir.LauncherPath)
 	if exePath == "" {
-		ux.Fwarning(stdErr, "expected LAUNCHER_PATH to be set. Defaulting to \"devbox\".")
+		ux.Fwarningf(stdErr, "expected LAUNCHER_PATH to be set. Defaulting to \"devbox\".")
 		exePath = "devbox"
 	}
 
@@ -257,7 +257,7 @@ func isNewDevboxAvailable() bool {
 	return SemverCompare(currentDevboxVersion, latest) < 0
 }
 
-// currentLauncherAvailable returns launcher's version if it is
+// currentLauncherVersion returns launcher's version if it is
 // available, or empty string if it is not.
 func currentLauncherVersion() string {
 	launcherVersion := os.Getenv(envir.LauncherVersion)

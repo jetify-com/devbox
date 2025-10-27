@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package shellgen
@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"embed"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime/trace"
@@ -16,10 +15,9 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/cuecfg"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/cuecfg"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/redact"
 )
 
 //go:embed tmpl/*
@@ -39,19 +37,19 @@ func GenerateForPrintEnv(ctx context.Context, devbox devboxer) error {
 	outPath := genPath(devbox)
 
 	// Preserving shell.nix to avoid breaking old-style .envrc users
-	err = writeFromTemplate(outPath, plan, "shell.nix", "shell.nix")
+	_, err = writeFromTemplate(outPath, plan, "shell.nix", "shell.nix")
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	// Gitignore file is added to the .devbox directory
-	err = writeFromTemplate(filepath.Join(devbox.ProjectDir(), ".devbox"), plan, ".gitignore", ".gitignore")
+	_, err = writeFromTemplate(filepath.Join(devbox.ProjectDir(), ".devbox"), plan, ".gitignore", ".gitignore")
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	if plan.needsGlibcPatch() {
-		patch, err := newGlibcPatchFlake(devbox.Config().NixPkgsCommitHash(), plan.Packages)
+		patch, err := newGlibcPatchFlake(devbox.Lockfile().Stdenv(), plan.Packages)
 		if err != nil {
 			return redact.Errorf("generate glibc patch flake: %v", err)
 		}
@@ -72,7 +70,7 @@ var (
 	tmplBuf   bytes.Buffer
 )
 
-func writeFromTemplate(path string, plan any, tmplName, generatedName string) error {
+func writeFromTemplate(path string, plan any, tmplName, generatedName string) (changed bool, err error) {
 	tmplKey := tmplName + ".tmpl"
 	tmpl := tmplCache[tmplKey]
 	if tmpl == nil {
@@ -83,78 +81,64 @@ func writeFromTemplate(path string, plan any, tmplName, generatedName string) er
 		glob := "tmpl/" + tmplKey
 		tmpl, err = tmpl.ParseFS(tmplFS, glob)
 		if err != nil {
-			return redact.Errorf("parse embedded tmplFS glob %q: %v", redact.Safe(glob), redact.Safe(err))
+			return false, redact.Errorf("parse embedded tmplFS glob %q: %v", redact.Safe(glob), redact.Safe(err))
 		}
 		tmplCache[tmplKey] = tmpl
 	}
 	tmplBuf.Reset()
 	if err := tmpl.Execute(&tmplBuf, plan); err != nil {
-		return redact.Errorf("execute template %s: %v", redact.Safe(tmplKey), err)
+		return false, redact.Errorf("execute template %s: %v", redact.Safe(tmplKey), err)
 	}
 
 	// In some circumstances, Nix looks at the mod time of a file when
 	// caching, so we only want to update the file if something has
 	// changed. Blindly overwriting the file could invalidate Nix's cache
 	// every time, slowing down evaluation considerably.
-	err := overwriteFileIfChanged(filepath.Join(path, generatedName), tmplBuf.Bytes(), 0o644)
+	changed, err = overwriteFileIfChanged(filepath.Join(path, generatedName), tmplBuf.Bytes(), 0o644)
 	if err != nil {
-		return redact.Errorf("write %s to file: %v", redact.Safe(tmplName), err)
+		return changed, redact.Errorf("write %s to file: %v", redact.Safe(tmplName), err)
 	}
-	return nil
-}
-
-// writeGlibcPatchScript writes the embedded glibc patching script to disk so
-// that a generated flake can use it.
-func writeGlibcPatchScript(path string) error {
-	script, err := fs.ReadFile(tmplFS, "tmpl/glibc-patch.bash")
-	if err != nil {
-		return redact.Errorf("read embedded glibc-patch.bash: %v", redact.Safe(err))
-	}
-	err = overwriteFileIfChanged(path, script, 0o755)
-	if err != nil {
-		return redact.Errorf("write glibc-patch.bash to file: %v", err)
-	}
-	return nil
+	return changed, nil
 }
 
 // overwriteFileIfChanged checks that the contents of f == data, and overwrites
 // f if they differ. It also ensures that f's permissions are set to perm.
-func overwriteFileIfChanged(path string, data []byte, perm os.FileMode) error {
+func overwriteFileIfChanged(path string, data []byte, perm os.FileMode) (changed bool, err error) {
 	flag := os.O_RDWR | os.O_CREATE
 	file, err := os.OpenFile(path, flag, perm)
 	if errors.Is(err, os.ErrNotExist) {
 		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-			return err
+			return false, err
 		}
 
 		// Definitely a new file if we had to make the directory.
-		return os.WriteFile(path, data, perm)
+		return true, os.WriteFile(path, data, perm)
 	}
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer file.Close()
 
 	fi, err := file.Stat()
 	if err != nil || fi.Mode().Perm() != perm {
 		if err := file.Chmod(perm); err != nil {
-			return err
+			return false, err
 		}
 	}
 
 	// Fast path - check if the lengths differ.
 	if err == nil && fi.Size() != int64(len(data)) {
-		return overwriteFile(file, data, 0)
+		return true, overwriteFile(file, data, 0)
 	}
 
 	r := bufio.NewReader(file)
 	for offset := range data {
 		b, err := r.ReadByte()
 		if err != nil || b != data[offset] {
-			return overwriteFile(file, data, offset)
+			return true, overwriteFile(file, data, offset)
 		}
 	}
-	return nil
+	return false, nil
 }
 
 // overwriteFile truncates f to len(data) and writes data[offset:] beginning at
@@ -184,9 +168,9 @@ var templateFuncs = template.FuncMap{
 
 func makeFlakeFile(d devboxer, plan *flakePlan) error {
 	flakeDir := FlakePath(d)
-	templateName := "flake.nix"
-	if featureflag.RemoveNixpkgs.Enabled() {
-		templateName = "flake_remove_nixpkgs.nix"
+	changed, err := writeFromTemplate(flakeDir, plan, "flake.nix", "flake.nix")
+	if changed {
+		_ = os.Remove(filepath.Join(flakeDir, "flake.lock"))
 	}
-	return writeFromTemplate(flakeDir, plan, templateName, "flake.nix")
+	return err
 }

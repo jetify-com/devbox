@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package plugin
@@ -8,22 +8,24 @@ import (
 	"cmp"
 	"encoding/json"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
-	"go.jetpack.io/devbox/internal/devpkg"
-
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/services"
+	"github.com/tailscale/hujson"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/services"
 )
 
 const (
+	// TODO rename to devboxPluginUserConfigDirName
 	devboxDirName       = "devbox.d"
 	devboxHiddenDirName = ".devbox"
 	pluginConfigName    = "plugin.json"
@@ -80,7 +82,7 @@ func (m *Manager) CreateFilesForConfig(cfg *Config) error {
 		return err
 	}
 
-	debug.Log("Creating files for package %q create files", pkg)
+	slog.Debug("creating files for package", "pkg", pkg)
 	for filePath, contentPath := range cfg.CreateFiles {
 		if !m.shouldCreateFile(locked, filePath) {
 			continue
@@ -101,13 +103,20 @@ func (m *Manager) CreateFilesForConfig(cfg *Config) error {
 		if err := m.createFile(pkg, filePath, contentPath, virtenvPath); err != nil {
 			return err
 		}
-
 	}
 
-	if locked != nil {
-		locked.PluginVersion = cfg.Version
-	}
+	return nil
+}
 
+func (m *Manager) UpdateLockfileVersion(cfg *Config) error {
+	pkg := cfg.Source
+	locked := m.lockfile.Packages[pkg.LockfileKey()]
+	// plugins that are not triggered by packages don't have a lockfile entry
+	// this may change if we decide to store all plugins in the lockfile
+	if locked == nil {
+		return nil
+	}
+	locked.PluginVersion = cfg.Version
 	return m.lockfile.Save()
 }
 
@@ -116,7 +125,7 @@ func (m *Manager) createFile(
 	filePath, contentPath, virtenvPath string,
 ) error {
 	name := pkg.CanonicalName()
-	debug.Log("Creating file %q from contentPath: %q", filePath, contentPath)
+	slog.Debug("Creating file %q from contentPath: %q", filePath, contentPath)
 	content, err := pkg.FileContent(contentPath)
 	if err != nil {
 		return errors.WithStack(err)
@@ -142,7 +151,7 @@ func (m *Manager) createFile(
 		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
 		"DevboxProfileDefault": filepath.Join(m.ProjectDir(), nix.ProfilePath),
 		"PackageAttributePath": attributePath,
-		"Packages":             m.PackageNames(),
+		"Packages":             m.AllPackageNamesIncludingRemovedTriggerPackages(),
 		"System":               nix.System(),
 		"URLForInput":          urlForInput,
 		"Virtenv":              filepath.Join(virtenvPath, name),
@@ -165,6 +174,7 @@ func (m *Manager) createFile(
 	return nil
 }
 
+// buildConfig returns a plugin.Config
 func buildConfig(pkg Includable, projectDir, content string) (*Config, error) {
 	cfg := &Config{PluginOnlyData: PluginOnlyData{Source: pkg}}
 	name := pkg.CanonicalName()
@@ -183,7 +193,16 @@ func buildConfig(pkg Includable, projectDir, content string) (*Config, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	return cfg, errors.WithStack(json.Unmarshal(buf.Bytes(), cfg))
+	jsonb, err := jsonPurifyPluginContent(buf.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	return cfg, errors.WithStack(json.Unmarshal(jsonb, cfg))
+}
+
+func jsonPurifyPluginContent(content []byte) ([]byte, error) {
+	return hujson.Standardize(slices.Clone(content))
 }
 
 func createDir(path string) error {
@@ -215,14 +234,16 @@ func (m *Manager) shouldCreateFile(
 	pkg *lock.Package,
 	filePath string,
 ) bool {
-	// Only create files in devboxDir if they are not in the lockfile
+	sep := string(filepath.Separator)
+
+	// Only create files in devbox.d directory if they are not in the lockfile
 	pluginInstalled := pkg != nil && pkg.PluginVersion != ""
-	if strings.Contains(filePath, devboxDirName) && pluginInstalled {
+	if strings.Contains(filePath, sep+devboxDirName+sep) && pluginInstalled {
 		return false
 	}
 
 	// Hidden .devbox files are always replaceable, so ok to recreate
-	if strings.Contains(filePath, devboxHiddenDirName) {
+	if strings.Contains(filePath, sep+devboxHiddenDirName+sep) {
 		return true
 	}
 	_, err := os.Stat(filePath)

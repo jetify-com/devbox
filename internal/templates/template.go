@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package templates
@@ -16,8 +16,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/build"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/build"
 )
 
 func InitFromName(w io.Writer, template, target string) error {
@@ -25,7 +25,7 @@ func InitFromName(w io.Writer, template, target string) error {
 	if !ok {
 		return usererr.New("unknown template name or format %q", template)
 	}
-	return InitFromRepo(w, "https://github.com/jetpack-io/devbox", templatePath, target)
+	return InitFromRepo(w, "https://github.com/jetify-com/devbox", templatePath, target)
 }
 
 func InitFromRepo(w io.Writer, repo, subdir, target string) error {
@@ -45,6 +45,8 @@ func InitFromRepo(w io.Writer, repo, subdir, target string) error {
 		"git", "clone", parsedRepoURL,
 		// Clone and checkout a specific ref
 		"-b", lo.Ternary(build.IsDev, "main", build.Version),
+		// Create shallow clone with depth of 1
+		"--depth", "1",
 		tmp,
 	)
 	fmt.Fprintf(w, "%s\n", cmd)
@@ -100,6 +102,6 @@ func ParseRepoURL(repo string) (string, error) {
 		return "", usererr.New("Invalid URL format for --repo %s", repo)
 	}
 	// this is to handle cases where user puts repo url with .git at the end
-	// like: https://github.com/jetpack-io/devbox.git
+	// like: https://github.com/jetify-com/devbox.git
 	return strings.TrimSuffix(repo, ".git"), nil
 }

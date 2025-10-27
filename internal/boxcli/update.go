@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -7,16 +7,17 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/multi"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/boxcli/multi"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
 )
 
 type updateCmdFlags struct {
 	config      configFlags
 	sync        bool
 	allProjects bool
+	noInstall   bool
 }
 
 func updateCmd() *cobra.Command {
@@ -29,7 +30,12 @@ func updateCmd() *cobra.Command {
 			"If no packages are specified, all packages will be updated. " +
 			"Legacy non-versioned packages will be converted to @latest versioned " +
 			"packages resolved to their current version.",
-		PreRunE: ensureNixInstalled,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if flags.noInstall {
+				return nil
+			}
+			return ensureNixInstalled(cmd, args)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return updateCmdFunc(cmd, args, flags)
 		},
@@ -48,6 +54,12 @@ func updateCmd() *cobra.Command {
 		"all-projects",
 		false,
 		"update all projects in the working directory, recursively.",
+	)
+	command.Flags().BoolVar(
+		&flags.noInstall,
+		"no-install",
+		false,
+		"update lockfile but don't install anything",
 	)
 	return command
 }
@@ -75,7 +87,8 @@ func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) err
 	}
 
 	return box.Update(cmd.Context(), devopt.UpdateOpts{
-		Pkgs: args,
+		Pkgs:      args,
+		NoInstall: flags.noInstall,
 	})
 }
 

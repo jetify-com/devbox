@@ -1,0 +1,96 @@
+# Python Auto-Patch Handles Missing Ref
+#
+# Check that `devbox patch --restore-refs` doesn't break the flake build when a
+# a store path cannot be restored.
+#
+# The nixpkgs commit hash and version of Python chosen in this test is very
+# specific. Most versions don't encounter this error, so be careful that the
+# test still fails with Devbox v0.13.0 if changing the devbox.lock.
+#
+# https://github.com/jetify-com/devbox/issues/2289
+
+exec devbox install
+
+-- devbox.json --
+{
+  "packages": {
+    "python": "latest"
+  },
+  "env": {
+    "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+    "PIP_NO_INPUT":                  "1",
+    "PIP_NO_PYTHON_VERSION_WARNING": "1",
+    "PIP_PROGRESS_BAR":              "off",
+    "PIP_REQUIRE_VIRTUALENV":        "1",
+    "PIP_ROOT_USER_ACTION":          "ignore"
+  },
+  "shell": {
+    "scripts": {
+      "venv": ". $VENV_DIR/bin/activate && \"$@\""
+    }
+  }
+}
+
+-- devbox.lock --
+{
+  "lockfile_version": "1",
+  "packages": {
+    "python@latest": {
+      "last_modified": "2024-09-10T15:01:03Z",
+      "plugin_version": "0.0.4",
+      "resolved": "github:NixOS/nixpkgs/5ed627539ac84809c78b2dd6d26a5cebeb5ae269#python3",
+      "source": "devbox-search",
+      "version": "3.12.5",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/9pj4rzx5pbynkkxq1srzwjhywmcfxws3-python3-3.12.5",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/9pj4rzx5pbynkkxq1srzwjhywmcfxws3-python3-3.12.5"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/xc4hygp28y7g1rvjf0vi7fj0d83a75pj-python3-3.12.5-debug"
+            }
+          ],
+          "store_path": "/nix/store/6iq3nhgdyp8a5wzwf097zf2mn4zyqxr6-python3-3.12.5"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ks8acr22s4iggnmvxydm5czl30racy32-python3-3.12.5",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/ks8acr22s4iggnmvxydm5czl30racy32-python3-3.12.5"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/h3i0acpmr8mrjx07519xxmidv8mpax4y-python3-3.12.5",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/0a39pi2s6kxqc3kjjz2y9yzibd62zhhb-python3-3.12.5-debug"
+            }
+          ],
+          "store_path": "/nix/store/h3i0acpmr8mrjx07519xxmidv8mpax4y-python3-3.12.5"
+        }
+      }
+    }
+  }
+}

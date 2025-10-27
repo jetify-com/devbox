@@ -1,15 +1,18 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package build
 
 import (
+	"fmt"
+	"log/slog"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"sync"
 
-	"go.jetpack.io/devbox/internal/fileutil"
+	"go.jetify.com/devbox/internal/fileutil"
 )
 
 var forceProd, _ = strconv.ParseBool(os.Getenv("DEVBOX_PROD"))
@@ -64,7 +67,7 @@ func Issuer() string {
 	if IsDev {
 		return "https://laughing-agnesi-vzh2rap9f6.projects.oryapis.com"
 	}
-	return "https://accounts.jetpack.io"
+	return "https://accounts.jetify.com"
 }
 
 func ClientID() string {
@@ -83,7 +86,48 @@ func JetpackAPIHost() string {
 
 func SuccessRedirect() string {
 	if IsDev {
-		return "https://auth.jetpack.dev/account/login/success"
+		return "https://auth.dev-jetify.com/account/login/success"
 	}
-	return "https://auth.jetpack.io/account/login/success"
+	return "https://auth.jetify.com/account/login/success"
+}
+
+func Audience() []string {
+	return []string{"https://api.jetpack.io"}
+}
+
+func DashboardHostname() string {
+	if IsDev {
+		return "http://localhost:8080"
+	}
+	return "https://cloud.jetify.com"
+}
+
+// SourceDir searches for the source code directory that built the current
+// binary.
+func SourceDir() (string, error) {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok || file == "" {
+		return "", fmt.Errorf("build.SourceDir: binary is missing path info")
+	}
+	slog.Debug("trying to determine path to devbox source using runtime.Caller", "path", file)
+
+	dir := filepath.Dir(file)
+	if _, err := os.Stat(dir); err != nil {
+		if filepath.IsAbs(file) {
+			return "", fmt.Errorf("build.SourceDir: path to binary source doesn't exist: %v", err)
+		}
+		return "", fmt.Errorf("build.SourceDir: binary was built with -trimpath")
+	}
+
+	for {
+		_, err := os.Stat(filepath.Join(dir, "go.mod"))
+		if err == nil {
+			slog.Debug("found devbox source directory", "path", dir)
+			return dir, nil
+		}
+		if dir == "/" || dir == "." {
+			return "", fmt.Errorf("build.SourceDir: can't find go.mod in any parent directories of %s", file)
+		}
+		dir = filepath.Dir(dir)
+	}
 }

@@ -14,8 +14,8 @@
       "./blog/bin/rails -f ./blog/Rakefile db:prepare"
     ],
     "scripts": {
-      "run_test":     ["./blog/bin/rails test"],
-      "start_server": ["./blog/bin/rails server"]
+      "run_test":     ["cd blog && bin/rails test"],
+      "start_server": ["cd blog && bin/rails server"]
     }
   }
 }

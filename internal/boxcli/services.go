@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -6,8 +6,8 @@ package boxcli
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
 )
 
 type servicesCmdFlags struct {
@@ -17,8 +17,10 @@ type servicesCmdFlags struct {
 }
 
 type serviceUpFlags struct {
-	background         bool
-	processComposeFile string
+	background          bool
+	processComposeFile  string
+	processComposeFlags []string
+	pcport              int
 }
 
 type serviceStopFlags struct {
@@ -35,6 +37,10 @@ func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 	)
 	cmd.Flags().BoolVarP(
 		&flags.background, "background", "b", false, "run service in background")
+	cmd.Flags().StringArrayVar(
+		&flags.processComposeFlags, "pcflags", []string{}, "pass flags directly to process compose")
+	cmd.Flags().IntVarP(
+		&flags.pcport, "pcport", "p", 0, "specify the port for process-compose to use. You can also set the pcport by exporting DEVBOX_PC_PORT_NUM")
 }
 
 func (flags *serviceStopFlags) register(cmd *cobra.Command) {
@@ -63,6 +69,15 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 				}
 			}
 			return nil
+		},
+	}
+
+	attachCommand := &cobra.Command{
+		Use:   "attach",
+		Short: "Attach to a running process-compose for the current project",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return attachServices(cmd, flags)
 		},
 	}
 
@@ -120,12 +135,26 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	servicesCommand.Flag("run-in-current-shell").Hidden = true
 	serviceUpFlags.register(upCommand)
 	serviceStopFlags.register(stopCommand)
+	servicesCommand.AddCommand(attachCommand)
 	servicesCommand.AddCommand(lsCommand)
 	servicesCommand.AddCommand(upCommand)
 	servicesCommand.AddCommand(restartCommand)
 	servicesCommand.AddCommand(startCommand)
 	servicesCommand.AddCommand(stopCommand)
 	return servicesCommand
+}
+
+func attachServices(cmd *cobra.Command, flags servicesCmdFlags) error {
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:         flags.config.path,
+		Environment: flags.config.environment,
+		Stderr:      cmd.ErrOrStderr(),
+	})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return box.AttachToProcessManager(cmd.Context())
 }
 
 func listServices(cmd *cobra.Command, flags servicesCmdFlags) error {
@@ -178,6 +207,7 @@ func stopServices(
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
 	if len(services) > 0 && flags.allProjects {
 		return errors.New("cannot use both services and --all-projects arguments simultaneously")
 	}
@@ -217,12 +247,17 @@ func startProcessManager(
 	if err != nil {
 		return err
 	}
+
+	if flags.pcport < 0 {
+		return errors.Errorf("invalid pcport %d: ports cannot be less than 0", flags.pcport)
+	}
+
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:                      servicesFlags.config.path,
 		Env:                      env,
 		Environment:              servicesFlags.config.environment,
-		CustomProcessComposeFile: flags.processComposeFile,
 		Stderr:                   cmd.ErrOrStderr(),
+		CustomProcessComposeFile: flags.processComposeFile,
 	})
 	if err != nil {
 		return errors.WithStack(err)
@@ -232,7 +267,10 @@ func startProcessManager(
 		cmd.Context(),
 		servicesFlags.runInCurrentShell,
 		args,
-		flags.background,
-		flags.processComposeFile,
+		devopt.ProcessComposeOpts{
+			Background:         flags.background,
+			ExtraFlags:         flags.processComposeFlags,
+			ProcessComposePort: flags.pcport,
+		},
 	)
 }

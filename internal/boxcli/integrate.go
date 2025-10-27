@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -16,13 +16,14 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/zealic/go2node"
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
 )
 
 type integrateCmdFlags struct {
 	config    configFlags
 	debugmode bool
+	ideName   string
 }
 
 func integrateCmd() *cobra.Command {
@@ -45,12 +46,13 @@ func integrateVSCodeCmd() *cobra.Command {
 	command := &cobra.Command{
 		Use:    "vscode",
 		Hidden: true,
-		Short:  "Integrate devbox environment with VSCode.",
+		Short:  "Integrate devbox environment with VSCode or other VSCode-based editors.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runIntegrateVSCodeCmd(cmd, flags)
 		},
 	}
 	command.Flags().BoolVar(&flags.debugmode, "debugmode", false, "enable debug outputs to a file.")
+	command.Flags().StringVar(&flags.ideName, "ide", "code", "name of the currently open editor to reopen after it's closed.")
 	flags.config.register(command)
 
 	return command
@@ -65,7 +67,7 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		enabled: flags.debugmode,
 	}
 	// Setup process communication with node as parent
-	dbug.logToFile("Devbox process initiated. Setting up communication channel with VSCode process")
+	dbug.logToFile("Devbox process initiated. Setting up communication channel with the code editor process")
 	channel, err := go2node.RunAsNodeChild()
 	if err != nil {
 		dbug.logToFile(err.Error())
@@ -106,11 +108,14 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		// PATH after VSCode opens and resets it to global shellenv. This causes the VSCode
 		// terminal to not be able to find devbox packages after the reopen in devbox
 		// environment action is called.
-		return ok && (strings.HasPrefix(k, "DEVBOX_OG_PATH") || k == "HOME" || k == "NODE_CHANNEL_FD")
+		//
+		// ELECTRON_RUN_AS_NODE being set causes this error in WSL:
+		// "Remote Extension host terminated unexpectedly 3 times within the last 5 minutes."
+		return ok && (strings.HasPrefix(k, "DEVBOX_OG_PATH") || k == "ELECTRON_RUN_AS_NODE" || k == "NODE_CHANNEL_FD")
 	})
 
 	// Send message to parent process to terminate
-	dbug.logToFile("Signaling VSCode to close")
+	dbug.logToFile("Signaling code editor to close")
 	err = channel.Write(&go2node.NodeMessage{
 		Message: []byte(`{"status": "finished"}`),
 	})
@@ -118,13 +123,19 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		dbug.logToFile(err.Error())
 		return err
 	}
-	// Open vscode with devbox shell environment
-	cmnd := exec.Command("code", message.ConfigDir)
+	// Open editor with devbox shell environment
+	cmndName := flags.ideName
+	cwd, ok := os.LookupEnv("VSCODE_CWD")
+	if ok {
+		// Specify full path to avoid running the `code` shell script from VS Code Server, which fails under WSL
+		cmndName = cwd + "/bin/" + cmndName
+	}
+	cmnd := exec.Command(cmndName, message.ConfigDir)
 	cmnd.Env = append(cmnd.Env, envVars...)
 	var outb, errb bytes.Buffer
 	cmnd.Stdout = &outb
 	cmnd.Stderr = &errb
-	dbug.logToFile("Re-opening VSCode in computed devbox environment")
+	dbug.logToFile("Re-opening code editor in computed devbox environment")
 	err = cmnd.Run()
 	if err != nil {
 		dbug.logToFile(fmt.Sprintf("stdout: %s \n stderr: %s", outb.String(), errb.String()))

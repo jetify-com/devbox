@@ -15,15 +15,20 @@ import (
 	"io"
 	"os"
 
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/redact"
 )
 
 // Bytes returns a hex-encoded hash of b.
-// TODO: This doesn't need to return an error.
-func Bytes(b []byte) (string, error) {
+func Bytes(b []byte) string {
 	h := newHash()
 	h.Write(b)
-	return hex.EncodeToString(h.Sum(nil)), nil
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// Bytes6 returns the first 6 characters of the hash of b.
+func Bytes6(b []byte) string {
+	hash := Bytes(b)
+	return hash[:min(len(hash), 6)]
 }
 
 // File returns a hex-encoded hash of a file's contents.
@@ -50,7 +55,7 @@ func JSON(a any) (string, error) {
 	if err != nil {
 		return "", redact.Errorf("marshal to json for hashing: %v", err)
 	}
-	return Bytes(b)
+	return Bytes(b), nil
 }
 
 // JSONFile compacts the JSON in a file and returns its hex-encoded hash.
@@ -66,7 +71,7 @@ func JSONFile(path string) (string, error) {
 	if err := json.Compact(buf, b); err != nil {
 		return "", redact.Errorf("compact json for hashing: %v", err)
 	}
-	return Bytes(buf.Bytes())
+	return Bytes(buf.Bytes()), nil
 }
 
 func newHash() hash.Hash { return sha256.New() }

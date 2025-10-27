@@ -7,17 +7,23 @@
     "MYSQL_HOME": "{{ .Virtenv }}/run",
     "MYSQL_DATADIR": "{{ .Virtenv }}/data",
     "MYSQL_UNIX_PORT": "{{ .Virtenv }}/run/mysql.sock",
-    "MYSQL_PID_FILE": "{{ .Virtenv }}/run/mysql.pid"
+    "MYSQL_PID_FILE": "{{ .Virtenv }}/run/mysql.pid",
+    "MYSQL_CONF": "{{ .DevboxDir }}/my.cnf"
   },
   "create_files": {
     "{{ .Virtenv }}/run": "",
     "{{ .Virtenv }}/flake/flake.nix": "mariadb/flake.nix",
     "{{ .Virtenv }}/setup_db.sh": "mariadb/setup_db.sh",
-    "{{ .Virtenv }}/process-compose.yaml": "mariadb/process-compose.yaml"
+    "{{ .Virtenv }}/process-compose.yaml": "mariadb/process-compose.yaml",
+    "{{ .DevboxDir }}/my.cnf": "mariadb/my.cnf"
   },
-  "packages": [
-    "path:{{ .Virtenv }}/flake"
-  ],
+  "packages": {
+    "path:{{ .Virtenv }}/flake": {},
+    "glibcLocales": {
+      "version": "latest",
+      "platforms": ["x86_64-linux", "aarch64-linux"]
+    }
+  },
   "__remove_trigger_package": true,
   "shell": {
     "init_hook": [

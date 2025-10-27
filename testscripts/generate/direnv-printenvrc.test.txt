@@ -1,0 +1,20 @@
+# Testscript to validate the output of --print-envrc
+
+exec devbox init
+exists ./devbox.json
+
+exec devbox generate direnv --print-envrc
+
+cmp stdout expected-results.txt
+
+! exists .envrc
+
+# Note: The contents of the following file ends with two blank lines. This is
+# necessary to match the blank line that follows "use devbox" in the actual output.
+-- expected-results.txt --
+use_devbox() {
+    eval "$(devbox shellenv --init-hook --install --no-refresh-alias)"
+    watch_file $DEVBOX_PROJECT_ROOT/devbox.json $DEVBOX_PROJECT_ROOT/devbox.lock
+}
+use devbox
+

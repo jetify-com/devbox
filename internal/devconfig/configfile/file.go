@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package configfile
@@ -14,9 +14,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/devbox/shellcmd"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/internal/devbox/shellcmd"
 )
 
 const (
@@ -84,7 +84,7 @@ func (c *ConfigFile) Hash() (string, error) {
 	}
 	ast := c.ast.root.Clone()
 	ast.Minimize()
-	return cachehash.Bytes(ast.Pack())
+	return cachehash.Bytes(ast.Pack()), nil
 }
 
 func (c *ConfigFile) Equals(other *ConfigFile) bool {
@@ -94,11 +94,8 @@ func (c *ConfigFile) Equals(other *ConfigFile) bool {
 }
 
 func (c *ConfigFile) NixPkgsCommitHash() string {
-	// The commit hash for nixpkgs-unstable on 2023-10-25 from status.nixos.org
-	const DefaultNixpkgsCommit = "75a52265bda7fd25e06e3a67dee3f0354e73243c"
-
-	if c == nil || c.Nixpkgs == nil || c.Nixpkgs.Commit == "" {
-		return DefaultNixpkgsCommit
+	if c == nil || c.Nixpkgs == nil {
+		return ""
 	}
 	return c.Nixpkgs.Commit
 }
@@ -113,6 +110,11 @@ func (c *ConfigFile) InitHook() *shellcmd.Commands {
 // SaveTo writes the config to a file.
 func (c *ConfigFile) SaveTo(path string) error {
 	return os.WriteFile(filepath.Join(path, DefaultName), c.Bytes(), 0o644)
+}
+
+// TODO: Can we remove SaveTo and just use Save()?
+func (c *ConfigFile) Save() error {
+	return c.SaveTo(c.AbsRootPath)
 }
 
 // Get returns the package with the given versionedName

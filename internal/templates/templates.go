@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package templates
@@ -19,6 +19,7 @@ var popularTemplates = []string{
 var templates = map[string]string{
 	"apache":          "examples/servers/apache/",
 	"argo":            "examples/cloud_development/argo-workflows/",
+	"bun":             "examples/development/bun/",
 	"caddy":           "examples/servers/caddy/",
 	"django":          "examples/stacks/django/",
 	"dotnet":          "examples/development/csharp/hello-world/",

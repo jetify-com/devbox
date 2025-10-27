@@ -1,14 +1,14 @@
 # Django Example
 
-[![Built with Devbox](https://jetpack.io/img/devbox/shield_moon.svg)](https://jetpack.io/devbox/docs/contributor-quickstart/)
+[![Built with Devbox](https://www.jetify.com/img/devbox/shield_moon.svg)](https://www.jetify.com/devbox/docs/contributor-quickstart/)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/django)
 
 ## How to Use
 
-1. Install [Devbox](https://www.jetpack.io/devbox/docs/installing_devbox/)
+1. Install [Devbox](https://www.jetify.com/docs/devbox/installing-devbox/index)
 1. Run `devbox shell` to install your packages and run the init_hook. This will activate your virtual environment and install Django.
 1. Initialize PostgreSQL with `devbox run initdb`.
+1. Start the Postgres service by running `devbox services up postgresql`. You can start it in the background using `devbox services up -b postgresql`.
 1. In the root directory, run `devbox run create_db` to create the database and run your Django migrations
 1. In the root directory, run `devbox run server` to start the server. You can access the Django example at `localhost:8000`
 
@@ -16,7 +16,7 @@
 
 ### Setting up the Project
 
-1. Install [Devbox](https://www.jetpack.io/devbox/docs/installing_devbox/).
+1. Install [Devbox](https://www.jetify.com/docs/devbox/installing-devbox/index).
 1. Run `devbox create --template django` to create a new Devbox project in your directory.
 1. Install Python and PostgreSQL with `devbox install`. This will also install the Devbox plugins for pip (which sets up your .venv directory) and PostgreSQL.
 1. Copy the requirements.txt and `todo_project` directory into the root folder of your project
@@ -67,5 +67,5 @@ This should start the development server.
 
 ### Related Docs
 
-* [Using Python with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/languages/python/)
-* [Using PostgreSQL with Devbox](https://www.jetpack.io/devbox/docs/devbox_examples/stacks/django/)
+* [Using Python with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/languages/python/)
+* [Using PostgreSQL with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/stacks/django/)

@@ -1,6 +1,8 @@
 package nix
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestParseInsecurePackagesFromExitError(t *testing.T) {
 	errorText := `

@@ -1,10 +1,11 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package midcobra
 
 import (
 	"errors"
+	"log/slog"
 	"os/exec"
 	"strconv"
 
@@ -12,10 +13,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/telemetry"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/telemetry"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 type DebugMiddleware struct {
@@ -64,7 +65,7 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	st := debug.EarliestStackTrace(runErr)
 	var exitErr *exec.ExitError
 	if errors.As(runErr, &exitErr) {
-		debug.Log("Command stderr: %s\n", exitErr.Stderr)
+		slog.Error("command error", "stderr", exitErr.Stderr, "execid", telemetry.ExecutionID, "stack", st)
 	}
-	debug.Log("\nExecutionID:%s\n%+v\n", telemetry.ExecutionID, st)
+	slog.Error("command error", "execid", telemetry.ExecutionID, "stack", st)
 }

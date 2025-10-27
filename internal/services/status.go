@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 //lint:ignore U1000 Ignore unused function temporarily for debugging
@@ -17,7 +17,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/envir"
 )
 
 // updateFunc returns a possibly updated service status and a boolean indicating

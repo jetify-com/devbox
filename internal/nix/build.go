@@ -3,34 +3,41 @@ package nix
 import (
 	"context"
 	"io"
+	"log/slog"
 	"os"
-	"os/exec"
+	"strings"
 
-	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/debug"
 )
 
 type BuildArgs struct {
-	AllowInsecure    bool
-	ExtraSubstituter string
-	Flags            []string
-	Writer           io.Writer
+	AllowInsecure     bool
+	Env               []string
+	ExtraSubstituters []string
+	Flags             []string
+	Writer            io.Writer
 }
 
 func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
+	defer debug.FunctionTimer().End()
+
+	FixInstallableArgs(installables)
+
 	// --impure is required for allowUnfreeEnv/allowInsecureEnv to work.
-	cmd := commandContext(ctx, "build", "--impure")
-	cmd.Args = append(cmd.Args, args.Flags...)
-	cmd.Args = append(cmd.Args, installables...)
+	cmd := Command("build", "--impure")
+	cmd.Args = appendArgs(cmd.Args, args.Flags)
+	cmd.Args = appendArgs(cmd.Args, installables)
 	// Adding extra substituters only here to be conservative, but this could also
 	// be added to ExperimentalFlags() in the future.
-	if args.ExtraSubstituter != "" {
-		cmd.Args = append(cmd.Args, "--extra-substituters", args.ExtraSubstituter)
+	if len(args.ExtraSubstituters) > 0 {
+		cmd.Args = append(cmd.Args,
+			"--extra-substituters",
+			strings.Join(args.ExtraSubstituters, " "),
+		)
 	}
-	cmd.Env = allowUnfreeEnv(os.Environ())
+	cmd.Env = append(allowUnfreeEnv(os.Environ()), args.Env...)
 	if args.AllowInsecure {
-		debug.Log("Setting Allow-insecure env-var\n")
+		slog.Debug("Setting Allow-insecure env-var\n")
 		cmd.Env = allowInsecureEnv(cmd.Env)
 	}
 
@@ -40,18 +47,5 @@ func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = args.Writer
 	cmd.Stderr = args.Writer
-
-	debug.Log("Running cmd: %s\n", cmd)
-	if err := cmd.Run(); err != nil {
-		if exitErr := (&exec.ExitError{}); errors.As(err, &exitErr) {
-			debug.Log("Nix build exit code: %d, output: %s\n", exitErr.ExitCode(), exitErr.Stderr)
-			return redact.Errorf("nix build exit code: %d, output: %s, err: %w",
-				redact.Safe(exitErr.ExitCode()),
-				exitErr.Stderr,
-				err,
-			)
-		}
-		return err
-	}
-	return nil
+	return cmd.Run(ctx)
 }

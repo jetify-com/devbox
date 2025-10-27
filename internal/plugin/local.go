@@ -5,8 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/nix/flake"
+	"github.com/pkg/errors"
+	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 type LocalPlugin struct {
@@ -26,7 +27,11 @@ func newLocalPlugin(ref flake.Ref, pluginDir string) (*LocalPlugin, error) {
 }
 
 func (l *LocalPlugin) Fetch() ([]byte, error) {
-	return os.ReadFile(addFilenameIfMissing(l.Path()))
+	content, err := os.ReadFile(addFilenameIfMissing(l.Path()))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return jsonPurifyPluginContent(content)
 }
 
 func (l *LocalPlugin) CanonicalName() string {
@@ -38,8 +43,7 @@ func (l *LocalPlugin) IsLocal() bool {
 }
 
 func (l *LocalPlugin) Hash() string {
-	h, _ := cachehash.Bytes([]byte(filepath.Clean(l.Path())))
-	return h
+	return cachehash.Bytes([]byte(filepath.Clean(l.Path())))
 }
 
 func (l *LocalPlugin) FileContent(subpath string) ([]byte, error) {
@@ -51,7 +55,7 @@ func (l *LocalPlugin) LockfileKey() string {
 }
 
 func (l *LocalPlugin) Path() string {
-	path := l.ref.Path
+	path := os.ExpandEnv(l.ref.Path)
 	if !strings.HasSuffix(path, pluginConfigName) {
 		path = filepath.Join(path, pluginConfigName)
 	}

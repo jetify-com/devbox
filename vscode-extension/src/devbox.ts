@@ -7,6 +7,13 @@ interface Message {
     status: string
 }
 
+const appNameBinaryMap: {[key: string]: string} = {
+  "vscodium": "codium",
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  "visual studio code": "code",
+  "cursor": "cursor",
+};
+
 export async function devboxReopen() {
   if (process.platform === 'win32') {
     const seeDocs = 'See Devbox docs';
@@ -15,7 +22,7 @@ export async function devboxReopen() {
       Please open VSCode from inside devbox shell in WSL using the CLI.', seeDocs
     );
     if (result === seeDocs) {
-      env.openExternal(Uri.parse('https://www.jetpack.io/devbox/docs/ide_configuration/vscode/#windows-setup'));
+      env.openExternal(Uri.parse('https://www.jetify.com/devbox/docs/ide_configuration/vscode/#windows-setup'));
       return;
     }
   }
@@ -38,7 +45,7 @@ export async function devboxReopen() {
           await setupDotDevbox(workingDir, dotdevbox);
           
           // setup required vscode settings
-          await logToFile(dotdevbox, 'Updating VSCode configurations');
+          await logToFile(dotdevbox, 'Updating editor configurations');
           progress.report({ message: 'Updating configurations...', increment: 50 });
           updateVSCodeConf();
 
@@ -49,7 +56,9 @@ export async function devboxReopen() {
           const devbox = 'devbox';
           // run devbox integrate and then close this window
           const debugModeFlag = workspace.getConfiguration("devbox").get("enableDebugMode");
-          let child = spawn(devbox, ['integrate', 'vscode', '--debugmode='+debugModeFlag], {
+          // name of the currently open editor
+          const ideName = appNameBinaryMap[env.appName.toLocaleLowerCase()] || 'code';
+          let child = spawn(devbox, ['integrate', 'vscode', '--debugmode='+debugModeFlag, '--ide='+ideName], {
             cwd: workingDir.path,
             stdio: [0, 1, 2, 'ipc']
           });

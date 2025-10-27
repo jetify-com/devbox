@@ -1,5 +1,5 @@
 {
-    "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox-plugin.schema.json",
+    "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox-plugin.schema.json",
     "version": "0.0.2",
     "name": "nodejs",
     "readme": "Devbox automatically configures Corepack for Nodejs when DEVBOX_COREPACK_ENABLED=1. You can install Yarn or Pnpm by adding them to your `package.json` file using `packageManager`\nCorepack binaries will be installed in your local `.devbox` directory",

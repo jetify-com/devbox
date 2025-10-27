@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package devbox
@@ -14,12 +14,12 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.jetpack.io/devbox/internal/devbox/envpath"
+	"go.jetify.com/devbox/internal/devbox/envpath"
 
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/devconfig"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devconfig"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/nix"
 )
 
 func TestDevbox(t *testing.T) {
@@ -46,7 +46,6 @@ func testShellPlan(t *testing.T, testPath string) {
 		_, err := Open(&devopt.Opts{
 			Dir:    baseDir,
 			Stderr: os.Stderr,
-			Pure:   false,
 		})
 		assert.NoErrorf(err, "%s should be a valid devbox project", baseDir)
 	})
@@ -70,8 +69,8 @@ func (n *testNix) PrintDevEnv(ctx context.Context, args *nix.PrintDevEnvArgs) (*
 func TestComputeEnv(t *testing.T) {
 	d := devboxForTesting(t)
 	d.nix = &testNix{}
-	ctx := context.Background()
-	env, err := d.computeEnv(ctx, false /*use cache*/)
+	ctx := t.Context()
+	env, err := d.computeEnv(ctx, false /*use cache*/, devopt.EnvOptions{})
 	require.NoError(t, err, "computeEnv should not fail")
 	assert.NotNil(t, env, "computeEnv should return a valid env")
 }
@@ -79,8 +78,8 @@ func TestComputeEnv(t *testing.T) {
 func TestComputeDevboxPathIsIdempotent(t *testing.T) {
 	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
-	ctx := context.Background()
-	env, err := devbox.computeEnv(ctx, false /*use cache*/)
+	ctx := t.Context()
+	env, err := devbox.computeEnv(ctx, false /*use cache*/, devopt.EnvOptions{})
 	require.NoError(t, err, "computeEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
@@ -90,7 +89,7 @@ func TestComputeDevboxPathIsIdempotent(t *testing.T) {
 	t.Setenv(envpath.PathStackEnv, env[envpath.PathStackEnv])
 	t.Setenv(envpath.Key(devbox.ProjectDirHash()), env[envpath.Key(devbox.ProjectDirHash())])
 
-	env, err = devbox.computeEnv(ctx, false /*use cache*/)
+	env, err = devbox.computeEnv(ctx, false /*use cache*/, devopt.EnvOptions{})
 	require.NoError(t, err, "computeEnv should not fail")
 	path2 := env["PATH"]
 
@@ -100,8 +99,8 @@ func TestComputeDevboxPathIsIdempotent(t *testing.T) {
 func TestComputeDevboxPathWhenRemoving(t *testing.T) {
 	devbox := devboxForTesting(t)
 	devbox.nix = &testNix{"/tmp/my/path"}
-	ctx := context.Background()
-	env, err := devbox.computeEnv(ctx, false /*use cache*/)
+	ctx := t.Context()
+	env, err := devbox.computeEnv(ctx, false /*use cache*/, devopt.EnvOptions{})
 	require.NoError(t, err, "computeEnv should not fail")
 	path := env["PATH"]
 	assert.NotEmpty(t, path, "path should not be nil")
@@ -113,7 +112,7 @@ func TestComputeDevboxPathWhenRemoving(t *testing.T) {
 	t.Setenv(envpath.Key(devbox.ProjectDirHash()), env[envpath.Key(devbox.ProjectDirHash())])
 
 	devbox.nix.(*testNix).path = ""
-	env, err = devbox.computeEnv(ctx, false /*use cache*/)
+	env, err = devbox.computeEnv(ctx, false /*use cache*/, devopt.EnvOptions{})
 	require.NoError(t, err, "computeEnv should not fail")
 	path2 := env["PATH"]
 	assert.NotContains(t, path2, "/tmp/my/path", "path should not contain /tmp/my/path")
@@ -128,7 +127,6 @@ func devboxForTesting(t *testing.T) *Devbox {
 	d, err := Open(&devopt.Opts{
 		Dir:    path,
 		Stderr: os.Stderr,
-		Pure:   false,
 	})
 	require.NoError(t, err, "Open should not fail")
 

@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package s3
@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/pullbox/tar"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/pullbox/tar"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 func Push(
@@ -37,6 +37,7 @@ func Push(
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	_, err = s3Client.Upload(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
@@ -53,7 +54,7 @@ func Push(
 		return err
 	}
 
-	ux.Fsuccess(
+	ux.Fsuccessf(
 		os.Stderr,
 		"Profile successfully pushed (profile: %s)\n",
 		profile,

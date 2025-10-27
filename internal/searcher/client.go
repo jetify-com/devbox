@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package searcher
@@ -10,10 +10,12 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"runtime"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/envir"
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/redact"
 )
 
 const searchAPIEndpoint = "https://search.devbox.sh"
@@ -30,7 +32,7 @@ func Client() *client {
 	}
 }
 
-func (c *client) Search(query string) (*SearchResults, error) {
+func (c *client) Search(ctx context.Context, query string) (*SearchResults, error) {
 	if query == "" {
 		return nil, fmt.Errorf("query should not be empty")
 	}
@@ -41,7 +43,7 @@ func (c *client) Search(query string) (*SearchResults, error) {
 	}
 	searchURL := endpoint + "?q=" + url.QueryEscape(query)
 
-	return execGet[SearchResults](context.TODO(), searchURL)
+	return execGet[SearchResults](ctx, searchURL)
 }
 
 // Resolve calls the /resolve endpoint of the search service. This returns
@@ -83,11 +85,15 @@ func (c *client) ResolveV2(ctx context.Context, name, version string) (*ResolveR
 	return execGet[ResolveResponse](ctx, searchURL)
 }
 
+var userAgent = fmt.Sprintf("Devbox/%s (%s; %s)", build.Version, runtime.GOOS, runtime.GOARCH)
+
 func execGet[T any](ctx context.Context, url string) (*T, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, redact.Errorf("GET %s: %w", redact.Safe(url), redact.Safe(err))
 	}
+	req.Header.Set("User-Agent", userAgent)
+
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, redact.Errorf("GET %s: %w", redact.Safe(url), redact.Safe(err))

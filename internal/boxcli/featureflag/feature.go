@@ -1,17 +1,18 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package featureflag
 
 import (
+	"log/slog"
 	"os"
 	"strconv"
 	"testing"
 
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/build"
 )
+
+const envNamePrefix = "DEVBOX_FEATURE_"
 
 type feature struct {
 	name    string
@@ -48,13 +49,13 @@ func (f *feature) Enabled() bool {
 	if f == nil {
 		return false
 	}
-	if on, err := strconv.ParseBool(os.Getenv(envir.DevboxFeaturePrefix + f.name)); err == nil {
+	if on, err := strconv.ParseBool(os.Getenv(envNamePrefix + f.name)); err == nil {
 		status := "enabled"
 		if !on {
 			status = "disabled"
 		}
 		if !logMap[f.name] {
-			debug.Log("Feature %q %s via environment variable.", f.name, status)
+			slog.Debug("Feature %q %s via environment variable.", f.name, status)
 			logMap[f.name] = true
 		}
 		return on
@@ -70,7 +71,7 @@ func (f *feature) EnableOnDev() *feature {
 }
 
 func (f *feature) EnableForTest(t *testing.T) {
-	t.Setenv(envir.DevboxFeaturePrefix+f.name, "1")
+	t.Setenv(envNamePrefix+f.name, "1")
 }
 
 // All returns a map of all known features flags and whether they're enabled.

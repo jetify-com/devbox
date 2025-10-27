@@ -4,20 +4,36 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"maps"
 	"net/http"
 	"os"
 	"path/filepath"
+	"syscall"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/build"
-	"go.jetpack.io/devbox/internal/cachehash"
-	"go.jetpack.io/devbox/internal/devbox/shellcmd"
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/plugin"
+	"github.com/samber/lo/mutable"
+	"go.jetify.com/devbox/internal/build"
+	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/internal/devbox/shellcmd"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/plugin"
 )
+
+// ErrNotFound occurs when [Open] or [Find] cannot find a devbox config file
+// after searching a directory (and possibly its parent directories).
+var ErrNotFound = errors.New("no devbox config file found")
+
+// errIsDirectory indicates that a file can't be opened because it's a
+// directory.
+const errIsDirectory = syscall.EISDIR
+
+// errNotDirectory indicates that a file can't be opened because the directory
+// portion of its path is not a directory.
+const errNotDirectory = syscall.ENOTDIR
 
 // Config represents a base devbox.json as well as any included plugins it may have.
 type Config struct {
@@ -32,7 +48,7 @@ const defaultInitHook = "echo 'Welcome to devbox!' > /dev/null"
 
 func DefaultConfig() *Config {
 	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
-		"$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/%s/.schema/devbox.schema.json",
+		"$schema": "https://raw.githubusercontent.com/jetify-com/devbox/%s/.schema/devbox.schema.json",
 		"packages": [],
 		"shell": {
 			"init_hook": [
@@ -63,8 +79,106 @@ func IsDefault(path string) bool {
 	return cfg.Root.Equals(&DefaultConfig().Root)
 }
 
-func LoadForTest(path string) (*Config, error) {
-	return readFromFile(path)
+// Open loads a Devbox config from a file or project directory. If path is a
+// directory, Open looks for a well-known config name (such as devbox.json)
+// within it. The error will be [ErrNotFound] if path is a valid directory
+// without a config file.
+//
+// Open does not recursively search outside of path. See [Find] to load a config
+// by walking up the directory tree.
+func Open(path string) (*Config, error) {
+	start := time.Now()
+	slog.Debug("searching for config file (excluding parent directories)", "path", path)
+
+	cfg, err := open(path)
+
+	if err == nil {
+		slog.Debug("config file found", "path", cfg.Root.AbsRootPath, "dur", time.Since(start))
+	} else {
+		slog.Error("config file search error", "err", err.Error(), "dur", time.Since(start))
+	}
+	return cfg, err
+}
+
+func open(path string) (*Config, error) {
+	// First try the happy path by assuming that path is a directory
+	// containing a devbox.json.
+	cfg, err := searchDir(path)
+	if errors.Is(err, ErrNotFound) || errors.Is(err, errNotDirectory) {
+		// Try reading path directly as a config file.
+		slog.Debug("trying config file", "path", path)
+		cfg, err = readFromFile(path)
+		if errors.Is(err, errIsDirectory) {
+			return nil, ErrNotFound
+		}
+	}
+	return cfg, err
+}
+
+// Find is like [Open] except it recursively searches up the directory tree,
+// starting in path. It returns [ErrNotFound] if path is a valid directory and
+// neither it nor any of its parents contain a config file.
+//
+// Find stops searching as soon as it encounters a file with a well-known config
+// name (such as devbox.json), even if that config fails to load.
+func Find(path string) (*Config, error) {
+	start := time.Now()
+	slog.Debug("searching for config file (including parent directories)", "path", path)
+
+	cfg, err := open(path)
+	if errors.Is(err, ErrNotFound) {
+		cfg, err = searchParentDirs(path)
+	}
+
+	if err == nil {
+		slog.Debug("config file found", "path", cfg.Root.AbsRootPath, "dur", time.Since(start))
+	} else {
+		slog.Error("config file search error", "err", err.Error(), "dur", time.Since(start))
+	}
+	return cfg, err
+}
+
+// searchDir looks for a config file in dir. It does not search parent
+// directories.
+func searchDir(dir string) (*Config, error) {
+	try := []string{configfile.DefaultName}
+	for _, name := range try {
+		path := filepath.Join(dir, name)
+		slog.Debug("trying config file", "path", path)
+
+		cfg, err := readFromFile(path)
+		if err == nil {
+			return cfg, nil
+		}
+
+		// Keep searching for other valid config filenames.
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
+		// Ignore directories named devbox.json.
+		if errors.Is(err, errIsDirectory) {
+			continue
+		}
+		// Stop if we found a config but couldn't load it.
+		return cfg, err
+	}
+	return nil, ErrNotFound
+}
+
+// searchParentDirs recursively searches parent directories for a config. It
+// starts with filepath.Dir(path) and does not search path itself.
+func searchParentDirs(path string) (cfg *Config, err error) {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("devconfig: search parent directories: %v", err)
+	}
+
+	err = ErrNotFound
+	for abs != "/" && errors.Is(err, ErrNotFound) {
+		abs = filepath.Dir(abs)
+		cfg, err = searchDir(abs)
+	}
+	return cfg, err
 }
 
 func readFromFile(path string) (*Config, error) {
@@ -76,8 +190,8 @@ func readFromFile(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	config.Root.AbsRootPath = path
-	return config, nil
+	config.Root.AbsRootPath, err = filepath.Abs(path)
+	return config, err
 }
 
 func LoadConfigFromURL(ctx context.Context, url string) (*Config, error) {
@@ -193,13 +307,20 @@ func (c *Config) IncludedPluginConfigs() []*plugin.Config {
 	return configs
 }
 
-func (c *Config) Packages() []configfile.Package {
+// Returns all packages including those from included plugins.
+// If includeRemovedTriggerPackages is true, then trigger packages that have
+// been removed will also be returned. These are only used for built-ins
+// (e.g. php) when the plugin creates a flake that is meant to replace the
+// original package.
+func (c *Config) Packages(
+	includeRemovedTriggerPackages bool,
+) []configfile.Package {
 	packages := []configfile.Package{}
 	packagesToRemove := map[string]bool{}
 
 	for _, i := range c.included {
-		packages = append(packages, i.Packages()...)
-		if i.pluginData.RemoveTriggerPackage {
+		packages = append(packages, i.Packages(includeRemovedTriggerPackages)...)
+		if i.pluginData.RemoveTriggerPackage && !includeRemovedTriggerPackages {
 			packagesToRemove[i.pluginData.Source.LockfileKey()] = true
 		}
 	}
@@ -213,23 +334,14 @@ func (c *Config) Packages() []configfile.Package {
 	}
 
 	// Keep only the last occurrence of each package (by name).
-	return lo.Reverse(lo.UniqBy(
-		lo.Reverse(packages),
+	mutable.Reverse(packages)
+	packages = lo.UniqBy(
+		packages,
 		func(p configfile.Package) string { return p.Name },
-	))
-}
+	)
+	mutable.Reverse(packages)
 
-// PackagesVersionedNames returns a list of package names with versions.
-// NOTE: if the package is unversioned, the version will be omitted (doesn't default to @latest).
-//
-// example:
-// ["package1", "package2@latest", "package3@1.20"]
-func (c *Config) PackagesVersionedNames() []string {
-	result := make([]string, 0, len(c.Root.TopLevelPackages()))
-	for _, p := range c.Root.TopLevelPackages() {
-		result = append(result, p.VersionedName())
-	}
-	return result
+	return packages
 }
 
 func (c *Config) NixPkgsCommitHash() string {
@@ -239,9 +351,11 @@ func (c *Config) NixPkgsCommitHash() string {
 func (c *Config) Env() map[string]string {
 	env := map[string]string{}
 	for _, i := range c.included {
-		maps.Copy(env, i.Env())
+		expandedEnvFromPlugin := OSExpandIfPossible(i.Env(), env)
+		maps.Copy(env, expandedEnvFromPlugin)
 	}
-	maps.Copy(env, c.Root.Env)
+	rootConfigEnv := OSExpandIfPossible(c.Root.Env, env)
+	maps.Copy(env, rootConfigEnv)
 	return env
 }
 
@@ -277,7 +391,7 @@ func (c *Config) Hash() (string, error) {
 		return "", err
 	}
 	data = append(data, hash...)
-	return cachehash.Bytes(data)
+	return cachehash.Bytes(data), nil
 }
 
 func (c *Config) IsEnvsecEnabled() bool {
@@ -298,4 +412,20 @@ func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {
 		includable.Root.AbsRootPath = localPlugin.Path()
 	}
 	return includable
+}
+
+func OSExpandIfPossible(env, existingEnv map[string]string) map[string]string {
+	mapping := func(value string) string {
+		// If the value is not set in existingEnv, return the value wrapped in ${...}
+		if existingEnv == nil || existingEnv[value] == "" {
+			return fmt.Sprintf("${%s}", value)
+		}
+		return existingEnv[value]
+	}
+
+	res := map[string]string{}
+	for k, v := range env {
+		res[k] = os.Expand(v, mapping)
+	}
+	return res
 }

@@ -1,9 +1,10 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package nix
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -13,17 +14,16 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/redact"
 )
 
 func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, error) {
-	cmd := command("profile", "list", "--profile", profilePath)
+	cmd := Command("profile", "list", "--profile", profilePath)
 	if useJSON {
 		cmd.Args = append(cmd.Args, "--json")
 	}
-	out, err := cmd.Output()
+	out, err := cmd.Output(context.TODO())
 	if err != nil {
 		return "", redact.Errorf("error running \"nix profile list\": %w", err)
 	}
@@ -31,67 +31,56 @@ func ProfileList(writer io.Writer, profilePath string, useJSON bool) (string, er
 }
 
 type ProfileInstallArgs struct {
-	Installable string
-	Offline     bool
-	ProfilePath string
-	Writer      io.Writer
+	Installables []string
+	ProfilePath  string
+	Writer       io.Writer
 }
 
-func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
-	if !IsInsecureAllowed() && PackageIsInsecure(args.Installable) {
-		knownVulnerabilities := PackageKnownVulnerabilities(args.Installable)
-		errString := fmt.Sprintf("Package %s is insecure. \n\n", args.Installable)
-		if len(knownVulnerabilities) > 0 {
-			errString += fmt.Sprintf("Known vulnerabilities: %s \n\n", knownVulnerabilities)
-		}
-		errString += "To override use `devbox add <pkg> --allow-insecure`"
-		return usererr.New(errString)
-	}
+var ErrPriorityConflict = errors.New("priority conflict")
 
-	cmd := commandContext(
-		ctx,
+func ProfileInstall(ctx context.Context, args *ProfileInstallArgs) error {
+	defer debug.FunctionTimer().End()
+
+	cmd := Command(
 		"profile", "install",
 		"--profile", args.ProfilePath,
-		"--impure", // for NIXPKGS_ALLOW_UNFREE
+		"--offline", // makes it faster. Package is already in store
+		"--impure",  // for NIXPKGS_ALLOW_UNFREE
 		// Using an arbitrary priority to avoid conflicts with other packages.
 		// Note that this is not really the priority we care about, since we
 		// use the flake.nix to specify the priority.
 		"--priority", nextPriority(args.ProfilePath),
 	)
-	if args.Offline {
-		cmd.Args = append(cmd.Args, "--offline")
-	}
-	cmd.Args = append(cmd.Args, args.Installable)
+
+	FixInstallableArgs(args.Installables)
+	cmd.Args = appendArgs(cmd.Args, args.Installables)
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
-	// If nix profile install runs as tty, the output is much nicer. If we ever
-	// need to change this to our own writers, consider that you may need
-	// to implement your own nicer output. --print-build-logs flag may be useful.
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = args.Writer
-	cmd.Stderr = args.Writer
-
-	debug.Log("running command: %s\n", cmd)
-	return cmd.Run()
+	// We used to attach this function to stdout and in in order to get the more interactive output.
+	// However, now we do the building in nix.Build, by the time we install in profile everything
+	// should already be in the store. We need to capture the output so we can decide if a conflict
+	// happened.
+	out, err := cmd.CombinedOutput(ctx)
+	if bytes.Contains(out, []byte("error: An existing package already provides the following file")) {
+		return ErrPriorityConflict
+	}
+	return err
 }
 
 // ProfileRemove removes packages from a profile.
 // WARNING, don't use indexes, they are not supported by nix 2.20+
 func ProfileRemove(profilePath string, packageNames ...string) error {
-	cmd := command(
-		append([]string{
-			"profile", "remove",
-			"--profile", profilePath,
-			"--impure", // for NIXPKGS_ALLOW_UNFREE
-		}, packageNames...)...,
+	defer debug.FunctionTimer().End()
+	cmd := Command(
+		"profile", "remove",
+		"--profile", profilePath,
+		"--impure", // for NIXPKGS_ALLOW_UNFREE
 	)
-	cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
 
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return redact.Errorf("error running \"nix profile remove\": %s: %w", out, err)
-	}
-	return nil
+	FixInstallableArgs(packageNames)
+	cmd.Args = appendArgs(cmd.Args, packageNames)
+	cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
+	return cmd.Run(context.TODO())
 }
 
 type manifest struct {

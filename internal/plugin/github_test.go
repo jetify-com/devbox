@@ -1,12 +1,13 @@
 package plugin
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
-	"go.jetpack.io/devbox/nix/flake"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 func TestNewGithubPlugin(t *testing.T) {
@@ -18,60 +19,60 @@ func TestNewGithubPlugin(t *testing.T) {
 	}{
 		{
 			name:    "parse basic github plugin",
-			Include: "github:jetpack-io/devbox-plugins",
+			Include: "github:jetify-com/devbox-plugins",
 			expected: githubPlugin{
 				ref: flake.Ref{
 					Type:  "github",
-					Owner: "jetpack-io",
+					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 				},
-				name: "jetpack-io.devbox-plugins",
+				name: "jetify-com.devbox-plugins",
 			},
-			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master",
+			expectedURL: "https://raw.githubusercontent.com/jetify-com/devbox-plugins/master",
 		},
 		{
 			name:    "parse github plugin with dir param",
-			Include: "github:jetpack-io/devbox-plugins?dir=mongodb",
+			Include: "github:jetify-com/devbox-plugins?dir=mongodb",
 			expected: githubPlugin{
 				ref: flake.Ref{
 					Type:  "github",
-					Owner: "jetpack-io",
+					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 					Dir:   "mongodb",
 				},
-				name: "jetpack-io.devbox-plugins.mongodb",
+				name: "jetify-com.devbox-plugins.mongodb",
 			},
-			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master/mongodb",
+			expectedURL: "https://raw.githubusercontent.com/jetify-com/devbox-plugins/master/mongodb",
 		},
 		{
 			name:    "parse github plugin with dir param and rev",
-			Include: "github:jetpack-io/devbox-plugins/my-branch?dir=mongodb",
+			Include: "github:jetify-com/devbox-plugins/my-branch?dir=mongodb",
 			expected: githubPlugin{
 				ref: flake.Ref{
 					Type:  "github",
-					Owner: "jetpack-io",
+					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 					Ref:   "my-branch",
 					Dir:   "mongodb",
 				},
-				name: "jetpack-io.devbox-plugins.mongodb",
+				name: "jetify-com.devbox-plugins.mongodb",
 			},
-			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/my-branch/mongodb",
+			expectedURL: "https://raw.githubusercontent.com/jetify-com/devbox-plugins/my-branch/mongodb",
 		},
 		{
 			name:    "parse github plugin with dir param and rev",
-			Include: "github:jetpack-io/devbox-plugins/initials/my-branch?dir=mongodb",
+			Include: "github:jetify-com/devbox-plugins/initials/my-branch?dir=mongodb",
 			expected: githubPlugin{
 				ref: flake.Ref{
 					Type:  "github",
-					Owner: "jetpack-io",
+					Owner: "jetify-com",
 					Repo:  "devbox-plugins",
 					Ref:   "initials/my-branch",
 					Dir:   "mongodb",
 				},
-				name: "jetpack-io.devbox-plugins.mongodb",
+				name: "jetify-com.devbox-plugins.mongodb",
 			},
-			expectedURL: "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/initials/my-branch/mongodb",
+			expectedURL: "https://raw.githubusercontent.com/jetify-com/devbox-plugins/initials/my-branch/mongodb",
 		},
 	}
 
@@ -101,4 +102,75 @@ func newGithubPluginForTest(include string) (*githubPlugin, error) {
 		" ",
 	)
 	return plugin, nil
+}
+
+func TestGithubPluginAuth(t *testing.T) {
+	githubPlugin := githubPlugin{
+		ref: flake.Ref{
+			Type:  "github",
+			Owner: "jetpack-io",
+			Repo:  "devbox-plugins",
+		},
+		name: "jetpack-io.devbox-plugins",
+	}
+
+	expectedURL := "https://raw.githubusercontent.com/jetpack-io/devbox-plugins/master/test"
+
+	t.Run("generate request for public Github repository", func(t *testing.T) {
+		t.Setenv("GITHUB_TOKEN", "")
+		url, err := githubPlugin.url("test")
+		assert.NoError(t, err)
+		actual, err := githubPlugin.request(url)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedURL, actual.URL.String())
+		assert.Equal(t, "", actual.Header.Get("Authorization"))
+	})
+
+	t.Run("generate request for private Github repository", func(t *testing.T) {
+		t.Setenv("GITHUB_TOKEN", "gh_abcd")
+		url, err := githubPlugin.url("test")
+		assert.NoError(t, err)
+		actual, err := githubPlugin.request(url)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedURL, actual.URL.String())
+		assert.Equal(t, "token gh_abcd", actual.Header.Get("Authorization"))
+	})
+}
+
+func TestGetRedactedAuthHeader(t *testing.T) {
+	testCases := []struct {
+		name       string
+		authHeader string
+		expected   string
+	}{
+		{
+			"normal length token partially readable for debugging",
+			"token ghp_61b296fb898349778e20532cb65ce38e",
+			"token ghp_********************************",
+		},
+		{
+			"short token redacted",
+			"token ghp_61b29",
+			"token *********",
+		},
+		{
+			"short header fully redacted",
+			"token xyz",
+			"*********",
+		},
+		{
+			"no token returns empty string",
+			"",
+			"",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
+			assert.NoError(t, err)
+			req.Header.Add("Authorization", testCase.authHeader)
+			assert.Equal(t, testCase.expected, getRedactedAuthHeader(req))
+		})
+	}
 }

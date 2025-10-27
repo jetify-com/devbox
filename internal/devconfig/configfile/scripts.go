@@ -1,6 +1,10 @@
 package configfile
 
-import "go.jetpack.io/devbox/internal/devbox/shellcmd"
+import (
+	"strings"
+
+	"go.jetify.com/devbox/internal/devbox/shellcmd"
+)
 
 type script struct {
 	shellcmd.Commands
@@ -25,5 +29,23 @@ func (c *ConfigFile) Scripts() Scripts {
 		}
 	}
 
+	return result
+}
+
+func (s Scripts) WithRelativePaths(projectDir string) Scripts {
+	result := make(Scripts, len(s))
+	for name, s := range s {
+		commandsWithRelativePaths := shellcmd.Commands{}
+		for _, c := range s.Commands.Cmds {
+			commandsWithRelativePaths.Cmds = append(
+				commandsWithRelativePaths.Cmds,
+				strings.ReplaceAll(c, projectDir, "."),
+			)
+		}
+		result[name] = &script{
+			Commands: commandsWithRelativePaths,
+			Comments: s.Comments,
+		}
+	}
 	return result
 }

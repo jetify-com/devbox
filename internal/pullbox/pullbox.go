@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package pullbox
@@ -12,12 +12,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/pullbox/git"
-	"go.jetpack.io/devbox/internal/pullbox/s3"
-	"go.jetpack.io/devbox/internal/pullbox/tar"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/pullbox/git"
+	"go.jetify.com/devbox/internal/pullbox/s3"
+	"go.jetify.com/devbox/internal/pullbox/tar"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 type devboxProject interface {
@@ -50,9 +50,9 @@ func (p *pullbox) Pull(ctx context.Context) error {
 	}
 
 	if p.URL != "" {
-		ux.Finfo(os.Stderr, "Pulling global config from %s\n", p.URL)
+		ux.Finfof(os.Stderr, "Pulling global config from %s\n", p.URL)
 	} else {
-		ux.Finfo(os.Stderr, "Pulling global config\n")
+		ux.Finfof(os.Stderr, "Pulling global config\n")
 	}
 
 	var tmpDir string
@@ -103,9 +103,9 @@ func (p *pullbox) Pull(ctx context.Context) error {
 
 func (p *pullbox) Push(ctx context.Context) error {
 	if p.URL != "" {
-		ux.Finfo(os.Stderr, "Pushing global config to %s\n", p.URL)
+		ux.Finfof(os.Stderr, "Pushing global config to %s\n", p.URL)
 	} else {
-		ux.Finfo(os.Stderr, "Pushing global config\n")
+		ux.Finfof(os.Stderr, "Pushing global config\n")
 	}
 
 	if p.URL == "" {
@@ -113,7 +113,7 @@ func (p *pullbox) Push(ctx context.Context) error {
 		if p.Credentials.IDToken == "" {
 			return usererr.New("Not logged in")
 		}
-		ux.Finfo(
+		ux.Finfof(
 			os.Stderr,
 			"Logged in as %s, pushing to to devbox cloud (profile: %s)\n",
 			p.Credentials.Email,

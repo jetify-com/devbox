@@ -1,16 +1,17 @@
 {
   "name": "python",
-  "version": "0.0.3",
-  "description": "Python in Devbox works best when used with a virtual environment (vent, virtualenv, etc.). Devbox will automatically create a virtual environment using `venv` for python3 projects, so you can install packages with pip as normal.\nTo activate the environment, run `. $VENV_DIR/bin/activate` or add it to the init_hook of your devbox.json\nTo change where your virtual environment is created, modify the $VENV_DIR environment variable in your init_hook",
+  "version": "0.0.4",
+  "description": "Python in Devbox works best when used with a virtual environment (venv, virtualenv, etc.). Devbox will automatically create a virtual environment using `venv` for python3 projects, so you can install packages with pip as normal.\nTo activate the environment, run `. $VENV_DIR/bin/activate` or add it to the init_hook of your devbox.json\nTo change where your virtual environment is created, modify the $VENV_DIR environment variable in your init_hook",
   "env": {
-      "VENV_DIR": "{{ .Virtenv }}/.venv"
+    "VENV_DIR": "{{ .DevboxProjectDir }}/.venv"
   },
   "create_files": {
-      "{{ .Virtenv }}/bin/venvShellHook.sh": "pip/venvShellHook.sh"
+    "{{ .Virtenv }}/bin/venvShellHook.sh": "python/venvShellHook.sh"
   },
   "shell": {
-      "init_hook": [
-          "{{ .Virtenv }}/bin/venvShellHook.sh"
-      ]
+    "init_hook": [
+      "export UV_PROJECT_ENVIRONMENT=\"$VENV_DIR\"",
+      "{{ .Virtenv }}/bin/venvShellHook.sh"
+    ]
   }
 }

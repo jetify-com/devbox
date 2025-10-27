@@ -20,7 +20,7 @@ func TestBuiltInMap(t *testing.T) {
 		"mariadb":                                "mariadb",
 		"mariadb_1011":                           "mariadb",
 		"mariadb-embedded":                       "mariadb",
-		"mysql":                                  "mysql",
+		"mysql":                                  "mariadb",
 		"mysql80":                                "mysql",
 		"python3Packages.pip":                    "pip",
 		"python":                                 "python",

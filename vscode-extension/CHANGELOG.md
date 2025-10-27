@@ -4,6 +4,19 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.7]
+
+- Removed Open In Desktop feature since devbox.sh web app is deprecated.
+
+## [0.1.6]
+
+- Fixed an issue where reopen in devbox feature wasn't working for cursor and vscodium.
+- Removed remote-ssh as a dependency extension.
+
+## [0.1.5]
+
+- Rebranding changes from jetpack.io to jetify.com.
+
 ## [0.1.4]
 
 - Added debug mode in extension settings (only supports logs for "Reopen in Devbox Shell environment" feature).
@@ -27,7 +40,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - Added reopen in devbox shell environment feature that allows projects with devbox.json
   reopen vscode in devbox environment. Note: It requires devbox CLI v0.5.5 and above
-  installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetpack-io/devbox) or our [Discord](https://discord.gg/Rr5KPJq7).
+  installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetify-com/devbox) or our [Discord](https://discord.gg/jetify).
 
 ## [0.0.7]
 

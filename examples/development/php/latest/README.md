@@ -2,9 +2,8 @@
 
 PHP projects can manage most of their dependencies locally with `composer`. Some PHP extensions, however, need to be bundled with PHP at compile time.
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/php/latest)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/php/latest)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/php)
 
 ## Adding PHP to your Project
 
@@ -35,10 +34,10 @@ For example -- to add the `ds` extension, run `devbox add php81Extensions.ds`, o
 
 ## PHP Plugin Details
 
-The PHP Plugin will provide the following configuration when you install a PHP runtime with `devbox add`. You can also manually add the PHP plugin by adding `plugin:php` to your `includes` list in `devbox.json`:
+The PHP Plugin will provide the following configuration when you install a PHP runtime with `devbox add`. You can also manually add the PHP plugin by adding `plugin:php` to your `include` list in `devbox.json`:
 
 ```json
-    "includes": [
+    "include": [
         "plugin:php"
     ]
 ```

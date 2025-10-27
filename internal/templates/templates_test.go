@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 package templates
 
@@ -40,7 +40,7 @@ func TestParseRepoURL(t *testing.T) {
 	assert.Error(t, err)
 	_, err = ParseRepoURL("http://")
 	assert.Error(t, err)
-	_, err = ParseRepoURL("git@github.com:jetpack-io/devbox.git")
+	_, err = ParseRepoURL("git@github.com:jetify-com/devbox.git")
 	assert.Error(t, err)
 	u, err := ParseRepoURL("http://github.com")
 	assert.NoError(t, err)

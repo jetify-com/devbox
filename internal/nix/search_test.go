@@ -1,6 +1,7 @@
 package nix
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -56,6 +57,55 @@ func TestAllowableQuery(t *testing.T) {
 			out := allowableQuery.MatchString(testCase.in)
 			if out != testCase.expected {
 				t.Errorf("got %t, want %t", out, testCase.expected)
+			}
+		})
+	}
+}
+
+func TestParseSearchResults(t *testing.T) {
+	testCases := []struct {
+		name           string
+		input          []byte
+		expectedResult map[string]*PkgInfo
+	}{
+		{
+			name: "Valid JSON input",
+			input: []byte(`{
+				"go": {
+					"pname": "go",
+					"version": "1.20.4"
+				},
+				"python3": {
+					"pname": "python3",
+					"version": "3.9.16"
+				}
+			}`),
+			expectedResult: map[string]*PkgInfo{
+				"go": {
+					AttributeKey: "go",
+					PName:        "go",
+					Version:      "1.20.4",
+				},
+				"python3": {
+					AttributeKey: "python3",
+					PName:        "python3",
+					Version:      "3.9.16",
+				},
+			},
+		},
+		{
+			name:           "Empty JSON input",
+			input:          []byte(`{}`),
+			expectedResult: map[string]*PkgInfo{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := parseSearchResults(tc.input)
+
+			if !reflect.DeepEqual(result, tc.expectedResult) {
+				t.Errorf("Expected result %v, got %v", tc.expectedResult, result)
 			}
 		})
 	}

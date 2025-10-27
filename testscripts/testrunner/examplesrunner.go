@@ -3,6 +3,7 @@ package testrunner
 import (
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,9 +14,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rogpeppe/go-internal/testscript"
 
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/devconfig"
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/devconfig"
+	"go.jetify.com/devbox/internal/envir"
 )
 
 // xdgStateHomeDir is the home directory for devbox state. We store symlinks to
@@ -43,7 +43,7 @@ func RunDevboxTestscripts(t *testing.T, dir string) {
 		}
 
 		configPath := filepath.Join(path, "devbox.json")
-		config, err := devconfig.LoadForTest(configPath)
+		config, err := devconfig.Open(configPath)
 		if err != nil {
 			// skip directories that do not have a devbox.json defined
 			if errors.Is(err, fs.ErrNotExist) {
@@ -90,7 +90,7 @@ func runSingleDevboxTestscript(t *testing.T, dir, projectDir string) {
 		t.Error(err)
 	}
 
-	params := getTestscriptParams(t, testscriptDir)
+	params := getTestscriptParams(testscriptDir)
 
 	// save a reference to the original params.Setup so that we can wrap it below
 	setup := params.Setup
@@ -105,7 +105,7 @@ func runSingleDevboxTestscript(t *testing.T, dir, projectDir string) {
 		}
 
 		// copy all the files and folders of the devbox-project being tested to the workdir
-		debug.Log("copying projectDir: %s to env.WorkDir: %s\n", projectDir, envs.WorkDir)
+		slog.Debug("copying projectDir: %s to env.WorkDir: %s\n", projectDir, envs.WorkDir)
 		// implementation detail: the period at the end of the projectDir/.
 		// is important to ensure this works for both mac and linux.
 		// Ref.https://dev.to/ackshaey/macos-vs-linux-the-cp-command-will-trip-you-up-2p00
@@ -113,12 +113,12 @@ func runSingleDevboxTestscript(t *testing.T, dir, projectDir string) {
 		cmd := exec.Command("rm", "-rf", projectDir+"/.devbox")
 		err = cmd.Run()
 		if err != nil {
-			debug.Log("failed %s before doing cp", cmd)
+			slog.Error("failed %s before doing cp", "cmd", cmd, "err", err)
 			return errors.WithStack(err)
 		}
 
 		cmd = exec.Command("cp", "-r", projectDir+"/.", envs.WorkDir)
-		debug.Log("Running cmd: %s\n", cmd)
+		slog.Debug("running cmd", "cmd", cmd)
 		err = cmd.Run()
 		return errors.WithStack(err)
 	}
@@ -152,7 +152,7 @@ func generateTestscript(t *testing.T, dir, projectDir string) (string, error) {
 
 	// Copy the testscript file to the temp-dir
 	runTestScriptPath := filepath.Join("testrunner", scriptName)
-	debug.Log("copying run_test.test.txt from %s to %s\n", runTestScriptPath, testscriptDir)
+	slog.Debug("copying run_test.test.txt from %s to %s\n", runTestScriptPath, testscriptDir)
 	// Using os's cp command for expediency.
 	err = exec.Command("cp", runTestScriptPath, testscriptDir+"/"+scriptNameForProject).Run()
 	return testscriptDir, errors.WithStack(err)

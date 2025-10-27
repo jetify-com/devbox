@@ -1,27 +1,23 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package devconfig
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
 )
 
-func Init(dir string) (created bool, err error) {
+func Init(dir string) (*Config, error) {
 	file, err := os.OpenFile(
 		filepath.Join(dir, configfile.DefaultName),
 		os.O_RDWR|os.O_CREATE|os.O_EXCL,
 		0o644,
 	)
-	if errors.Is(err, os.ErrExist) {
-		return false, nil
-	}
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	defer func() {
 		if err != nil {
@@ -29,18 +25,11 @@ func Init(dir string) (created bool, err error) {
 		}
 	}()
 
-	_, err = file.Write(DefaultConfig().Root.Bytes())
+	newConfig := DefaultConfig()
+	_, err = file.Write(newConfig.Root.Bytes())
+	defer file.Close()
 	if err != nil {
-		file.Close()
-		return false, err
+		return nil, err
 	}
-	if err := file.Close(); err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-func Open(projectDir string) (*Config, error) {
-	cfgPath := filepath.Join(projectDir, configfile.DefaultName)
-	return readFromFile(cfgPath)
+	return newConfig, nil
 }

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft-04/schema#",
-  "$id": "https://github.com/jetpack-io/devbox/plugins",
+  "$id": "https://github.com/jetify-com/devbox/plugins",
   "title": "Devbox Plugin Schema",
   "description": "Defines fields and values for public devbox plugins",
   "type": "object",
@@ -142,5 +142,5 @@
       }
     }
   },
-  "required": ["name", "version", "readme"]
+  "required": ["name", "version", "description"]
 }

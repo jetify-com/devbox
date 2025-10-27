@@ -1,10 +1,11 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package usererr
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/pkg/errors"
 )
@@ -82,9 +83,14 @@ func Extract(err error) (error, bool) { // nolint: revive
 	return nil, false
 }
 
-// ShouldLogError returns true if the it's a logged user error or is a non-user error
+// ShouldLogError returns true if the it's a combined error specifically marked to be logged
+// or if it's not an ExitError.
 func ShouldLogError(err error) bool {
 	if err == nil {
+		return false
+	}
+	var userExecErr *ExitError
+	if errors.As(err, &userExecErr) {
 		return false
 	}
 	c := &combined{}
@@ -123,7 +129,7 @@ func (c *combined) Cause() error { return errors.Cause(c.source) }
 // Format allows us to use %+v as implemented by github.com/pkg/errors.
 func (c *combined) Format(s fmt.State, verb rune) {
 	if c.source == nil {
-		fmt.Fprintf(s, c.userMessage)
+		_, _ = io.WriteString(s, c.userMessage)
 		return
 	}
 	errors.Wrap(c.source, c.userMessage).(interface { //nolint:errorlint

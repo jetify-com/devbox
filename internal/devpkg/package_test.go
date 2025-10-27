@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package devpkg
@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 const nixCommitHash = "hsdafkhsdafhas"
@@ -108,12 +109,13 @@ func (l *lockfile) ProjectDir() string {
 	return l.projectDir
 }
 
-func (l *lockfile) LegacyNixpkgsPath(pkg string) string {
-	return fmt.Sprintf(
-		"github:NixOS/nixpkgs/%s#%s",
-		nixCommitHash,
-		pkg,
-	)
+func (l *lockfile) Stdenv() flake.Ref {
+	return flake.Ref{
+		Type:  flake.TypeGitHub,
+		Owner: "NixOS",
+		Repo:  "nixpkgs",
+		Rev:   nixCommitHash,
+	}
 }
 
 func (l *lockfile) Get(pkg string) *lock.Package {
@@ -128,7 +130,10 @@ func (l *lockfile) Resolve(pkg string) (*lock.Package, error) {
 		return &lock.Package{Resolved: pkg}, nil
 	default:
 		return &lock.Package{
-			Resolved: l.LegacyNixpkgsPath(pkg),
+			Resolved: flake.Installable{
+				Ref:      l.Stdenv(),
+				AttrPath: pkg,
+			}.String(),
 		}, nil
 	}
 }

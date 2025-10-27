@@ -1,0 +1,9 @@
+*.go diff=golang
+*.sh diff=bash
+*.md diff=markdown
+*.py diff=python
+*.sql diff=sql
+
+devbox.json linguist-language=json5
+
+go.sum -diff linguist-generated

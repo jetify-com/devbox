@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -12,12 +12,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/goutil"
-	"go.jetpack.io/devbox/internal/pullbox/s3"
-	"go.jetpack.io/pkg/auth"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devbox/providers/identity"
+	"go.jetify.com/devbox/internal/goutil"
+	"go.jetify.com/devbox/internal/pullbox/s3"
+	"go.jetify.com/pkg/auth"
 )
 
 type pullCmdFlags struct {
@@ -64,7 +65,7 @@ func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 	}
 
 	var creds devopt.Credentials
-	t, err := genSession(cmd.Context())
+	t, err := identity.GenSession(cmd.Context())
 	if err != nil && !errors.Is(err, auth.ErrNotLoggedIn) {
 		return errors.WithStack(err)
 	} else if t != nil && err == nil {
@@ -105,7 +106,9 @@ func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 
 	return installCmdFunc(
 		cmd,
-		runCmdFlags{config: configFlags{pathFlag: pathFlag{path: flags.config.path}}},
+		installCmdFlags{
+			runCmdFlags: runCmdFlags{config: configFlags{pathFlag: pathFlag{path: flags.config.path}}},
+		},
 	)
 }
 

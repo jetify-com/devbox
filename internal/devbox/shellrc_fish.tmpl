@@ -59,7 +59,7 @@ set workingDir (pwd)
 cd "{{ .ProjectDir }}" || exit
 
 # Source the hooks file, which contains the project's init hooks and plugin hooks.
-source {{ .HooksFilePath }}
+source "{{ .HooksFilePath }}"
 
 cd "$workingDir" || exit
 

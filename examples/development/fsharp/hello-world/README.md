@@ -2,9 +2,8 @@
 
 F# and .NET projects can be easily generated in Devbox by adding the dotnet SDK to your project. You can then create new projects using `dotnet new`
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/fsharp)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/fsharp)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/fsharp)
 
 ## Adding .NET to your project
 

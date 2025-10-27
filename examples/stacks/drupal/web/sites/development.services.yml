@@ -1,7 +1,17 @@
 # Local development services.
 #
+# The development.services.yml file allows the developer to override
+# container parameters for debugging.
+#
 # To activate this feature, follow the instructions at the top of the
 # 'example.settings.local.php' file, which sits next to this file.
+#
+# Be aware that in Drupal's configuration system, all the files that
+# provide container definitions are merged using a shallow merge approach
+# within \Drupal\Core\DependencyInjection\YamlFileLoader.
+# This means that if you want to override any value of a parameter, the
+# whole parameter array needs to be copied from
+# sites/default/default.services.yml or from core/core.services.yml file.
 parameters:
   http.response.debug_cacheability_headers: true
 services:

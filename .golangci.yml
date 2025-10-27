@@ -1,11 +1,9 @@
-run:
-  go: "1.20"
 linters:
   disable-all: true
   enable:
     - dupl
-    - errorlint
     - errcheck
+    - errorlint
     - gofmt
     - goimports
     - gosimple
@@ -18,12 +16,12 @@ linters:
     - revive
     - staticcheck
     - stylecheck
-    - tenv
     - typecheck
     - unconvert
     - unparam
     - unused
     - usestdlibvars
+    - usetesting
     - varnamelen
     # - wrapcheck If we're going to use github.com/pkg/errors we should probably turn this on?
     # We'd like to have the following linter enabled, but it's broken for Go
@@ -40,6 +38,8 @@ linters-settings:
       - name: bare-return
       - name: bool-literal-in-expr
       - name: cognitive-complexity
+        exclude:
+          - "**_test.go"
         arguments:
           - 32 # TODO: gradually reduce it
       - name: datarace
@@ -70,6 +70,7 @@ linters-settings:
       - m map[string]int
       - n int
       - ns string
+      - ok bool
       - r *http.Request
       - r io.Reader
       - r *os.File
@@ -85,7 +86,7 @@ linters-settings:
       - w *os.File
   wrapcheck:
     ignorePackageGlobs:
-      - go.jetpack.io/devbox/*
+      - go.jetify.com/devbox/*
   misspell:
     ignore-words:
       - substituters

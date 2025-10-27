@@ -12,14 +12,19 @@ type Opts struct {
 	Dir                      string
 	Env                      map[string]string
 	Environment              string
-	PreservePathStack        bool
-	Pure                     bool
 	IgnoreWarnings           bool
 	CustomProcessComposeFile string
 	Stderr                   io.Writer
 }
 
+type ProcessComposeOpts struct {
+	ExtraFlags         []string
+	Background         bool
+	ProcessComposePort int
+}
+
 type GenerateOpts struct {
+	ForType  string
 	Force    bool
 	RootUser bool
 }
@@ -27,6 +32,13 @@ type GenerateOpts struct {
 type EnvFlags struct {
 	EnvMap  map[string]string
 	EnvFile string
+}
+
+type EnvrcOpts struct {
+	EnvFlags
+	Force     bool
+	EnvrcDir  string
+	ConfigDir string
 }
 
 type PullboxOpts struct {
@@ -47,17 +59,35 @@ type AddOpts struct {
 	Platforms        []string
 	ExcludePlatforms []string
 	DisablePlugin    bool
-	PatchGlibc       bool
+	Patch            string
 	Outputs          []string
 }
 
 type UpdateOpts struct {
 	Pkgs                  []string
+	NoInstall             bool
 	IgnoreMissingPackages bool
 }
 
 type EnvExportsOpts struct {
-	DontRecomputeEnvironment bool
-	NoRefreshAlias           bool
-	RunHooks                 bool
+	EnvOptions     EnvOptions
+	NoRefreshAlias bool
+	RunHooks       bool
+}
+
+// EnvOptions configure the Devbox Environment in the `computeEnv` function.
+// - These options are commonly set by flags in some Devbox commands
+// like `shellenv`, `shell` and `run`.
+// - The struct is designed for the "common case" to be zero-initialized as `EnvOptions{}`.
+type EnvOptions struct {
+	Hooks             LifecycleHooks
+	OmitNixEnv        bool
+	PreservePathStack bool
+	Pure              bool
+	SkipRecompute     bool
+}
+
+type LifecycleHooks struct {
+	// OnStaleState is called when the Devbox state is out of date
+	OnStaleState func()
 }

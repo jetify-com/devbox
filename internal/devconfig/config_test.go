@@ -1,14 +1,299 @@
 package devconfig
 
 import (
+	"io/fs"
+	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
-	"go.jetpack.io/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
 )
+
+func TestOpen(t *testing.T) {
+	t.Run("Dir", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+
+		cfg, err := Open(root)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", root, err)
+		}
+		gotDir := filepath.Dir(cfg.Root.AbsRootPath)
+		if gotDir != root {
+			t.Errorf("filepath.Dir(cfg.Root.AbsRootPath) = %q, want %q", gotDir, root)
+		}
+	})
+	t.Run("File", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+		path := filepath.Join(root, "devbox.json")
+
+		cfg, err := Open(path)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", path, err)
+		}
+		gotDir := filepath.Dir(cfg.Root.AbsRootPath)
+		if gotDir != root {
+			t.Errorf("filepath.Dir(cfg.Root.AbsRootPath) = %q, want %q", gotDir, root)
+		}
+	})
+}
+
+func TestOpenError(t *testing.T) {
+	t.Run("NotExist", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+
+		path := filepath.Join(root, "notafile.json")
+		cfg, err := Open(path)
+		if err == nil {
+			t.Fatalf("Open(%q) = %q, want error", root, cfg.Root.AbsRootPath)
+		}
+		if !errors.Is(err, fs.ErrNotExist) {
+			t.Error("errors.Is(err, fs.ErrNotExist) = false, want true")
+		}
+		if errors.Is(err, ErrNotFound) {
+			t.Error("errors.Is(err, ErrNotFound) = true, want false")
+		}
+	})
+	t.Run("NotFound", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+
+		cfg, err := Open(root)
+		if err == nil {
+			t.Fatalf("Open(%q) = %q, want error", root, cfg.Root.AbsRootPath)
+		}
+		if !errors.Is(err, ErrNotFound) {
+			t.Error("errors.Is(err, ErrNotFound) = false, want true")
+		}
+	})
+	t.Run("ParentNotFound", func(t *testing.T) {
+		root, child, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+
+		cfg, err := Open(child)
+		if err == nil {
+			t.Fatalf("Open(%q) = %q, want error", root, cfg.Root.AbsRootPath)
+		}
+		if !errors.Is(err, ErrNotFound) {
+			t.Error("errors.Is(err, ErrNotFound) = false, want true")
+		}
+	})
+}
+
+func TestFind(t *testing.T) {
+	t.Run("StartInSameDir", func(t *testing.T) {
+		root, child, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+		if _, err := Init(child); err != nil {
+			t.Fatalf("Init(%q) error: %v", child, err)
+		}
+
+		cfg, err := Find(child)
+		if err != nil {
+			t.Fatalf("Find(%q) error: %v", child, err)
+		}
+		gotDir := filepath.Dir(cfg.Root.AbsRootPath)
+		if gotDir != child {
+			t.Errorf("filepath.Dir(cfg.Root.AbsRootPath) = %q, want %q", gotDir, child)
+		}
+	})
+	t.Run("StartInChildDir", func(t *testing.T) {
+		root, child, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+
+		cfg, err := Find(child)
+		if err != nil {
+			t.Fatalf("Find(%q) error: %v", child, err)
+		}
+		gotDir := filepath.Dir(cfg.Root.AbsRootPath)
+		if gotDir != root {
+			t.Errorf("filepath.Dir(cfg.Root.AbsRootPath) = %q, want %q", gotDir, root)
+		}
+	})
+	t.Run("StartInNestedChildDir", func(t *testing.T) {
+		root, child, nested := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+		if _, err := Init(child); err != nil {
+			t.Fatalf("Init(%q) error: %v", child, err)
+		}
+
+		cfg, err := Find(nested)
+		if err != nil {
+			t.Fatalf("Find(%q) error: %v", nested, err)
+		}
+		gotDir := filepath.Dir(cfg.Root.AbsRootPath)
+		if gotDir != child {
+			t.Errorf("filepath.Dir(cfg.Root.AbsRootPath) = %q, want %q", gotDir, child)
+		}
+	})
+	t.Run("IgnoreDirsWithMatchingName", func(t *testing.T) {
+		root, child, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+
+		trickyDir := filepath.Join(child, "devbox.json")
+		perm := fs.FileMode(0o777)
+		if err := os.Mkdir(trickyDir, perm); err != nil {
+			t.Fatalf("Mkdir(%q, %O) error: %v", trickyDir, perm, err)
+		}
+
+		cfg, err := Find(child)
+		if errors.Is(err, errIsDirectory) {
+			t.Fatalf("Find(%q) did not ignore a directory named devbox.json: %v", child, err)
+		}
+		if err != nil {
+			t.Fatalf("Find(%q) error: %v", child, err)
+		}
+		gotDir := filepath.Dir(cfg.Root.AbsRootPath)
+		if gotDir != root {
+			t.Errorf("filepath.Dir(cfg.Root.AbsRootPath) = %q, want %q", gotDir, root)
+		}
+	})
+	t.Run("ExactFile", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+
+		path := filepath.Join(root, "devbox.json")
+		cfg, err := Find(path)
+		if err != nil {
+			t.Fatalf("Find(%q) error: %v", path, err)
+		}
+		if cfg.Root.AbsRootPath != path {
+			t.Errorf("cfg.Root.AbsRootPath = %q, want %q", cfg.Root.AbsRootPath, path)
+		}
+	})
+}
+
+func TestFindError(t *testing.T) {
+	t.Run("NotExist", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+
+		path := filepath.Join(root, "notafile.json")
+		cfg, err := Find(path)
+		if err == nil {
+			t.Fatalf("Find(%q) = %q, want error", path, cfg.Root.AbsRootPath)
+		}
+		if !errors.Is(err, fs.ErrNotExist) {
+			t.Error("errors.Is(err, fs.ErrNotExist) = false, want true")
+		}
+		if errors.Is(err, ErrNotFound) {
+			t.Error("errors.Is(err, ErrNotFound) = true, want false")
+		}
+	})
+	t.Run("NotFound", func(t *testing.T) {
+		root, child, _ := mkNestedDirs(t)
+		if _, err := Init(child); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+
+		cfg, err := Find(root)
+		if err == nil {
+			t.Fatalf("Find(%q) = %q, want error", root, cfg.Root.AbsRootPath)
+		}
+		if !errors.Is(err, ErrNotFound) {
+			t.Error("errors.Is(err, ErrNotFound) = false, want true")
+		}
+	})
+	t.Run("Permissions", func(t *testing.T) {
+		root, child, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+		if _, err := Init(child); err != nil {
+			t.Fatalf("Init(%q) error: %v", child, err)
+		}
+		path := filepath.Join(child, "devbox.json")
+		if err := os.Chmod(path, 0o000); err != nil {
+			t.Fatalf("os.Chmod(%q, 0o000) error: %v", path, err)
+		}
+		t.Cleanup(func() { _ = os.Chmod(path, 0o666) })
+
+		cfg, err := Find(child)
+		if err == nil {
+			t.Fatalf("Find(%q) = %q, want error", child, cfg.Root.AbsRootPath)
+		}
+		if !errors.Is(err, fs.ErrPermission) {
+			t.Error("errors.Is(err, fs.ErrPermission) = false, want true")
+		}
+	})
+	t.Run("ExactFileBadSyntax", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+
+		var (
+			path = filepath.Join(root, "devbox.json")
+			data = []byte("this isn't json!")
+			perm = fs.FileMode(0o666)
+		)
+		if err := os.WriteFile(path, data, perm); err != nil {
+			t.Fatalf("os.WriteFile(%q, []byte(%q), %O) error: %v", path, data, perm, err)
+		}
+
+		cfg, err := Find(path)
+		if err == nil {
+			t.Fatalf("Find(%q) = %q, want error", path, cfg.Root.AbsRootPath)
+		}
+	})
+	t.Run("ExactFilePermissions", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+		path := filepath.Join(root, "devbox.json")
+		if err := os.Chmod(path, 0o000); err != nil {
+			t.Fatalf("os.Chmod(%q, 0o000) error: %v", path, err)
+		}
+		t.Cleanup(func() { _ = os.Chmod(path, 0o666) })
+
+		cfg, err := Find(path)
+		if err == nil {
+			t.Fatalf("Find(%q) = %q, want error", path, cfg.Root.AbsRootPath)
+		}
+		if !errors.Is(err, fs.ErrPermission) {
+			t.Error("errors.Is(err, fs.ErrPermission) = false, want true")
+		}
+	})
+}
+
+// mkNestedDirs sets up a nested directory structure for Find and Open tests.
+func mkNestedDirs(t *testing.T) (root, child, nested string) {
+	t.Helper()
+
+	root = t.TempDir()
+	child = filepath.Join(root, "child")
+	nested = filepath.Join(child, "nested")
+	t.Cleanup(func() { _ = os.RemoveAll(root) })
+
+	perm := fs.FileMode(0o777)
+	if err := os.MkdirAll(nested, perm); err != nil {
+		t.Fatalf("os.MkdirAll(%q, %O) error: %v", nested, perm, err)
+	}
+	return root, child, nested
+}
 
 func TestDefault(t *testing.T) {
 	path := filepath.Join(t.TempDir())
@@ -21,7 +306,7 @@ func TestDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal("got save error:", err)
 	}
-	out, err := LoadForTest(filepath.Join(path, configfile.DefaultName))
+	out, err := Open(filepath.Join(path, configfile.DefaultName))
 	if err != nil {
 		t.Fatal("got load error:", err)
 	}
@@ -40,5 +325,105 @@ func TestDefault(t *testing.T) {
 	}
 	if string(inBytes) != string(outBytes) {
 		t.Errorf("got different JSON after load/save/load:\ninput:\n%s\noutput:\n%s", inBytes, outBytes)
+	}
+}
+
+func TestOSExpandIfPossible(t *testing.T) {
+	tests := []struct {
+		name        string
+		env         map[string]string
+		existingEnv map[string]string
+		want        map[string]string
+	}{
+		{
+			name: "basic expansion",
+			env: map[string]string{
+				"FOO": "$BAR",
+				"BAZ": "${QUX}",
+			},
+			existingEnv: map[string]string{
+				"BAR": "bar_value",
+				"QUX": "qux_value",
+			},
+			want: map[string]string{
+				"FOO": "bar_value",
+				"BAZ": "qux_value",
+			},
+		},
+		{
+			name: "missing values remain as template",
+			env: map[string]string{
+				"FOO": "$BAR",
+				"BAZ": "${QUX}",
+			},
+			existingEnv: map[string]string{
+				"BAR": "bar_value",
+				// QUX is missing
+			},
+			want: map[string]string{
+				"FOO": "bar_value",
+				"BAZ": "${QUX}",
+			},
+		},
+		{
+			name: "nil existing env",
+			env: map[string]string{
+				"FOO": "$BAR",
+				"BAZ": "${QUX}",
+			},
+			existingEnv: nil,
+			want: map[string]string{
+				"FOO": "${BAR}",
+				"BAZ": "${QUX}",
+			},
+		},
+		{
+			name: "empty existing env",
+			env: map[string]string{
+				"FOO": "$BAR",
+			},
+			existingEnv: map[string]string{},
+			want: map[string]string{
+				"FOO": "${BAR}",
+			},
+		},
+		{
+			name: "mixed literal and variable",
+			env: map[string]string{
+				"FOO": "prefix_${BAR}_suffix",
+			},
+			existingEnv: map[string]string{
+				"BAR": "bar_value",
+			},
+			want: map[string]string{
+				"FOO": "prefix_bar_value_suffix",
+			},
+		},
+		{
+			name: "path special case",
+			env: map[string]string{
+				"FOO": "/my/config:$FOO",
+			},
+			existingEnv: map[string]string{
+				"FOO": "/my/plugin:$FOO",
+			},
+			want: map[string]string{
+				"FOO": "/my/config:/my/plugin:$FOO",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := OSExpandIfPossible(tt.env, tt.existingEnv)
+			if len(got) != len(tt.want) {
+				t.Errorf("OSExpandIfPossible() got %v entries, want %v entries", len(got), len(tt.want))
+			}
+			for k, v := range tt.want {
+				if got[k] != v {
+					t.Errorf("OSExpandIfPossible() for key %q = %q, want %q", k, got[k], v)
+				}
+			}
+		})
 	}
 }

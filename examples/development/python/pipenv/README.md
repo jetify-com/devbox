@@ -3,7 +3,7 @@
 
 Python by default will attempt to install your packages globally, or in the Nix Store (which it does not have permissions to modify). To use Python with Devbox, we recommend setting up a Virtual Environment using pipenv or Poetry (see below).
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/python)
 
 ## Adding Python to your Project
 
@@ -19,9 +19,8 @@ This will install Python 3.10 in your shell. You can find other versions of Pyth
 
 ## Pipenv
 
-[**Example Repo**](https://github.com/jetpack-io/devbox/tree/main/examples/development/python/pipenv)
+[**Example Repo**](https://github.com/jetify-com/devbox/tree/main/examples/development/python/pipenv)
 
-[![Open In Devbox.sh](https://jetpack.io/img/devbox/open-in-devbox.svg)](https://devbox.sh/open/templates/python-pipenv)
 
 [pipenv](https://pipenv.pypa.io/en/latest/) is a tool that will automatically set up a virtual environment for installing your PyPi packages.
 

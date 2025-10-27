@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package fileutil
@@ -49,6 +49,14 @@ func IsFile(path string) bool {
 func Exists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+func IsDirEmpty(path string) (bool, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return false, err
+	}
+	return len(entries) == 0, nil
 }
 
 // FileContains checks if a given file at 'path' contains the 'substring'

@@ -15,11 +15,13 @@ func CopyInstallableToCache(
 	// paths into "path" flakes which is not what we want for /nix/store paths.
 	// TODO: Add support for store paths in flake.Installable
 	to, installable string,
+	env []string,
 ) error {
 	fmt.Fprintf(out, "Copying %s to %s\n", installable, to)
-	cmd := commandContext(
-		ctx,
+	cmd := Command(
 		"copy", "--to", to,
+		// --impure makes NIXPKGS_ALLOW_* environment variables work.
+		"--impure",
 		// --refresh checks the cache to ensure it is up to date. Otherwise if
 		// anything has was copied previously from this machine and then purged
 		// it may not be copied again. It's fairly fast, but not instant.
@@ -30,6 +32,7 @@ func CopyInstallableToCache(
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = out
 	cmd.Stderr = out
+	cmd.Env = append(allowUnfreeEnv(allowInsecureEnv(os.Environ())), env...)
 
-	return cmd.Run()
+	return cmd.Run(ctx)
 }

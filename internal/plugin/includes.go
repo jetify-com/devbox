@@ -3,8 +3,8 @@ package plugin
 import (
 	"strings"
 
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
 )
 
 func LoadConfigFromInclude(include string, lockfile *lock.File, workingDir string) (*Config, error) {

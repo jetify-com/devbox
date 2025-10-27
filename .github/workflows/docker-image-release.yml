@@ -1,6 +1,16 @@
 name: docker-image-release
 
-on: workflow_dispatch
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'tag name'
+        required: true
+        default: ''
+        type: string
 
 jobs:
   docker-image-build-push:
@@ -10,6 +20,26 @@ jobs:
         uses: actions/checkout@v4
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            jetpackio/devbox
+          tags: |
+            type=raw,value=${{ inputs.tag || github.ref_name }}
+          flavor: |
+            latest=false
+      - name: Docker meta root
+        id: metaroot
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            jetpackio/devbox-root-user
+          tags: |
+            type=raw,value=${{ inputs.tag || github.ref_name }}
+          flavor: |
+            latest=false
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Login to Docker Hub
@@ -18,18 +48,58 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Build and push default
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
+        with:
+          context: ./internal/devbox/generate/tmpl/
+          file: ./internal/devbox/generate/tmpl/DevboxImageDockerfile
+          build-args: |
+            DEVBOX_USE_VERSION=${{ inputs.tag || github.ref_name }}
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+      - name: Build and push root user
+        uses: docker/build-push-action@v5
+        with:
+          context: ./internal/devbox/generate/tmpl/
+          file: ./internal/devbox/generate/tmpl/DevboxImageDockerfileRootUser
+          build-args: |
+            DEVBOX_USE_VERSION=${{ inputs.tag || github.ref_name }}
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.metaroot.outputs.tags }}
+      - name: Docker meta latest
+        id: metalatest
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            jetpackio/devbox
+          tags: |
+            type=raw,value=latest
+          flavor: |
+            latest=true
+      - name: Build and push latest
+        uses: docker/build-push-action@v5
         with:
           context: ./internal/devbox/generate/tmpl/
           file: ./internal/devbox/generate/tmpl/DevboxImageDockerfile
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: jetpackio/devbox:latest
-      - name: Build and push root user
-        uses: docker/build-push-action@v4
+          tags: ${{ steps.metalatest.outputs.tags }}
+      - name: Docker meta root latest
+        id: metarootlatest
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            jetpackio/devbox-root-user
+          tags: |
+            type=raw,value=latest
+          flavor: |
+            latest=true
+      - name: Build and push root user latest
+        uses: docker/build-push-action@v5
         with:
           context: ./internal/devbox/generate/tmpl/
           file: ./internal/devbox/generate/tmpl/DevboxImageDockerfileRootUser
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: jetpackio/devbox-root-user:latest
+          tags: ${{ steps.metarootlatest.outputs.tags }}

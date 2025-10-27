@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package nix
@@ -8,19 +8,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"runtime/trace"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/redact"
+	"go.jetify.com/devbox/internal/boxcli/featureflag"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/redact"
+	"go.jetify.com/devbox/nix/flake"
 
-	"go.jetpack.io/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/debug"
 )
 
 // ProfilePath contains the contents of the profile generated via `nix-env --profile ProfilePath <command>`
@@ -45,7 +49,7 @@ type PrintDevEnvArgs struct {
 
 // PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
 // all the environment variables and bash functions required to create a nix shell.
-func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEnvOut, error) {
+func (*NixInstance) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEnvOut, error) {
 	defer debug.FunctionTimer().End()
 	defer trace.StartRegion(ctx, "nixPrintDevEnv").End()
 
@@ -68,21 +72,20 @@ func (*Nix) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*PrintDevEn
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	ref := flake.Ref{Type: flake.TypePath, Path: flakeDirResolved}
 
 	if len(data) == 0 {
-		cmd := exec.CommandContext(
-			ctx,
-			"nix", "print-dev-env",
-			"path:"+flakeDirResolved,
-		)
-		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-		cmd.Args = append(cmd.Args, "--json")
-		debug.Log("Running print-dev-env cmd: %s\n", cmd)
-		data, err = cmd.Output()
+		cmd := Command("print-dev-env", "--json")
+		if featureflag.ImpurePrintDevEnv.Enabled() {
+			cmd.Args = append(cmd.Args, "--impure")
+		}
+		cmd.Args = append(cmd.Args, ref)
+		slog.Debug("running print-dev-env cmd", "cmd", cmd)
+		data, err = cmd.Output(ctx)
 		if insecure, insecureErr := IsExitErrorInsecurePackage(err, "" /*pkgName*/, "" /*installable*/); insecure {
 			return nil, insecureErr
 		} else if err != nil {
-			return nil, redact.Errorf("nix print-dev-env --json \"path:%s\": %w", flakeDirResolved, err)
+			return nil, err
 		}
 
 		if err := json.Unmarshal(data, &out); err != nil {
@@ -116,84 +119,15 @@ func FlakeNixpkgs(commit string) string {
 }
 
 func ExperimentalFlags() []string {
-	options := []string{"nix-command", "flakes"}
-	if featureflag.RemoveNixpkgs.Enabled() {
-		options = append(options, "fetch-closure")
-	}
+	options := []string{"nix-command", "flakes", "fetch-closure"}
 	return []string{
 		"--extra-experimental-features", "ca-derivations",
 		"--option", "experimental-features", strings.Join(options, " "),
 	}
 }
 
-func System() string {
-	if cachedSystem == "" {
-		// While this should have been initialized, we do a best-effort to avoid
-		// a panic.
-		if err := ComputeSystem(); err != nil {
-			panic(fmt.Sprintf(
-				"System called before being initialized by ComputeSystem: %v",
-				err,
-			))
-		}
-	}
-	return cachedSystem
-}
-
-var cachedSystem string
-
-func ComputeSystem() error {
-	// For Savil to debug "remove nixpkgs" feature. The Search api lacks x86-darwin info.
-	// So, I need to fake that I am x86-linux and inspect the output in generated devbox.lock
-	// and flake.nix files.
-	// This is also used by unit tests.
-	if cachedSystem != "" {
-		return nil
-	}
-	override := os.Getenv("__DEVBOX_NIX_SYSTEM")
-	if override != "" {
-		cachedSystem = override
-	} else {
-		cmd := exec.Command(
-			"nix", "eval", "--impure", "--raw", "--expr", "builtins.currentSystem",
-		)
-		cmd.Args = append(cmd.Args, ExperimentalFlags()...)
-		out, err := cmd.Output()
-		if err != nil {
-			return err
-		}
-		cachedSystem = string(out)
-	}
-	return nil
-}
-
 func SystemIsLinux() bool {
 	return strings.Contains(System(), "linux")
-}
-
-// version is the cached output of `nix --version`.
-var version = ""
-
-// Version returns the version of nix from `nix --version`. Usually in a semver
-// like format, but not strictly.
-func Version() (string, error) {
-	if version != "" {
-		return version, nil
-	}
-
-	cmd := command("--version")
-	outBytes, err := cmd.Output()
-	if err != nil {
-		return "", redact.Errorf("nix command: %s", redact.Safe(cmd))
-	}
-	out := string(outBytes)
-	const prefix = "nix (Nix) "
-	if !strings.HasPrefix(out, prefix) {
-		return "", redact.Errorf(`nix command %s: expected %q prefix, but output was: %s`,
-			redact.Safe(cmd), redact.Safe(prefix), redact.Safe(out))
-	}
-	version = strings.TrimSpace(strings.TrimPrefix(out, prefix))
-	return version, nil
 }
 
 var nixPlatforms = []string{
@@ -204,7 +138,7 @@ var nixPlatforms = []string{
 	"x86_64-linux",
 	// not technically supported, but should work?
 	// ref. https://nixos.wiki/wiki/Nix_on_ARM
-	// ref. https://github.com/jetpack-io/devbox/pull/1300
+	// ref. https://github.com/jetify-com/devbox/pull/1300
 	"armv7l-linux",
 }
 
@@ -262,7 +196,7 @@ func IsExitErrorInsecurePackage(err error, pkgNameOrEmpty, installableOrEmpty st
 			errMessages = append(errMessages,
 				fmt.Sprintf("To override, use `devbox add %s --allow-insecure=%s`", pkgName, strings.Join(insecurePackages, ", ")))
 
-			return true, usererr.New(strings.Join(errMessages, "\n\n"))
+			return true, usererr.New("%s", strings.Join(errMessages, "\n\n"))
 		}
 	}
 	return false, nil
@@ -292,4 +226,69 @@ func parseInsecurePackagesFromExitError(errorMsg string) []string {
 	}
 
 	return insecurePackages
+}
+
+var ErrUnknownServiceManager = errors.New("unknown service manager")
+
+func restartDaemon(ctx context.Context) error {
+	if runtime.GOOS != "darwin" {
+		err := fmt.Errorf("don't know how to restart nix daemon: %w", ErrUnknownServiceManager)
+		return &DaemonError{err: err}
+	}
+
+	cmd := exec.CommandContext(ctx, "launchctl", "bootout", "system", "/Library/LaunchDaemons/org.nixos.nix-daemon.plist")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return &DaemonError{
+			cmd:    cmd.String(),
+			stderr: out,
+			err:    fmt.Errorf("stop nix daemon: %w", err),
+		}
+	}
+	cmd = exec.CommandContext(ctx, "launchctl", "bootstrap", "system", "/Library/LaunchDaemons/org.nixos.nix-daemon.plist")
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		return &DaemonError{
+			cmd:    cmd.String(),
+			stderr: out,
+			err:    fmt.Errorf("start nix daemon: %w", err),
+		}
+	}
+
+	// TODO(gcurtis): poll for daemon to come back instead.
+	time.Sleep(2 * time.Second)
+	return nil
+}
+
+// FixInstallableArgs removes the narHash and lastModifiedDate query parameters
+// from any args that are valid installables and the Nix version is <2.25.
+// Otherwise it returns them unchanged.
+//
+// This fixes an issues with some older versions of Nix where specifying a
+// narHash without a lastModifiedDate results in an error.
+func FixInstallableArgs(args []string) {
+	if AtLeast(Version2_25) {
+		return
+	}
+
+	for i := range args {
+		parsed, _ := flake.ParseInstallable(args[i])
+		if parsed.Ref.NARHash == "" && parsed.Ref.LastModified == 0 {
+			continue
+		}
+		if parsed.Ref.NARHash != "" && parsed.Ref.LastModified != 0 {
+			continue
+		}
+
+		parsed.Ref.NARHash = ""
+		parsed.Ref.LastModified = 0
+		args[i] = parsed.String()
+	}
+}
+
+// fixInstallableArg calls fixInstallableArgs with a single argument.
+func FixInstallableArg(arg string) string {
+	args := []string{arg}
+	FixInstallableArgs(args)
+	return args[0]
 }

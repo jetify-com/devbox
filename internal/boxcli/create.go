@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/templates"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/templates"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 type createCmdFlags struct {
@@ -57,7 +57,7 @@ func createCmd() *cobra.Command {
 	)
 	command.Flags().StringVarP(
 		&flags.repo, "repo", "r", "",
-		"Git repository HTTPS URL to import template files from. Example: https://github.com/jetpack-io/devbox",
+		"Git repository HTTPS URL to import template files from. Example: https://github.com/jetify-com/devbox",
 	)
 	command.Flags().StringVarP(
 		&flags.subdir, "subdir", "s", "",
@@ -85,7 +85,7 @@ func runCreateCmd(cmd *cobra.Command, args []string, flags *createCmdFlags) erro
 		return err
 	}
 
-	ux.Fsuccess(
+	ux.Fsuccessf(
 		cmd.ErrOrStderr(),
 		"Initialized devbox project using template %s\n",
 		flags.template,

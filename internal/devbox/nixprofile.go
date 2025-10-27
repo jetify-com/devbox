@@ -2,13 +2,17 @@ package devbox
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/samber/lo"
-	"go.jetpack.io/devbox/internal/debug"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/nix/nixprofile"
+	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/nix/nixprofile"
 )
 
 // syncNixProfileFromFlake ensures the nix profile has the packages from the buildInputs
@@ -16,18 +20,20 @@ import (
 //
 // It also removes any packages from the nix profile that are no longer in the buildInputs.
 func (d *Devbox) syncNixProfileFromFlake(ctx context.Context) error {
-	// Get the computed Devbox environment from the generated flake
-	env, err := d.computeEnv(ctx, false /*usePrintDevEnvCache*/)
+	defer debug.FunctionTimer().End()
+	// Get the buildInputs from the generated flake
+	env, err := d.execPrintDevEnv(ctx, false /*usePrintDevEnvCache*/)
 	if err != nil {
 		return err
 	}
+	buildInputs := env["buildInputs"]
 
 	// Get the store-paths of the packages we want installed in the nix profile
 	wantStorePaths := []string{}
-	if env["buildInputs"] != "" {
+	if buildInputs != "" {
 		// env["buildInputs"] can be empty string if there are no packages in the project
 		// if buildInputs is empty, then we don't want wantStorePaths to be an array with a single "" entry
-		wantStorePaths = strings.Split(env["buildInputs"], " ")
+		wantStorePaths = strings.Split(buildInputs, " ")
 	}
 
 	profilePath, err := d.profilePath()
@@ -53,29 +59,68 @@ func (d *Devbox) syncNixProfileFromFlake(ctx context.Context) error {
 			storePath := nix.NewStorePathParts(p)
 			packagesToRemove = append(packagesToRemove, fmt.Sprintf("%s@%s", storePath.Name, storePath.Version))
 		}
-		debug.Log("Removing packages from nix profile: %s\n", strings.Join(packagesToRemove, ", "))
+		slog.Debug("removing packages from nix profile", "pkgs", strings.Join(packagesToRemove, ", "))
 
 		if err := nix.ProfileRemove(profilePath, remove...); err != nil {
 			return err
 		}
 	}
 	if len(add) > 0 {
-		// We need to install the packages in the nix profile one-by-one because
-		// we do checks for insecure packages.
-		// TODO: move the insecure package check here, and do `nix profile install installables...`
-		// in one command for speed.
-		for _, addPath := range add {
-			if err = nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
-				Installable: addPath,
-				// Install in offline mode for speed. We know we should have all the files
-				// locally in /nix/store since we have run `nix print-dev-env` prior to this.
-				// Also avoids some "substituter not found for store-path" errors.
-				Offline:     true,
-				ProfilePath: profilePath,
-				Writer:      d.stderr,
-			}); err != nil {
-				return fmt.Errorf("error installing package in nix profile %s: %w", addPath, err)
+		if err = nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
+			Installables: add,
+			ProfilePath:  profilePath,
+			Writer:       d.stderr,
+		}); errors.Is(err, nix.ErrPriorityConflict) {
+			// We need to install the packages one by one because there was possibly a priority conflict
+			// This is slower, but uncommon.
+			for _, addPath := range add {
+				if err = nix.ProfileInstall(ctx, &nix.ProfileInstallArgs{
+					Installables: []string{addPath},
+					ProfilePath:  profilePath,
+					Writer:       d.stderr,
+				}); err != nil {
+					return fmt.Errorf("error installing package in nix profile %s: %w", addPath, err)
+				}
 			}
+		} else if err != nil {
+			return fmt.Errorf("error installing packages in nix profile %s: %w", add, err)
+		}
+	}
+	if len(add) > 0 || len(remove) > 0 {
+		err := wipeProfileHistory(profilePath)
+		if err != nil {
+			// Log the error, but nothing terrible happens if this
+			// fails.
+			slog.DebugContext(ctx, "error cleaning up profile history", "err", err)
+		}
+	}
+	return nil
+}
+
+// wipeProfileHistory removes all old generations of a Nix profile, similar to
+// nix profile wipe-history. profile should be a path to the "default" symlink,
+// like .devbox/nix/profile/default.
+func wipeProfileHistory(profile string) error {
+	link, err := os.Readlink(profile)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	dir := filepath.Dir(profile)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	for _, dent := range entries {
+		if dent.Name() == "default" || dent.Name() == link {
+			continue
+		}
+		err := os.Remove(filepath.Join(dir, dent.Name()))
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
 		}
 	}
 	return nil

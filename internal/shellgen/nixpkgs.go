@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package shellgen
@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"go.jetpack.io/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/envir"
 )
 
 // Contains default nixpkgs used for mkShell

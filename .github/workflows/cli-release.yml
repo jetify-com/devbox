@@ -68,11 +68,11 @@ jobs:
         with:
           go-version-file: ./go.mod
       - name: Build snapshot with goreleaser
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
-          args: release --rm-dist --skip-publish --skip-announce --snapshot
+          args: release --clean --skip=announce,publish --snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
@@ -138,7 +138,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --rm-dist
+          args: release --clean
         env:
           DISCORD_WEBHOOK_ID: ${{ secrets.DISCORD_WEBHOOK_ID }}
           DISCORD_WEBHOOK_TOKEN: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}

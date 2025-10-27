@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package shellgen
@@ -11,39 +11,42 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/searcher"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/searcher"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 // update overwrites golden files with the new test results.
 var update = flag.Bool("update", false, "update the golden files with the test results")
 
+// TestWriteFromTemplate will verify that the flake.nix code generation works as expected.
+// Note: this test was derived from an older flake.nix, prior to having the builtins.FetchClosures
+// and so may be a bit out of date. It could be updated to be better and more exhaustive.
 func TestWriteFromTemplate(t *testing.T) {
 	t.Setenv("__DEVBOX_NIX_SYSTEM", "x86_64-linux")
 	dir := filepath.Join(t.TempDir(), "makeme")
 	outPath := filepath.Join(dir, "flake.nix")
-	err := writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix", "flake.nix")
+	_, err := writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix", "flake.nix")
 	if err != nil {
 		t.Fatal("got error writing flake template:", err)
 	}
 	cmpGoldenFile(t, outPath, "testdata/flake.nix.golden")
 
 	t.Run("WriteUnmodified", func(t *testing.T) {
-		err = writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix", "flake.nix")
+		_, err = writeFromTemplate(dir, testFlakeTmplPlan, "flake.nix", "flake.nix")
 		if err != nil {
 			t.Fatal("got error writing flake template:", err)
 		}
 		cmpGoldenFile(t, outPath, "testdata/flake.nix.golden")
 	})
 	t.Run("WriteModifiedSmaller", func(t *testing.T) {
-		emptyPlan := struct {
-			NixpkgsInfo struct {
-				URL string
-			}
-			FlakeInputs []flakeInput
-		}{}
-		err = writeFromTemplate(dir, emptyPlan, "flake.nix", "flake.nix")
+		emptyPlan := &flakePlan{
+			Packages:    []*devpkg.Package{},
+			FlakeInputs: []flakeInput{},
+			System:      "x86_64-linux",
+		}
+		_, err = writeFromTemplate(dir, emptyPlan, "flake.nix", "flake.nix")
 		if err != nil {
 			t.Fatal("got error writing flake template:", err)
 		}
@@ -82,21 +85,12 @@ If the new file is correct, you can update the golden file with:
 
 var (
 	locker            = &lockmock{}
-	testFlakeTmplPlan = &struct {
-		NixpkgsInfo struct {
-			URL string
-		}
-		FlakeInputs []flakeInput
-	}{
-		NixpkgsInfo: struct {
-			URL string
-		}{
-			URL: "https://github.com/nixos/nixpkgs/archive/b9c00c1d41ccd6385da243415299b39aa73357be.tar.gz",
-		},
+	testFlakeTmplPlan = &flakePlan{
+		Packages: []*devpkg.Package{}, // TODO savil
 		FlakeInputs: []flakeInput{
 			{
 				Name: "nixpkgs",
-				URL:  "github:NixOS/nixpkgs/b9c00c1d41ccd6385da243415299b39aa73357be",
+				Ref:  flake.Ref{Type: flake.TypeGitHub, Owner: "NixOS", Repo: "nixpkgs", Rev: "b9c00c1d41ccd6385da243415299b39aa73357be"},
 				Packages: []*devpkg.Package{
 					devpkg.PackageFromStringWithDefaults("php@latest", locker),
 					devpkg.PackageFromStringWithDefaults("php81Packages.composer@latest", locker),
@@ -123,6 +117,7 @@ var (
 				},
 			},
 		},
+		System: "x86_64-linux",
 	}
 )
 
@@ -135,14 +130,6 @@ func (*lockmock) Resolve(pkg string) (*lock.Package, error) {
 	}, nil
 }
 
-func (*lockmock) Get(pkg string) *lock.Package {
-	return nil
-}
-
-func (*lockmock) LegacyNixpkgsPath(pkg string) string {
-	return ""
-}
-
-func (*lockmock) ProjectDir() string {
-	return ""
-}
+func (*lockmock) Get(pkg string) *lock.Package { return nil }
+func (*lockmock) Stdenv() flake.Ref            { return flake.Ref{} }
+func (*lockmock) ProjectDir() string           { return "" }

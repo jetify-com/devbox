@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package devbox
@@ -6,20 +6,35 @@ package devbox
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/pkg/errors"
-	"go.jetpack.io/devbox/internal/boxcli/featureflag"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
-	"go.jetpack.io/devbox/internal/devpkg"
-	"go.jetpack.io/devbox/internal/lock"
-	"go.jetpack.io/devbox/internal/nix"
-	"go.jetpack.io/devbox/internal/nix/nixprofile"
-	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/internal/shellgen"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/nix/nixprofile"
+	"go.jetify.com/devbox/internal/plugin"
+	"go.jetify.com/devbox/internal/searcher"
+	"go.jetify.com/devbox/internal/shellgen"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
+	if len(opts.Pkgs) == 0 || slices.Contains(opts.Pkgs, "nixpkgs") {
+		if err := d.lockfile.UpdateStdenv(); err != nil {
+			return err
+		}
+		// if nixpkgs is the only package to update, just return here.
+		if len(opts.Pkgs) == 1 {
+			return nil
+		}
+		// Otherwise, remove nixpkgs and continue
+		opts.Pkgs = slices.DeleteFunc(opts.Pkgs, func(pkg string) bool {
+			return pkg == "nixpkgs"
+		})
+	}
+
 	inputs, err := d.inputsToUpdate(opts)
 	if err != nil {
 		return err
@@ -65,7 +80,11 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		}
 	}
 
-	if err := d.ensureStateIsUpToDate(ctx, update); err != nil {
+	mode := update
+	if opts.NoInstall {
+		mode = noInstall
+	}
+	if err := d.ensureStateIsUpToDate(ctx, mode); err != nil {
 		return err
 	}
 
@@ -74,14 +93,20 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	// It will return an error if .devbox/gen/flake is missing
 	// TODO: Remove this if it's not needed.
 	_ = nix.FlakeUpdate(shellgen.FlakePath(d))
-	return nil
+
+	// fix any missing store paths.
+	if err = d.FixMissingStorePaths(ctx); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return plugin.Update()
 }
 
 func (d *Devbox) inputsToUpdate(
 	opts devopt.UpdateOpts,
 ) ([]*devpkg.Package, error) {
 	if len(opts.Pkgs) == 0 {
-		return d.ConfigPackages(), nil
+		return d.AllPackages(), nil
 	}
 
 	var pkgsToUpdate []*devpkg.Package
@@ -116,62 +141,59 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 ) error {
 	existing := lockfile.Packages[pkg.Raw]
 	if existing == nil {
-		ux.Finfo(d.stderr, "Resolved %s to %[1]s %[2]s\n", pkg, resolved.Resolved)
+		ux.Finfof(d.stderr, "Resolved %s to %[1]s %[2]s\n", pkg, resolved.Resolved)
 		lockfile.Packages[pkg.Raw] = resolved
 		return nil
 	}
 
 	if existing.Version != resolved.Version {
 		if existing.LastModified > resolved.LastModified {
-			ux.Fwarning(
+			ux.Fwarningf(
 				d.stderr,
 				"Resolved version for %s has older last_modified time. Not updating\n",
 				pkg,
 			)
 			return nil
 		}
-		ux.Finfo(d.stderr, "Updating %s %s -> %s\n", pkg, existing.Version, resolved.Version)
+		ux.Finfof(d.stderr, "Updating %s %s -> %s\n", pkg, existing.Version, resolved.Version)
 		useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
 		return nil
 	}
 
 	// Add any missing system infos for packages whose versions did not change.
-	if featureflag.RemoveNixpkgs.Enabled() {
-
-		if lockfile.Packages[pkg.Raw].Systems == nil {
-			lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
-		}
-
-		userSystem := nix.System()
-		updated := false
-		for sysName, newSysInfo := range resolved.Systems {
-			// Check whether we are actually updating any system info.
-			if sysName == userSystem {
-				// The resolved pkg has a system info for the user's system, so add/overwrite it.
-				if !newSysInfo.Equals(existing.Systems[userSystem]) {
-					// We only guard this so that the ux messaging is accurate. We could overwrite every time.
-					updated = true
-				}
-			} else {
-				// Add other system infos if they don't exist, or if we have a different StorePath. This may
-				// overwrite an existing StorePath, but to ensure correctness we should ensure that all StorePaths
-				// come from the same package version.
-				existingSysInfo, exists := existing.Systems[sysName]
-				if !exists || !existingSysInfo.Equals(newSysInfo) {
-					updated = true
-				}
-			}
-		}
-		if updated {
-			// if we are updating the system info, then we should also update the other fields
-			useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
-
-			ux.Finfo(d.stderr, "Updated system information for %s\n", pkg)
-			return nil
-		}
+	if lockfile.Packages[pkg.Raw].Systems == nil {
+		lockfile.Packages[pkg.Raw].Systems = map[string]*lock.SystemInfo{}
 	}
 
-	ux.Finfo(d.stderr, "Already up-to-date %s %s\n", pkg, existing.Version)
+	userSystem := nix.System()
+	updated := false
+	for sysName, newSysInfo := range resolved.Systems {
+		// Check whether we are actually updating any system info.
+		if sysName == userSystem {
+			// The resolved pkg has a system info for the user's system, so add/overwrite it.
+			if !newSysInfo.Equals(existing.Systems[userSystem]) {
+				// We only guard this so that the ux messaging is accurate. We could overwrite every time.
+				updated = true
+			}
+		} else {
+			// Add other system infos if they don't exist, or if we have a different StorePath. This may
+			// overwrite an existing StorePath, but to ensure correctness we should ensure that all StorePaths
+			// come from the same package version.
+			existingSysInfo, exists := existing.Systems[sysName]
+			if !exists || !existingSysInfo.Equals(newSysInfo) {
+				updated = true
+			}
+		}
+	}
+	if updated {
+		// if we are updating the system info, then we should also update the other fields
+		useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
+
+		ux.Finfof(d.stderr, "Updated system information for %s\n", pkg)
+		return nil
+	}
+
+	ux.Finfof(d.stderr, "Already up-to-date %s %s\n", pkg, existing.Version)
 	return nil
 }
 
@@ -183,7 +205,7 @@ func (d *Devbox) attemptToUpgradeFlake(pkg *devpkg.Package) error {
 		return err
 	}
 
-	ux.Finfo(
+	ux.Finfof(
 		d.stderr,
 		"Attempting to upgrade %s using `nix profile upgrade`\n",
 		pkg.Raw,
@@ -191,7 +213,7 @@ func (d *Devbox) attemptToUpgradeFlake(pkg *devpkg.Package) error {
 
 	err = nixprofile.ProfileUpgrade(profilePath, pkg, d.lockfile)
 	if err != nil {
-		ux.Fwarning(
+		ux.Fwarningf(
 			d.stderr,
 			"Failed to upgrade %s using `nix profile upgrade`: %s\n",
 			pkg.Raw,

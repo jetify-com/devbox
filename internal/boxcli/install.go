@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -9,12 +9,19 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/devbox"
-	"go.jetpack.io/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devbox"
+	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/ux"
 )
 
+type installCmdFlags struct {
+	runCmdFlags
+	tidyLockfile bool
+}
+
 func installCmd() *cobra.Command {
-	flags := runCmdFlags{}
+	flags := installCmdFlags{}
 	command := &cobra.Command{
 		Use:     "install",
 		Short:   "Install all packages mentioned in devbox.json",
@@ -26,11 +33,16 @@ func installCmd() *cobra.Command {
 	}
 
 	flags.config.register(command)
+	command.Flags().BoolVar(
+		&flags.tidyLockfile, "tidy-lockfile", false,
+		"Fix missing store paths in the devbox.lock file.",
+		// Could potentially do more in the future.
+	)
 
 	return command
 }
 
-func installCmdFunc(cmd *cobra.Command, flags runCmdFlags) error {
+func installCmdFunc(cmd *cobra.Command, flags installCmdFlags) error {
 	// Check the directory exists.
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:         flags.config.path,
@@ -40,8 +52,17 @@ func installCmdFunc(cmd *cobra.Command, flags runCmdFlags) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if err = box.Install(cmd.Context()); err != nil {
+	ctx := cmd.Context()
+	if flags.tidyLockfile {
+		ctx = ux.HideMessage(ctx, devpkg.MissingStorePathsWarning)
+	}
+	if err = box.Install(ctx); err != nil {
 		return errors.WithStack(err)
+	}
+	if flags.tidyLockfile {
+		if err = box.FixMissingStorePaths(ctx); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 	fmt.Fprintln(cmd.ErrOrStderr(), "Finished installing packages.")
 	return nil

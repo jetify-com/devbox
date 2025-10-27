@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package boxcli
@@ -9,12 +9,15 @@ import (
 	"math"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
-	"go.jetpack.io/devbox/internal/boxcli/usererr"
-	"go.jetpack.io/devbox/internal/searcher"
-	"go.jetpack.io/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/searcher"
+	"go.jetify.com/devbox/internal/ux"
 )
+
+const trimmedVersionsLength = 10
 
 type searchCmdFlags struct {
 	showAll bool
@@ -30,7 +33,7 @@ func searchCmd() *cobra.Command {
 			query := args[0]
 			name, version, isVersioned := searcher.ParseVersionedPackage(query)
 			if !isVersioned {
-				results, err := searcher.Client().Search(query)
+				results, err := searcher.Client().Search(cmd.Context(), query)
 				if err != nil {
 					return err
 				}
@@ -81,7 +84,7 @@ func printSearchResults(
 
 	resultsAreTrimmed := false
 	pkgs := results.Packages
-	if !showAll && len(pkgs) > 10 {
+	if !showAll && len(pkgs) > trimmedVersionsLength {
 		resultsAreTrimmed = true
 		pkgs = results.Packages[:int(math.Min(10, float64(len(results.Packages))))]
 	}
@@ -89,7 +92,7 @@ func printSearchResults(
 	for _, pkg := range pkgs {
 		nonEmptyVersions := []string{}
 		for i, v := range pkg.Versions {
-			if !showAll && i >= 10 {
+			if !showAll && i >= trimmedVersionsLength {
 				resultsAreTrimmed = true
 				break
 			}
@@ -100,14 +103,19 @@ func printSearchResults(
 
 		versionString := ""
 		if len(nonEmptyVersions) > 0 {
-			versionString = fmt.Sprintf(" (%s)", strings.Join(nonEmptyVersions, ", "))
+			ellipses := lo.Ternary(resultsAreTrimmed && pkg.NumVersions > trimmedVersionsLength, " ...", "")
+			if showAll {
+				versionString = fmt.Sprintf("\n > %s \n", strings.Join(nonEmptyVersions, "\n > "))
+			} else {
+				versionString = fmt.Sprintf(" (%s%s)", strings.Join(nonEmptyVersions, ", "), ellipses)
+			}
 		}
 		fmt.Fprintf(w, "* %s %s\n", pkg.Name, versionString)
 	}
 
 	if resultsAreTrimmed {
 		fmt.Println()
-		ux.Fwarning(
+		ux.Fwarningf(
 			w,
 			"Showing top 10 results and truncated versions. Use --show-all to "+
 				"show all.\n\n",

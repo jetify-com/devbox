@@ -19,9 +19,18 @@ content readable.
 */ -}}
 
 {{- if .OriginalInitPath -}}
+{{- if eq .ShellName "zsh" -}}
+if [ -f {{ .OriginalInitPath }} ]; then
+  local DEVBOX_ZDOTDIR="$ZDOTDIR"
+  export ZDOTDIR="{{dirPath .OriginalInitPath}}"
+  . "{{ .OriginalInitPath }}"
+  export ZDOTDIR="$DEVBOX_ZDOTDIR"
+fi
+{{ else -}}
 if [ -f {{ .OriginalInitPath }} ]; then
   . "{{ .OriginalInitPath }}"
 fi
+{{ end -}}
 {{ end -}}
 
 # Begin Devbox Post-init Hook
@@ -56,7 +65,7 @@ working_dir="$(pwd)"
 cd "{{ .ProjectDir }}" || exit
 
 # Source the hooks file, which contains the project's init hooks and plugin hooks.
-. {{ .HooksFilePath }}
+. "{{ .HooksFilePath }}"
 
 cd "$working_dir" || exit
 

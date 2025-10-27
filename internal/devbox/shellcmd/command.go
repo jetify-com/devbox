@@ -1,4 +1,4 @@
-// Copyright 2023 Jetpack Technologies Inc and contributors. All rights reserved.
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
 // Use of this source code is governed by the license in the LICENSE file.
 
 package shellcmd
@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"go.jetpack.io/devbox/internal/cuecfg"
+	"go.jetify.com/devbox/internal/cuecfg"
 )
 
 // Formats for marshalling and unmarshalling a series of shell commands in a
