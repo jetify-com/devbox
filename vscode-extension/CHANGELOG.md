@@ -4,6 +4,11 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.8]
+
+- Added support "Reopen in Devbox" feature for Windows with WSL
+  - Credit: [Adrian Grucza](https://github.com/apgrucza)
+
 ## [0.1.7]
 
 - Removed Open In Desktop feature since devbox.sh web app is deprecated.

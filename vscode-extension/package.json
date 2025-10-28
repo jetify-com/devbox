@@ -2,7 +2,7 @@
   "name": "devbox",
   "displayName": "devbox by Jetify",
   "description": "devbox integration for VSCode",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
