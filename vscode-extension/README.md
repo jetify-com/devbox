@@ -20,6 +20,8 @@ If the opened workspace in VSCode has a devbox.json file, from command palette, 
 NOTE: Requires devbox CLI v0.5.5 and above
   installed and in PATH. This feature is in beta. Please report any bugs/issues in [Github](https://github.com/jetify-com/devbox) or our [Discord](https://discord.gg/jetify).
 
+NOTE2: This feature works with Linux, MacOS, and Windows with WSL (project files should reside in WSL and devbox CLI needs to be installed and in PATH in WSL)
+
 ### Run devbox commands from command palette
 
 `cmd/ctrl + shift + p` opens vscode's command palette. Typing devbox filters all available commands devbox extension can run. Those commands are:
