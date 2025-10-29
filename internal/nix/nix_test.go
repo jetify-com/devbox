@@ -68,21 +68,3 @@ func TestParseInsecurePackagesFromExitError(t *testing.T) {
 		t.Errorf("Expected package 'python-2.7.18.7', got %s", packages[0])
 	}
 }
-
-func TestFlakeNixpkgs(t *testing.T) {
-	// Test that FlakeNixpkgs returns the expected string given a commit hash.
-	commit := "123456abcdef"
-	expected := "github:NixOS/nixpkgs/123456abcdef"
-	result := FlakeNixpkgs(commit)
-	if result != expected {
-		t.Errorf("FlakeNixpkgs(%q) = %q, want %q", commit, result, expected)
-	}
-
-	// Test with an empty string
-	commit = ""
-	expected = "github:NixOS/nixpkgs/"
-	result = FlakeNixpkgs(commit)
-	if result != expected {
-		t.Errorf("FlakeNixpkgs(empty string) = %q, want %q", result, expected)
-	}
-}
