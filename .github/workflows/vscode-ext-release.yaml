@@ -11,11 +11,11 @@ jobs:
     environment: release
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup NodeJS 18
-        uses: actions/setup-node@v4
+        uses: actions/checkout@v5
+      - name: Setup NodeJS 24
+        uses: actions/setup-node@v5
         with:
-          node-version: 18
+          node-version: 24
       - name: Install dependencies
         run: |
           npm install -g yarn
