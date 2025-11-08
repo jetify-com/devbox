@@ -2,25 +2,114 @@
 
 Devbox supports nushell through the `--format` flag on the `shellenv` command.
 
+## Quick Start
+
+**Add this to `~/.config/nushell/env.nu`:**
+
+```nushell
+devbox global shellenv --format nushell --preserve-path-stack -r
+  | lines 
+  | parse "$env.{name} = \"{value}\""
+  | where name != null 
+  | transpose -r 
+  | into record 
+  | load-env
+```
+
+This is equivalent to bash's `eval "$(devbox global shellenv)"` and runs fresh on every shell start.
+
+---
+
 ## Global Configuration
 
-To use devbox global packages with nushell, add the following to your nushell configuration file:
+To use devbox global packages with nushell, you need to load the environment similar to how bash/zsh use `eval "$(devbox global shellenv)"`.
 
-### Option 1: Add to `~/.config/nushell/env.nu` (recommended)
+### Option 1 (Recommended): Dynamic loading with `load-env` - True eval equivalent
 
-```nushell
-# Load devbox global environment
-devbox global shellenv --format nushell | save -f ~/.cache/devbox-env.nu
-source ~/.cache/devbox-env.nu
-```
-
-### Option 2: Add to `~/.config/nushell/config.nu`
+Add this to `~/.config/nushell/env.nu` to regenerate and load devbox environment fresh every time, just like bash's `eval`:
 
 ```nushell
-# Load devbox global environment
-devbox global shellenv --format nushell | save -f ~/.cache/devbox-env.nu
-source ~/.cache/devbox-env.nu
+# Load devbox global environment dynamically (equivalent to bash eval)
+devbox global shellenv --format nushell --preserve-path-stack -r
+  | lines 
+  | parse "$env.{name} = \"{value}\""
+  | where name != null 
+  | transpose -r 
+  | into record 
+  | load-env
 ```
+
+**Flags explained:**
+
+- `--format nushell` - Output in nushell syntax
+- `--preserve-path-stack` - Maintain existing PATH order if devbox is already active
+- `-r` (recompute) - Always recompute the environment, prevents "out of date" warnings
+
+**Advantages:**
+
+- ✅ Regenerates environment every time (like `eval "$(devbox global shellenv)"`)
+- ✅ No cached files
+- ✅ Always up to date
+- ✅ Works in a single shell startup
+
+### Option 2: Cache-based loading (faster startup)
+
+If you prefer faster shell startup, use a cached file approach:
+
+**First time setup:**
+
+```nushell
+# Run this once to generate the cache file
+devbox global shellenv --format nushell --preserve-path-stack -r | save -f ~/.cache/devbox-global-env.nu --force
+```
+
+**Then add to `~/.config/nushell/env.nu`:**
+
+```nushell
+# Load devbox from cache (faster, but needs manual refresh)
+source ~/.cache/devbox-global-env.nu
+```
+
+**Add this refresh command to `~/.config/nushell/config.nu`:**
+
+```nushell
+# Refresh devbox environment when needed
+def devbox-refresh [] {
+    devbox global shellenv --format nushell --preserve-path-stack -r | save -f ~/.cache/devbox-global-env.nu --force
+    print "Devbox environment updated! Restart your shell to apply changes."
+}
+```
+
+**When to refresh:** Run `devbox-refresh` after:
+
+- Adding/removing global packages (`devbox global add/rm`)
+- Updating packages (`devbox global update`)
+
+### How It Works (Compared to Bash eval)
+
+**Bash/Zsh:**
+
+```bash
+eval "$(devbox global shellenv)"  # Generates and executes every time
+```
+
+**Nushell Option 1 (Dynamic - Recommended):**
+
+```nushell
+devbox global shellenv --format nushell --preserve-path-stack -r 
+  | lines | parse ... | load-env  # Generates and loads every time, just like bash eval
+```
+
+**Nushell Option 2 (Cached):**
+
+```nushell
+source ~/.cache/devbox-global-env.nu  # Loads from cache, faster but needs manual refresh
+```
+
+**Why the extra flags?**
+
+- `--preserve-path-stack` - Prevents PATH conflicts if devbox is already active
+- `-r` (recompute) - Forces environment regeneration, eliminates "out of date" warnings
 
 ## Project-Specific Shells
 
@@ -48,11 +137,13 @@ source /tmp/devbox-env.nu
 Nushell uses a different syntax for environment variables:
 
 **Bash/Zsh:**
+
 ```bash
 export MY_VAR="value"
 ```
 
 **Nushell:**
+
 ```nushell
 $env.MY_VAR = "value"
 ```
@@ -100,6 +191,7 @@ You should see devbox-related paths in the output.
 ## More Information
 
 For more information about devbox, visit:
+
 - [Devbox Documentation](https://www.jetify.com/devbox/docs/)
 - [GitHub Repository](https://github.com/jetify-com/devbox)
 - [Join our Discord](https://discord.gg/jetify)
