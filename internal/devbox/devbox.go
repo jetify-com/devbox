@@ -367,15 +367,28 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 		return "", err
 	}
 
-	envStr := exportify(envs)
+	// Use the appropriate export format based on shell type
+	var envStr string
+	if opts.ShellFormat == devopt.ShellFormatNushell {
+		envStr = exportifyNushell(envs)
+	} else {
+		envStr = exportify(envs)
+	}
 
 	if opts.RunHooks {
-		hooksStr := ". \"" + shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename) + "\""
+		var hooksStr string
+		if opts.ShellFormat == devopt.ShellFormatNushell {
+			// Nushell uses 'source' command
+			hooksStr = "source \"" + shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename) + "\""
+		} else {
+			// Bash/Zsh/Fish use '.' command
+			hooksStr = ". \"" + shellgen.ScriptPath(d.ProjectDir(), shellgen.HooksFilename) + "\""
+		}
 		envStr = fmt.Sprintf("%s\n%s;\n", envStr, hooksStr)
 	}
 
 	if !opts.NoRefreshAlias {
-		envStr += "\n" + d.refreshAlias()
+		envStr += "\n" + d.refreshAliasForShell(string(opts.ShellFormat))
 	}
 
 	return envStr, nil

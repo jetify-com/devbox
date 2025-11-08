@@ -69,10 +69,19 @@ type UpdateOpts struct {
 	IgnoreMissingPackages bool
 }
 
+type ShellFormat string
+
+const (
+	ShellFormatBash    ShellFormat = "bash"
+	ShellFormatFish    ShellFormat = "fish"
+	ShellFormatNushell ShellFormat = "nushell"
+)
+
 type EnvExportsOpts struct {
 	EnvOptions     EnvOptions
 	NoRefreshAlias bool
 	RunHooks       bool
+	ShellFormat    ShellFormat
 }
 
 // EnvOptions configure the Devbox Environment in the `computeEnv` function.
