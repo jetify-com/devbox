@@ -73,7 +73,6 @@ type ShellFormat string
 
 const (
 	ShellFormatBash    ShellFormat = "bash"
-	ShellFormatFish    ShellFormat = "fish"
 	ShellFormatNushell ShellFormat = "nushell"
 )
 

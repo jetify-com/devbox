@@ -118,11 +118,9 @@ For bash/zsh (~/.bashrc or ~/.zshrc):
 	eval "$(devbox global shellenv)"
 
 For fish (~/.config/fish/config.fish):
-	devbox global shellenv --format fish | source
+	devbox global shellenv | source
 
-For nushell (~/.config/nushell/config.nu or ~/.config/nushell/env.nu):
-	devbox global shellenv --format nushell | save -f ~/.cache/devbox-env.nu
-	source ~/.cache/devbox-env.nu
+For nushell: See NUSHELL.md for setup instructions
 `,
 		)
 	}

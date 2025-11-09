@@ -433,8 +433,3 @@ func isFishShell() bool {
 	return filepath.Base(os.Getenv("SHELL")) == "fish" ||
 		os.Getenv("FISH_VERSION") != ""
 }
-
-func isNushell() bool {
-	return filepath.Base(os.Getenv("SHELL")) == "nu" ||
-		os.Getenv("NU_VERSION") != ""
-}
