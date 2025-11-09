@@ -47,7 +47,6 @@ func shellEnvCmd(defaults shellenvFlagDefaults) *cobra.Command {
 				return err
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), s)
-			// hash -r is only for bash/zsh, not nushell
 			if flags.format != "nushell" && !strings.HasSuffix(os.Getenv("SHELL"), "fish") {
 				fmt.Fprintln(cmd.OutOrStdout(), "hash -r")
 			}
@@ -85,7 +84,7 @@ func shellEnvCmd(defaults shellenvFlagDefaults) *cobra.Command {
 
 	command.Flags().StringVar(
 		&flags.format, "format", "bash",
-		"Output format for shell environment (bash, nushell)",
+		"Output format for shell environment (nushell)",
 	)
 
 	flags.config.register(command)
