@@ -64,9 +64,6 @@ func (d *Devbox) refreshCmdForShell(format string) string {
 		// Nushell doesn't have eval; use overlay or source with temporary file
 		return fmt.Sprintf(`devbox %s | save -f ~/.cache/devbox-env.nu; source ~/.cache/devbox-env.nu`, devboxCmd)
 	}
-	if format == "fish" || isFishShell() {
-		return fmt.Sprintf(`eval (devbox %s  | string collect)`, devboxCmd)
-	}
 	return fmt.Sprintf(`eval "$(devbox %s)" && hash -r`, devboxCmd)
 }
 
