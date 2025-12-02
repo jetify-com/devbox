@@ -55,7 +55,7 @@ jobs:
   build-devbox:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -100,7 +100,7 @@ jobs:
   golangci-lint:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
@@ -128,7 +128,7 @@ jobs:
       matrix:
         is-main:
           - ${{ github.ref == 'refs/heads/main' && 'is-main' || 'not-main' }}
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest, macos-latest]
         # This is an optimization that runs tests twice, with and without
         # the devbox.json tests. We can require the other tests to complete before
         # merging, while keeping the others as an additional non-required signal
@@ -140,7 +140,7 @@ jobs:
         nix-version: ["2.12.0", "2.19.2", "2.30.2"]
         exclude:
           # Only runs tests on macos if explicitly requested, or on a schedule
-          - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-13' }}"
+          - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-latest' }}"
             
 
     runs-on: ${{ matrix.os }}
@@ -223,7 +223,7 @@ jobs:
     needs: build-devbox
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest, macos-latest]
         use-detsys: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
@@ -272,7 +272,7 @@ jobs:
     needs: build-devbox
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest, macos-latest]
         nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0, 2.19.2, 2.24.7]
     runs-on: ${{ matrix.os }}
     steps:
