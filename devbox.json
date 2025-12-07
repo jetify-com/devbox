@@ -8,15 +8,19 @@
   },
   "env": {
     "GOENV": "off",
-    "PATH":  "$PWD/dist/tools:$PATH:$PWD/dist"
+    "PATH":  "$PWD/dist/tools:$PATH:$PWD/dist",
+     // Disabling CGO is a workaround for a clang linker error in macos
+     // This should be okay, because Devbox doesn't require CGO
+     // https://github.com/NixOS/nixpkgs/issues/433688#issuecomment-3231557942
+    "CGO_ENABLED": "0",
   },
   "shell": {
     "init_hook": [
       // Remove Go environment variables that might've been inherited from the
       // user's environment and could affect the build.
       "test -z $FISH_VERSION && \\",
-      "unset       CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK || \\",
-      "set --erase CGO_ENABLED GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK",
+      "unset       GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK || \\",
+      "set --erase GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK",
       "GOBIN=$PWD/dist/tools go install tool"
     ],
     "scripts": {
