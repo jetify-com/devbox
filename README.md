@@ -190,8 +190,8 @@ Thanks to [Nix](https://nixos.org/) for providing isolated shells.
 
 ## Translation
 
-- [Chinese](./docs/translation/README-zh-CN.md)
-- [Korean](./docs/translation/README-ko-KR.md)
+- [Chinese](./translation/README-zh-CN.md)
+- [Korean](./translation/README-ko-KR.md)
 
 ## License
 
