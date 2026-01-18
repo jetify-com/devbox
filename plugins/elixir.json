@@ -1,11 +1,6 @@
 {
   "name": "elixir",
-  "version": "0.0.1",
-  "packages": {
-    "darwin.apple_sdk.frameworks.CoreServices": {
-      "platforms": ["aarch64-darwin", "x86_64-darwin"]
-    }
-  },
+  "version": "0.0.2",
   "env": {
     "MIX_HOME": "{{ .Virtenv }}/mix",
     "HEX_HOME": "{{ .Virtenv }}/hex",
