@@ -24,6 +24,12 @@ func getConfigIfAny(inc Includable, projectDir string) (*Config, error) {
 			return nil, errors.WithStack(err)
 		}
 		return buildConfig(includable, projectDir, string(content))
+	case *gitPlugin:
+		content, err := includable.Fetch()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		return buildConfig(includable, projectDir, string(content))
 	case *LocalPlugin:
 		content, err := os.ReadFile(includable.Path())
 		if err != nil && !os.IsNotExist(err) {
