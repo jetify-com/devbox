@@ -2,7 +2,7 @@
   "name": "devbox",
   "displayName": "devbox by Jetify",
   "description": "devbox integration for VSCode",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
@@ -160,6 +160,7 @@
   "dependencies": {
     "@types/node": "16.x",
     "form-data": "^4.0.4",
+    "js-yaml": "^4.1.1",
     "node-fetch": "^2",
     "which": "^3.0.0"
   }

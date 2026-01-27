@@ -47,7 +47,7 @@ curl -fsSL https://get.jetify.com/devbox | bash
 ```
 
 Read more on the
-[Devbox docs](https://www.jetify.com/devbox/docs/installing_devbox/).
+[Devbox docs](https://www.jetify.com/devbox/docs/installing-devbox/).
 
 ## Benefits
 
@@ -187,11 +187,6 @@ Devbox is an opensource project, so contributions are always welcome. Please rea
 ## Related Work
 
 Thanks to [Nix](https://nixos.org/) for providing isolated shells.
-
-## Translation
-
-- [Chinese](./docs/translation/README-zh-CN.md)
-- [Korean](./docs/translation/README-ko-KR.md)
 
 ## License
 

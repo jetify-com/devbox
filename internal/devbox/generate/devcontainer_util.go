@@ -140,11 +140,11 @@ func (g *Options) CreateDevcontainer(ctx context.Context) error {
 	return err
 }
 
-func CreateEnvrc(ctx context.Context, path string, envFlags devopt.EnvFlags) error {
+func CreateEnvrc(ctx context.Context, opts devopt.EnvrcOpts) error {
 	defer trace.StartRegion(ctx, "createEnvrc").End()
 
 	// create .envrc file
-	file, err := os.Create(filepath.Join(path, ".envrc"))
+	file, err := os.Create(filepath.Join(opts.EnvrcDir, ".envrc"))
 	if err != nil {
 		return err
 	}
@@ -152,21 +152,54 @@ func CreateEnvrc(ctx context.Context, path string, envFlags devopt.EnvFlags) err
 
 	flags := []string{}
 
-	if len(envFlags.EnvMap) > 0 {
-		for k, v := range envFlags.EnvMap {
+	if len(opts.EnvMap) > 0 {
+		for k, v := range opts.EnvMap {
 			flags = append(flags, fmt.Sprintf("--env %s=%s", k, v))
 		}
 	}
-	if envFlags.EnvFile != "" {
-		flags = append(flags, fmt.Sprintf("--env-file %s", envFlags.EnvFile))
+	if opts.EnvFile != "" {
+		flags = append(flags, fmt.Sprintf("--env-file %s", opts.EnvFile))
+	}
+
+	configDir, err := getRelativePathToConfig(opts.EnvrcDir, opts.ConfigDir)
+	if err != nil {
+		return err
 	}
 
 	t := template.Must(template.ParseFS(tmplFS, "tmpl/envrc.tmpl"))
 
 	// write content into file
 	return t.Execute(file, map[string]string{
-		"Flags": strings.Join(flags, " "),
+		"EnvFlag":   strings.Join(flags, " "),
+		"ConfigDir": formatConfigDirArg(configDir),
 	})
+}
+
+// Returns the relative path from sourceDir to configDir, or an error if it cannot be determined.
+func getRelativePathToConfig(sourceDir, configDir string) (string, error) {
+	absConfigDir, err := filepath.Abs(configDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to get absolute path for config dir: %w", err)
+	}
+
+	absSourceDir, err := filepath.Abs(sourceDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to get absolute path for source dir: %w", err)
+	}
+
+	// We don't want the path if the config dir is a parent of the envrc dir. This way
+	// the config will be found when it recursively searches for it through the parent tree.
+	if strings.HasPrefix(absSourceDir, absConfigDir) {
+		return "", nil
+	}
+
+	relPath, err := filepath.Rel(absSourceDir, absConfigDir)
+	if err != nil {
+		// If a relative path cannot be computed, return the absolute path of configDir
+		return absConfigDir, err
+	}
+
+	return relPath, nil
 }
 
 func (g *Options) getDevcontainerContent() *devcontainerObject {
@@ -219,17 +252,26 @@ func (g *Options) getDevcontainerContent() *devcontainerObject {
 	return devcontainerContent
 }
 
-func EnvrcContent(w io.Writer, envFlags devopt.EnvFlags) error {
-	tmplName := "envrcContent.tmpl"
-	t := template.Must(template.ParseFS(tmplFS, "tmpl/"+tmplName))
+func EnvrcContent(w io.Writer, envFlags devopt.EnvFlags, configDir string) error {
+	t := template.Must(template.ParseFS(tmplFS, "tmpl/envrcContent.tmpl"))
 	envFlag := ""
 	if len(envFlags.EnvMap) > 0 {
 		for k, v := range envFlags.EnvMap {
 			envFlag += fmt.Sprintf("--env %s=%s ", k, v)
 		}
 	}
+
 	return t.Execute(w, map[string]string{
-		"EnvFlag": envFlag,
-		"EnvFile": envFlags.EnvFile,
+		"EnvFlag":   envFlag,
+		"EnvFile":   envFlags.EnvFile,
+		"ConfigDir": formatConfigDirArg(configDir),
 	})
+}
+
+func formatConfigDirArg(configDir string) string {
+	if configDir == "" {
+		return ""
+	}
+
+	return "--config " + configDir
 }

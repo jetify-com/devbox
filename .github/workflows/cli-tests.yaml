@@ -48,12 +48,14 @@ env:
   HOMEBREW_NO_EMOJI: 1
   HOMEBREW_NO_ENV_HINTS: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
-
+  NIX_CONFIG: |
+    access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+    
 jobs:
   build-devbox:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -98,7 +100,7 @@ jobs:
   golangci-lint:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
@@ -126,7 +128,7 @@ jobs:
       matrix:
         is-main:
           - ${{ github.ref == 'refs/heads/main' && 'is-main' || 'not-main' }}
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest, macos-latest]
         # This is an optimization that runs tests twice, with and without
         # the devbox.json tests. We can require the other tests to complete before
         # merging, while keeping the others as an additional non-required signal
@@ -138,7 +140,7 @@ jobs:
         nix-version: ["2.12.0", "2.19.2", "2.30.2"]
         exclude:
           # Only runs tests on macos if explicitly requested, or on a schedule
-          - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-13' }}"
+          - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-latest' }}"
             
 
     runs-on: ${{ matrix.os }}
@@ -176,6 +178,30 @@ jobs:
         uses: jetify-com/devbox-install-action@jl/migrate-installer
         with:
           enable-cache: true
+      - name: Setup Nix GitHub authentication
+        run: |
+          # Setup github authentication to ensure Github's rate limits are not hit
+          # For macOS, we need to configure the system-wide nix.conf because the Nix daemon
+          # runs as a different user and doesn't read the user's ~/.config/nix/nix.conf
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            echo "Configuring system-wide Nix config for macOS daemon"
+            # Ensure /etc/nix directory exists
+            if [ ! -d /etc/nix ]; then
+              sudo mkdir -p /etc/nix
+            fi
+            # Check if file exists, create it if not
+            if [ ! -f /etc/nix/nix.conf ]; then
+              echo "# Nix configuration" | sudo tee /etc/nix/nix.conf > /dev/null
+            fi
+            echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" | sudo tee -a /etc/nix/nix.conf
+            # Restart nix daemon to pick up the new configuration
+            sudo launchctl stop org.nixos.nix-daemon || true
+            sudo launchctl start org.nixos.nix-daemon || true
+            sleep 2  # Give daemon time to restart
+          fi
+          # For Linux and as a backup for macOS, also configure user config
+          mkdir -p ~/.config/nix
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
       - name: Run fast tests
         if: matrix.run-project-tests == 'project-tests-off'
         run: |
@@ -197,7 +223,7 @@ jobs:
     needs: build-devbox
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest, macos-latest]
         use-detsys: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
@@ -215,12 +241,28 @@ jobs:
           export NIX_INSTALLER_NO_CHANNEL_ADD=1
           export DEVBOX_FEATURE_DETSYS_INSTALLER=${{ matrix.use-detsys }}
 
-          # Setup github authentication to ensure Github's rate limits are not hit.
-          # If this works, we can consider refactoring this into a reusable github action helper.
+          # Setup github authentication BEFORE running devbox to ensure Github's rate limits are not hit.
+          # Configure user config first (Nix installer will respect this)
           mkdir -p ~/.config/nix
           echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
 
+          # Run devbox which will auto-install Nix if needed
           devbox run echo "Installing packages..."
+
+          # After Nix is installed, configure system-wide config for the daemon on macOS
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            echo "Configuring system-wide Nix config for macOS daemon"
+            # Check if file exists, create directory if needed
+            if [ ! -f /etc/nix/nix.conf ]; then
+              sudo mkdir -p /etc/nix
+              echo "# Nix configuration" | sudo tee /etc/nix/nix.conf > /dev/null
+            fi
+            echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" | sudo tee -a /etc/nix/nix.conf
+            # Restart nix daemon to pick up the new configuration
+            sudo launchctl stop org.nixos.nix-daemon || true
+            sudo launchctl start org.nixos.nix-daemon || true
+            sleep 2  # Give daemon time to restart
+          fi
       - name: Test removing package
         run: devbox rm go
 
@@ -230,7 +272,7 @@ jobs:
     needs: build-devbox
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest, macos-latest]
         nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0, 2.19.2, 2.24.7]
     runs-on: ${{ matrix.os }}
     steps:

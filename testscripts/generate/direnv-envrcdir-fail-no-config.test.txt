@@ -1,0 +1,9 @@
+# Testscript to validate generating a direnv .envrc in a specified location (./cfg) that also
+# contains a config, but NO --config is specified so it fails to find it.
+
+mkdir cfg
+exec devbox init cfg
+exists cfg/devbox.json
+
+! exec devbox generate direnv --envrc-dir cfg
+stderr 'no devbox.json found in the current directory \(or any parent directories\). Did you run `devbox init` yet\?'
