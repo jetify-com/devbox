@@ -2,7 +2,7 @@ version: "0.5"
 
 processes:
   postgresql:
-    command: "pg_ctl start -o \"-k '$PGHOST'\""
+    command: "pg_ctl start -o \"-k '$PGHOST' ${PGPORT:+-p '$PGPORT'}\""
     is_daemon: true
     shutdown: 
       command: "pg_ctl stop -m fast"
@@ -10,4 +10,4 @@ processes:
       restart: "always"
     readiness_probe:
       exec:
-        command: "pg_isready"
+        command: "pg_isready ${PGPORT:+-p '$PGPORT'}"
