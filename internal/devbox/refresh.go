@@ -52,21 +52,6 @@ func (d *Devbox) refreshCmd() string {
 	return fmt.Sprintf(`eval "$(devbox %s)" && hash -r`, devboxCmd)
 }
 
-func (d *Devbox) refreshCmdForShell(format string) string {
-	devboxCmd := fmt.Sprintf("shellenv --preserve-path-stack -c %q", d.projectDir)
-	if d.isGlobal() {
-		devboxCmd = "global shellenv --preserve-path-stack -r --format " + format
-	} else {
-		devboxCmd = fmt.Sprintf("shellenv --preserve-path-stack -c %q --format %s", d.projectDir, format)
-	}
-
-	if format == "nushell" {
-		// Nushell doesn't have eval; use overlay or source with temporary file
-		return fmt.Sprintf(`devbox %s | save -f ~/.cache/devbox-env.nu; source ~/.cache/devbox-env.nu`, devboxCmd)
-	}
-	return fmt.Sprintf(`eval "$(devbox %s)" && hash -r`, devboxCmd)
-}
-
 func (d *Devbox) refreshAlias() string {
 	if isFishShell() {
 		return fmt.Sprintf(
