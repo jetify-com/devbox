@@ -110,11 +110,11 @@ func TestGitPlugin(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ref, err := flake.ParseRef(tt.ref)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			ref, err := flake.ParseRef(testCase.ref)
 			if err != nil {
-				t.Fatalf("Failed to parse ref %q: %v", tt.ref, err)
+				t.Fatalf("Failed to parse ref %q: %v", testCase.ref, err)
 			}
 
 			plugin, err := newGitPlugin(ref)
@@ -122,23 +122,23 @@ func TestGitPlugin(t *testing.T) {
 				t.Fatalf("Failed to create Git plugin: %v", err)
 			}
 
-			if plugin.ref.Type != tt.expected.ref.Type {
-				t.Errorf("Expected type %q, got %q", tt.expected.ref.Type, plugin.ref.Type)
+			if plugin.ref.Type != testCase.expected.ref.Type {
+				t.Errorf("Expected type %q, got %q", testCase.expected.ref.Type, plugin.ref.Type)
 			}
-			if plugin.ref.URL != tt.expected.ref.URL {
-				t.Errorf("Expected URL %q, got %q", tt.expected.ref.URL, plugin.ref.URL)
+			if plugin.ref.URL != testCase.expected.ref.URL {
+				t.Errorf("Expected URL %q, got %q", testCase.expected.ref.URL, plugin.ref.URL)
 			}
-			if plugin.ref.Ref != tt.expected.ref.Ref {
-				t.Errorf("Expected ref %q, got %q", tt.expected.ref.Ref, plugin.ref.Ref)
+			if plugin.ref.Ref != testCase.expected.ref.Ref {
+				t.Errorf("Expected ref %q, got %q", testCase.expected.ref.Ref, plugin.ref.Ref)
 			}
-			if plugin.ref.Rev != tt.expected.ref.Rev {
-				t.Errorf("Expected rev %q, got %q", tt.expected.ref.Rev, plugin.ref.Rev)
+			if plugin.ref.Rev != testCase.expected.ref.Rev {
+				t.Errorf("Expected rev %q, got %q", testCase.expected.ref.Rev, plugin.ref.Rev)
 			}
-			if plugin.ref.Dir != tt.expected.ref.Dir {
-				t.Errorf("Expected dir %q, got %q", tt.expected.ref.Dir, plugin.ref.Dir)
+			if plugin.ref.Dir != testCase.expected.ref.Dir {
+				t.Errorf("Expected dir %q, got %q", testCase.expected.ref.Dir, plugin.ref.Dir)
 			}
-			if plugin.name != tt.expected.name {
-				t.Errorf("Expected name %q, got %q", tt.expected.name, plugin.name)
+			if plugin.name != testCase.expected.name {
+				t.Errorf("Expected name %q, got %q", testCase.expected.name, plugin.name)
 			}
 		})
 	}
@@ -271,11 +271,11 @@ func TestGitPluginURL(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ref, err := flake.ParseRef(tt.ref)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			ref, err := flake.ParseRef(testCase.ref)
 			if err != nil {
-				t.Fatalf("Failed to parse ref %q: %v", tt.ref, err)
+				t.Fatalf("Failed to parse ref %q: %v", testCase.ref, err)
 			}
 
 			plugin, err := newGitPlugin(ref)
@@ -286,13 +286,13 @@ func TestGitPluginURL(t *testing.T) {
 			// Test that the plugin can be created and the subpath is handled correctly
 			// The actual file path will be constructed in FileContent method
 			if plugin.ref.Dir != "" {
-				expectedPath := plugin.ref.Dir + "/" + tt.subpath
-				if expectedPath != tt.expected {
-					t.Errorf("Expected path %q, got %q", tt.expected, expectedPath)
+				expectedPath := plugin.ref.Dir + "/" + testCase.subpath
+				if expectedPath != testCase.expected {
+					t.Errorf("Expected path %q, got %q", testCase.expected, expectedPath)
 				}
 			} else {
-				if tt.subpath != tt.expected {
-					t.Errorf("Expected subpath %q, got %q", tt.expected, tt.subpath)
+				if testCase.subpath != testCase.expected {
+					t.Errorf("Expected subpath %q, got %q", testCase.expected, testCase.subpath)
 				}
 			}
 		})

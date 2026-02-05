@@ -96,9 +96,13 @@ func (p *gitPlugin) cloneAndRead(subpath string) ([]byte, error) {
 	// Clone repository using base URL without query parameters
 	baseURL := p.getBaseURL()
 
-	cloneCmd := exec.Command("git", "clone", "--depth", "1", baseURL, tempDir)
-	if p.ref.Rev != "" {
+	// For branch names, use --branch to clone that specific branch
+	// For commit hashes, clone default branch then fetch the specific commit
+	var cloneCmd *exec.Cmd
+	if p.ref.Rev != "" && isBranchName(p.ref.Rev) {
 		cloneCmd = exec.Command("git", "clone", "--depth", "1", "--branch", p.ref.Rev, baseURL, tempDir)
+	} else {
+		cloneCmd = exec.Command("git", "clone", "--depth", "1", baseURL, tempDir)
 	}
 
 	output, err := cloneCmd.CombinedOutput()
@@ -108,9 +112,17 @@ func (p *gitPlugin) cloneAndRead(subpath string) ([]byte, error) {
 
 	// Checkout specific commit if revision is a commit hash
 	if p.ref.Rev != "" && !isBranchName(p.ref.Rev) {
+		// Fetch the specific commit
+		fetchCmd := exec.Command("git", "fetch", "--depth", "1", "origin", p.ref.Rev)
+		fetchCmd.Dir = tempDir
+		output, err := fetchCmd.CombinedOutput()
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch revision %s: %w\nOutput: %s", p.ref.Rev, err, string(output))
+		}
+
 		checkoutCmd := exec.Command("git", "checkout", p.ref.Rev)
 		checkoutCmd.Dir = tempDir
-		output, err := checkoutCmd.CombinedOutput()
+		output, err = checkoutCmd.CombinedOutput()
 		if err != nil {
 			return nil, fmt.Errorf("failed to checkout revision %s: %w\nOutput: %s", p.ref.Rev, err, string(output))
 		}
