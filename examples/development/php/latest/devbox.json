@@ -13,6 +13,7 @@
     ],
     "scripts": {
       "run_test": "php public/index.php"
-    }
+    },
+    "exclude_cc_toolchain": true
   }
 }

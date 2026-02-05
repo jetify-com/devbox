@@ -125,6 +125,11 @@
                             }
                         }
                     }
+                },
+                "exclude_cc_toolchain": {
+                    "type": "boolean",
+                    "description": "When true, uses mkShellNoCC instead of mkShell, excluding the C compiler toolchain from the shell environment. Useful for reducing closure size in non-compiled language environments.",
+                    "default": false
                 }
             },
             "additionalProperties": false

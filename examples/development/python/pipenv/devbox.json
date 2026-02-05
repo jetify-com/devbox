@@ -9,6 +9,7 @@
         ],
         "scripts": {
             "run_test": "pipenv run python main.py"
-        }
+        },
+        "exclude_cc_toolchain": true
     }
 }

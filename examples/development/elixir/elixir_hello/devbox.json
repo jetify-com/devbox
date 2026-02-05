@@ -8,6 +8,7 @@
     ],
     "scripts": {
       "run_test": "mix run"
-    }
+    },
+    "exclude_cc_toolchain": true
   }
 }

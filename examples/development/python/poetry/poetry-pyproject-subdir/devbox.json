@@ -19,6 +19,7 @@
         "devbox run install-service",
         "cd service && poetry run pytest"
       ]
-    }
+    },
+    "exclude_cc_toolchain": true
   }
 }

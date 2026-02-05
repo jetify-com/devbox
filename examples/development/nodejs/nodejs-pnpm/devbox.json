@@ -9,6 +9,7 @@
     ],
     "scripts": {
       "run_test": "pnpm run start"
-    }
+    },
+    "exclude_cc_toolchain": true
   }
 }

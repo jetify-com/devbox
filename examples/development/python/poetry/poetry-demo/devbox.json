@@ -10,6 +10,7 @@
     "scripts": {
       "run_test": "poetry run python -m poetry_demo",
       "test": "poetry run pytest"
-    }
+    },
+    "exclude_cc_toolchain": true
   }
 }

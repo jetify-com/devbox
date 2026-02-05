@@ -35,7 +35,7 @@
         {{- end }}
       in
       {
-        devShells.{{ .System }}.default = pkgs.mkShell {
+        devShells.{{ .System }}.default = pkgs.{{if .ExcludeCCToolchain}}mkShellNoCC{{else}}mkShell{{end}} {
           buildInputs = [
             {{- range $_, $pkg := .Packages }}
             {{- range $_, $output := $pkg.GetOutputsWithCache }}

@@ -782,3 +782,146 @@ func TestNixpkgsValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestExcludeCCToolchain(t *testing.T) {
+	testCases := map[string]struct {
+		config *ConfigFile
+		want   bool
+	}{
+		"nil_config": {
+			config: nil,
+			want:   false,
+		},
+		"nil_shell": {
+			config: &ConfigFile{},
+			want:   false,
+		},
+		"false_value": {
+			config: &ConfigFile{
+				Shell: &shellConfig{
+					ExcludeCCToolchain: false,
+				},
+			},
+			want: false,
+		},
+		"true_value": {
+			config: &ConfigFile{
+				Shell: &shellConfig{
+					ExcludeCCToolchain: true,
+				},
+			},
+			want: true,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			got := tc.config.ExcludeCCToolchain()
+			if got != tc.want {
+				t.Errorf("ExcludeCCToolchain() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestExcludeCCToolchainParsing(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name: "explicit_true",
+			input: `
+-- in --
+{
+  "packages": ["nodejs@18"],
+  "shell": {
+    "exclude_cc_toolchain": true
+  }
+}
+-- want --
+{
+  "packages": ["nodejs@18"],
+  "shell": {
+    "exclude_cc_toolchain": true
+  }
+}`,
+			expected: true,
+		},
+		{
+			name: "explicit_false",
+			input: `
+-- in --
+{
+  "packages": ["python@3.11"],
+  "shell": {
+    "exclude_cc_toolchain": false
+  }
+}
+-- want --
+{
+  "packages": ["python@3.11"],
+  "shell": {
+    "exclude_cc_toolchain": false
+  }
+}`,
+			expected: false,
+		},
+		{
+			name: "omitted_defaults_to_false",
+			input: `
+-- in --
+{
+  "packages": ["go@1.20"]
+}
+-- want --
+{
+  "packages": ["go@1.20"]
+}`,
+			expected: false,
+		},
+		{
+			name: "with_other_shell_config",
+			input: `
+-- in --
+{
+  "packages": ["ruby@3.2"],
+  "shell": {
+    "init_hook": ["echo 'hello'"],
+    "exclude_cc_toolchain": true,
+    "scripts": {
+      "test": "echo 'test'"
+    }
+  }
+}
+-- want --
+{
+  "packages": ["ruby@3.2"],
+  "shell": {
+    "init_hook": ["echo 'hello'"],
+    "exclude_cc_toolchain": true,
+    "scripts": {
+      "test": "echo 'test'"
+    }
+  }
+}`,
+			expected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			in, want := parseConfigTxtarTest(t, tc.input)
+
+			got := in.ExcludeCCToolchain()
+			if got != tc.expected {
+				t.Errorf("ExcludeCCToolchain() = %v, want %v", got, tc.expected)
+			}
+
+			if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+				t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
+			}
+		})
+	}
+}

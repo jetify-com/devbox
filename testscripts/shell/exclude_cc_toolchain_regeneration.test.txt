@@ -1,0 +1,64 @@
+# Test that changing exclude_cc_toolchain triggers flake regeneration
+
+# Start with default mkShell (no exclude_cc_toolchain)
+exec devbox init
+
+-- devbox.json --
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox.schema.json",
+  "packages": ["hello@latest"]
+}
+
+# First, generate with default mkShell
+exec devbox run echo 'first generation'
+stdout 'first generation'
+
+# Check the flake contains mkShell (not mkShellNoCC)
+exec cat .devbox/gen/flake/flake.nix
+stdout 'mkShell[^N]'
+
+# Save the flake to compare later
+cp .devbox/gen/flake/flake.nix flake1.nix
+
+-- devbox.json --
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox.schema.json",
+  "packages": ["hello@latest"],
+  "shell": {
+    "exclude_cc_toolchain": true
+  }
+}
+
+# Run command again - should trigger regeneration
+exec devbox run echo 'second generation'
+stdout 'second generation'
+
+# Check the flake now contains mkShellNoCC
+exec cat .devbox/gen/flake/flake.nix
+stdout 'mkShellNoCC'
+
+# Verify the flakes are different
+! exec diff flake1.nix .devbox/gen/flake/flake.nix
+
+# Save this flake
+cp .devbox/gen/flake/flake.nix flake2.nix
+
+-- devbox.json --
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox.schema.json",
+  "packages": ["hello@latest"],
+  "shell": {
+    "exclude_cc_toolchain": false
+  }
+}
+
+# Run command again - should regenerate back to mkShell
+exec devbox run echo 'third generation'
+stdout 'third generation'
+
+# Check the flake is back to mkShell (not mkShellNoCC)
+exec cat .devbox/gen/flake/flake.nix
+stdout 'mkShell[^N]'
+
+# Verify this is different from flake2 but similar to flake1
+! exec diff flake2.nix .devbox/gen/flake/flake.nix

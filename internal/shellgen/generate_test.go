@@ -52,6 +52,19 @@ func TestWriteFromTemplate(t *testing.T) {
 		}
 		cmpGoldenFile(t, outPath, "testdata/flake-empty.nix.golden")
 	})
+	t.Run("WriteWithExcludeCCToolchain", func(t *testing.T) {
+		planWithNoCC := &flakePlan{
+			Packages:           []*devpkg.Package{},
+			FlakeInputs:        []flakeInput{},
+			System:             "x86_64-linux",
+			ExcludeCCToolchain: true,
+		}
+		_, err = writeFromTemplate(dir, planWithNoCC, "flake.nix", "flake.nix")
+		if err != nil {
+			t.Fatal("got error writing flake template:", err)
+		}
+		cmpGoldenFile(t, outPath, "testdata/flake-no-cc.nix.golden")
+	})
 }
 
 func cmpGoldenFile(t *testing.T, gotPath, wantGoldenPath string) {

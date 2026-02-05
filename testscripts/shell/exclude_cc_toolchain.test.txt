@@ -1,0 +1,50 @@
+# Test exclude_cc_toolchain feature
+
+# Start with a config that has exclude_cc_toolchain: true
+exec devbox init
+
+-- devbox.json --
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox.schema.json",
+  "packages": ["hello@latest"],
+  "shell": {
+    "exclude_cc_toolchain": true
+  }
+}
+
+# Verify the generated flake uses mkShellNoCC
+exec devbox run echo 'checking flake'
+stdout 'checking flake'
+exec cat .devbox/gen/flake/flake.nix
+stdout 'mkShellNoCC'
+
+# Verify cc is not available in pure mode
+! exec devbox run --pure test-command
+! stdout 'cc'
+
+# Verify packages still work
+exec devbox run hello
+stdout 'Hello, world!'
+
+-- devbox.json --
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox.schema.json",
+  "packages": ["hello@latest"],
+  "shell": {
+    "exclude_cc_toolchain": false,
+    "scripts": {
+      "test-command": "command -v cc || echo 'cc not found'"
+    }
+  }
+}
+
+# Test 2: With exclude_cc_toolchain: false, cc should be available
+exec devbox run echo 'regenerating'
+stdout 'regenerating'
+exec cat .devbox/gen/flake/flake.nix
+stdout 'mkShell[^N]'
+
+# Verify cc is available in pure mode (from stdenv)
+exec devbox run --pure test-command
+stdout '/nix/store'
+stdout 'cc'

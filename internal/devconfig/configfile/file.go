@@ -62,6 +62,10 @@ type shellConfig struct {
 	// InitHook contains commands that will run at shell startup.
 	InitHook *shellcmd.Commands            `json:"init_hook,omitempty"`
 	Scripts  map[string]*shellcmd.Commands `json:"scripts,omitempty"`
+
+	// ExcludeCCToolchain uses mkShellNoCC instead of mkShell,
+	// excluding the C compiler toolchain from the environment
+	ExcludeCCToolchain bool `json:"exclude_cc_toolchain,omitempty"`
 }
 
 type NixpkgsConfig struct {
@@ -105,6 +109,13 @@ func (c *ConfigFile) InitHook() *shellcmd.Commands {
 		return &shellcmd.Commands{}
 	}
 	return c.Shell.InitHook
+}
+
+func (c *ConfigFile) ExcludeCCToolchain() bool {
+	if c == nil || c.Shell == nil {
+		return false
+	}
+	return c.Shell.ExcludeCCToolchain
 }
 
 // SaveTo writes the config to a file.

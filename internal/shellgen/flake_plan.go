@@ -20,10 +20,11 @@ import (
 // flakePlan contains the data to populate the top level flake.nix file
 // that builds the devbox environment
 type flakePlan struct {
-	Stdenv      flake.Ref
-	Packages    []*devpkg.Package
-	FlakeInputs []flakeInput
-	System      string
+	Stdenv             flake.Ref
+	Packages           []*devpkg.Package
+	FlakeInputs        []flakeInput
+	System             string
+	ExcludeCCToolchain bool
 }
 
 func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
@@ -45,10 +46,11 @@ func newFlakePlan(ctx context.Context, devbox devboxer) (*flakePlan, error) {
 	}
 
 	return &flakePlan{
-		FlakeInputs: flakeInputs(ctx, packages),
-		Stdenv:      devbox.Lockfile().Stdenv(),
-		Packages:    packages,
-		System:      nix.System(),
+		FlakeInputs:        flakeInputs(ctx, packages),
+		Stdenv:             devbox.Lockfile().Stdenv(),
+		Packages:           packages,
+		System:             nix.System(),
+		ExcludeCCToolchain: devbox.Config().Root.ExcludeCCToolchain(),
 	}, nil
 }
 

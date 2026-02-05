@@ -6,7 +6,9 @@
     "scripts": {
       "build": "bun build ./index.ts",
       "test": "bun test",
-      "dev": "bun --watch run index.ts"
-    }
+      "dev": "bun --watch run index.ts",
+      "run_test": "bun test"
+    },
+    "exclude_cc_toolchain": true
   }
 }

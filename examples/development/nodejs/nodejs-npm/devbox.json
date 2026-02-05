@@ -8,6 +8,7 @@
     ],
     "scripts": {
       "run_test": "npm run start"
-    }
+    },
+    "exclude_cc_toolchain": true
   }
 }
