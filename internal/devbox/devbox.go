@@ -52,9 +52,8 @@ import (
 const (
 
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
-	shellHistoryFile            = ".devbox/shell_history"
-	processComposeTargetVersion = "v1.5.0"
-	arbitraryCmdFilename        = ".cmd"
+	shellHistoryFile     = ".devbox/shell_history"
+	arbitraryCmdFilename = ".cmd"
 )
 
 type Devbox struct {
