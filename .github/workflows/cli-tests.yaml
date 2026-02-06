@@ -50,7 +50,7 @@ env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   NIX_CONFIG: |
     access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-    
+
 jobs:
   build-devbox:
     strategy:
@@ -96,7 +96,7 @@ jobs:
             exit 1
           fi
       - run: ./result/bin/devbox version
-  
+
   golangci-lint:
     strategy:
       matrix:
@@ -134,14 +134,14 @@ jobs:
         # merging, while keeping the others as an additional non-required signal
         run-project-tests: ["project-tests-only", "project-tests-off"]
         # Run tests on:
-        # 1. the oldest supported nix version (which is 2.9.0? But determinate-systems installer has 2.12.0)
+        # 1. the oldest supported nix version (Nixpkgs requires >= 2.18 as of 2026)
         # 2. nix 2.19.2: version before nix profile changes
-        # 2. latest nix version (note, 2.20.1 introduced a new profile change)
-        nix-version: ["2.12.0", "2.19.2", "2.30.2"]
+        # 3. latest nix version (note, 2.20.1 introduced a new profile change)
+        nix-version: ["2.18.0", "2.19.2", "2.30.2"]
         exclude:
           # Only runs tests on macos if explicitly requested, or on a schedule
           - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-latest' }}"
-            
+
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -273,7 +273,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        nix-version: [2.15.1, 2.16.1, 2.17.0, 2.18.0, 2.19.2, 2.24.7]
+        nix-version: [2.18.0, 2.19.2, 2.24.7, 2.30.2]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
