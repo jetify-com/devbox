@@ -24,7 +24,7 @@ const (
 	Version2_24 = nix.Version2_24
 	Version2_25 = nix.Version2_25
 
-	MinVersion = nix.Version2_12
+	MinVersion = nix.Version2_18
 )
 
 type (
