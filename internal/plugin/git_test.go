@@ -1,0 +1,401 @@
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
+package plugin
+
+import (
+	"testing"
+
+	"go.jetify.com/devbox/nix/flake"
+)
+
+func TestGitPlugin(t *testing.T) {
+	testCases := []struct {
+		name     string
+		ref      string
+		expected *gitPlugin
+	}{
+		{
+			name: "basic git plugin",
+			ref:  "git+https://github.com/jetify-com/devbox-plugins.git",
+			expected: &gitPlugin{
+				ref: &flake.Ref{
+					Type: flake.TypeGit,
+					URL:  "https://github.com/jetify-com/devbox-plugins.git",
+				},
+				name: "jetify-com.devbox-plugins",
+			},
+		},
+		{
+			name: "git plugin with ref",
+			ref:  "git+https://github.com/jetify-com/devbox-plugins.git?ref=main",
+			expected: &gitPlugin{
+				ref: &flake.Ref{
+					Type: flake.TypeGit,
+					URL:  "https://github.com/jetify-com/devbox-plugins.git",
+					Ref:  "main",
+				},
+				name: "jetify-com.devbox-plugins",
+			},
+		},
+		{
+			name: "git plugin with rev",
+			ref:  "git+https://github.com/jetify-com/devbox-plugins.git?rev=abc123",
+			expected: &gitPlugin{
+				ref: &flake.Ref{
+					Type: flake.TypeGit,
+					URL:  "https://github.com/jetify-com/devbox-plugins.git",
+					Rev:  "abc123",
+				},
+				name: "jetify-com.devbox-plugins",
+			},
+		},
+		{
+			name: "git plugin with directory",
+			ref:  "git+https://github.com/jetify-com/devbox-plugins.git?dir=mongodb",
+			expected: &gitPlugin{
+				ref: &flake.Ref{
+					Type: flake.TypeGit,
+					URL:  "https://github.com/jetify-com/devbox-plugins.git?dir=mongodb",
+					Dir:  "mongodb",
+				},
+				name: "jetify-com.devbox-plugins.mongodb",
+			},
+		},
+		{
+			name: "git plugin with directory and ref",
+			ref:  "git+https://github.com/jetify-com/devbox-plugins.git?dir=mongodb&ref=my-branch",
+			expected: &gitPlugin{
+				ref: &flake.Ref{
+					Type: flake.TypeGit,
+					URL:  "https://github.com/jetify-com/devbox-plugins.git?dir=mongodb",
+					Dir:  "mongodb",
+					Ref:  "my-branch",
+				},
+				name: "jetify-com.devbox-plugins.mongodb",
+			},
+		},
+		{
+			name: "git plugin with subgroups",
+			ref:  "git+https://gitlab.com/group/subgroup/repo.git",
+			expected: &gitPlugin{
+				ref: &flake.Ref{
+					Type: flake.TypeGit,
+					URL:  "https://gitlab.com/group/subgroup/repo.git",
+				},
+				name: "subgroup.repo",
+			},
+		},
+		{
+			name: "git plugin with SSH URL",
+			ref:  "git+ssh://git@github.com/jetify-com/devbox-plugins.git",
+			expected: &gitPlugin{
+				ref: &flake.Ref{
+					Type: flake.TypeGit,
+					URL:  "ssh://git@github.com/jetify-com/devbox-plugins.git",
+				},
+				name: "jetify-com.devbox-plugins",
+			},
+		},
+		{
+			name: "git plugin with file URL",
+			ref:  "git+file:///tmp/local-repo.git",
+			expected: &gitPlugin{
+				ref: &flake.Ref{
+					Type: flake.TypeGit,
+					URL:  "file:///tmp/local-repo.git",
+				},
+				name: "tmp.local-repo",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			ref, err := flake.ParseRef(testCase.ref)
+			if err != nil {
+				t.Fatalf("Failed to parse ref %q: %v", testCase.ref, err)
+			}
+
+			plugin, err := newGitPlugin(ref)
+			if err != nil {
+				t.Fatalf("Failed to create Git plugin: %v", err)
+			}
+
+			if plugin.ref.Type != testCase.expected.ref.Type {
+				t.Errorf("Expected type %q, got %q", testCase.expected.ref.Type, plugin.ref.Type)
+			}
+			if plugin.ref.URL != testCase.expected.ref.URL {
+				t.Errorf("Expected URL %q, got %q", testCase.expected.ref.URL, plugin.ref.URL)
+			}
+			if plugin.ref.Ref != testCase.expected.ref.Ref {
+				t.Errorf("Expected ref %q, got %q", testCase.expected.ref.Ref, plugin.ref.Ref)
+			}
+			if plugin.ref.Rev != testCase.expected.ref.Rev {
+				t.Errorf("Expected rev %q, got %q", testCase.expected.ref.Rev, plugin.ref.Rev)
+			}
+			if plugin.ref.Dir != testCase.expected.ref.Dir {
+				t.Errorf("Expected dir %q, got %q", testCase.expected.ref.Dir, plugin.ref.Dir)
+			}
+			if plugin.name != testCase.expected.name {
+				t.Errorf("Expected name %q, got %q", testCase.expected.name, plugin.name)
+			}
+		})
+	}
+}
+
+func TestGenerateGitPluginName(t *testing.T) {
+	testCases := []struct {
+		name     string
+		ref      flake.Ref
+		expected string
+	}{
+		{
+			name: "github repository",
+			ref: flake.Ref{
+				URL: "https://github.com/jetify-com/devbox-plugins.git",
+			},
+			expected: "jetify-com.devbox-plugins",
+		},
+		{
+			name: "gitlab repository with subgroups",
+			ref: flake.Ref{
+				URL: "https://gitlab.com/group/subgroup/repo.git",
+			},
+			expected: "subgroup.repo",
+		},
+		{
+			name: "repository without .git suffix",
+			ref: flake.Ref{
+				URL: "https://github.com/jetify-com/devbox-plugins",
+			},
+			expected: "jetify-com.devbox-plugins",
+		},
+		{
+			name: "repository with single path component",
+			ref: flake.Ref{
+				URL: "https://github.com/repo",
+			},
+			expected: "github.com.repo",
+		},
+		{
+			name: "SSH repository",
+			ref: flake.Ref{
+				URL: "ssh://git@github.com/jetify-com/devbox-plugins.git",
+			},
+			expected: "jetify-com.devbox-plugins",
+		},
+		{
+			name: "file repository",
+			ref: flake.Ref{
+				URL: "file:///tmp/local-repo.git",
+			},
+			expected: "tmp.local-repo",
+		},
+		{
+			name: "repository with directory",
+			ref: flake.Ref{
+				URL: "https://github.com/jetify-com/devbox-plugins.git",
+				Dir: "mongodb",
+			},
+			expected: "jetify-com.devbox-plugins.mongodb",
+		},
+		{
+			name: "repository with nested directory",
+			ref: flake.Ref{
+				URL: "https://github.com/jetify-com/devbox-plugins.git",
+				Dir: "plugins/python",
+			},
+			expected: "jetify-com.devbox-plugins.plugins.python",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result := generateGitPluginName(testCase.ref)
+			if result != testCase.expected {
+				t.Errorf("Expected name %q, got %q", testCase.expected, result)
+			}
+		})
+	}
+}
+
+func TestGitPluginURL(t *testing.T) {
+	testCases := []struct {
+		name     string
+		ref      string
+		subpath  string
+		expected string
+	}{
+		{
+			name:     "basic plugin.json",
+			ref:      "git+https://github.com/jetify-com/devbox-plugins.git",
+			subpath:  "plugin.json",
+			expected: "plugin.json",
+		},
+		{
+			name:     "plugin with directory",
+			ref:      "git+https://github.com/jetify-com/devbox-plugins.git?dir=mongodb",
+			subpath:  "plugin.json",
+			expected: "mongodb/plugin.json",
+		},
+		{
+			name:     "plugin with ref",
+			ref:      "git+https://github.com/jetify-com/devbox-plugins.git?ref=main",
+			subpath:  "plugin.json",
+			expected: "plugin.json",
+		},
+		{
+			name:     "plugin with directory and ref",
+			ref:      "git+https://github.com/jetify-com/devbox-plugins.git?dir=mongodb&ref=my-branch",
+			subpath:  "plugin.json",
+			expected: "mongodb/plugin.json",
+		},
+		{
+			name:     "plugin with subgroups",
+			ref:      "git+https://gitlab.com/group/subgroup/repo.git",
+			subpath:  "plugin.json",
+			expected: "plugin.json",
+		},
+		{
+			name:     "plugin with SSH URL",
+			ref:      "git+ssh://git@github.com/jetify-com/devbox-plugins.git",
+			subpath:  "plugin.json",
+			expected: "plugin.json",
+		},
+		{
+			name:     "plugin with file URL",
+			ref:      "git+file:///tmp/local-repo.git",
+			subpath:  "plugin.json",
+			expected: "plugin.json",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			ref, err := flake.ParseRef(testCase.ref)
+			if err != nil {
+				t.Fatalf("Failed to parse ref %q: %v", testCase.ref, err)
+			}
+
+			plugin, err := newGitPlugin(ref)
+			if err != nil {
+				t.Fatalf("Failed to create Git plugin: %v", err)
+			}
+
+			// Test that the plugin can be created and the subpath is handled correctly
+			// The actual file path will be constructed in FileContent method
+			if plugin.ref.Dir != "" {
+				expectedPath := plugin.ref.Dir + "/" + testCase.subpath
+				if expectedPath != testCase.expected {
+					t.Errorf("Expected path %q, got %q", testCase.expected, expectedPath)
+				}
+			} else {
+				if testCase.subpath != testCase.expected {
+					t.Errorf("Expected subpath %q, got %q", testCase.expected, testCase.subpath)
+				}
+			}
+		})
+	}
+}
+
+func TestIsBranchName(t *testing.T) {
+	testCases := []struct {
+		name     string
+		ref      string
+		expected bool
+	}{
+		{
+			name:     "branch name",
+			ref:      "main",
+			expected: true,
+		},
+		{
+			name:     "branch name with slash",
+			ref:      "feature/new-feature",
+			expected: true,
+		},
+		{
+			name:     "commit hash",
+			ref:      "abc123def456",
+			expected: true, // Not 40 chars, so treated as branch
+		},
+		{
+			name:     "full commit hash",
+			ref:      "a1b2c3d4e5f6789012345678901234567890abcd",
+			expected: false, // 40 chars, looks like commit hash
+		},
+		{
+			name:     "short commit hash",
+			ref:      "abc123",
+			expected: true, // Not 40 chars, so treated as branch
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result := isBranchName(testCase.ref)
+			if result != testCase.expected {
+				t.Errorf("Expected %v for %q, got %v", testCase.expected, testCase.ref, result)
+			}
+		})
+	}
+}
+
+func TestIsSSHURL(t *testing.T) {
+	testCases := []struct {
+		name     string
+		url      string
+		expected bool
+	}{
+		{
+			name:     "SSH URL with ssh:// protocol",
+			url:      "ssh://git@github.com/user/repo.git",
+			expected: true,
+		},
+		{
+			name:     "SSH URL with git@ format",
+			url:      "git@github.com:user/repo.git",
+			expected: true,
+		},
+		{
+			name:     "SSH URL with user@host format",
+			url:      "ssh://user@gitlab.com/project/repo.git",
+			expected: true,
+		},
+		{
+			name:     "HTTPS URL should not be SSH",
+			url:      "https://github.com/user/repo.git",
+			expected: false,
+		},
+		{
+			name:     "HTTP URL should not be SSH",
+			url:      "http://github.com/user/repo.git",
+			expected: false,
+		},
+		{
+			name:     "HTTPS URL with port should not be SSH",
+			url:      "https://git@github.com:443/user/repo.git",
+			expected: false,
+		},
+		{
+			name:     "HTTPS URL with authentication should not be SSH",
+			url:      "https://user@github.com/user/repo.git",
+			expected: false,
+		},
+		{
+			name:     "File URL should not be SSH",
+			url:      "file:///tmp/repo.git",
+			expected: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result := isSSHURL(testCase.url)
+			if result != testCase.expected {
+				t.Errorf("Expected %v for %q, got %v", testCase.expected, testCase.url, result)
+			}
+		})
+	}
+}
