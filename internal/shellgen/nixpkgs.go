@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"log/slog"
 
 	"go.jetify.com/devbox/internal/envir"
 )
@@ -19,16 +20,25 @@ type NixpkgsInfo struct {
 }
 
 func getNixpkgsInfo(commitHash string) *NixpkgsInfo {
+	// Default URLs pointing to GitHub
 	url := fmt.Sprintf("github:NixOS/nixpkgs/%s", commitHash)
+	tarURL := fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", commitHash)
+
+	// Check if a local/internal mirror is available via DEVBOX_CACHE
 	if mirror := nixpkgsMirrorURL(commitHash); mirror != "" {
-		url = mirror
+		url = mirror      // flakes use this URL
+		tarURL = mirror   // devbox shell uses this tarball URL
+		slog.Debug("Using local/internal mirror for nixpkgs", "commit", commitHash, "url", url, "tarURL", tarURL)
+	} else {
+		slog.Debug("No local mirror found, falling back to GitHub", "commit", commitHash, "url", url, "tarURL", tarURL)
 	}
+
 	return &NixpkgsInfo{
-		URL: url,
-		// legacy, used for shell.nix (which is no longer used, but some direnv users still need it)
-		TarURL: fmt.Sprintf("https://github.com/nixos/nixpkgs/archive/%s.tar.gz", commitHash),
+		URL:    url,
+		TarURL: tarURL,
 	}
 }
+
 
 func nixpkgsMirrorURL(commitHash string) string {
 	baseURL := os.Getenv(envir.DevboxCache)
