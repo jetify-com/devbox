@@ -172,7 +172,7 @@ const (
 	Version2_24 = "2.24.0"
 	Version2_25 = "2.25.0"
 
-	MinVersion = Version2_12
+	MinVersion = Version2_18
 )
 
 // versionRegexp matches the first line of "nix --version" output.
