@@ -60,6 +60,57 @@ func exportify(vars map[string]string) string {
 	return strings.TrimSpace(strb.String())
 }
 
+// exportifyNushell formats vars as nushell environment variable assignments.
+// Each line is of the form `$env.KEY = "value"` with special characters escaped.
+func exportifyNushell(vars map[string]string) string {
+	// Nushell protected environment variables that cannot be set manually
+	// See: https://www.nushell.sh/book/environment.html#automatic-environment-variables
+	protectedVars := map[string]bool{
+		"CURRENT_FILE":    true,
+		"FILE_PWD":        true,
+		"LAST_EXIT_CODE":  true,
+		"CMD_DURATION_MS": true,
+		"NU_VERSION":      true,
+		"PWD":             true, // Nushell manages this automatically
+	}
+
+	keys := make([]string, len(vars))
+	i := 0
+	for k := range vars {
+		keys[i] = k
+		i++
+	}
+	slices.Sort(keys) // for reproducibility
+
+	strb := strings.Builder{}
+	for _, key := range keys {
+		// Skip bash functions for nushell
+		if strings.HasPrefix(key, "BASH_FUNC_") && strings.HasSuffix(key, "%%") {
+			continue
+		}
+
+		// Skip nushell protected environment variables
+		if protectedVars[key] {
+			continue
+		}
+
+		// Nushell environment variable syntax: $env.KEY = "value"
+		strb.WriteString("$env.")
+		strb.WriteString(key)
+		strb.WriteString(` = "`)
+		for _, r := range vars[key] {
+			switch r {
+			// Escape special characters for nushell double-quoted strings
+			case '"', '\\':
+				strb.WriteRune('\\')
+			}
+			strb.WriteRune(r)
+		}
+		strb.WriteString("\"\n")
+	}
+	return strings.TrimSpace(strb.String())
+}
+
 // addEnvIfNotPreviouslySetByDevbox adds the key-value pairs from new to existing,
 // but only if the key was not previously set by devbox
 // Caveat, this won't mark the values as set by devbox automatically. Instead,

@@ -74,3 +74,20 @@ fi`,
 		d.refreshCmd(),
 	)
 }
+
+func (d *Devbox) refreshAliasForShell(format string) string {
+	// For nushell format, provide instructions as a comment since aliases with pipes are complex
+	if format == "nushell" {
+		devboxCmd := "global shellenv --preserve-path-stack -r --format nushell"
+		if !d.isGlobal() {
+			devboxCmd = fmt.Sprintf("shellenv --preserve-path-stack -c %q --format nushell", d.projectDir)
+		}
+		return fmt.Sprintf(
+			`# To refresh your devbox environment in nushell, run:
+# devbox %s | save -f ~/.cache/devbox-env.nu; source ~/.cache/devbox-env.nu`,
+			devboxCmd,
+		)
+	}
+	// Otherwise use the original refreshAlias function
+	return d.refreshAlias()
+}

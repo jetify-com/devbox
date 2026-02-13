@@ -112,10 +112,12 @@ func ensureGlobalEnvEnabled(cmd *cobra.Command, args []string) error {
 			cmd.ErrOrStderr(),
 			`devbox global is not activated.
 
-Add the following line to your shell's rcfile (e.g., ~/.bashrc or ~/.zshrc)
-and restart your shell to fix this:
+Add the following line to your shell's rcfile and restart your shell:
 
+For bash/zsh (~/.bashrc or ~/.zshrc):
 	eval "$(devbox global shellenv)"
+
+For nushell: See NUSHELL.md for setup instructions
 `,
 		)
 	}

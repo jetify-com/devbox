@@ -24,6 +24,7 @@ type shellEnvCmdFlags struct {
 	pure              bool
 	recomputeEnv      bool
 	runInitHook       bool
+	format            string
 }
 
 // shellenvFlagDefaults are the flag default values that differ
@@ -46,7 +47,7 @@ func shellEnvCmd(defaults shellenvFlagDefaults) *cobra.Command {
 				return err
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), s)
-			if !strings.HasSuffix(os.Getenv("SHELL"), "fish") {
+			if flags.format != "nushell" && !strings.HasSuffix(os.Getenv("SHELL"), "fish") {
 				fmt.Fprintln(cmd.OutOrStdout(), "hash -r")
 			}
 			return nil
@@ -79,6 +80,11 @@ func shellEnvCmd(defaults shellenvFlagDefaults) *cobra.Command {
 	command.Flags().BoolVarP(
 		&flags.recomputeEnv, "recompute", "r", defaults.recomputeEnv,
 		"Recompute environment if needed",
+	)
+
+	command.Flags().StringVar(
+		&flags.format, "format", "bash",
+		"Output format for shell environment (nushell)",
 	)
 
 	flags.config.register(command)
@@ -115,6 +121,15 @@ func shellEnvFunc(
 		}
 	}
 
+	// Convert format string to ShellFormat type
+	var shellFormat devopt.ShellFormat
+	switch flags.format {
+	case "nushell":
+		shellFormat = devopt.ShellFormatNushell
+	default:
+		shellFormat = devopt.ShellFormatBash
+	}
+
 	envStr, err := box.EnvExports(ctx, devopt.EnvExportsOpts{
 		EnvOptions: devopt.EnvOptions{
 			Hooks: devopt.LifecycleHooks{
@@ -136,6 +151,7 @@ func shellEnvFunc(
 		},
 		NoRefreshAlias: flags.noRefreshAlias,
 		RunHooks:       flags.runInitHook,
+		ShellFormat:    shellFormat,
 	})
 	if err != nil {
 		return "", err
