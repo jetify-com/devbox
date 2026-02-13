@@ -4,20 +4,13 @@ exec devbox install
 
 # aside: choose armv7l-linux to verify that the add actually works on the
 # current host that is unlikely to be armv7l-linux
-<<<<<<< main
-exec devbox add github:F1bonacc1/process-compose/v1.46.0 --exclude-platform armv7l-linux
-=======
+
 exec devbox add github:F1bonacc1/process-compose/v1.87.0 --exclude-platform armv7l-linux
->>>>>>> main
 json.superset devbox.json expected_devbox1.json
 
 # verify that the package is installed on this platform
 exec devbox run -- process-compose version
-<<<<<<< main
-stdout '1.46.0'
-=======
 stdout '1.87.0'
->>>>>>> main
 
 -- devbox.json --
 {
@@ -32,11 +25,7 @@ stdout '1.87.0'
   "packages": {
     "hello": "",
     "cowsay": "latest",
-<<<<<<< main
-    "github:F1bonacc1/process-compose/v1.46.0": {
-=======
     "github:F1bonacc1/process-compose/v1.87.0": {
->>>>>>> main
       "excluded_platforms": ["armv7l-linux"]
     }
   }
