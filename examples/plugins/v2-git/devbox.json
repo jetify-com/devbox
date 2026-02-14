@@ -11,7 +11,7 @@
     }
   },
   "include": [
-    "git+ssh://git@github.com/jetify-com/devbox-plugin-example.git",
+    "git+https://github.com/jetify-com/devbox-plugin-example.git",
     "git+https://github.com/jetify-com/devbox-plugin-example?dir=custom-dir"
   ]
 }

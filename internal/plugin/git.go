@@ -93,19 +93,18 @@ func (p *gitPlugin) cloneAndRead(subpath string) ([]byte, error) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Clone repository using base URL without query parameters
 	baseURL := p.getBaseURL()
 
-	cloneCmd := exec.Command("git", "clone", "--depth", "1", baseURL, tempDir)
-	if p.ref.Rev != "" {
-		cloneCmd = exec.Command("git", "clone", "--depth", "1", "--branch", p.ref.Rev, baseURL, tempDir)
+	cloneArgs := []string{"clone"}
+	if p.ref.Ref != "" {
+		cloneArgs = append(cloneArgs, "--depth", "1", "--branch", p.ref.Ref)
+	} else if p.ref.Rev == "" {
+		cloneArgs = append(cloneArgs, "--depth", "1")
 	}
+	cloneArgs = append(cloneArgs, baseURL, tempDir)
+	cloneCmd := exec.Command("git", cloneArgs...)
 
-	// Configure SSH for host key verification when using SSH URLs
-	// Use GIT_SSH_COMMAND to handle SSH connections without prompting for host key verification
 	if isSSHURL(baseURL) {
-		// Allow user to override SSH command via environment variable
-		// Default: accept new host keys automatically but preserve security for existing keys
 		gitSSHCommand := os.Getenv("GIT_SSH_COMMAND")
 		if gitSSHCommand == "" {
 			gitSSHCommand = "ssh -o StrictHostKeyChecking=accept-new"
@@ -118,8 +117,7 @@ func (p *gitPlugin) cloneAndRead(subpath string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to clone repository %s: %w\nOutput: %s", p.ref.URL, err, string(output))
 	}
 
-	// Checkout specific commit if revision is a commit hash
-	if p.ref.Rev != "" && !isBranchName(p.ref.Rev) {
+	if p.ref.Rev != "" {
 		checkoutCmd := exec.Command("git", "checkout", p.ref.Rev)
 		checkoutCmd.Dir = tempDir
 		output, err := checkoutCmd.CombinedOutput()
@@ -184,10 +182,7 @@ func (p *gitPlugin) CanonicalName() string {
 // Hash returns a unique hash for this plugin including directory.
 // This ensures plugins from the same repo with different dirs are unique.
 func (p *gitPlugin) Hash() string {
-	if p.ref.Dir != "" {
-		return fmt.Sprintf("%s-%s-%s", p.ref.URL, p.ref.Rev, p.ref.Dir)
-	}
-	return fmt.Sprintf("%s-%s", p.ref.URL, p.ref.Rev)
+	return fmt.Sprintf("%s-%s-%s-%s", p.ref.URL, p.ref.Rev, p.ref.Ref, p.ref.Dir)
 }
 
 func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
