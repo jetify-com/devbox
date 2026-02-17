@@ -1,0 +1,11 @@
+{
+  "packages": [],
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to devbox!' > /dev/null"
+    ]
+  },
+  "include": [
+    "git+https://github.com/jetify-com/devbox-plugin-example.git?rev=d9c00334353c9b1294c7bd5dbea128c149b2eb3a"
+  ]
+}
