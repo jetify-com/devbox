@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/f1bonacc1/process-compose/src/types"
 )
@@ -19,6 +20,9 @@ type processStates = types.ProcessesState
 type Process struct {
 	Name     string
 	Status   string
+	Age	     time.Duration
+	Health   string
+	Restarts int
 	ExitCode int
 }
 
@@ -93,6 +97,9 @@ func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Proces
 			results = append(results, Process{
 				Name:     process.Name,
 				Status:   process.Status,
+				Age:      process.Age.Round(time.Second),
+				Health:   process.Health,
+				Restarts: process.Restarts,
 				ExitCode: process.ExitCode,
 			})
 		}
