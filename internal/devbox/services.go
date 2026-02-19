@@ -123,9 +123,9 @@ func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error
 		fmt.Fprintln(d.stderr, "Error listing services: ", err)
 	} else {
 		fmt.Fprintln(d.stderr, "Services running in process-compose:")
-		fmt.Fprintln(tw, "NAME\tSTATUS\tEXIT CODE")
+		fmt.Fprintln(tw, "NAME\tSTATUS\tAGE\tHEALTH\tRESTARTS\tEXIT CODE")
 		for _, s := range pcSvcs {
-			fmt.Fprintf(tw, "%s\t%s\t%d\n", s.Name, s.Status, s.ExitCode)
+			fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%d\t%d\n", s.Name, s.Status, s.Age, s.Health, s.Restarts, s.ExitCode)
 		}
 		tw.Flush()
 	}
