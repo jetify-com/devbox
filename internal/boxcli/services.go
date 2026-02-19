@@ -124,6 +124,15 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 		},
 	}
 
+	pcportCommand := &cobra.Command{
+		Use:   "pcport",
+		Short: "Display the port that process-compose is running on",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return showProcessComposePort(cmd, flags)
+		},
+	}
+
 	flags.envFlag.register(servicesCommand)
 	flags.config.registerPersistent(servicesCommand)
 	servicesCommand.PersistentFlags().BoolVar(
@@ -141,6 +150,7 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 	servicesCommand.AddCommand(restartCommand)
 	servicesCommand.AddCommand(startCommand)
 	servicesCommand.AddCommand(stopCommand)
+	servicesCommand.AddCommand(pcportCommand)
 	return servicesCommand
 }
 
@@ -273,4 +283,17 @@ func startProcessManager(
 			ProcessComposePort: flags.pcport,
 		},
 	)
+}
+
+func showProcessComposePort(cmd *cobra.Command, flags servicesCmdFlags) error {
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:         flags.config.path,
+		Environment: flags.config.environment,
+		Stderr:      cmd.ErrOrStderr(),
+	})
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return box.ShowProcessComposePort(cmd.Context(), cmd.OutOrStdout())
 }
