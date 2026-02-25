@@ -20,7 +20,7 @@ type processStates = types.ProcessesState
 type Process struct {
 	Name     string
 	Status   string
-	Age	     time.Duration
+	Age      time.Duration
 	Health   string
 	Restarts int
 	ExitCode int
