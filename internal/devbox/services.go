@@ -3,6 +3,7 @@ package devbox
 import (
 	"context"
 	"fmt"
+	"io"
 	"strconv"
 	"text/tabwriter"
 
@@ -271,4 +272,14 @@ func (d *Devbox) StartProcessManager(
 func (d *Devbox) runDevboxServicesScript(ctx context.Context, cmdArgs []string) error {
 	cmdArgs = append([]string{"services"}, cmdArgs...)
 	return d.RunScript(ctx, devopt.EnvOptions{}, "devbox", cmdArgs)
+}
+
+func (d *Devbox) ShowProcessComposePort(ctx context.Context, writer io.Writer) error {
+	port, err := services.GetProcessManagerPort(d.projectDir)
+	if err != nil {
+		return err // Error already contains user-friendly message from services layer
+	}
+
+	fmt.Fprintf(writer, "%d\n", port)
+	return nil
 }
