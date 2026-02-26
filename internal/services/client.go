@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/f1bonacc1/process-compose/src/types"
 )
@@ -17,9 +18,14 @@ import (
 type processStates = types.ProcessesState
 
 type Process struct {
-	Name     string
-	Status   string
-	ExitCode int
+	PID       int
+	Name      string
+	Namespace string
+	Status    string
+	Age       time.Duration
+	Health    string
+	Restarts  int
+	ExitCode  int
 }
 
 func StartServices(ctx context.Context, w io.Writer, serviceName, projectDir string) error {
@@ -91,9 +97,14 @@ func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Proces
 		}
 		for _, process := range processes.States {
 			results = append(results, Process{
-				Name:     process.Name,
-				Status:   process.Status,
-				ExitCode: process.ExitCode,
+				PID:       process.Pid,
+				Name:      process.Name,
+				Namespace: process.Namespace,
+				Status:    process.Status,
+				Age:       process.Age.Round(time.Second),
+				Health:    process.Health,
+				Restarts:  process.Restarts,
+				ExitCode:  process.ExitCode,
 			})
 		}
 		return results, nil
