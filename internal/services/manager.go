@@ -159,6 +159,13 @@ func StartProcessManager(
 		}
 	}
 
+	// Add override file if it exists. Override files are merged with base configuration
+	// and allow individual developers to customize their local development environment.
+	// See: https://f1bonacc1.github.io/process-compose/merge/
+	if overrideFile := LookupProcessComposeOverride(projectDir); overrideFile != "" {
+		flags = append(flags, "-f", overrideFile)
+	}
+
 	flags = append(flags, processComposeConfig.ExtraFlags...)
 
 	if processComposeConfig.Background {
