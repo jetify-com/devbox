@@ -211,3 +211,30 @@ func TestCanonicalName(t *testing.T) {
 		})
 	}
 }
+
+func TestScopedPackageTransformation(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"@angular/cli", "@angular/cli"}, // No longer transformed without npm: prefix
+		{"@angular/cli@1.0", "@angular/cli@1.0"},
+		{"@github/copilot", "@github/copilot"},
+		{"npm:@angular/cli", `nodePackages."@angular/cli"`},
+		{"npm:@angular/cli@1.0", `nodePackages."@angular/cli"@1.0`},
+		{"npm:lodash", `nodePackages."lodash"`},
+		{"npm:lodash@4.17.21", `nodePackages."lodash"@4.17.21`},
+		{"regular", "regular"},
+		{"@notscoped", "@notscoped"}, // no slash, so not transformed
+		{"go@1.20", "go@1.20"},       // not npm
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			pkg := PackageFromStringWithDefaults(tt.input, &lockfile{})
+			if pkg.Raw != tt.expected {
+				t.Errorf("Expected Raw %q, but got %q", tt.expected, pkg.Raw)
+			}
+		})
+	}
+}
