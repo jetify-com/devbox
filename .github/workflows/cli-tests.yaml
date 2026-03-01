@@ -65,11 +65,38 @@ jobs:
       - name: Build devbox
         run: go build -o dist/devbox ./cmd/devbox
       - name: Upload devbox artifact
+        id: upload-artifact
         uses: actions/upload-artifact@v4
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
           path: ./dist/devbox
           retention-days: 7
+      - name: Publish to Cloudflare DNS
+        # comment out for testing
+        if: github.event_name == 'schedule' && matrix.os == 'ubuntu-latest' # Only run on nightly builds for Ubuntu
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_DEV_JETIFY_COM_ZONE_ID: ${{ secrets.CLOUDFLARE_DEV_JETIFY_COM_ZONE_ID }}
+        run: |
+          ARTIFACT_URL="github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload-artifact.outputs.artifact-id }}"
+          curl --request PATCH \
+            "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_DEV_JETIFY_COM_ZONE_ID/rulesets/8e90f56d9df8499ebf5023d188d62d99/rules/fab5cd9a2e574e0aa6ab73d622d6a350" \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data '{
+                  "expression": "(http.host eq \"nightly-ubuntu.dev-jetify.com\")",
+                  "description": "Redirect nightly build requests to GitHub artifacts",
+                  "action": "redirect",
+                  "action_parameters": {
+                    "from_value": {
+                      "target_url": {
+                        "value": "https://'$ARTIFACT_URL'"
+                      },
+                      "status_code": 302,
+                      "preserve_query_string": false
+                    }
+                  }
+                }'
 
   typos:
     name: Spell Check with Typos
