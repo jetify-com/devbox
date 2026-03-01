@@ -13,11 +13,15 @@ import (
 	"path/filepath"
 	"runtime/trace"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/debug"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/devbox/providers/nixcache"
 	"go.jetify.com/devbox/internal/devconfig"
@@ -25,17 +29,15 @@ import (
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/devpkg/pkgtype"
 	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/plugin"
+	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/setup"
 	"go.jetify.com/devbox/internal/shellgen"
 	"go.jetify.com/devbox/internal/telemetry"
+	"go.jetify.com/devbox/internal/ux"
 	"go.jetify.com/devbox/nix/flake"
 	"go.jetify.com/pkg/auth"
-
-	"go.jetify.com/devbox/internal/boxcli/usererr"
-	"go.jetify.com/devbox/internal/debug"
-	"go.jetify.com/devbox/internal/nix"
-	"go.jetify.com/devbox/internal/plugin"
-	"go.jetify.com/devbox/internal/ux"
 )
 
 const StateOutOfDateMessage = "Your devbox environment may be out of date. Run %s to update it.\n"
@@ -60,17 +62,25 @@ func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error)
 			continue
 		}
 
-		lockPackage, err := lockfile.FetchResolvedPackage(pkg.Versioned())
+		result, err := searcher.Client().Search(ctx, pkg.CanonicalName())
 		if err != nil {
 			warnings = append(warnings, fmt.Sprintf("Note: unable to check updates for %s", pkg.CanonicalName()))
 			continue
 		}
-		existingLockPackage := lockfile.Packages[pkg.Raw]
-		if lockPackage.Version == existingLockPackage.Version {
-			continue
-		}
 
-		outdatedPackages[pkg.Versioned()] = UpdateVersion{Current: existingLockPackage.Version, Latest: lockPackage.Version}
+		for _, p := range result.Packages {
+			if p.Name != pkg.CanonicalName() {
+				continue
+			}
+
+			for _, v := range p.Versions {
+				existingLockPackage := lockfile.Packages[pkg.Raw]
+				if isGreater(v.Version, existingLockPackage.Version) {
+					outdatedPackages[pkg.Versioned()] = UpdateVersion{Current: existingLockPackage.Version, Latest: v.Version}
+					break
+				}
+			}
+		}
 	}
 
 	for _, warning := range warnings {
@@ -78,6 +88,32 @@ func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error)
 	}
 
 	return outdatedPackages, nil
+}
+
+// isGreater returns true if v1 is greater than v2
+func isGreater(v1, v2 string) bool {
+	parts1 := strings.Split(v1, ".")
+	parts2 := strings.Split(v2, ".")
+
+	maxLen := max(len(parts2), len(parts1))
+
+	for i := range maxLen {
+		var num1, num2 int
+		if i < len(parts1) {
+			num1, _ = strconv.Atoi(parts1[i])
+		}
+		if i < len(parts2) {
+			num2, _ = strconv.Atoi(parts2[i])
+		}
+
+		if num1 > num2 {
+			return true
+		} else if num1 < num2 {
+			return false
+		}
+	}
+
+	return false
 }
 
 // Add adds the `pkgs` to the config (i.e. devbox.json) and nix profile for this
