@@ -4,6 +4,9 @@
 package plugin
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"go.jetify.com/devbox/nix/flake"
@@ -397,5 +400,149 @@ func TestIsSSHURL(t *testing.T) {
 				t.Errorf("Expected %v for %q, got %v", testCase.expected, testCase.url, result)
 			}
 		})
+	}
+}
+
+// setupLocalGitRepo creates a temporary bare git repo with a plugin.json file.
+// Returns the file:// URL to the repo.
+func setupLocalGitRepo(t *testing.T, content string) string {
+	t.Helper()
+
+	// Create a working repo, commit a file, then clone it as bare.
+	workDir := t.TempDir()
+	runGit := func(args ...string) {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = workDir
+		cmd.Env = append(os.Environ(),
+			"GIT_AUTHOR_NAME=test",
+			"GIT_AUTHOR_EMAIL=test@test.com",
+			"GIT_COMMITTER_NAME=test",
+			"GIT_COMMITTER_EMAIL=test@test.com",
+		)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v failed: %v\n%s", args, err, out)
+		}
+	}
+
+	runGit("init")
+	runGit("checkout", "-b", "main")
+	if err := os.WriteFile(filepath.Join(workDir, "plugin.json"), []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	runGit("add", "plugin.json")
+	runGit("commit", "-m", "init")
+
+	// Clone to bare repo so file:// clone works cleanly.
+	bareDir := t.TempDir()
+	cmd := exec.Command("git", "clone", "--bare", workDir, bareDir)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("bare clone failed: %v\n%s", err, out)
+	}
+
+	return "file://" + bareDir
+}
+
+func TestGitPluginFileContentCache(t *testing.T) {
+	// Clear the git cache before and after the test to avoid pollution.
+	if err := gitCache.Clear(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { gitCache.Clear() })
+
+	repoURL := setupLocalGitRepo(t, `{"name": "test-plugin"}`)
+
+	plugin := &gitPlugin{
+		ref: &flake.Ref{
+			Type: flake.TypeGit,
+			URL:  repoURL,
+			Ref:  "main",
+		},
+		name: "test-cache-plugin",
+	}
+
+	// First call — populates the cache via git clone.
+	content1, err := plugin.FileContent("plugin.json")
+	if err != nil {
+		t.Fatalf("first FileContent call failed: %v", err)
+	}
+	if string(content1) != `{"name": "test-plugin"}` {
+		t.Fatalf("unexpected content: %s", content1)
+	}
+
+	// Delete the source repo. If the cache is working, FileContent should
+	// still return the cached value without attempting a clone.
+	repoPath := repoURL[len("file://"):]
+	if err := os.RemoveAll(repoPath); err != nil {
+		t.Fatalf("failed to remove repo: %v", err)
+	}
+
+	content2, err := plugin.FileContent("plugin.json")
+	if err != nil {
+		t.Fatalf("second FileContent call should have used cache but failed: %v", err)
+	}
+	if string(content2) != string(content1) {
+		t.Fatalf("cached content mismatch: got %s, want %s", content2, content1)
+	}
+}
+
+func TestGitPluginFileContentCacheRespectsEnvVar(t *testing.T) {
+	if err := gitCache.Clear(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { gitCache.Clear() })
+
+	repoURL := setupLocalGitRepo(t, `{"name": "ttl-test"}`)
+
+	plugin := &gitPlugin{
+		ref: &flake.Ref{
+			Type: flake.TypeGit,
+			URL:  repoURL,
+			Ref:  "main",
+		},
+		name: "test-ttl-plugin",
+	}
+
+	// Set a very short TTL so the cache expires immediately.
+	t.Setenv("DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL", "1ns")
+
+	content, err := plugin.FileContent("plugin.json")
+	if err != nil {
+		t.Fatalf("FileContent failed: %v", err)
+	}
+	if string(content) != `{"name": "ttl-test"}` {
+		t.Fatalf("unexpected content: %s", content)
+	}
+
+	// With a 1ns TTL the cache entry should already be expired.
+	// Delete the source repo — if the expired cache is not served,
+	// this will attempt a fresh clone and fail, proving the TTL works.
+	repoPath := repoURL[len("file://"):]
+	if err := os.RemoveAll(repoPath); err != nil {
+		t.Fatalf("failed to remove repo: %v", err)
+	}
+	_, err = plugin.FileContent("plugin.json")
+	if err == nil {
+		t.Fatal("expected error after cache expiry with deleted repo, but got nil")
+	}
+}
+
+func TestGitPluginFileContentCacheInvalidTTL(t *testing.T) {
+	t.Setenv("DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL", "not-a-duration")
+	t.Cleanup(func() { gitCache.Clear() })
+
+	plugin := &gitPlugin{
+		ref: &flake.Ref{
+			Type: flake.TypeGit,
+			URL:  "file:///doesnt-matter",
+			Ref:  "main",
+		},
+		name: "test-invalid-ttl",
+	}
+
+	_, err := plugin.FileContent("plugin.json")
+	if err == nil {
+		t.Fatal("expected error for invalid TTL, got nil")
 	}
 }
