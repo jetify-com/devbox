@@ -408,6 +408,10 @@ func TestIsSSHURL(t *testing.T) {
 func setupLocalGitRepo(t *testing.T, content string) string {
 	t.Helper()
 
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("skipping: git not found in PATH")
+	}
+
 	// Create a working repo, commit a file, then clone it as bare.
 	workDir := t.TempDir()
 	runGit := func(args ...string) {

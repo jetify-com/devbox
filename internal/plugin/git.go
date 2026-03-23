@@ -199,7 +199,7 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 			return nil, fmt.Errorf("invalid DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL=%q: %w", ttlStr, err)
 		}
 	}
-	cacheKey := p.LockfileKey() + "/" + subpath + "/" + ttlStr
+	cacheKey := p.LockfileKey() + "/" + subpath + "/" + ttl.String()
 	return gitCache.GetOrSet(cacheKey, func() ([]byte, time.Duration, error) {
 		content, err := p.cloneAndRead(subpath)
 		if err != nil {
