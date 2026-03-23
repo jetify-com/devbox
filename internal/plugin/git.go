@@ -196,7 +196,7 @@ func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
 	if ttlStr != "" {
 		ttl, err = time.ParseDuration(ttlStr)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("invalid DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL=%q: %w", ttlStr, err)
 		}
 	}
 	cacheKey := p.LockfileKey() + "/" + subpath + "/" + ttlStr
