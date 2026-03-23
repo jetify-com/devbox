@@ -453,7 +453,7 @@ func TestGitPluginFileContentCache(t *testing.T) {
 	if err := gitCache.Clear(); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { gitCache.Clear() })
+	t.Cleanup(func() { _ = gitCache.Clear() })
 
 	repoURL := setupLocalGitRepo(t, `{"name": "test-plugin"}`)
 
@@ -495,7 +495,7 @@ func TestGitPluginFileContentCacheRespectsEnvVar(t *testing.T) {
 	if err := gitCache.Clear(); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { gitCache.Clear() })
+	t.Cleanup(func() { _ = gitCache.Clear() })
 
 	repoURL := setupLocalGitRepo(t, `{"name": "ttl-test"}`)
 
@@ -534,7 +534,7 @@ func TestGitPluginFileContentCacheRespectsEnvVar(t *testing.T) {
 
 func TestGitPluginFileContentCacheInvalidTTL(t *testing.T) {
 	t.Setenv("DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL", "not-a-duration")
-	t.Cleanup(func() { gitCache.Clear() })
+	t.Cleanup(func() { _ = gitCache.Clear() })
 
 	plugin := &gitPlugin{
 		ref: &flake.Ref{
