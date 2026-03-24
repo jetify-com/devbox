@@ -177,7 +177,7 @@ func (d *Devbox) AttachToProcessManager(ctx context.Context) error {
 		return usererr.New("Process manager is not running. Run `devbox services up` to start it.")
 	}
 
-	err := initDevboxUtilityProject(ctx, d.stderr)
+	err := addToUtilityProject(ctx, d.stderr, "process-compose@"+processComposeVersion)
 	if err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func (d *Devbox) StartProcessManager(
 		}
 	}
 
-	err = initDevboxUtilityProject(ctx, d.stderr)
+	err = addToUtilityProject(ctx, d.stderr, "process-compose@"+processComposeVersion)
 	if err != nil {
 		return err
 	}

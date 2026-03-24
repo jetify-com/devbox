@@ -20,7 +20,10 @@ const processComposeVersion = "1.87.0"
 
 var utilProjectConfigPath string
 
-func initDevboxUtilityProject(ctx context.Context, stderr io.Writer) error {
+// addToUtilityProject ensures the given packages are installed in the shared
+// devbox utility project. Call this on-demand rather than eagerly installing
+// all utilities at startup.
+func addToUtilityProject(ctx context.Context, stderr io.Writer, packages ...string) error {
 	devboxUtilityProjectPath, err := ensureDevboxUtilityConfig()
 	if err != nil {
 		return err
@@ -34,11 +37,7 @@ func initDevboxUtilityProject(ctx context.Context, stderr io.Writer) error {
 		return errors.WithStack(err)
 	}
 
-	// Add all utilities here.
-	utilities := []string{
-		"process-compose@" + processComposeVersion,
-	}
-	if err = box.Add(ctx, utilities, devopt.AddOpts{}); err != nil {
+	if err = box.Add(ctx, packages, devopt.AddOpts{}); err != nil {
 		return err
 	}
 
@@ -99,4 +98,14 @@ func utilityBinPath() (string, error) {
 	}
 
 	return filepath.Join(nixProfilePath, "default/bin"), nil
+}
+
+// utilityCorepackBinPath returns the path where corepack installs package
+// manager binaries in the utility project.
+func utilityCorepackBinPath() (string, error) {
+	path, err := utilityDataPath()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(path, ".devbox/virtenv/nodejs/corepack-bin"), nil
 }

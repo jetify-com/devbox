@@ -133,15 +133,14 @@ func (d *Devbox) JSPMPaths(ctx context.Context) (string, error) {
 	return strings.Join(binPaths, string(filepath.ListSeparator)), nil
 }
 
-// jspmRunCommand runs a JS package manager command. It looks for the binary
-// in the devbox nix profile first (which is already installed by the time
-// JSPM packages are installed), then falls back to the system PATH.
+// jspmRunCommand runs a JS package manager command. It builds a PATH that
+// includes the project's nix profile, the utility project's nodejs/corepack
+// binaries, and the system PATH.
 func (d *Devbox) jspmRunCommand(ctx context.Context, manager string, args ...string) error {
-	// Build a PATH that includes the nix profile bin directory.
-	// By the time JSPM packages are installed, nix packages (including nodejs/pnpm)
-	// are already in the nix profile.
-	profileBin := nix.ProfileBinPath(d.projectDir)
-	path := profileBin + string(filepath.ListSeparator) + os.Getenv("PATH")
+	path, err := d.jspmPath(ctx)
+	if err != nil {
+		return err
+	}
 
 	// Look up the manager binary in our augmented PATH
 	managerPath, err := lookPathIn(manager, path)
@@ -158,6 +157,69 @@ func (d *Devbox) jspmRunCommand(ctx context.Context, manager string, args ...str
 	cmd.Stdout = d.stderr // use stderr for install output
 	cmd.Stderr = d.stderr
 	return cmd.Run()
+}
+
+// jspmPath builds a PATH string that includes all places where JS package
+// manager binaries might be found: the project's nix profile, the utility
+// project's corepack bin, and the system PATH.
+func (d *Devbox) jspmPath(ctx context.Context) (string, error) {
+	var paths []string
+
+	// 1. Project's nix profile (user may have nodejs/pnpm there)
+	profileBin := nix.ProfileBinPath(d.projectDir)
+	paths = append(paths, profileBin)
+
+	// 2. Utility project's corepack bin (for corepack-enabled managers)
+	corepackBin, err := d.ensureUtilityNodejs(ctx)
+	if err == nil && corepackBin != "" {
+		paths = append(paths, corepackBin)
+	}
+
+	// 3. Utility project's nix bin (for nodejs itself from utility project)
+	utilBin, err := utilityBinPath()
+	if err == nil {
+		paths = append(paths, utilBin)
+	}
+
+	// 4. System PATH
+	paths = append(paths, os.Getenv("PATH"))
+
+	return strings.Join(paths, string(filepath.ListSeparator)), nil
+}
+
+// ensureUtilityNodejs installs nodejs in the utility project and enables
+// corepack so that pnpm/yarn are available. Returns the corepack bin path.
+func (d *Devbox) ensureUtilityNodejs(ctx context.Context) (string, error) {
+	if err := addToUtilityProject(ctx, d.stderr, "nodejs@latest"); err != nil {
+		return "", err
+	}
+
+	// Enable corepack in the utility project
+	utilBin, err := utilityBinPath()
+	if err != nil {
+		return "", err
+	}
+
+	corepackBin, err := utilityCorepackBinPath()
+	if err != nil {
+		return "", err
+	}
+
+	if err := os.MkdirAll(corepackBin, 0o755); err != nil {
+		return "", err
+	}
+
+	// Run corepack enable to install package manager shims
+	corepackPath := filepath.Join(utilBin, "corepack")
+	cmd := exec.CommandContext(ctx, corepackPath, "enable", "--install-directory", corepackBin)
+	cmd.Env = append(os.Environ(), "PATH="+utilBin+string(filepath.ListSeparator)+os.Getenv("PATH"))
+	cmd.Stdout = d.stderr
+	cmd.Stderr = d.stderr
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("failed to enable corepack: %w", err)
+	}
+
+	return corepackBin, nil
 }
 
 // lookPathIn searches for an executable in the given PATH string.
