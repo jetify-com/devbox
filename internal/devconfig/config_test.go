@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 func TestOpen(t *testing.T) {
@@ -427,3 +429,43 @@ func TestOSExpandIfPossible(t *testing.T) {
 		})
 	}
 }
+
+// TestLoadRecursiveMultipleBuiltinPluginIncludes is a regression test for
+// DEV-16: two explicit built-in plugin includes must not trigger a false
+// "circular or duplicate include detected" error.
+func TestLoadRecursiveMultipleBuiltinPluginIncludes(t *testing.T) {
+	dir := t.TempDir()
+
+	const jsonContent = `{
+		"packages": [],
+		"include": ["plugin:nodejs", "plugin:python"]
+	}`
+	path := filepath.Join(dir, "devbox.json")
+	if err := os.WriteFile(path, []byte(jsonContent), 0o644); err != nil {
+		t.Fatalf("os.WriteFile error: %v", err)
+	}
+
+	cfg, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open error: %v", err)
+	}
+
+	lockfile, err := lock.GetFile(&testLockProject{dir: dir})
+	if err != nil {
+		t.Fatalf("lock.GetFile error: %v", err)
+	}
+
+	if err := cfg.LoadRecursive(lockfile); err != nil {
+		t.Errorf("LoadRecursive returned unexpected error: %v", err)
+	}
+}
+
+// testLockProject satisfies the unexported lock.devboxProject interface for tests.
+type testLockProject struct {
+	dir string
+}
+
+func (p *testLockProject) ConfigHash() (string, error)                              { return "", nil }
+func (p *testLockProject) Stdenv() flake.Ref                                        { return flake.Ref{} }
+func (p *testLockProject) AllPackageNamesIncludingRemovedTriggerPackages() []string { return nil }
+func (p *testLockProject) ProjectDir() string                                       { return p.dir }
