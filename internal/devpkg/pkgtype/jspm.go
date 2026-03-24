@@ -43,20 +43,21 @@ func JSPMType(s string) JSPackageManager {
 // JSPMPackageName strips the prefix and splits on @ to return (name, version).
 // For "pnpm:vercel@latest" returns ("vercel", "latest").
 // For "pnpm:vercel" returns ("vercel", "").
-func JSPMPackageName(s string) (name, version string) {
+func JSPMPackageName(raw string) (name, version string) {
 	// Strip the prefix
+	pkg := raw
 	switch {
-	case strings.HasPrefix(s, PnpmPrefix):
-		s = strings.TrimPrefix(s, PnpmPrefix)
-	case strings.HasPrefix(s, YarnPrefix):
-		s = strings.TrimPrefix(s, YarnPrefix)
-	case strings.HasPrefix(s, NpmPrefix):
-		s = strings.TrimPrefix(s, NpmPrefix)
+	case strings.HasPrefix(pkg, PnpmPrefix):
+		pkg = strings.TrimPrefix(pkg, PnpmPrefix)
+	case strings.HasPrefix(pkg, YarnPrefix):
+		pkg = strings.TrimPrefix(pkg, YarnPrefix)
+	case strings.HasPrefix(pkg, NpmPrefix):
+		pkg = strings.TrimPrefix(pkg, NpmPrefix)
 	}
 
 	// Split on last @ (to handle scoped packages like @scope/pkg@version)
-	if i := strings.LastIndex(s, "@"); i > 0 {
-		return s[:i], s[i+1:]
+	if i := strings.LastIndex(pkg, "@"); i > 0 {
+		return pkg[:i], pkg[i+1:]
 	}
-	return s, ""
+	return pkg, ""
 }
