@@ -68,20 +68,8 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		}
 	}
 
-	for _, pkg := range pendingPackagesToUpdate {
-		if pkg.IsJSPM() {
-			if err = d.UpdateJSPMPackage(ctx, pkg); err != nil {
-				return err
-			}
-		} else if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); !isVersioned {
-			if err = d.attemptToUpgradeFlake(pkg); err != nil {
-				return err
-			}
-		} else {
-			if err = d.updateDevboxPackage(pkg); err != nil {
-				return err
-			}
-		}
+	if err := d.updatePendingPackages(ctx, pendingPackagesToUpdate); err != nil {
+		return err
 	}
 
 	mode := update
@@ -124,6 +112,25 @@ func (d *Devbox) inputsToUpdate(
 		pkgsToUpdate = append(pkgsToUpdate, found)
 	}
 	return pkgsToUpdate, nil
+}
+
+func (d *Devbox) updatePendingPackages(ctx context.Context, packages []*devpkg.Package) error {
+	for _, pkg := range packages {
+		if pkg.IsJSPM() {
+			if err := d.UpdateJSPMPackage(ctx, pkg); err != nil {
+				return err
+			}
+		} else if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); !isVersioned {
+			if err := d.attemptToUpgradeFlake(pkg); err != nil {
+				return err
+			}
+		} else {
+			if err := d.updateDevboxPackage(pkg); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (d *Devbox) updateDevboxPackage(pkg *devpkg.Package) error {
