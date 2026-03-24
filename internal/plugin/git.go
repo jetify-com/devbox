@@ -9,9 +9,13 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"go.jetify.com/devbox/nix/flake"
+	"go.jetify.com/pkg/filecache"
 )
+
+var gitCache = filecache.New[[]byte]("devbox/plugin/git")
 
 type gitPlugin struct {
 	ref  *flake.Ref
@@ -186,7 +190,23 @@ func (p *gitPlugin) Hash() string {
 }
 
 func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
-	return p.cloneAndRead(subpath)
+	ttl := 24 * time.Hour
+	var err error
+	ttlStr := os.Getenv("DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL")
+	if ttlStr != "" {
+		ttl, err = time.ParseDuration(ttlStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL=%q: %w", ttlStr, err)
+		}
+	}
+	cacheKey := p.LockfileKey() + "/" + subpath + "/" + ttl.String()
+	return gitCache.GetOrSet(cacheKey, func() ([]byte, time.Duration, error) {
+		content, err := p.cloneAndRead(subpath)
+		if err != nil {
+			return nil, 0, err
+		}
+		return content, ttl, nil
+	})
 }
 
 func (p *gitPlugin) LockfileKey() string {

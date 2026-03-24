@@ -91,7 +91,7 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 	}
 
 	return githubCache.GetOrSet(
-		contentURL+ttlStr,
+		contentURL+ttl.String(),
 		func() ([]byte, time.Duration, error) {
 			req, err := p.request(contentURL)
 			if err != nil {
