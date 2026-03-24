@@ -1,9 +1,11 @@
 {
   "packages": [
     "nodejs_22@latest",
-    "pnpm@latest",
     "pnpm:vercel@latest"
   ],
+  "env": {
+    "DEVBOX_COREPACK_ENABLED": "true"
+  },
   "shell": {
     "scripts": {
       "run_test": "vercel --version && echo 'JSPM test passed'"
