@@ -800,6 +800,12 @@ func (d *Devbox) computeEnv(
 	}
 	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, runXPaths)
 
+	jspmPaths, err := d.JSPMPaths(ctx)
+	if err != nil {
+		return nil, err
+	}
+	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, jspmPaths)
+
 	pathStack := envpath.Stack(env, originalEnv)
 	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, envOpts.PreservePathStack)
 	env["PATH"] = pathStack.Path(env)

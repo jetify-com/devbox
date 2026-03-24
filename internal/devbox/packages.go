@@ -124,31 +124,36 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			}
 		}
 
-		// validate that the versioned package exists in the search endpoint.
-		// if not, fallback to legacy vanilla nix.
-		versionedPkg := devpkg.PackageFromStringWithOptions(pkg.Versioned(), d.lockfile, opts)
-
 		packageNameForConfig := pkg.Raw
-		ok, err := versionedPkg.ValidateExists(ctx)
-		if (err == nil && ok) || errors.Is(err, devpkg.ErrCannotBuildPackageOnSystem) {
-			// Only use versioned if it exists in search. We can disregard the error
-			// about not building on the current system, since user's can continue
-			// via --exclude-platform flag.
+		if pkg.IsJSPM() {
+			// JSPM packages skip nix validation; validated at install time.
 			packageNameForConfig = pkg.Versioned()
-		} else if !versionedPkg.IsDevboxPackage {
-			// This means it didn't validate and we don't want to fallback to legacy
-			// Just propagate the error.
-			return err
 		} else {
-			installable := flake.Installable{
-				Ref:      d.lockfile.Stdenv(),
-				AttrPath: pkg.Raw,
-			}
-			_, err := nix.Search(installable.String())
-			if err != nil {
-				// This means it looked like a devbox package or attribute path, but we
-				// could not find it in search or in the legacy nixpkgs path.
-				return usererr.New("Package %s not found", pkg.Raw)
+			// validate that the versioned package exists in the search endpoint.
+			// if not, fallback to legacy vanilla nix.
+			versionedPkg := devpkg.PackageFromStringWithOptions(pkg.Versioned(), d.lockfile, opts)
+
+			ok, err := versionedPkg.ValidateExists(ctx)
+			if (err == nil && ok) || errors.Is(err, devpkg.ErrCannotBuildPackageOnSystem) {
+				// Only use versioned if it exists in search. We can disregard the error
+				// about not building on the current system, since user's can continue
+				// via --exclude-platform flag.
+				packageNameForConfig = pkg.Versioned()
+			} else if !versionedPkg.IsDevboxPackage {
+				// This means it didn't validate and we don't want to fallback to legacy
+				// Just propagate the error.
+				return err
+			} else {
+				installable := flake.Installable{
+					Ref:      d.lockfile.Stdenv(),
+					AttrPath: pkg.Raw,
+				}
+				_, err := nix.Search(installable.String())
+				if err != nil {
+					// This means it looked like a devbox package or attribute path, but we
+					// could not find it in search or in the legacy nixpkgs path.
+					return usererr.New("Package %s not found", pkg.Raw)
+				}
 			}
 		}
 
@@ -260,6 +265,11 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 			"the following packages were not found in your devbox.json: %s\n",
 			strings.Join(missingPkgs, ", "),
 		)
+	}
+
+	// Remove JSPM packages via their package managers
+	if err := d.RemoveJSPMPackages(ctx, packagesToUninstall); err != nil {
+		return err
 	}
 
 	if err := plugin.Remove(d.projectDir, packagesToUninstall); err != nil {
@@ -478,7 +488,11 @@ func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
 		return err
 	}
 
-	return d.InstallRunXPackages(ctx)
+	if err := d.InstallRunXPackages(ctx); err != nil {
+		return err
+	}
+
+	return d.InstallJSPMPackages(ctx)
 }
 
 func (d *Devbox) handleInstallFailure(ctx context.Context, mode installMode) error {

@@ -197,6 +197,11 @@ func TestCanonicalName(t *testing.T) {
 		{"runx:golangci/golangci-lint@latest", "runx:golangci/golangci-lint"},
 		{"runx:golangci/golangci-lint@v0.0.2", "runx:golangci/golangci-lint"},
 		{"runx:golangci/golangci-lint", "runx:golangci/golangci-lint"},
+		{"pnpm:vercel", "pnpm:vercel"},
+		{"pnpm:vercel@latest", "pnpm:vercel"},
+		{"npm:eslint@8.0.0", "npm:eslint"},
+		{"yarn:turbo@1.0.0", "yarn:turbo"},
+		{"npm:@scope/pkg@1.0.0", "npm:@scope/pkg"},
 		{"github:NixOS/nixpkgs/12345", ""},
 		{"path:/to/my/file", ""},
 	}
@@ -207,6 +212,56 @@ func TestCanonicalName(t *testing.T) {
 			got := pkg.CanonicalName()
 			if got != tt.expectedName {
 				t.Errorf("Expected canonical name %q, but got %q", tt.expectedName, got)
+			}
+		})
+	}
+}
+
+func TestVersioned(t *testing.T) {
+	tests := []struct {
+		pkgName  string
+		expected string
+	}{
+		{"go", "go@latest"},
+		{"go@1.21", "go@1.21"},
+		{"pnpm:vercel", "pnpm:vercel@latest"},
+		{"pnpm:vercel@latest", "pnpm:vercel@latest"},
+		{"pnpm:vercel@1.2.3", "pnpm:vercel@1.2.3"},
+		{"npm:eslint", "npm:eslint@latest"},
+		{"npm:@scope/pkg@1.0.0", "npm:@scope/pkg@1.0.0"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.pkgName, func(t *testing.T) {
+			pkg := PackageFromStringWithDefaults(tt.pkgName, &lockfile{})
+			got := pkg.Versioned()
+			if got != tt.expected {
+				t.Errorf("Versioned() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestIsJSPM(t *testing.T) {
+	tests := []struct {
+		pkgName  string
+		expected bool
+	}{
+		{"pnpm:vercel", true},
+		{"pnpm:vercel@latest", true},
+		{"npm:eslint", true},
+		{"yarn:turbo", true},
+		{"go@1.21", false},
+		{"runx:foo/bar", false},
+		{"hello", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.pkgName, func(t *testing.T) {
+			pkg := PackageFromStringWithDefaults(tt.pkgName, &lockfile{})
+			got := pkg.IsJSPM()
+			if got != tt.expected {
+				t.Errorf("IsJSPM() = %v, want %v", got, tt.expected)
 			}
 		})
 	}

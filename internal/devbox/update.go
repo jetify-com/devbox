@@ -69,7 +69,11 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	}
 
 	for _, pkg := range pendingPackagesToUpdate {
-		if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); !isVersioned {
+		if pkg.IsJSPM() {
+			if err = d.UpdateJSPMPackage(ctx, pkg); err != nil {
+				return err
+			}
+		} else if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); !isVersioned {
 			if err = d.attemptToUpgradeFlake(pkg); err != nil {
 				return err
 			}

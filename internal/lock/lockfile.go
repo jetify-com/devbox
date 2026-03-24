@@ -75,8 +75,14 @@ func (f *File) Remove(pkgs ...string) error {
 // This avoids writing values that may need to be removed in case of error.
 func (f *File) Resolve(pkg string) (*Package, error) {
 	entry, hasEntry := f.Packages[pkg]
-	if hasEntry && entry.Resolved != "" {
+	if hasEntry && (entry.Resolved != "" || entry.ManagedBy != "") {
 		return f.Packages[pkg], nil
+	}
+
+	if pkgtype.IsJSPM(pkg) {
+		locked := &Package{ManagedBy: string(pkgtype.JSPMType(pkg))}
+		f.Packages[pkg] = locked
+		return locked, nil
 	}
 
 	locked := &Package{}

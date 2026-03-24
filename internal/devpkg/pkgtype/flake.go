@@ -7,7 +7,7 @@ import (
 )
 
 func IsFlake(s string) bool {
-	if IsRunX(s) {
+	if IsRunX(s) || IsJSPM(s) {
 		return false
 	}
 	parsed, err := flake.ParseInstallable(s)

@@ -22,6 +22,9 @@ type Package struct {
 	Version       string `json:"version,omitempty"`
 	// Systems is keyed by the system name
 	Systems map[string]*SystemInfo `json:"systems,omitempty"`
+	// ManagedBy indicates the package is managed by an external JS package
+	// manager (pnpm, yarn, npm) rather than Nix.
+	ManagedBy string `json:"managed_by,omitempty"`
 
 	// NOTE: if you add more fields, please update SyncLockfiles
 }

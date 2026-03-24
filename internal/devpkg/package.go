@@ -139,6 +139,12 @@ func newPackage(raw string, isInstallable func() bool, locker lock.Locker) *Pack
 		isInstallable: sync.OnceValue(isInstallable),
 	}
 
+	// JSPM packages are managed by external JS package managers, not Nix.
+	if pkgtype.IsJSPM(raw) {
+		pkg.resolve = sync.OnceValue(func() error { return nil })
+		return pkg
+	}
+
 	// The raw string is either a Devbox package ("name" or "name@version")
 	// or it's a flake installable. In some cases they're ambiguous
 	// ("nixpkgs" is a devbox package and a flake). When that happens, we
@@ -496,8 +502,15 @@ func (p *Package) Equals(other *Package) bool {
 }
 
 // CanonicalName returns the name of the package without the version
-// it only applies to devbox packages
+// it only applies to devbox packages and JSPM packages
 func (p *Package) CanonicalName() string {
+	if p.IsJSPM() {
+		// For JSPM packages, canonical name includes the prefix but not version.
+		// e.g. "pnpm:vercel@latest" -> "pnpm:vercel"
+		prefix := string(p.JSPMType()) + ":"
+		name, _ := p.JSPMPackageName()
+		return prefix + name
+	}
 	if !p.IsDevboxPackage {
 		return ""
 	}
@@ -506,6 +519,13 @@ func (p *Package) CanonicalName() string {
 }
 
 func (p *Package) Versioned() string {
+	if p.IsJSPM() {
+		_, version := p.JSPMPackageName()
+		if version == "" {
+			return p.Raw + "@latest"
+		}
+		return p.Raw
+	}
 	if p.IsDevboxPackage && !p.isVersioned() {
 		return p.Raw + "@latest"
 	}
@@ -657,6 +677,19 @@ func (p *Package) IsRunX() bool {
 	return pkgtype.IsRunX(p.Raw)
 }
 
+func (p *Package) IsJSPM() bool {
+	return pkgtype.IsJSPM(p.Raw)
+}
+
+func (p *Package) JSPMType() pkgtype.JSPackageManager {
+	return pkgtype.JSPMType(p.Raw)
+}
+
+// JSPMPackageName returns the JS package name and version without the manager prefix.
+func (p *Package) JSPMPackageName() (name, version string) {
+	return pkgtype.JSPMPackageName(p.Raw)
+}
+
 func (p *Package) IsNix() bool {
 	return IsNix(p, 0)
 }
@@ -680,11 +713,15 @@ func (p *Package) LockfileKey() string {
 }
 
 func IsNix(p *Package, _ int) bool {
-	return !p.IsRunX()
+	return !p.IsRunX() && !p.IsJSPM()
 }
 
 func IsRunX(p *Package, _ int) bool {
 	return p.IsRunX()
+}
+
+func IsJSPM(p *Package, _ int) bool {
+	return p.IsJSPM()
 }
 
 func (p *Package) DocsURL() string {
@@ -701,7 +738,7 @@ func (p *Package) DocsURL() string {
 // GetOutputNames returns the names of the nix package outputs. Outputs can be
 // specified in devbox.json package fields or as part of the flake reference.
 func (p *Package) GetOutputNames() ([]string, error) {
-	if p.IsRunX() {
+	if p.IsRunX() || p.IsJSPM() {
 		return []string{}, nil
 	}
 

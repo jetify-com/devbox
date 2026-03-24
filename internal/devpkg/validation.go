@@ -9,6 +9,10 @@ import (
 )
 
 func (p *Package) ValidateExists(ctx context.Context) (bool, error) {
+	if p.IsJSPM() {
+		// JSPM packages are validated at install time by the JS package manager.
+		return true, nil
+	}
 	if p.IsRunX() {
 		_, err := p.lockfile.Resolve(p.Raw)
 		return err == nil, err

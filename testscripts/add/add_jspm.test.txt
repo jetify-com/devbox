@@ -1,0 +1,41 @@
+# Test adding and removing JS package manager packages
+
+exec devbox init
+
+# Add nodejs and pnpm first so the JS package manager is available
+exec devbox add nodejs_22 pnpm
+
+# Add a pnpm-managed JS package
+exec devbox add pnpm:vercel
+json.superset devbox.json expected_devbox_after_add.json
+devboxlock.packages.contains devbox.lock pnpm:vercel@latest
+
+# Verify the binary is accessible via devbox run
+exec devbox run -- vercel --version
+
+# Remove the JS package
+exec devbox rm pnpm:vercel
+json.superset devbox.json expected_devbox_after_rm.json
+! devboxlock.packages.contains devbox.lock pnpm:vercel@latest
+
+-- devbox.json --
+{
+  "packages": []
+}
+
+-- expected_devbox_after_add.json --
+{
+  "packages": [
+    "nodejs_22@latest",
+    "pnpm@latest",
+    "pnpm:vercel@latest"
+  ]
+}
+
+-- expected_devbox_after_rm.json --
+{
+  "packages": [
+    "nodejs_22@latest",
+    "pnpm@latest"
+  ]
+}
