@@ -6,6 +6,7 @@
     "yarn":    "latest",
     "curl":    "latest",
     "sqlite":  "latest",
+    "pkg-config": "latest",
     "libyaml": {
       "version": "latest",
       "outputs": ["out", "dev"]
