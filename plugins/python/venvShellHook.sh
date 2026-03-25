@@ -35,17 +35,15 @@ if [ -d "$VENV_DIR" ]; then
             echo "Do you want to overwrite it? (y/n)"
             read reply
             echo
-            if [[ $reply =~ ^[Yy]$ ]]; then
-                echo "Overwriting existing virtual environment..."
-                create_venv
-            elif [[ $reply =~ ^[Nn]$ ]]; then
-                echo "Using your existing virtual environment. We recommend changing \$VENV_DIR to a different location"
-                touch "$STATE_FILE"
-                exit 0
-            else
-                echo "Invalid input. Exiting..."
-                exit 1
-            fi
+            case "$reply" in
+                [Yy]) echo "Overwriting existing virtual environment..."
+                    create_venv ;;
+                [Nn]) echo "Using your existing virtual environment. We recommend changing \$VENV_DIR to a different location"
+                    touch "$STATE_FILE"
+                    exit 0 ;;
+                *) echo "Invalid input. Exiting..."
+                    exit 1 ;;
+            esac
         fi
     else
         echo "Directory exists but is not a valid virtual environment. Creating a new one..."
