@@ -1,11 +1,16 @@
 {
   "packages": {
-    "ruby":    "3.3",
-    "bundler": "2.5",
-    "nodejs":  "21",
-    "yarn":    "1.22",
+    "ruby":    "latest",
+    "bundler": "latest",
+    "nodejs":  "latest",
+    "yarn":    "latest",
     "curl":    "latest",
-    "sqlite":  "latest"
+    "sqlite":  "latest",
+    "pkg-config": "latest",
+    "libyaml": {
+      "version": "latest",
+      "outputs": ["out", "dev"]
+    }
   },
   "shell": {
     "init_hook": [
