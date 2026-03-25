@@ -466,7 +466,7 @@ func (p *Package) Hash() string {
 	}
 
 	if sum == "" {
-		sum = cachehash.Bytes([]byte(p.installable.String()))
+		sum = cachehash.Bytes([]byte(cmp.Or(p.installable.String(), p.Raw)))
 	}
 	return sum[:min(len(sum), 6)]
 }
