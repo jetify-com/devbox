@@ -159,7 +159,8 @@
   },
   "resolutions": {
     "minimatch": "^3.1.5",
-    "serialize-javascript": "^6.0.2 || ^7.0.0"
+    "serialize-javascript": "^6.0.2 || ^7.0.0",
+    "flatted": "^3.4.0"
   },
   "dependencies": {
     "@types/node": "16.x",
