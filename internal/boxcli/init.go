@@ -31,15 +31,23 @@ func initCmd() *cobra.Command {
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := runInitCmd(cmd, args, flags)
-			if errors.Is(err, os.ErrExist) {
-				path := pathArg(args)
-				if path == "" || path == "." {
-					path, _ = os.Getwd()
-				}
-				ux.Fwarningf(cmd.ErrOrStderr(), "devbox.json already exists in %q.", path)
-				err = nil
+			path := pathArg(args)
+			if path == "" || path == "." {
+				path, _ = os.Getwd()
 			}
-			return err
+			if errors.Is(err, os.ErrExist) {
+				ux.Fwarningf(cmd.ErrOrStderr(), "devbox.json already exists in %q.", path)
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+			if flags.dryRun {
+				return nil
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "Created devbox.json in %s\n", path)
+			fmt.Fprintln(cmd.OutOrStdout(), "Run `devbox add <package>` to add packages, or `devbox shell` to start a dev shell.")
+			return nil
 		},
 	}
 
