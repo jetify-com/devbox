@@ -5,7 +5,11 @@
     "nodejs":  "latest",
     "yarn":    "latest",
     "curl":    "latest",
-    "sqlite":  "latest"
+    "sqlite":  "latest",
+    "libyaml": {
+      "version": "latest",
+      "outputs": ["out", "dev"]
+    }
   },
   "shell": {
     "init_hook": [
