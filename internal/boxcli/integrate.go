@@ -124,12 +124,7 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		return err
 	}
 	// Open editor with devbox shell environment
-	cmndName := flags.ideName
-	cwd, ok := os.LookupEnv("VSCODE_CWD")
-	if ok {
-		// Specify full path to avoid running the `code` shell script from VS Code Server, which fails under WSL
-		cmndName = cwd + "/bin/" + cmndName
-	}
+	cmndName := resolveEditorBinary(flags.ideName)
 	cmnd := exec.Command(cmndName, message.ConfigDir)
 	cmnd.Env = append(cmnd.Env, envVars...)
 	var outb, errb bytes.Buffer
@@ -143,6 +138,23 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		return err
 	}
 	return nil
+}
+
+// resolveEditorBinary returns the path to the editor binary. On WSL,
+// VSCODE_CWD points to the VS Code installation directory, so we can
+// construct an absolute path to avoid the VS Code Server shell script.
+// On macOS, VSCODE_CWD is the workspace directory, so the constructed
+// path won't exist and we fall back to the bare command name.
+func resolveEditorBinary(ideName string) string {
+	cwd, ok := os.LookupEnv("VSCODE_CWD")
+	if !ok {
+		return ideName
+	}
+	fullPath := cwd + "/bin/" + ideName
+	if _, err := os.Stat(fullPath); err == nil {
+		return fullPath
+	}
+	return ideName
 }
 
 type debugMode struct {
