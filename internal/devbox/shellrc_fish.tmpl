@@ -43,7 +43,8 @@ set fish_history devbox
 if not set -q devbox_no_prompt
     functions -c fish_prompt __devbox_fish_prompt_orig
     function fish_prompt
-        echo "(devbox)" (__devbox_fish_prompt_orig)
+        printf "(devbox) "
+        __devbox_fish_prompt_orig
     end
 end
 
