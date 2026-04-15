@@ -192,40 +192,40 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 }
 
 func TestUpdateOnlyTargetedPackagesAreSelected(t *testing.T) {
-	d := devboxForTesting(t)
+	devbox := devboxForTesting(t)
 
 	pkgA := devpkg.PackageFromStringWithDefaults("hello@1.2.3", nil)
 	pkgB := devpkg.PackageFromStringWithDefaults("curl@latest", nil)
 	pkgC := devpkg.PackageFromStringWithDefaults("git@latest", nil)
 
 	// Simulate updating only pkgB.
-	d.packagesBeingUpdated = []*devpkg.Package{pkgB}
+	devbox.packagesBeingUpdated = []*devpkg.Package{pkgB}
 
-	require.False(t, d.isBeingUpdated(pkgA), "pkgA should not be marked as being updated")
-	require.True(t, d.isBeingUpdated(pkgB), "pkgB should be marked as being updated")
-	require.False(t, d.isBeingUpdated(pkgC), "pkgC should not be marked as being updated")
+	require.False(t, devbox.isBeingUpdated(pkgA), "pkgA should not be marked as being updated")
+	require.True(t, devbox.isBeingUpdated(pkgB), "pkgB should be marked as being updated")
+	require.False(t, devbox.isBeingUpdated(pkgC), "pkgC should not be marked as being updated")
 }
 
 func TestUpdateAllPackagesSelectedWhenNoneTargeted(t *testing.T) {
-	d := devboxForTesting(t)
+	devbox := devboxForTesting(t)
 
 	pkgA := devpkg.PackageFromStringWithDefaults("hello@1.2.3", nil)
 	pkgB := devpkg.PackageFromStringWithDefaults("curl@latest", nil)
 
 	// Simulate `devbox update` with no args: all packages are in the update list.
-	d.packagesBeingUpdated = []*devpkg.Package{pkgA, pkgB}
+	devbox.packagesBeingUpdated = []*devpkg.Package{pkgA, pkgB}
 
-	require.True(t, d.isBeingUpdated(pkgA))
-	require.True(t, d.isBeingUpdated(pkgB))
+	require.True(t, devbox.isBeingUpdated(pkgA))
+	require.True(t, devbox.isBeingUpdated(pkgB))
 }
 
 func TestUpdateEmptyUpdateListSelectsNothing(t *testing.T) {
-	d := devboxForTesting(t)
+	devbox := devboxForTesting(t)
 
-	pkg := devpkg.PackageFromStringWithDefaults("hello@1.2.3", nil)
+	helloPkg := devpkg.PackageFromStringWithDefaults("hello@1.2.3", nil)
 
 	// packagesBeingUpdated is nil (default) — no package should be force-refreshed.
-	require.False(t, d.isBeingUpdated(pkg))
+	require.False(t, devbox.isBeingUpdated(helloPkg))
 }
 
 func currentSystem(*testing.T) string {
