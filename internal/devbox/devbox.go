@@ -68,6 +68,10 @@ type Devbox struct {
 
 	// This is needed because of the --quiet flag.
 	stderr io.Writer
+
+	// packagesBeingUpdated tracks which packages are being updated so that
+	// installNixPackagesToStore only refreshes those, not all packages.
+	packagesBeingUpdated []*devpkg.Package
 }
 
 var legacyPackagesWarningHasBeenShown = false

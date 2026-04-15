@@ -80,6 +80,8 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		}
 	}
 
+	d.packagesBeingUpdated = inputs
+
 	mode := update
 	if opts.NoInstall {
 		mode = noInstall
