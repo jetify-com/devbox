@@ -191,6 +191,43 @@ func TestUpdateOtherSysInfoIsReplaced(t *testing.T) {
 	require.Equal(t, "store_path2", lockfile.Packages[raw].Systems[sys2].Outputs[0].Path)
 }
 
+func TestUpdateOnlyTargetedPackagesAreSelected(t *testing.T) {
+	d := devboxForTesting(t)
+
+	pkgA := devpkg.PackageFromStringWithDefaults("hello@1.2.3", nil)
+	pkgB := devpkg.PackageFromStringWithDefaults("curl@latest", nil)
+	pkgC := devpkg.PackageFromStringWithDefaults("git@latest", nil)
+
+	// Simulate updating only pkgB.
+	d.packagesBeingUpdated = []*devpkg.Package{pkgB}
+
+	require.False(t, d.isBeingUpdated(pkgA), "pkgA should not be marked as being updated")
+	require.True(t, d.isBeingUpdated(pkgB), "pkgB should be marked as being updated")
+	require.False(t, d.isBeingUpdated(pkgC), "pkgC should not be marked as being updated")
+}
+
+func TestUpdateAllPackagesSelectedWhenNoneTargeted(t *testing.T) {
+	d := devboxForTesting(t)
+
+	pkgA := devpkg.PackageFromStringWithDefaults("hello@1.2.3", nil)
+	pkgB := devpkg.PackageFromStringWithDefaults("curl@latest", nil)
+
+	// Simulate `devbox update` with no args: all packages are in the update list.
+	d.packagesBeingUpdated = []*devpkg.Package{pkgA, pkgB}
+
+	require.True(t, d.isBeingUpdated(pkgA))
+	require.True(t, d.isBeingUpdated(pkgB))
+}
+
+func TestUpdateEmptyUpdateListSelectsNothing(t *testing.T) {
+	d := devboxForTesting(t)
+
+	pkg := devpkg.PackageFromStringWithDefaults("hello@1.2.3", nil)
+
+	// packagesBeingUpdated is nil (default) — no package should be force-refreshed.
+	require.False(t, d.isBeingUpdated(pkg))
+}
+
 func currentSystem(*testing.T) string {
 	sys := nix.System() // NOTE: we could mock this too, if it helps.
 	return sys
