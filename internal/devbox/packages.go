@@ -637,7 +637,7 @@ func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode)
 	packagesToInstall := []*devpkg.Package{}
 	storePathsForPackage := map[*devpkg.Package][]string{}
 	for _, pkg := range packages {
-		if mode == update {
+		if mode == update && d.isBeingUpdated(pkg) {
 			packagesToInstall = append(packagesToInstall, pkg)
 			continue
 		}
@@ -664,6 +664,15 @@ func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode)
 	}
 
 	return lo.Uniq(packagesToInstall), nil
+}
+
+func (d *Devbox) isBeingUpdated(pkg *devpkg.Package) bool {
+	for _, u := range d.packagesBeingUpdated {
+		if u.Raw == pkg.Raw {
+			return true
+		}
+	}
+	return false
 }
 
 // moveAllowInsecureFromLockfile will modernize a Devbox project by moving the allow_insecure: boolean
