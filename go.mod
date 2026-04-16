@@ -1,6 +1,6 @@
 module go.jetify.com/devbox
 
-go 1.26.1
+go 1.26
 
 require (
 	al.essio.dev/pkg/shellescape v1.6.0
