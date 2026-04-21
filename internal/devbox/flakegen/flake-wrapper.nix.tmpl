@@ -1,0 +1,15 @@
+{
+  description = "{{ .Description }}";
+
+  inputs.nixpkgs.url = "{{ .NixpkgsURL }}";
+
+  outputs = { self, nixpkgs }: let
+    forAllSystems = f: nixpkgs.lib.genAttrs
+      nixpkgs.lib.systems.flakeExposed
+      (system: f nixpkgs.legacyPackages.${system});
+  in {
+    packages = forAllSystems (pkgs: {
+      {{ .Attr }} = pkgs.callPackage ./{{ .NixFile }} {};
+    });
+  };
+}
