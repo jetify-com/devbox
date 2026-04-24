@@ -71,22 +71,8 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		}
 	}
 
-	for _, pkg := range pendingPackagesToUpdate {
-		if pkgtype.IsFlake(pkg.Raw) {
-			// Flake refs are updated by re-resolving the ref via `nix flake
-			// metadata` and rewriting the lockfile entry. Errors are non-fatal
-			// (network blip, deleted branch, renamed attr) — warn and continue
-			// so one broken ref doesn't abort update for everything else.
-			if err := d.updateDevboxPackage(pkg); err != nil {
-				ux.Fwarningf(d.stderr, "Failed to update %s: %s\n", pkg.Raw, err)
-			}
-			continue
-		}
-		if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); isVersioned {
-			if err = d.updateDevboxPackage(pkg); err != nil {
-				return err
-			}
-		}
+	if err := d.updatePendingPackages(pendingPackagesToUpdate); err != nil {
+		return err
 	}
 
 	d.packagesBeingUpdated = inputs
@@ -131,6 +117,27 @@ func (d *Devbox) inputsToUpdate(
 		pkgsToUpdate = append(pkgsToUpdate, found)
 	}
 	return pkgsToUpdate, nil
+}
+
+// updatePendingPackages updates the lockfile entries for each package, using
+// the right strategy per package kind. Flake refs warn-and-continue on
+// failure (see #1180 / #1840); versioned nixpkgs packages abort the update on
+// failure. Unversioned non-flake entries are left alone.
+func (d *Devbox) updatePendingPackages(pkgs []*devpkg.Package) error {
+	for _, pkg := range pkgs {
+		if pkgtype.IsFlake(pkg.Raw) {
+			if err := d.updateDevboxPackage(pkg); err != nil {
+				ux.Fwarningf(d.stderr, "Failed to update %s: %s\n", pkg.Raw, err)
+			}
+			continue
+		}
+		if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); isVersioned {
+			if err := d.updateDevboxPackage(pkg); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (d *Devbox) updateDevboxPackage(pkg *devpkg.Package) error {
