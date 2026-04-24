@@ -1,0 +1,38 @@
+# Regression guard: `devbox update` on a project that includes a local path:
+# flake must not error out or emit the "Failed to update" warning. Path flakes
+# are one of the cases the forgiving-error branch in the update loop has to
+# handle cleanly.
+
+exec devbox install
+
+# Update with no source changes.
+exec devbox update
+
+# No warnings about the path flake.
+! stderr 'Failed to update path:'
+
+-- devbox.json --
+{
+  "packages": ["path:my-flake"]
+}
+
+-- my-flake/flake.nix --
+{
+  description = "Test local flake";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+      {
+        packages = {
+          default = pkgs.hello;
+        };
+      });
+}

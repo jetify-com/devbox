@@ -22,8 +22,17 @@ type FlakeMetadata struct {
 	Resolved     flake.Ref `json:"resolved"`
 }
 
-func ResolveFlake(ctx context.Context, ref flake.Ref) (FlakeMetadata, error) {
-	cmd := Command("flake", "metadata", "--json", ref)
+// ResolveFlake runs `nix flake metadata` for the given ref. When refresh is
+// true, `--refresh` is passed so nix bypasses its own eval/tarball cache and
+// re-queries the upstream (e.g. GitHub) — use this on `devbox update`, not on
+// paths like Add where stale-but-cached results are fine.
+func ResolveFlake(ctx context.Context, ref flake.Ref, refresh bool) (FlakeMetadata, error) {
+	args := []any{"flake", "metadata", "--json"}
+	if refresh {
+		args = append(args, "--refresh")
+	}
+	args = append(args, ref)
+	cmd := Command(args...)
 	out, err := cmd.Output(ctx)
 	if err != nil {
 		return FlakeMetadata{}, err
@@ -38,7 +47,7 @@ func ResolveFlake(ctx context.Context, ref flake.Ref) (FlakeMetadata, error) {
 
 func ResolveCachedFlake(ctx context.Context, ref flake.Ref) (FlakeMetadata, error) {
 	return flakeFileCache.GetOrSet(ref.String(), func() (FlakeMetadata, time.Duration, error) {
-		meta, err := ResolveFlake(ctx, ref)
+		meta, err := ResolveFlake(ctx, ref, false)
 		if err != nil {
 			return FlakeMetadata{}, 0, err
 		}

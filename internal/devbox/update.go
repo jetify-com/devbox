@@ -7,17 +7,20 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/devpkg/pkgtype"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
-	"go.jetify.com/devbox/internal/nix/nixprofile"
 	"go.jetify.com/devbox/internal/plugin"
 	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/shellgen"
 	"go.jetify.com/devbox/internal/ux"
+	"go.jetify.com/devbox/nix/flake"
 )
 
 func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
@@ -69,11 +72,17 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	}
 
 	for _, pkg := range pendingPackagesToUpdate {
-		if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); !isVersioned {
-			if err = d.attemptToUpgradeFlake(pkg); err != nil {
-				return err
+		if pkgtype.IsFlake(pkg.Raw) {
+			// Flake refs are updated by re-resolving the ref via `nix flake
+			// metadata` and rewriting the lockfile entry. Errors are non-fatal
+			// (network blip, deleted branch, renamed attr) — warn and continue
+			// so one broken ref doesn't abort update for everything else.
+			if err := d.updateDevboxPackage(pkg); err != nil {
+				ux.Fwarningf(d.stderr, "Failed to update %s: %s\n", pkg.Raw, err)
 			}
-		} else {
+			continue
+		}
+		if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); isVersioned {
 			if err = d.updateDevboxPackage(pkg); err != nil {
 				return err
 			}
@@ -125,7 +134,10 @@ func (d *Devbox) inputsToUpdate(
 }
 
 func (d *Devbox) updateDevboxPackage(pkg *devpkg.Package) error {
-	resolved, err := d.lockfile.FetchResolvedPackage(pkg.Raw)
+	// refresh=true so flake refs bypass nix's own metadata cache and re-query
+	// upstream. Without this, `devbox update` on a github: ref can return a
+	// stale commit that nix had cached from an earlier call.
+	resolved, err := d.lockfile.FetchResolvedPackage(pkg.Raw, true)
 	if err != nil {
 		return err
 	}
@@ -146,6 +158,14 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 		ux.Finfof(d.stderr, "Resolved %s to %[1]s %[2]s\n", pkg, resolved.Resolved)
 		lockfile.Packages[pkg.Raw] = resolved
 		return nil
+	}
+
+	// Flake refs have no Version, so the Version-based comparison below would
+	// always report "Already up-to-date" even when the locked rev changed.
+	// Handle them via their Resolved field (which embeds the locked rev) and
+	// LastModified.
+	if pkgtype.IsFlake(pkg.Raw) {
+		return d.mergeResolvedFlakeToLockfile(pkg, resolved, existing, lockfile)
 	}
 
 	if existing.Version != resolved.Version {
@@ -199,31 +219,73 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 	return nil
 }
 
-// attemptToUpgradeFlake attempts to upgrade a flake using `nix profile upgrade`
-// and prints an error if it fails, but does not propagate upgrade errors.
-func (d *Devbox) attemptToUpgradeFlake(pkg *devpkg.Package) error {
-	profilePath, err := d.profilePath()
-	if err != nil {
-		return err
+// mergeResolvedFlakeToLockfile updates the lockfile entry for a flake ref. It
+// compares on Resolved (which embeds the locked rev) rather than Version since
+// flake refs don't carry a semver. It honors the same LastModified staleness
+// guard as the nixpkgs path.
+func (d *Devbox) mergeResolvedFlakeToLockfile(
+	pkg *devpkg.Package,
+	resolved *lock.Package,
+	existing *lock.Package,
+	lockfile *lock.File,
+) error {
+	if existing.Resolved == resolved.Resolved {
+		ux.Finfof(d.stderr, "Already up-to-date %s\n", pkg)
+		return nil
 	}
 
-	ux.Finfof(
-		d.stderr,
-		"Attempting to upgrade %s using `nix profile upgrade`\n",
-		pkg.Raw,
-	)
-
-	err = nixprofile.ProfileUpgrade(profilePath, pkg, d.lockfile)
-	if err != nil {
+	// RFC3339 sorts lexicographically the same as chronologically; matches the
+	// nixpkgs branch's comparison style a few lines above.
+	if existing.LastModified > resolved.LastModified {
 		ux.Fwarningf(
 			d.stderr,
-			"Failed to upgrade %s using `nix profile upgrade`: %s\n",
-			pkg.Raw,
-			err,
+			"Resolved ref for %s has older last_modified time. Not updating\n",
+			pkg,
 		)
+		return nil
 	}
 
+	ux.Finfof(d.stderr, "Updating %s %s\n", pkg, describeFlakeUpdate(existing, resolved))
+	useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
 	return nil
+}
+
+// describeFlakeUpdate renders a short human-readable diff between two flake
+// lockfile entries. It prefers short revs when both sides have them, falls
+// back to a date range when not, and omits either piece cleanly if missing.
+func describeFlakeUpdate(existing, resolved *lock.Package) string {
+	var parts []string
+	if oldRev, newRev := shortRev(existing.Resolved), shortRev(resolved.Resolved); oldRev != "" && newRev != "" {
+		parts = append(parts, fmt.Sprintf("%s -> %s", oldRev, newRev))
+	}
+	if oldDate, newDate := shortDate(existing.LastModified), shortDate(resolved.LastModified); oldDate != "" && newDate != "" {
+		parts = append(parts, fmt.Sprintf("(%s → %s)", oldDate, newDate))
+	}
+	return strings.Join(parts, "  ")
+}
+
+// shortRev returns the first 7 chars of the locked git rev, or "" for refs
+// without one (path:, tarball:, unlocked refs).
+func shortRev(resolved string) string {
+	installable, err := flake.ParseInstallable(resolved)
+	if err != nil || installable.Ref.Rev == "" {
+		return ""
+	}
+	if len(installable.Ref.Rev) < 7 {
+		return installable.Ref.Rev
+	}
+	return installable.Ref.Rev[:7]
+}
+
+func shortDate(rfc3339 string) string {
+	if rfc3339 == "" {
+		return ""
+	}
+	t, err := time.Parse(time.RFC3339, rfc3339)
+	if err != nil {
+		return ""
+	}
+	return t.Format("2006-01-02")
 }
 
 func useResolvedPackageInLockfile(

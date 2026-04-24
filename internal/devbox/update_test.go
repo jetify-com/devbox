@@ -232,3 +232,129 @@ func currentSystem(*testing.T) string {
 	sys := nix.System() // NOTE: we could mock this too, if it helps.
 	return sys
 }
+
+func TestFlakeUpdateRewritesLockEntry(t *testing.T) {
+	devbox := devboxForTesting(t)
+
+	raw := "github:numtide/flake-utils"
+	devPkg := devpkg.PackageFromStringWithDefaults(raw, devbox.lockfile)
+	oldRev := "1111111111111111111111111111111111111111"
+	newRev := "2222222222222222222222222222222222222222"
+	existing := &lock.Package{
+		Resolved:     "github:numtide/flake-utils/" + oldRev,
+		LastModified: "2024-01-01T00:00:00Z",
+	}
+	resolved := &lock.Package{
+		Resolved:     "github:numtide/flake-utils/" + newRev,
+		LastModified: "2025-04-22T00:00:00Z",
+	}
+	lockfile := &lock.File{
+		Packages: map[string]*lock.Package{raw: existing},
+	}
+
+	err := devbox.mergeResolvedPackageToLockfile(devPkg, resolved, lockfile)
+	require.NoError(t, err)
+	require.Equal(t, "github:numtide/flake-utils/"+newRev, lockfile.Packages[raw].Resolved)
+	require.Equal(t, "2025-04-22T00:00:00Z", lockfile.Packages[raw].LastModified)
+}
+
+func TestFlakeUpdateStalenessGuardRejectsOlder(t *testing.T) {
+	devbox := devboxForTesting(t)
+
+	raw := "github:numtide/flake-utils"
+	devPkg := devpkg.PackageFromStringWithDefaults(raw, devbox.lockfile)
+	newerRev := "2222222222222222222222222222222222222222"
+	olderRev := "1111111111111111111111111111111111111111"
+	existing := &lock.Package{
+		Resolved:     "github:numtide/flake-utils/" + newerRev,
+		LastModified: "2025-04-22T00:00:00Z",
+	}
+	resolved := &lock.Package{
+		Resolved:     "github:numtide/flake-utils/" + olderRev,
+		LastModified: "2024-01-01T00:00:00Z",
+	}
+	lockfile := &lock.File{
+		Packages: map[string]*lock.Package{raw: existing},
+	}
+
+	err := devbox.mergeResolvedPackageToLockfile(devPkg, resolved, lockfile)
+	require.NoError(t, err)
+	// Entry must remain on the newer rev.
+	require.Equal(t, "github:numtide/flake-utils/"+newerRev, lockfile.Packages[raw].Resolved)
+}
+
+func TestFlakeUpdateNoOpWhenResolvedUnchanged(t *testing.T) {
+	devbox := devboxForTesting(t)
+
+	raw := "github:numtide/flake-utils"
+	devPkg := devpkg.PackageFromStringWithDefaults(raw, devbox.lockfile)
+	rev := "1111111111111111111111111111111111111111"
+	existing := &lock.Package{
+		Resolved:     "github:numtide/flake-utils/" + rev,
+		LastModified: "2024-01-01T00:00:00Z",
+	}
+	resolved := &lock.Package{
+		Resolved:     "github:numtide/flake-utils/" + rev,
+		LastModified: "2024-01-01T00:00:00Z",
+	}
+	lockfile := &lock.File{
+		Packages: map[string]*lock.Package{raw: existing},
+	}
+
+	err := devbox.mergeResolvedPackageToLockfile(devPkg, resolved, lockfile)
+	require.NoError(t, err)
+	require.Same(t, existing, lockfile.Packages[raw], "entry should not be replaced on no-op update")
+}
+
+func TestShortRev(t *testing.T) {
+	// GitHub refs only parse as "locked" (with a Rev) if the third path
+	// component is a 40-char hex SHA. Anything shorter is treated as a ref
+	// name, not a revision.
+	longRev := "abc1234def56789012345678901234567890abcd"
+	cases := []struct {
+		in, want string
+	}{
+		{"github:numtide/flake-utils/" + longRev + "#pkg", "abc1234"},
+		{"path:./local", ""},
+		{"", ""},
+		{"not a flake ref", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.in, func(t *testing.T) {
+			require.Equal(t, tc.want, shortRev(tc.in))
+		})
+	}
+}
+
+func TestShortDate(t *testing.T) {
+	require.Equal(t, "2025-04-22", shortDate("2025-04-22T14:30:00Z"))
+	require.Equal(t, "", shortDate(""))
+	require.Equal(t, "", shortDate("not a date"))
+}
+
+func TestDescribeFlakeUpdateFormats(t *testing.T) {
+	oldRev := "abc1234def56789012345678901234567890abcd"
+	newRev := "f4567890123456789abcdef012345678901234ab"
+	oldPkg := &lock.Package{
+		Resolved:     "github:numtide/flake-utils/" + oldRev + "#pkg",
+		LastModified: "2024-11-01T00:00:00Z",
+	}
+	newPkg := &lock.Package{
+		Resolved:     "github:numtide/flake-utils/" + newRev + "#pkg",
+		LastModified: "2025-04-22T00:00:00Z",
+	}
+	require.Equal(t,
+		"abc1234 -> f456789  (2024-11-01 → 2025-04-22)",
+		describeFlakeUpdate(oldPkg, newPkg),
+	)
+
+	// Fallback to date-only when refs have no rev (e.g. path:).
+	oldPath := &lock.Package{Resolved: "path:./x", LastModified: "2024-11-01T00:00:00Z"}
+	newPath := &lock.Package{Resolved: "path:./x", LastModified: "2025-04-22T00:00:00Z"}
+	require.Equal(t, "(2024-11-01 → 2025-04-22)", describeFlakeUpdate(oldPath, newPath))
+
+	// Fallback to rev-only when dates missing.
+	oldNoDate := &lock.Package{Resolved: "github:numtide/flake-utils/" + oldRev + "#pkg"}
+	newNoDate := &lock.Package{Resolved: "github:numtide/flake-utils/" + newRev + "#pkg"}
+	require.Equal(t, "abc1234 -> f456789", describeFlakeUpdate(oldNoDate, newNoDate))
+}

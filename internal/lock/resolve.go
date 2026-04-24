@@ -28,13 +28,17 @@ import (
 // not changed. This can happen when doing `devbox update` and search has
 // a newer hash than the lock file but same version. In that case we don't want
 // to update because it would be slow and wasteful.
-func (f *File) FetchResolvedPackage(pkg string) (*Package, error) {
+//
+// When refresh is true, flake ref resolution bypasses nix's own cache via
+// `--refresh`. This should only be set on the `devbox update` path; other
+// callers (Add, install, outdated checks) prefer the cache.
+func (f *File) FetchResolvedPackage(pkg string, refresh bool) (*Package, error) {
 	if pkgtype.IsFlake(pkg) {
 		installable, err := flake.ParseInstallable(pkg)
 		if err != nil {
 			return nil, fmt.Errorf("package %q: %v", pkg, err)
 		}
-		installable.Ref, err = lockFlake(context.TODO(), installable.Ref)
+		installable.Ref, err = lockFlake(context.TODO(), installable.Ref, refresh)
 		if err != nil {
 			return nil, err
 		}
@@ -207,7 +211,7 @@ func buildLockSystemInfos(pkg *searcher.PackageVersion) (map[string]*SystemInfo,
 	return sysInfos, nil
 }
 
-func lockFlake(ctx context.Context, ref flake.Ref) (flake.Ref, error) {
+func lockFlake(ctx context.Context, ref flake.Ref, refresh bool) (flake.Ref, error) {
 	if ref.Locked() {
 		return ref, nil
 	}
@@ -216,8 +220,9 @@ func lockFlake(ctx context.Context, ref flake.Ref) (flake.Ref, error) {
 	// file is a bit more lenient and only requires a revision so that we
 	// don't need to download the nixpkgs source for cached packages. If the
 	// search index is ever able to return the NAR hash then we can remove
-	// this check.
-	if ref.Type == flake.TypeGitHub && (ref.Rev != "") {
+	// this check. Skip this shortcut when refresh is requested — the caller
+	// is asking us to re-query upstream for a newer rev.
+	if !refresh && ref.Type == flake.TypeGitHub && (ref.Rev != "") {
 		return ref, nil
 	}
 
@@ -234,10 +239,10 @@ func lockFlake(ctx context.Context, ref flake.Ref) (flake.Ref, error) {
 	//
 	// That said, the logic for caching resolved versions and non-locked flake references would not
 	// be the same.
-	if ref.IsNixpkgs() {
+	if ref.IsNixpkgs() && !refresh {
 		meta, err = nix.ResolveCachedFlake(ctx, ref)
 	} else {
-		meta, err = nix.ResolveFlake(ctx, ref)
+		meta, err = nix.ResolveFlake(ctx, ref, refresh)
 	}
 
 	if err != nil {
