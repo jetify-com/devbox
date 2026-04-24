@@ -241,9 +241,10 @@ func (d *Devbox) mergeResolvedFlakeToLockfile(
 		return nil
 	}
 
-	// RFC3339 sorts lexicographically the same as chronologically; matches the
-	// nixpkgs branch's comparison style a few lines above.
-	if existing.LastModified > resolved.LastModified {
+	// Skip the guard if either side is missing a timestamp — treat unknown as
+	// not-older so we don't block a legit update.
+	if existing.LastModified != "" && resolved.LastModified != "" &&
+		existing.LastModified > resolved.LastModified {
 		ux.Fwarningf(
 			d.stderr,
 			"Resolved ref for %s has older last_modified time. Not updating\n",

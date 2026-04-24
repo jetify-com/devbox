@@ -283,6 +283,32 @@ func TestFlakeUpdateStalenessGuardRejectsOlder(t *testing.T) {
 	require.Equal(t, "github:numtide/flake-utils/"+newerRev, lockfile.Packages[raw].Resolved)
 }
 
+// Regression: the staleness guard must not trigger when resolved.LastModified
+// is empty (some nix error paths omit it). Missing == unknown, not older.
+func TestFlakeUpdateAllowsMissingResolvedLastModified(t *testing.T) {
+	devbox := devboxForTesting(t)
+
+	raw := "github:numtide/flake-utils"
+	devPkg := devpkg.PackageFromStringWithDefaults(raw, devbox.lockfile)
+	oldRev := "1111111111111111111111111111111111111111"
+	newRev := "2222222222222222222222222222222222222222"
+	existing := &lock.Package{
+		Resolved:     "github:numtide/flake-utils/" + oldRev,
+		LastModified: "2025-04-22T00:00:00Z",
+	}
+	resolved := &lock.Package{
+		Resolved: "github:numtide/flake-utils/" + newRev,
+		// LastModified deliberately empty.
+	}
+	lockfile := &lock.File{
+		Packages: map[string]*lock.Package{raw: existing},
+	}
+
+	err := devbox.mergeResolvedPackageToLockfile(devPkg, resolved, lockfile)
+	require.NoError(t, err)
+	require.Equal(t, "github:numtide/flake-utils/"+newRev, lockfile.Packages[raw].Resolved)
+}
+
 func TestFlakeUpdateNoOpWhenResolvedUnchanged(t *testing.T) {
 	devbox := devboxForTesting(t)
 
