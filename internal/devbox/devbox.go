@@ -1065,6 +1065,10 @@ var ignoreCurrentEnvVar = map[string]bool{
 
 	// The "_" variable is read-only, so we ignore it to avoid attempting to write it later.
 	"_": true,
+
+	// PROFILEREAD is read-only in SUSE/openSUSE to prevent duplicate processing
+	// of system and user environment variables.
+	"PROFILEREAD": true,
 }
 
 // ignoreDevEnvVar contains environment variables that Devbox should remove from
