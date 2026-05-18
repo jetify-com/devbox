@@ -82,7 +82,7 @@ func (f *File) Resolve(pkg string) (*Package, error) {
 	locked := &Package{}
 	_, _, versioned := searcher.ParseVersionedPackage(pkg)
 	if pkgtype.IsRunX(pkg) || versioned || pkgtype.IsFlake(pkg) {
-		resolved, err := f.FetchResolvedPackage(pkg)
+		resolved, err := f.FetchResolvedPackage(pkg, false)
 		if err != nil {
 			return nil, err
 		}

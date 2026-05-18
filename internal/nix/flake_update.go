@@ -11,14 +11,6 @@ import (
 	"go.jetify.com/devbox/nix"
 )
 
-func ProfileUpgrade(ProfileDir, indexOrName string) error {
-	return Command(
-		"profile", "upgrade",
-		"--profile", ProfileDir,
-		indexOrName,
-	).Run(context.TODO())
-}
-
 func FlakeUpdate(ProfileDir string) error {
 	ux.Finfof(os.Stderr, "Running \"nix flake update\"\n")
 	cmd := Command("flake", "update")

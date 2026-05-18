@@ -60,7 +60,7 @@ func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error)
 			continue
 		}
 
-		lockPackage, err := lockfile.FetchResolvedPackage(pkg.Versioned())
+		lockPackage, err := lockfile.FetchResolvedPackage(pkg.Versioned(), false)
 		if err != nil {
 			warnings = append(warnings, fmt.Sprintf("Note: unable to check updates for %s", pkg.CanonicalName()))
 			continue
