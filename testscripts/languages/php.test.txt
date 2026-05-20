@@ -1,13 +1,13 @@
 exec devbox run php index.php
-stdout 'ds-loaded\n'
+stdout 'done\n'
 
 exec devbox rm php85Extensions.ds
 exec devbox run php index.php
-stdout 'ds-not-loaded\n'
+stdout 'ds extension is not enabled'
 
 exec devbox add php85Extensions.ds
 exec devbox run php index.php
-stdout 'ds-loaded\n'
+stdout 'done\n'
 
 -- devbox.json --
 {
@@ -20,4 +20,16 @@ stdout 'ds-loaded\n'
 -- index.php --
 <?php
 
-echo extension_loaded('ds') ? "ds-loaded\n" : "ds-not-loaded\n";
+// Check that the extension is loaded.
+if (!extension_loaded('ds')) {
+    echo("ds extension is not enabled");
+    exit(0);
+}
+
+$seq = new \Ds\Seq(["hello", "world"]);
+
+echo("Original sequence elements\n");
+foreach ($seq as $idx => $elem) {
+  echo("idx: $idx and elem: $elem\n");
+}
+echo("done\n");
