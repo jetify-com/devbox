@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/pkg/errors"
 
@@ -16,7 +17,7 @@ import (
 	"go.jetify.com/devbox/internal/xdg"
 )
 
-const processComposeVersion = "1.87.0"
+const processComposeVersion = "1.110.0"
 
 var utilProjectConfigPath string
 
@@ -38,8 +39,23 @@ func initDevboxUtilityProject(ctx context.Context, stderr io.Writer) error {
 	utilities := []string{
 		"process-compose@" + processComposeVersion,
 	}
-	if err = box.Add(ctx, utilities, devopt.AddOpts{}); err != nil {
-		return err
+
+	// Skip Add for utilities whose exact versioned name is already in the
+	// config; calling Add anyway would print noisy "Package already in
+	// devbox.json" messages on every services interaction. A version mismatch
+	// (e.g. after bumping processComposeVersion) will fall through to Add,
+	// which replaces the existing package by canonical name.
+	existing := box.AllPackageNamesIncludingRemovedTriggerPackages()
+	toAdd := []string{}
+	for _, u := range utilities {
+		if !slices.Contains(existing, u) {
+			toAdd = append(toAdd, u)
+		}
+	}
+	if len(toAdd) > 0 {
+		if err = box.Add(ctx, toAdd, devopt.AddOpts{}); err != nil {
+			return err
+		}
 	}
 
 	return box.Install(ctx)
