@@ -12,8 +12,8 @@ stdout 'done\n'
 -- devbox.json --
 {
   "packages": [
-    "php@latest",
-    "php83Extensions.ds@latest"
+    "php@8.5",
+    "php85Extensions.ds@latest"
   ]
 }
 
