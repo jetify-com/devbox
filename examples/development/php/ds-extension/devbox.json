@@ -1,0 +1,11 @@
+{
+  "packages": [
+    "php@8.5",
+    "php85Extensions.ds@latest"
+  ],
+  "shell": {
+    "scripts": {
+      "run_test": "php index.php"
+    }
+  }
+}
