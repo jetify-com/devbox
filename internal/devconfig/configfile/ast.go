@@ -465,3 +465,45 @@ func (c *configAST) setEnv(env map[string]string) {
 	}
 	c.root.Format()
 }
+
+// migrateShellToTopLevel moves the deprecated "shell.init_hook" and
+// "shell.scripts" members up to the root object and removes the "shell" object.
+// Comments and formatting are preserved. Members that already exist at the top
+// level are not overwritten.
+func (c *configAST) migrateShellToTopLevel() {
+	rootObj := c.root.Value.(*hujson.Object)
+	shellIdx := c.memberIndex(rootObj, "shell")
+	if shellIdx == -1 {
+		return
+	}
+
+	shellObj, ok := rootObj.Members[shellIdx].Value.Value.(*hujson.Object)
+	if !ok {
+		// "shell" isn't an object (e.g. null); just remove it.
+		rootObj.Members = slices.Delete(rootObj.Members, shellIdx, shellIdx+1)
+		c.root.Format()
+		return
+	}
+
+	for _, key := range []string{"init_hook", "scripts"} {
+		srcIdx := c.memberIndex(shellObj, key)
+		if srcIdx == -1 {
+			continue
+		}
+		// Don't clobber a field that already exists at the top level.
+		if c.memberIndex(rootObj, key) != -1 {
+			continue
+		}
+		member := shellObj.Members[srcIdx]
+		// Ensure the migrated field starts on its own line.
+		if !slices.Contains(member.Name.BeforeExtra, '\n') {
+			member.Name.BeforeExtra = append([]byte{'\n'}, member.Name.BeforeExtra...)
+		}
+		rootObj.Members = append(rootObj.Members, member)
+	}
+
+	// Remove the now-migrated "shell" object.
+	shellIdx = c.memberIndex(rootObj, "shell")
+	rootObj.Members = slices.Delete(rootObj.Members, shellIdx, shellIdx+1)
+	c.root.Format()
+}

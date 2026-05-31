@@ -42,7 +42,19 @@ type ConfigFile struct {
 	// Only allows "envsec" for now
 	EnvFrom string `json:"env_from,omitempty"`
 
+	// InitHookField contains commands that will run at shell startup. It is the
+	// modern, top-level replacement for the deprecated shell.init_hook field.
+	InitHookField *shellcmd.Commands `json:"init_hook,omitempty"`
+
+	// ScriptsField is a set of named scripts. It is the modern, top-level
+	// replacement for the deprecated shell.scripts field.
+	ScriptsField map[string]*shellcmd.Commands `json:"scripts,omitempty"`
+
 	// Shell configures the devbox shell environment.
+	//
+	// Deprecated: init_hook and scripts are now top-level fields. The nested
+	// "shell" object is still accepted for backward compatibility but will be
+	// removed in an upcoming version. Run `devbox config fmt` to migrate.
 	Shell *shellConfig `json:"shell,omitempty"`
 	// Nixpkgs specifies the repository to pull packages from
 	// Deprecated: Versioned packages don't need this
@@ -101,10 +113,48 @@ func (c *ConfigFile) NixPkgsCommitHash() string {
 }
 
 func (c *ConfigFile) InitHook() *shellcmd.Commands {
-	if c == nil || c.Shell == nil || c.Shell.InitHook == nil {
+	if c == nil {
 		return &shellcmd.Commands{}
 	}
-	return c.Shell.InitHook
+	if c.InitHookField != nil {
+		return c.InitHookField
+	}
+	// Fall back to the deprecated shell.init_hook for backward compatibility.
+	if c.Shell != nil && c.Shell.InitHook != nil {
+		return c.Shell.InitHook
+	}
+	return &shellcmd.Commands{}
+}
+
+// UsesDeprecatedShellField reports whether the config nests init_hook and/or
+// scripts inside the deprecated top-level "shell" object.
+func (c *ConfigFile) UsesDeprecatedShellField() bool {
+	return c != nil && c.Shell != nil
+}
+
+// MigrateShell moves the deprecated shell.init_hook and shell.scripts fields up
+// to the top level and removes the "shell" object. Fields that already exist at
+// the top level take precedence and are not overwritten. It updates both the
+// parsed struct and the underlying AST so the change is preserved on save.
+func (c *ConfigFile) MigrateShell() {
+	if c == nil || c.Shell == nil {
+		return
+	}
+	if c.Shell.InitHook != nil && c.InitHookField == nil {
+		c.InitHookField = c.Shell.InitHook
+	}
+	for name, cmds := range c.Shell.Scripts {
+		if c.ScriptsField == nil {
+			c.ScriptsField = map[string]*shellcmd.Commands{}
+		}
+		if _, ok := c.ScriptsField[name]; !ok {
+			c.ScriptsField[name] = cmds
+		}
+	}
+	c.Shell = nil
+	if c.ast != nil {
+		c.ast.migrateShellToTopLevel()
+	}
 }
 
 // SaveTo writes the config to a file.
