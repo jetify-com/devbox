@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +15,10 @@ import (
 const (
 	HomebrewScheme = "homebrew"
 	HomebrewPrefix = HomebrewScheme + ":"
+
+	// homebrewInstallScriptURL is the official Homebrew installer. It supports
+	// both macOS and Linux.
+	homebrewInstallScriptURL = "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
 )
 
 // IsHomebrew returns true if the package string refers to a Homebrew formula,
@@ -44,10 +50,110 @@ type brewFormula struct {
 	VersionedFormulae []string `json:"versioned_formulae"`
 }
 
-// IsInstalled reports whether the `brew` CLI is available on the user's PATH.
+// brewKnownPaths are the default locations Homebrew installs the `brew` binary
+// on Linux and macOS. We check these so that devbox can find brew immediately
+// after installing it, even before the user has updated their shell PATH.
+func brewKnownPaths() []string {
+	paths := []string{
+		"/home/linuxbrew/.linuxbrew/bin/brew", // Linux (default)
+		"/opt/homebrew/bin/brew",              // macOS (Apple Silicon)
+		"/usr/local/bin/brew",                 // macOS (Intel)
+	}
+	if home, err := os.UserHomeDir(); err == nil {
+		paths = append(paths, filepath.Join(home, ".linuxbrew", "bin", "brew"))
+	}
+	return paths
+}
+
+// brewPath returns the path to the `brew` executable, looking first on PATH and
+// then in the default install locations. It returns "" if brew is not found.
+func (h *Homebrew) brewPath() string {
+	if path, err := exec.LookPath("brew"); err == nil {
+		return path
+	}
+	for _, path := range brewKnownPaths() {
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+	return ""
+}
+
+// IsInstalled reports whether the `brew` CLI is available, either on PATH or in
+// one of the default Homebrew install locations.
 func (h *Homebrew) IsInstalled() bool {
-	_, err := exec.LookPath("brew")
-	return err == nil
+	return h.brewPath() != ""
+}
+
+// Bootstrap installs Homebrew itself using the official install script. It runs
+// non-interactively (the caller is responsible for confirming with the user
+// first). It works on both macOS and Linux. Output is streamed to w.
+func (h *Homebrew) Bootstrap(ctx context.Context, w io.Writer) error {
+	script, err := h.downloadInstallScript(ctx)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(script)
+
+	cmd := exec.CommandContext(ctx, "/bin/bash", script)
+	// NONINTERACTIVE tells the Homebrew installer not to prompt; we've already
+	// confirmed with the user (or are running non-interactively).
+	cmd.Env = append(os.Environ(), "NONINTERACTIVE=1")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = w
+	cmd.Stderr = w
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to install homebrew: %w", err)
+	}
+
+	if !h.IsInstalled() {
+		return fmt.Errorf(
+			"homebrew installation completed but `brew` could not be found in the " +
+				"expected locations",
+		)
+	}
+
+	// Make brew (and its installed formulae) available to the rest of this
+	// process by adding its bin directory to PATH, similar to sourcing
+	// `brew shellenv`.
+	if brewBin := filepath.Dir(h.brewPath()); brewBin != "" {
+		path := os.Getenv("PATH")
+		if !strings.Contains(path, brewBin) {
+			_ = os.Setenv("PATH", brewBin+string(os.PathListSeparator)+path)
+		}
+	}
+	return nil
+}
+
+func (h *Homebrew) downloadInstallScript(ctx context.Context) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, homebrewInstallScriptURL, nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to download homebrew installer: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf(
+			"failed to download homebrew installer: unexpected status %s", resp.Status)
+	}
+
+	f, err := os.CreateTemp("", "homebrew-install-*.sh")
+	if err != nil {
+		return "", err
+	}
+	if _, err := io.Copy(f, resp.Body); err != nil {
+		f.Close()
+		os.Remove(f.Name())
+		return "", err
+	}
+	if err := f.Close(); err != nil {
+		os.Remove(f.Name())
+		return "", err
+	}
+	return f.Name(), nil
 }
 
 // VersionedFormulae returns the names of the versioned variants of the given
@@ -105,7 +211,7 @@ func (h *Homebrew) Search(ctx context.Context, query string) ([]string, error) {
 }
 
 func (h *Homebrew) install(ctx context.Context, formula string) error {
-	cmd := exec.CommandContext(ctx, "brew", "install", formula)
+	cmd := exec.CommandContext(ctx, h.brewPath(), "install", formula)
 	// Stream brew's output so the user can follow along with the install.
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
@@ -136,11 +242,12 @@ func (h *Homebrew) info(ctx context.Context, formula string) (*brewInfo, error) 
 }
 
 func (h *Homebrew) run(ctx context.Context, args ...string) ([]byte, error) {
-	if !h.IsInstalled() {
+	brew := h.brewPath()
+	if brew == "" {
 		return nil, fmt.Errorf(
 			"homebrew is required to use homebrew: packages, but `brew` was not " +
-				"found on your PATH. Install it from https://brew.sh",
+				"found. Install it from https://brew.sh",
 		)
 	}
-	return exec.CommandContext(ctx, "brew", args...).Output()
+	return exec.CommandContext(ctx, brew, args...).Output()
 }

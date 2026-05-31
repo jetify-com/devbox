@@ -1214,6 +1214,10 @@ func (d *Devbox) HomebrewPaths(ctx context.Context) (string, error) {
 		return "", err
 	}
 
+	if err := d.ensureHomebrewInstalled(ctx); err != nil {
+		return "", err
+	}
+
 	hb := pkgtype.HomebrewClient()
 	for _, pkg := range pkgs {
 		paths, err := hb.EnsureInstalled(ctx, pkg.HomebrewFormula())

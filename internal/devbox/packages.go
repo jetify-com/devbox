@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetify.com/devbox/internal/devbox/devopt"
@@ -531,6 +533,9 @@ func (d *Devbox) InstallHomebrewPackages(ctx context.Context) error {
 	if len(pkgs) == 0 {
 		return nil
 	}
+	if err := d.ensureHomebrewInstalled(ctx); err != nil {
+		return err
+	}
 	hb := pkgtype.HomebrewClient()
 	for _, pkg := range pkgs {
 		if _, err := hb.EnsureInstalled(ctx, pkg.HomebrewFormula()); err != nil {
@@ -538,6 +543,40 @@ func (d *Devbox) InstallHomebrewPackages(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// ensureHomebrewInstalled makes sure the `brew` CLI is available, installing
+// Homebrew if it isn't. When running interactively it asks the user for
+// confirmation (defaulting to yes); when running non-interactively it installs
+// automatically. Homebrew is supported on both macOS and Linux.
+func (d *Devbox) ensureHomebrewInstalled(ctx context.Context) error {
+	hb := pkgtype.HomebrewClient()
+	if hb.IsInstalled() {
+		return nil
+	}
+
+	install := true
+	if isatty.IsTerminal(os.Stdin.Fd()) {
+		prompt := &survey.Confirm{
+			Message: "Homebrew is required for homebrew: packages but is not installed. " +
+				"Install it now?",
+			Default: true,
+		}
+		if err := survey.AskOne(prompt, &install); err != nil {
+			return errors.WithStack(err)
+		}
+	} else {
+		ux.Finfof(d.stderr, "Homebrew is not installed. Installing it automatically.\n")
+	}
+
+	if !install {
+		return usererr.New(
+			"Homebrew is required to install homebrew: packages. " +
+				"Install it from https://brew.sh and try again.",
+		)
+	}
+
+	return hb.Bootstrap(ctx, d.stderr)
 }
 
 // resolveHomebrewPackageName validates a homebrew package and returns the name
@@ -554,13 +593,12 @@ func (d *Devbox) resolveHomebrewPackageName(
 		return pkg.Raw, nil
 	}
 
-	hb := pkgtype.HomebrewClient()
-	// If brew isn't installed we can't check for versioned formulae. Store the
-	// package as-is; the install step will surface the missing-brew error.
-	if !hb.IsInstalled() {
-		return pkg.Raw, nil
+	// We need brew to check for versioned formulae, so make sure it's installed.
+	if err := d.ensureHomebrewInstalled(ctx); err != nil {
+		return "", err
 	}
 
+	hb := pkgtype.HomebrewClient()
 	versionedFormulae, err := hb.VersionedFormulae(ctx, base)
 	if err != nil {
 		return "", err
