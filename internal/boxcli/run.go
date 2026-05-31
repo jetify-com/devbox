@@ -90,7 +90,11 @@ func listScripts(cmd *cobra.Command, flags runCmdFlags) []string {
 	// * Flags need to be parsed again
 	// * cmd.Flag("config") contains the correct value, but flags.config.path is empty
 	// Give my low confidence, I'm making this a very narrow code path.
-	if path == "" && slices.Contains(os.Args, "__complete") {
+	//
+	// We always re-parse during completion (rather than only when path is
+	// empty) so that an explicit --config still takes precedence over the
+	// DEVBOX_CONFIG default baked into flags.config.path.
+	if slices.Contains(os.Args, "__complete") {
 		_ = cmd.ParseFlags(os.Args)
 		if flag := cmd.Flag("config"); flag != nil && flag.Value != nil {
 			path = flag.Value.String()

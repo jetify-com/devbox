@@ -44,14 +44,14 @@ func TestPathFlagEnvVar(t *testing.T) {
 	}
 
 	for _, persistent := range []bool{false, true} {
-		for _, tt := range tests {
-			name := tt.name
+		for _, testCase := range tests {
+			name := testCase.name
 			if persistent {
 				name += " (persistent)"
 			}
 			t.Run(name, func(t *testing.T) {
-				if tt.envVal != "" {
-					t.Setenv(envir.DevboxConfig, tt.envVal)
+				if testCase.envVal != "" {
+					t.Setenv(envir.DevboxConfig, testCase.envVal)
 				} else {
 					// Ensure the env var is unset for this subtest.
 					t.Setenv(envir.DevboxConfig, "")
@@ -65,13 +65,13 @@ func TestPathFlagEnvVar(t *testing.T) {
 					flags.register(cmd)
 				}
 
-				cmd.SetArgs(tt.args)
+				cmd.SetArgs(testCase.args)
 				if err := cmd.Execute(); err != nil {
 					t.Fatalf("cmd.Execute() error = %v", err)
 				}
 
-				if flags.path != tt.want {
-					t.Errorf("flags.path = %q, want %q", flags.path, tt.want)
+				if flags.path != testCase.want {
+					t.Errorf("flags.path = %q, want %q", flags.path, testCase.want)
 				}
 			})
 		}
