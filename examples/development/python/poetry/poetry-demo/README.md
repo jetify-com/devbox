@@ -10,7 +10,7 @@ In this directory, run:
 
 `devbox shell`
 
-This will automatically activate your poetry shell via the `init_hook`.
+To activate your poetry shell add `"eval $(poetry env activate)"` to the `init_hook` otherwise use poetry to run commands, e.g. `poetry run pytest`.
 
 To exit the poetry shell, use `exit`. To exit your devbox shell, use `exit` again.
 

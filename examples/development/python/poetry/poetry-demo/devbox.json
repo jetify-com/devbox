@@ -1,6 +1,5 @@
 {
   "packages": [
-    "python@latest",
     "poetry@latest"
   ],
   "shell": {
