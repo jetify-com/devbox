@@ -340,6 +340,28 @@ func TestAliasesEmpty(t *testing.T) {
 	}
 }
 
+func TestAliasesInvalid(t *testing.T) {
+	tests := map[string]string{
+		"empty name":         `{"aliases": {"": "ls -la"}}`,
+		"whitespace name":    `{"aliases": {"bad name": "ls -la"}}`,
+		"empty command":      `{"aliases": {"ll": ""}}`,
+		"whitespace command": `{"aliases": {"ll": "   "}}`,
+	}
+	for name, cfgJSON := range tests {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			if err := os.WriteFile(
+				filepath.Join(dir, configfile.DefaultName), []byte(cfgJSON), 0o644,
+			); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := Open(dir); err == nil {
+				t.Errorf("Open(%q) succeeded, want validation error", cfgJSON)
+			}
+		})
+	}
+}
+
 func TestDefault(t *testing.T) {
 	path := filepath.Join(t.TempDir())
 	cfg := DefaultConfig()

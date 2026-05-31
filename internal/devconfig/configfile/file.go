@@ -164,6 +164,7 @@ func validateConfig(cfg *ConfigFile) error {
 	fns := []func(cfg *ConfigFile) error{
 		ValidateNixpkg,
 		validateScripts,
+		validateAliases,
 	}
 
 	for _, fn := range fns {
@@ -189,6 +190,23 @@ func validateScripts(cfg *ConfigFile) error {
 		if strings.TrimSpace(scripts[k].String()) == "" {
 			return errors.Errorf(
 				"cannot have an empty script body in devbox.json: %s", k)
+		}
+	}
+	return nil
+}
+
+func validateAliases(cfg *ConfigFile) error {
+	for name, command := range cfg.Aliases {
+		if strings.TrimSpace(name) == "" {
+			return errors.New("cannot have alias with empty name in devbox.json")
+		}
+		if whitespace.MatchString(name) {
+			return errors.Errorf(
+				"cannot have alias name with whitespace in devbox.json: %s", name)
+		}
+		if strings.TrimSpace(command) == "" {
+			return errors.Errorf(
+				"cannot have an empty alias command in devbox.json: %s", name)
 		}
 	}
 	return nil
