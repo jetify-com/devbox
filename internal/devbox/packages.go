@@ -35,6 +35,7 @@ import (
 	"go.jetify.com/devbox/internal/debug"
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/internal/plugin"
+	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/ux"
 )
 
@@ -122,6 +123,19 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			if err := d.Remove(ctx, found.Raw); err != nil {
 				return err
 			}
+		}
+
+		// Homebrew packages are installed via the `brew` CLI rather than nix, so
+		// they don't go through the search/flake validation below.
+		if pkg.IsHomebrew() {
+			packageNameForConfig, err := d.resolveHomebrewPackageName(ctx, pkg)
+			if err != nil {
+				return err
+			}
+			ux.Finfof(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)
+			d.cfg.PackageMutator().Add(packageNameForConfig)
+			addedPackageNames = append(addedPackageNames, packageNameForConfig)
+			continue
 		}
 
 		// validate that the versioned package exists in the search endpoint.
@@ -478,7 +492,11 @@ func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
 		return err
 	}
 
-	return d.InstallRunXPackages(ctx)
+	if err := d.InstallRunXPackages(ctx); err != nil {
+		return err
+	}
+
+	return d.InstallHomebrewPackages(ctx)
 }
 
 func (d *Devbox) handleInstallFailure(ctx context.Context, mode installMode) error {
@@ -506,6 +524,58 @@ func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (d *Devbox) InstallHomebrewPackages(ctx context.Context) error {
+	pkgs := lo.Filter(d.InstallablePackages(), devpkg.IsHomebrew)
+	if len(pkgs) == 0 {
+		return nil
+	}
+	hb := pkgtype.HomebrewClient()
+	for _, pkg := range pkgs {
+		if _, err := hb.EnsureInstalled(ctx, pkg.HomebrewFormula()); err != nil {
+			return fmt.Errorf("error installing homebrew package %s: %w", pkg, err)
+		}
+	}
+	return nil
+}
+
+// resolveHomebrewPackageName validates a homebrew package and returns the name
+// that should be stored in devbox.json. If a version is requested but the
+// formula doesn't support versioned formulae, it warns the user and falls back
+// to the unversioned formula.
+func (d *Devbox) resolveHomebrewPackageName(
+	ctx context.Context,
+	pkg *devpkg.Package,
+) (string, error) {
+	formula := pkg.HomebrewFormula()
+	base, _, hasVersion := searcher.ParseVersionedPackage(formula)
+	if !hasVersion {
+		return pkg.Raw, nil
+	}
+
+	hb := pkgtype.HomebrewClient()
+	// If brew isn't installed we can't check for versioned formulae. Store the
+	// package as-is; the install step will surface the missing-brew error.
+	if !hb.IsInstalled() {
+		return pkg.Raw, nil
+	}
+
+	versionedFormulae, err := hb.VersionedFormulae(ctx, base)
+	if err != nil {
+		return "", err
+	}
+	if len(versionedFormulae) == 0 {
+		ux.Fwarningf(
+			d.stderr,
+			"Homebrew package %s does not support versioned formulae. devbox will "+
+				"still install it, but if you try to install a different version it "+
+				"will replace the existing version.\n",
+			base,
+		)
+		return pkgtype.HomebrewPrefix + base, nil
+	}
+	return pkg.Raw, nil
 }
 
 // installNixPackagesToStore will install all the packages in the nix store, if
@@ -726,7 +796,7 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 func (d *Devbox) FixMissingStorePaths(ctx context.Context) error {
 	packages := d.InstallablePackages()
 	for _, pkg := range packages {
-		if !pkg.IsDevboxPackage || pkg.IsRunX() {
+		if !pkg.IsDevboxPackage || !pkg.IsNix() {
 			continue
 		}
 		existingStorePaths, err := pkg.GetResolvedStorePaths()

@@ -804,6 +804,12 @@ func (d *Devbox) computeEnv(
 	}
 	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, runXPaths)
 
+	homebrewPaths, err := d.HomebrewPaths(ctx)
+	if err != nil {
+		return nil, err
+	}
+	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, homebrewPaths)
+
 	pathStack := envpath.Stack(env, originalEnv)
 	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, envOpts.PreservePathStack)
 	env["PATH"] = pathStack.Path(env)
@@ -1186,6 +1192,50 @@ func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 		}
 	}
 	return runxBinPath, nil
+}
+
+// HomebrewPaths installs any homebrew: packages and returns a directory of
+// symlinks to their executables that can be added to PATH. It mirrors how
+// RunXPaths works for runx packages. It returns an empty string if the project
+// has no homebrew packages.
+func (d *Devbox) HomebrewPaths(ctx context.Context) (string, error) {
+	homebrewBinPath := filepath.Join(d.projectDir, ".devbox", "virtenv", "homebrew", "bin")
+	pkgs := lo.Filter(d.InstallablePackages(), devpkg.IsHomebrew)
+	if len(pkgs) == 0 {
+		// Clean up any stale symlinks from previously-removed homebrew packages
+		// and don't add anything to PATH.
+		return "", os.RemoveAll(homebrewBinPath)
+	}
+
+	if err := os.RemoveAll(homebrewBinPath); err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(homebrewBinPath, 0o755); err != nil {
+		return "", err
+	}
+
+	hb := pkgtype.HomebrewClient()
+	for _, pkg := range pkgs {
+		paths, err := hb.EnsureInstalled(ctx, pkg.HomebrewFormula())
+		if err != nil {
+			return "", err
+		}
+		for _, path := range paths {
+			// create symlink to all files in path
+			files, err := os.ReadDir(path)
+			if err != nil {
+				return "", err
+			}
+			for _, file := range files {
+				src := filepath.Join(path, file.Name())
+				dst := filepath.Join(homebrewBinPath, file.Name())
+				if err := os.Symlink(src, dst); err != nil && !errors.Is(err, os.ErrExist) {
+					return "", err
+				}
+			}
+		}
+	}
+	return homebrewBinPath, nil
 }
 
 func validateEnvironment(environment string) (string, error) {

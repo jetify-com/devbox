@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -45,6 +46,18 @@ func (f *File) FetchResolvedPackage(pkg string, refresh bool) (*Package, error) 
 		return &Package{
 			Resolved:     installable.String(),
 			LastModified: time.Unix(installable.Ref.LastModified, 0).UTC().Format(time.RFC3339),
+		}, nil
+	}
+
+	if pkgtype.IsHomebrew(pkg) {
+		// Homebrew formulae are resolved and installed by shelling out to the
+		// `brew` CLI at environment-compute time. The lockfile only records the
+		// formula identifier (and version, if any) so the package is reproducible.
+		formula := strings.TrimPrefix(pkg, pkgtype.HomebrewPrefix)
+		_, version, _ := searcher.ParseVersionedPackage(formula)
+		return &Package{
+			Resolved: pkg,
+			Version:  version,
 		}, nil
 	}
 

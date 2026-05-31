@@ -197,6 +197,8 @@ func TestCanonicalName(t *testing.T) {
 		{"runx:golangci/golangci-lint@latest", "runx:golangci/golangci-lint"},
 		{"runx:golangci/golangci-lint@v0.0.2", "runx:golangci/golangci-lint"},
 		{"runx:golangci/golangci-lint", "runx:golangci/golangci-lint"},
+		{"homebrew:python@3.10", "homebrew:python"},
+		{"homebrew:wget", "homebrew:wget"},
 		{"github:NixOS/nixpkgs/12345", ""},
 		{"path:/to/my/file", ""},
 	}
@@ -207,6 +209,42 @@ func TestCanonicalName(t *testing.T) {
 			got := pkg.CanonicalName()
 			if got != tt.expectedName {
 				t.Errorf("Expected canonical name %q, but got %q", tt.expectedName, got)
+			}
+		})
+	}
+}
+
+func TestHomebrewPackage(t *testing.T) {
+	tests := []struct {
+		pkgName         string
+		isHomebrew      bool
+		isNix           bool
+		isRunX          bool
+		homebrewFormula string
+	}{
+		{"homebrew:python@3.10", true, false, false, "python@3.10"},
+		{"homebrew:wget", true, false, false, "wget"},
+		{"runx:golangci/golangci-lint@latest", false, false, true, ""},
+		{"go@1.21", false, true, false, ""},
+		{"hello", false, true, false, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.pkgName, func(t *testing.T) {
+			pkg := PackageFromStringWithDefaults(tt.pkgName, &lockfile{})
+			if got := pkg.IsHomebrew(); got != tt.isHomebrew {
+				t.Errorf("IsHomebrew() = %v, want %v", got, tt.isHomebrew)
+			}
+			if got := pkg.IsNix(); got != tt.isNix {
+				t.Errorf("IsNix() = %v, want %v", got, tt.isNix)
+			}
+			if got := pkg.IsRunX(); got != tt.isRunX {
+				t.Errorf("IsRunX() = %v, want %v", got, tt.isRunX)
+			}
+			if tt.isHomebrew {
+				if got := pkg.HomebrewFormula(); got != tt.homebrewFormula {
+					t.Errorf("HomebrewFormula() = %q, want %q", got, tt.homebrewFormula)
+				}
 			}
 		})
 	}
