@@ -4,7 +4,11 @@
 package boxcli
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
+
+	"go.jetify.com/devbox/internal/envir"
 )
 
 // to be composed into xyzCmdFlags structs
@@ -34,12 +38,14 @@ type pathFlag struct {
 
 func (flags *pathFlag) register(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(
-		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
+		&flags.path, "config", "c", os.Getenv(envir.DevboxConfig),
+		"path to directory containing a devbox.json config file. Defaults to the DEVBOX_CONFIG environment variable, when set.",
 	)
 }
 
 func (flags *pathFlag) registerPersistent(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(
-		&flags.path, "config", "c", "", "path to directory containing a devbox.json config file",
+		&flags.path, "config", "c", os.Getenv(envir.DevboxConfig),
+		"path to directory containing a devbox.json config file. Defaults to the DEVBOX_CONFIG environment variable, when set.",
 	)
 }
