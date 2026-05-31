@@ -229,21 +229,21 @@ func TestHomebrewPackage(t *testing.T) {
 		{"hello", false, true, false, ""},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.pkgName, func(t *testing.T) {
-			pkg := PackageFromStringWithDefaults(tt.pkgName, &lockfile{})
-			if got := pkg.IsHomebrew(); got != tt.isHomebrew {
-				t.Errorf("IsHomebrew() = %v, want %v", got, tt.isHomebrew)
+	for _, test := range tests {
+		t.Run(test.pkgName, func(t *testing.T) {
+			pkg := PackageFromStringWithDefaults(test.pkgName, &lockfile{})
+			if got := pkg.IsHomebrew(); got != test.isHomebrew {
+				t.Errorf("IsHomebrew() = %v, want %v", got, test.isHomebrew)
 			}
-			if got := pkg.IsNix(); got != tt.isNix {
-				t.Errorf("IsNix() = %v, want %v", got, tt.isNix)
+			if got := pkg.IsNix(); got != test.isNix {
+				t.Errorf("IsNix() = %v, want %v", got, test.isNix)
 			}
-			if got := pkg.IsRunX(); got != tt.isRunX {
-				t.Errorf("IsRunX() = %v, want %v", got, tt.isRunX)
+			if got := pkg.IsRunX(); got != test.isRunX {
+				t.Errorf("IsRunX() = %v, want %v", got, test.isRunX)
 			}
-			if tt.isHomebrew {
-				if got := pkg.HomebrewFormula(); got != tt.homebrewFormula {
-					t.Errorf("HomebrewFormula() = %q, want %q", got, tt.homebrewFormula)
+			if test.isHomebrew {
+				if got := pkg.HomebrewFormula(); got != test.homebrewFormula {
+					t.Errorf("HomebrewFormula() = %q, want %q", got, test.homebrewFormula)
 				}
 			}
 		})
