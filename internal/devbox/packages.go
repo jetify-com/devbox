@@ -550,8 +550,8 @@ func (d *Devbox) InstallHomebrewPackages(ctx context.Context) error {
 // confirmation (defaulting to yes); when running non-interactively it installs
 // automatically. Homebrew is supported on both macOS and Linux.
 func (d *Devbox) ensureHomebrewInstalled(ctx context.Context) error {
-	hb := pkgtype.HomebrewClient()
-	if hb.IsInstalled() {
+	client := pkgtype.HomebrewClient()
+	if client.IsInstalled() {
 		return nil
 	}
 
@@ -576,7 +576,7 @@ func (d *Devbox) ensureHomebrewInstalled(ctx context.Context) error {
 		)
 	}
 
-	return hb.Bootstrap(ctx, d.stderr)
+	return client.Bootstrap(ctx, d.stderr)
 }
 
 // resolveHomebrewPackageName validates a homebrew package and returns the name
@@ -588,6 +588,12 @@ func (d *Devbox) resolveHomebrewPackageName(
 	pkg *devpkg.Package,
 ) (string, error) {
 	formula := pkg.HomebrewFormula()
+	if formula == "" {
+		return "", usererr.New(
+			"No homebrew formula specified. Use the form %s<formula>, e.g. %spython@3.10.",
+			pkgtype.HomebrewPrefix, pkgtype.HomebrewPrefix,
+		)
+	}
 	base, _, hasVersion := searcher.ParseVersionedPackage(formula)
 	if !hasVersion {
 		return pkg.Raw, nil
@@ -598,8 +604,8 @@ func (d *Devbox) resolveHomebrewPackageName(
 		return "", err
 	}
 
-	hb := pkgtype.HomebrewClient()
-	versionedFormulae, err := hb.VersionedFormulae(ctx, base)
+	client := pkgtype.HomebrewClient()
+	versionedFormulae, err := client.VersionedFormulae(ctx, base)
 	if err != nil {
 		return "", err
 	}
@@ -612,6 +618,15 @@ func (d *Devbox) resolveHomebrewPackageName(
 			base,
 		)
 		return pkgtype.HomebrewPrefix + base, nil
+	}
+	// The formula does support versioned formulae, so make sure the requested
+	// version is actually one of them rather than letting install fail later.
+	if !slices.Contains(versionedFormulae, formula) {
+		return "", usererr.New(
+			"Homebrew package %s is not an available versioned formula for %s. "+
+				"Available versions are: %s.",
+			formula, base, strings.Join(versionedFormulae, ", "),
+		)
 	}
 	return pkg.Raw, nil
 }

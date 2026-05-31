@@ -140,20 +140,20 @@ func (h *Homebrew) downloadInstallScript(ctx context.Context) (string, error) {
 			"failed to download homebrew installer: unexpected status %s", resp.Status)
 	}
 
-	f, err := os.CreateTemp("", "homebrew-install-*.sh")
+	tmpFile, err := os.CreateTemp("", "homebrew-install-*.sh")
 	if err != nil {
 		return "", err
 	}
-	if _, err := io.Copy(f, resp.Body); err != nil {
-		f.Close()
-		os.Remove(f.Name())
+	if _, err := io.Copy(tmpFile, resp.Body); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpFile.Name())
 		return "", err
 	}
-	if err := f.Close(); err != nil {
-		os.Remove(f.Name())
+	if err := tmpFile.Close(); err != nil {
+		os.Remove(tmpFile.Name())
 		return "", err
 	}
-	return f.Name(), nil
+	return tmpFile.Name(), nil
 }
 
 // VersionedFormulae returns the names of the versioned variants of the given
@@ -203,9 +203,12 @@ func (h *Homebrew) Search(ctx context.Context, query string) ([]string, error) {
 	results := []string{}
 	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
 		line = strings.TrimSpace(line)
-		if line != "" && !strings.HasPrefix(line, "==>") {
-			results = append(results, line)
+		if line == "" || strings.HasPrefix(line, "==>") {
+			continue
 		}
+		// `brew search` may print multiple formula names per line, separated by
+		// whitespace, so split each line into individual formulae.
+		results = append(results, strings.Fields(line)...)
 	}
 	return results, nil
 }

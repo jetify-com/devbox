@@ -55,6 +55,12 @@ func (f *File) FetchResolvedPackage(pkg string, refresh bool) (*Package, error) 
 		// formula identifier (and version, if any) so the package is reproducible.
 		formula := strings.TrimPrefix(pkg, pkgtype.HomebrewPrefix)
 		_, version, _ := searcher.ParseVersionedPackage(formula)
+		// "latest" is a synthetic version Devbox appends to unversioned packages
+		// (see Package.Versioned). Homebrew has no such version, so treat it as
+		// unversioned to match the lockfile entry for the stored formula.
+		if version == "latest" {
+			version = ""
+		}
 		return &Package{
 			Resolved: pkg,
 			Version:  version,
