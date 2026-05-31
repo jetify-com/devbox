@@ -32,11 +32,12 @@ internally powered by `nix`.
 
 ## Demo
 
-The example below creates a development environment with `python 2.7` and
+The example below creates a development environment with `python 3.10` and
 `go 1.18`, even though those packages are not installed in the underlying
-machine:
+machine. You can run commands in the environment with `devbox run`, or start an
+interactive shell in it with `devbox shell`:
 
-![screen cast](https://user-images.githubusercontent.com/279789/186491771-6b910175-18ec-4c65-92b0-ed1a91bb15ed.svg)
+![screen cast](docs/app/static/img/devbox_demo.svg)
 
 ## Installing Devbox
 
