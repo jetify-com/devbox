@@ -117,12 +117,12 @@ If the new shellrc is correct, you can update the golden file with:
 func TestWriteDevboxShellrcAliases(t *testing.T) {
 	cfgJSON := `{
   "shell": {
-    "init_hook": "echo hi",
-    "aliases": {
-      "ll": "ls -la",
-      "gs": "git status",
-      "say": "echo it's here"
-    }
+    "init_hook": "echo hi"
+  },
+  "aliases": {
+    "ll": "ls -la",
+    "gs": "git status",
+    "say": "echo it's here"
   }
 }`
 	dir := t.TempDir()

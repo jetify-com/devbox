@@ -44,6 +44,13 @@ type ConfigFile struct {
 
 	// Shell configures the devbox shell environment.
 	Shell *shellConfig `json:"shell,omitempty"`
+
+	// Aliases contains shell aliases that are set up when entering the devbox
+	// shell. They are injected after the init hook is sourced, so they can rely
+	// on anything the init hook sets up. The map key is the alias name and the
+	// value is the command it expands to. Aliases use the current shell's
+	// builtin `alias` command and work in bash, zsh, and fish.
+	Aliases map[string]string `json:"aliases,omitempty"`
 	// Nixpkgs specifies the repository to pull packages from
 	// Deprecated: Versioned packages don't need this
 	Nixpkgs *NixpkgsConfig `json:"nixpkgs,omitempty"`
@@ -62,12 +69,6 @@ type shellConfig struct {
 	// InitHook contains commands that will run at shell startup.
 	InitHook *shellcmd.Commands            `json:"init_hook,omitempty"`
 	Scripts  map[string]*shellcmd.Commands `json:"scripts,omitempty"`
-	// Aliases contains shell aliases that are set up when entering the devbox
-	// shell. They are injected after the init hook is sourced, so they can rely
-	// on anything the init hook sets up. The map key is the alias name and the
-	// value is the command it expands to. Aliases use the current shell's
-	// builtin `alias` command and work in bash, zsh, and fish.
-	Aliases map[string]string `json:"aliases,omitempty"`
 }
 
 type NixpkgsConfig struct {
@@ -111,15 +112,6 @@ func (c *ConfigFile) InitHook() *shellcmd.Commands {
 		return &shellcmd.Commands{}
 	}
 	return c.Shell.InitHook
-}
-
-// Aliases returns the shell aliases defined in this config file, keyed by
-// alias name. It returns nil if no aliases are defined.
-func (c *ConfigFile) Aliases() map[string]string {
-	if c == nil || c.Shell == nil {
-		return nil
-	}
-	return c.Shell.Aliases
 }
 
 // SaveTo writes the config to a file.

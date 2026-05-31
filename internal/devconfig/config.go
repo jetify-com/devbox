@@ -376,7 +376,7 @@ func (c *Config) Aliases() map[string]string {
 	for _, i := range c.included {
 		maps.Copy(aliases, i.Aliases())
 	}
-	maps.Copy(aliases, c.Root.Aliases())
+	maps.Copy(aliases, c.Root.Aliases)
 	return aliases
 }
 

@@ -301,11 +301,11 @@ func TestAliases(t *testing.T) {
 	dir := t.TempDir()
 	cfgJSON := `{
   "shell": {
-    "init_hook": "echo hi",
-    "aliases": {
-      "ll": "ls -la",
-      "gs": "git status"
-    }
+    "init_hook": "echo hi"
+  },
+  "aliases": {
+    "ll": "ls -la",
+    "gs": "git status"
   }
 }`
 	if err := os.WriteFile(filepath.Join(dir, configfile.DefaultName), []byte(cfgJSON), 0o644); err != nil {
