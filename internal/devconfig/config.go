@@ -368,6 +368,18 @@ func (c *Config) InitHook() *shellcmd.Commands {
 	return &commands
 }
 
+// Aliases returns the merged shell aliases from this config and any included
+// configs (plugins). Aliases defined in the root config take precedence over
+// those from included configs.
+func (c *Config) Aliases() map[string]string {
+	aliases := map[string]string{}
+	for _, i := range c.included {
+		maps.Copy(aliases, i.Aliases())
+	}
+	maps.Copy(aliases, c.Root.Aliases())
+	return aliases
+}
+
 func (c *Config) Scripts() configfile.Scripts {
 	scripts := configfile.Scripts{}
 	for _, i := range c.included {

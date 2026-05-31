@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 	"time"
@@ -325,6 +326,8 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		ExportEnv        string
 		ShellName        string
 
+		ShellAliases []string
+
 		RefreshAliasName   string
 		RefreshCmd         string
 		RefreshAliasEnvVar string
@@ -337,6 +340,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		HistoryFile:        strings.TrimSpace(s.historyFile),
 		ExportEnv:          exportify(s.env),
 		ShellName:          string(s.name),
+		ShellAliases:       s.aliasLines(),
 		RefreshAliasName:   s.devbox.refreshAliasName(),
 		RefreshCmd:         s.devbox.refreshCmd(),
 		RefreshAliasEnvVar: s.devbox.refreshAliasEnvVar(),
@@ -347,6 +351,48 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 
 	slog.Debug("wrote devbox shellrc", "path", path)
 	return path, nil
+}
+
+// aliasLines returns the shell `alias` commands for the aliases defined in
+// devbox.json, sorted by alias name for deterministic output. The returned
+// lines use the current shell's builtin `alias` command (which is compatible
+// across bash, zsh, and fish) and are injected into the shellrc after the init
+// hook is sourced. It returns nil when there are no aliases or no config.
+func (s *DevboxShell) aliasLines() []string {
+	if s.devbox == nil || s.devbox.Config() == nil {
+		return nil
+	}
+	aliases := s.devbox.Config().Aliases()
+	if len(aliases) == 0 {
+		return nil
+	}
+
+	names := make([]string, 0, len(aliases))
+	for name := range aliases {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	lines := make([]string, 0, len(names))
+	for _, name := range names {
+		lines = append(lines, fmt.Sprintf("alias %s=%s", name, s.quoteAliasValue(aliases[name])))
+	}
+	return lines
+}
+
+// quoteAliasValue single-quotes an alias value so it is passed verbatim to the
+// shell's `alias` builtin, escaping any embedded quotes for the current shell.
+func (s *DevboxShell) quoteAliasValue(value string) string {
+	if s.name == shFish {
+		// Inside fish single quotes, only \\ and \' are escape sequences.
+		value = strings.ReplaceAll(value, `\`, `\\`)
+		value = strings.ReplaceAll(value, `'`, `\'`)
+		return "'" + value + "'"
+	}
+	// POSIX shells (bash/zsh/ksh): close the quote, emit an escaped quote,
+	// then reopen, i.e. ' -> '\''.
+	value = strings.ReplaceAll(value, `'`, `'\''`)
+	return "'" + value + "'"
 }
 
 // setupShellStartupFiles creates initialization files for the shell by sourcing the user's originals.

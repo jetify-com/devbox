@@ -297,6 +297,49 @@ func mkNestedDirs(t *testing.T) (root, child, nested string) {
 	return root, child, nested
 }
 
+func TestAliases(t *testing.T) {
+	dir := t.TempDir()
+	cfgJSON := `{
+  "shell": {
+    "init_hook": "echo hi",
+    "aliases": {
+      "ll": "ls -la",
+      "gs": "git status"
+    }
+  }
+}`
+	if err := os.WriteFile(filepath.Join(dir, configfile.DefaultName), []byte(cfgJSON), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := Open(dir)
+	if err != nil {
+		t.Fatalf("Open error: %v", err)
+	}
+	got := cfg.Aliases()
+	want := map[string]string{"ll": "ls -la", "gs": "git status"}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Aliases() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestAliasesEmpty(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(
+		filepath.Join(dir, configfile.DefaultName),
+		[]byte(`{"shell": {"init_hook": "echo hi"}}`),
+		0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := Open(dir)
+	if err != nil {
+		t.Fatalf("Open error: %v", err)
+	}
+	if got := cfg.Aliases(); len(got) != 0 {
+		t.Errorf("Aliases() = %v, want empty", got)
+	}
+}
+
 func TestDefault(t *testing.T) {
 	path := filepath.Join(t.TempDir())
 	cfg := DefaultConfig()

@@ -15,6 +15,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devconfig"
 	"go.jetify.com/devbox/internal/envir"
 	"go.jetify.com/devbox/internal/shellgen"
 	"go.jetify.com/devbox/internal/xdg"
@@ -108,6 +109,86 @@ Generated shellrc != shellrc.golden (-shellrc.golden +shellrc):
 If the new shellrc is correct, you can update the golden file with:
 
 	go test -run "^%s$" -update`), diff, t.Name())
+			}
+		})
+	}
+}
+
+func TestWriteDevboxShellrcAliases(t *testing.T) {
+	cfgJSON := `{
+  "shell": {
+    "init_hook": "echo hi",
+    "aliases": {
+      "ll": "ls -la",
+      "gs": "git status",
+      "say": "echo it's here"
+    }
+  }
+}`
+	dir := t.TempDir()
+	if err := os.WriteFile(
+		filepath.Join(dir, "devbox.json"), []byte(cfgJSON), 0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := devconfig.Open(dir)
+	if err != nil {
+		t.Fatalf("Open config error: %v", err)
+	}
+
+	tests := []struct {
+		shell name
+		want  []string
+	}{
+		{
+			shell: shBash,
+			want: []string{
+				`alias gs='git status'`,
+				`alias ll='ls -la'`,
+				`alias say='echo it'\''s here'`,
+			},
+		},
+		{
+			shell: shFish,
+			want: []string{
+				`alias gs='git status'`,
+				`alias ll='ls -la'`,
+				`alias say='echo it\'s here'`,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(string(test.shell), func(t *testing.T) {
+			s := &DevboxShell{
+				devbox:     &Devbox{projectDir: dir, cfg: cfg},
+				projectDir: dir,
+				name:       test.shell,
+			}
+			path, err := s.writeDevboxShellrc()
+			if err != nil {
+				t.Fatalf("writeDevboxShellrc error: %v", err)
+			}
+			b, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got := string(b)
+
+			// Aliases must appear after the init hook is sourced.
+			hookIdx := strings.Index(got, ".hooks")
+			if hookIdx < 0 {
+				t.Fatalf("hooks not sourced in shellrc:\n%s", got)
+			}
+			for _, line := range test.want {
+				idx := strings.Index(got, line)
+				if idx < 0 {
+					t.Errorf("expected alias line %q in shellrc:\n%s", line, got)
+					continue
+				}
+				if idx < hookIdx {
+					t.Errorf("alias %q injected before init hook was sourced", line)
+				}
 			}
 		})
 	}
