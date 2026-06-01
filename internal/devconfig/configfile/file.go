@@ -44,6 +44,13 @@ type ConfigFile struct {
 
 	// Shell configures the devbox shell environment.
 	Shell *shellConfig `json:"shell,omitempty"`
+
+	// Aliases contains shell aliases that are set up when entering the devbox
+	// shell. They are injected after the init hook is sourced, so they can rely
+	// on anything the init hook sets up. The map key is the alias name and the
+	// value is the command it expands to. Aliases use the current shell's
+	// builtin `alias` command and work in bash, zsh, and fish.
+	Aliases map[string]string `json:"aliases,omitempty"`
 	// Nixpkgs specifies the repository to pull packages from
 	// Deprecated: Versioned packages don't need this
 	Nixpkgs *NixpkgsConfig `json:"nixpkgs,omitempty"`
@@ -157,6 +164,7 @@ func validateConfig(cfg *ConfigFile) error {
 	fns := []func(cfg *ConfigFile) error{
 		ValidateNixpkg,
 		validateScripts,
+		validateAliases,
 	}
 
 	for _, fn := range fns {
@@ -182,6 +190,23 @@ func validateScripts(cfg *ConfigFile) error {
 		if strings.TrimSpace(scripts[k].String()) == "" {
 			return errors.Errorf(
 				"cannot have an empty script body in devbox.json: %s", k)
+		}
+	}
+	return nil
+}
+
+func validateAliases(cfg *ConfigFile) error {
+	for name, command := range cfg.Aliases {
+		if strings.TrimSpace(name) == "" {
+			return errors.New("cannot have alias with empty name in devbox.json")
+		}
+		if whitespace.MatchString(name) {
+			return errors.Errorf(
+				"cannot have alias name with whitespace in devbox.json: %s", name)
+		}
+		if strings.TrimSpace(command) == "" {
+			return errors.Errorf(
+				"cannot have an empty alias command in devbox.json: %s", name)
 		}
 	}
 	return nil
