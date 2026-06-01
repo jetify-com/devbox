@@ -362,6 +362,41 @@ func TestAliasesInvalid(t *testing.T) {
 	}
 }
 
+// TestExampleLocalPluginAliases loads the examples/plugins/local project and
+// verifies that aliases defined in the plugin are merged into the parent
+// config, and that an alias defined in the parent overrides the plugin's.
+func TestExampleLocalPluginAliases(t *testing.T) {
+	exampleDir, err := filepath.Abs(
+		filepath.Join("..", "..", "examples", "plugins", "local"),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := Open(exampleDir)
+	if err != nil {
+		t.Fatalf("Open(%q) error: %v", exampleDir, err)
+	}
+
+	lockfile, err := lock.GetFile(&testLockProject{dir: exampleDir})
+	if err != nil {
+		t.Fatalf("lock.GetFile error: %v", err)
+	}
+	if err := cfg.LoadRecursive(lockfile); err != nil {
+		t.Fatalf("LoadRecursive error: %v", err)
+	}
+
+	want := map[string]string{
+		// Parent devbox.json overrides the plugin's "greet" alias.
+		"greet": "echo greeting-from-parent",
+		// "plugin_only" is contributed solely by the plugin.
+		"plugin_only": "echo from-plugin",
+	}
+	if diff := cmp.Diff(want, cfg.Aliases()); diff != "" {
+		t.Errorf("Aliases() mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestDefault(t *testing.T) {
 	path := filepath.Join(t.TempDir())
 	cfg := DefaultConfig()
