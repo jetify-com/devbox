@@ -49,7 +49,14 @@ func exportify(vars map[string]string) string {
 				switch r {
 				// Special characters inside double quotes:
 				// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
-				case '$', '`', '"', '\\', '\n':
+				//
+				// Note: a newline is NOT special inside double quotes and must
+				// not be escaped. Writing a backslash before a newline produces
+				// a line continuation, which the shell removes entirely, joining
+				// adjacent lines together (e.g. a multi-line PROMPT_COMMAND would
+				// be silently mangled). Leaving the newline unescaped preserves
+				// it literally.
+				case '$', '`', '"', '\\':
 					strb.WriteRune('\\')
 				}
 				strb.WriteRune(r)
