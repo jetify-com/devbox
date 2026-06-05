@@ -1,6 +1,6 @@
 # Django Example
 
-[![Built with Devbox](https://www.jetify.com/img/devbox/shield_moon.svg)](https://www.jetify.com/devbox/docs/contributor-quickstart/)
+[![Built with Devbox](https://www.jetify.com/img/devbox/shield_moon.svg)](https://www.jetify.com/docs/devbox/contributor-quickstart/)
 
 
 ## How to Use
@@ -67,5 +67,5 @@ This should start the development server.
 
 ### Related Docs
 
-* [Using Python with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/languages/python/)
-* [Using PostgreSQL with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/stacks/django/)
+* [Using Python with Devbox](https://www.jetify.com/docs/devbox/devbox_examples/languages/python/)
+* [Using PostgreSQL with Devbox](https://www.jetify.com/docs/devbox/devbox_examples/stacks/django/)
