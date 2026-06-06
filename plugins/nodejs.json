@@ -5,7 +5,14 @@
     "readme": "Devbox automatically configures Corepack for Nodejs when DEVBOX_COREPACK_ENABLED=1. You can install Yarn or Pnpm by adding them to your `package.json` file using `packageManager`\nCorepack binaries will be installed in your local `.devbox` directory",
     "shell": {
         "init_hook": [
-            "if [ -n \"$DEVBOX_COREPACK_ENABLED\" ]; then if command -v corepack >/dev/null 2>&1; then corepack enable --install-directory \"{{ .Virtenv }}/corepack-bin/\" && export PATH=\"{{ .Virtenv }}/corepack-bin/:$PATH\"; else echo 'Warning: DEVBOX_COREPACK_ENABLED is set but corepack was not found. The nodejs-slim package no longer ships corepack; use the nodejs package instead, or add corepack to your packages.' >&2; fi; fi"
+            "if [ -n \"$DEVBOX_COREPACK_ENABLED\" ]; then",
+            "  if command -v corepack >/dev/null 2>&1; then",
+            "    corepack enable --install-directory \"{{ .Virtenv }}/corepack-bin/\"",
+            "    export PATH=\"{{ .Virtenv }}/corepack-bin/:$PATH\"",
+            "  else",
+            "    echo 'Warning: DEVBOX_COREPACK_ENABLED is set but corepack was not found. The nodejs-slim package no longer ships corepack; use the nodejs package instead, or add corepack to your packages.' >&2",
+            "  fi",
+            "fi"
         ]
     },
     "create_files": {
