@@ -7,10 +7,11 @@
         "init_hook": [
             "test -z \"${DEVBOX_COREPACK_ENABLED:-}\" || corepack enable --install-directory \"{{ .Virtenv }}/corepack-bin/\"",
             "test -z \"${DEVBOX_COREPACK_ENABLED:-}\" || export PATH=\"{{ .Virtenv }}/corepack-bin/:$PATH\"",
-            "if [ -n \"${DEVBOX_COREPACK_ENABLED:-}\" ] && [ -z \"${DEVBOX_DISABLE_NODEJS_PACKAGE_MANAGER_AUTODETECT:-}\" ] && [ -f \"$DEVBOX_PROJECT_ROOT/package.json\" ]; then\n  __devbox_nodejs_pkg_mgr=$(node -e \"const p = require(process.env.DEVBOX_PROJECT_ROOT + '/package.json').packageManager; if (p) console.log(p)\" 2>/dev/null || true)\n  [ -n \"$__devbox_nodejs_pkg_mgr\" ] && corepack prepare --activate \"$__devbox_nodejs_pkg_mgr\"\n  unset __devbox_nodejs_pkg_mgr\nfi"
+            "test -z \"${DEVBOX_COREPACK_ENABLED:-}\" || node \"{{ .Virtenv }}/bin/activate-package-manager.js\""
         ]
     },
     "create_files": {
-      "{{ .Virtenv }}/corepack-bin": ""
+      "{{ .Virtenv }}/corepack-bin": "",
+      "{{ .Virtenv }}/bin/activate-package-manager.js": "nodejs/activate-package-manager.js"
     }
 }
