@@ -1,17 +1,15 @@
 {
     "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox-plugin.schema.json",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "name": "nodejs",
     "readme": "Devbox automatically configures Corepack for Nodejs when DEVBOX_COREPACK_ENABLED=1. You can install Yarn or Pnpm by adding them to your `package.json` file using `packageManager`\nCorepack binaries will be installed in your local `.devbox` directory\n\nWhen Corepack is enabled, Devbox also activates the package manager pinned in your `package.json` `packageManager` field automatically. Set DEVBOX_DISABLE_NODEJS_PACKAGE_MANAGER_AUTODETECT=1 to disable this behavior.",
     "shell": {
         "init_hook": [
-            "test -z \"${DEVBOX_COREPACK_ENABLED:-}\" || corepack enable --install-directory \"{{ .Virtenv }}/corepack-bin/\"",
-            "test -z \"${DEVBOX_COREPACK_ENABLED:-}\" || export PATH=\"{{ .Virtenv }}/corepack-bin/:$PATH\"",
-            "test -z \"${DEVBOX_COREPACK_ENABLED:-}\" || node \"{{ .Virtenv }}/bin/activate-package-manager.js\""
+            "eval \"$(node \"{{ .Virtenv }}/bin/setup-corepack.js\" \"{{ .Virtenv }}/corepack-bin\")\""
         ]
     },
     "create_files": {
       "{{ .Virtenv }}/corepack-bin": "",
-      "{{ .Virtenv }}/bin/activate-package-manager.js": "nodejs/activate-package-manager.js"
+      "{{ .Virtenv }}/bin/setup-corepack.js": "nodejs/setup-corepack.js"
     }
 }
