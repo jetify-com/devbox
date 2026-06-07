@@ -40,6 +40,6 @@ Note that the `.sock` filepath can only be maximum 100 characters long. You can 
 
 ### Related Docs
 
-* [Using PHP with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/languages/php/)
-* [Using Nginx with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/servers/nginx/)
-* [Using PostgreSQL with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/databases/postgres/)
+* [Using PHP with Devbox](https://www.jetify.com/docs/devbox/devbox_examples/languages/php/)
+* [Using Nginx with Devbox](https://www.jetify.com/docs/devbox/devbox_examples/servers/nginx/)
+* [Using PostgreSQL with Devbox](https://www.jetify.com/docs/devbox/devbox_examples/databases/postgres/)
