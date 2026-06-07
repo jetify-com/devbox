@@ -29,6 +29,6 @@ devbox run readme
 
 ## Next Steps
 
-* Checkout our Docs at [https://www.jetify.com/docs/devbox](https://www.jetify.com/docs/devbox)
+* Check out our Docs at [https://www.jetify.com/docs/devbox](https://www.jetify.com/docs/devbox)
 * Try out an Example Project at [https://www.jetify.com/docs/devbox/devbox-examples](https://www.jetify.com/docs/devbox/devbox-examples)
 * Report Issues at [https://github.com/jetify-com/devbox/issues/new/choose](https://github.com/jetify-com/devbox/issues/new/choose)
