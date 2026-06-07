@@ -40,6 +40,11 @@ checksum:
 release:
   prerelease: auto
   draft: true
+  # Reuse an existing draft release for this tag instead of creating a new one.
+  # `keep-existing` leaves the release (and its description) as is if one already
+  # exists, so a manually-written description is preserved.
+  mode: keep-existing
+  replace_existing_draft: false
   github:
     owner: jetify-com
     name: devbox
