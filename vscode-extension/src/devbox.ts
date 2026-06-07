@@ -22,7 +22,7 @@ export async function devboxReopen() {
       Please open VSCode from inside devbox shell in WSL using the CLI.', seeDocs
     );
     if (result === seeDocs) {
-      env.openExternal(Uri.parse('https://www.jetify.com/devbox/docs/ide_configuration/vscode/#windows-setup'));
+      env.openExternal(Uri.parse('https://www.jetify.com/docs/devbox/ide_configuration/vscode/#windows-setup'));
       return;
     }
   }

@@ -45,5 +45,5 @@ BUNDLE_BUILD__SASSC: "--disable-lto"
 
 ## Related Docs
 
-* [Rails + Devbox](https://www.jetify.com/devbox/docs/devbox_examples/stacks/rails/)
-* [Jekyll + Devbox](https://www.jetify.com/devbox/docs/devbox_examples/stacks/jekyll/)
+* [Rails + Devbox](https://www.jetify.com/docs/devbox/devbox_examples/stacks/rails/)
+* [Jekyll + Devbox](https://www.jetify.com/docs/devbox/devbox_examples/stacks/jekyll/)
