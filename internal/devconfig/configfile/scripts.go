@@ -14,14 +14,30 @@ type script struct {
 type Scripts map[string]*script
 
 func (c *ConfigFile) Scripts() Scripts {
-	if c == nil || c.Shell == nil {
+	if c == nil {
 		return nil
 	}
 	result := make(Scripts)
-	for name, commands := range c.Shell.Scripts {
+
+	// Read legacy shell.scripts first so that top-level scripts with the same
+	// name take precedence.
+	if c.Shell != nil {
+		for name, commands := range c.Shell.Scripts {
+			comments := ""
+			if c.ast != nil {
+				comments = string(c.ast.beforeComment("shell", "scripts", name))
+			}
+			result[name] = &script{
+				Commands: *commands,
+				Comments: comments,
+			}
+		}
+	}
+
+	for name, commands := range c.ScriptsField {
 		comments := ""
 		if c.ast != nil {
-			comments = string(c.ast.beforeComment("shell", "scripts", name))
+			comments = string(c.ast.beforeComment("scripts", name))
 		}
 		result[name] = &script{
 			Commands: *commands,
@@ -29,6 +45,9 @@ func (c *ConfigFile) Scripts() Scripts {
 		}
 	}
 
+	if len(result) == 0 {
+		return nil
+	}
 	return result
 }
 

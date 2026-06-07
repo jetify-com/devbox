@@ -50,15 +50,13 @@ func DefaultConfig() *Config {
 	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
 		"$schema": "https://raw.githubusercontent.com/jetify-com/devbox/%s/.schema/devbox.schema.json",
 		"packages": [],
-		"shell": {
-			"init_hook": [
-				"%s"
-			],
-			"scripts": {
-				"test": [
-					"echo \"Error: no test specified\" && exit 1"
-				]
-			}
+		"init_hook": [
+			"%s"
+		],
+		"scripts": {
+			"test": [
+				"echo \"Error: no test specified\" && exit 1"
+			]
 		}
 	}
 	`,

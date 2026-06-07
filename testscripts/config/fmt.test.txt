@@ -1,0 +1,36 @@
+# Test that `devbox config fmt` migrates the deprecated nested "shell" object
+# to top-level init_hook and scripts fields.
+
+exec devbox config fmt
+stderr 'Formatted'
+
+# The "shell" object should be gone, replaced by top-level fields.
+! grep '"shell"' devbox.json
+grep '"init_hook"' devbox.json
+grep '"scripts"' devbox.json
+
+# Running fmt again should be a no-op (idempotent) and still valid.
+exec devbox config fmt
+! grep '"shell"' devbox.json
+
+json.superset devbox.json expected.json
+
+-- devbox.json --
+{
+  "packages": ["go@latest"],
+  "shell": {
+    "init_hook": ["echo hello"],
+    "scripts": {
+      "build": "go build ./..."
+    }
+  }
+}
+
+-- expected.json --
+{
+  "packages": ["go@latest"],
+  "init_hook": ["echo hello"],
+  "scripts": {
+    "build": "go build ./..."
+  }
+}
