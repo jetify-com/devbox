@@ -1,5 +1,9 @@
 // Configures Corepack for the Devbox shell. This is the nodejs plugin's
-// init_hook, invoked as: node setup-corepack.js
+// init_hook, invoked as: node setup-corepack.cjs
+//
+// The .cjs extension forces Node to treat this as a CommonJS module even when
+// the project's package.json sets "type": "module" (otherwise the require()
+// calls below would throw "require is not defined in ES module scope").
 //
 // It is a no-op unless DEVBOX_COREPACK_ENABLED is set, in which case it:
 //   1. Enables Corepack, installing its package-manager shims into the
