@@ -1,9 +1,10 @@
 // Configures Corepack for the Devbox shell. This is the nodejs plugin's
-// init_hook, invoked as: node setup-corepack.cjs
+// init_hook, invoked as: node setup-corepack.mjs
 //
-// The .cjs extension forces Node to treat this as a CommonJS module even when
-// the project's package.json sets "type": "module" (otherwise the require()
-// calls below would throw "require is not defined in ES module scope").
+// The .mjs extension forces Node to treat this as an ES module regardless of
+// the project's package.json "type" field. A plain .js file would be parsed as
+// CommonJS or ESM depending on that field, so it would break in one case or the
+// other (see issue #2856).
 //
 // It is a no-op unless DEVBOX_COREPACK_ENABLED is set, in which case it:
 //   1. Enables Corepack, installing its package-manager shims into the
@@ -13,8 +14,9 @@
 //      "packageManager" field (pnpm, yarn, npm, ...), unless
 //      DEVBOX_DISABLE_NODEJS_PACKAGE_MANAGER_AUTODETECT is set.
 
-const { execFileSync } = require("node:child_process");
-const path = require("node:path");
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
 if (!process.env.DEVBOX_COREPACK_ENABLED) {
   process.exit(0);
@@ -41,11 +43,17 @@ function activatePinnedPackageManager() {
     return;
   }
 
+  // Read package.json directly rather than importing it: JSON module import
+  // syntax differs across Node versions, whereas readFileSync + JSON.parse
+  // works everywhere.
   let packageManager;
   try {
-    ({ packageManager } = require(path.join(projectRoot, "package.json")));
+    const pkg = JSON.parse(
+      readFileSync(path.join(projectRoot, "package.json"), "utf8"),
+    );
+    ({ packageManager } = pkg);
   } catch {
-    // No package.json (or it is unreadable) — nothing to autodetect.
+    // No package.json (or it is unreadable/invalid) — nothing to autodetect.
     return;
   }
 

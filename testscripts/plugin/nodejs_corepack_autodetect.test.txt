@@ -24,8 +24,8 @@ exec devbox run -- node -e 'console.log("case2-ok")'
 stdout 'case2-ok'
 
 # Case 3: package.json sets "type": "module" (regression test for #2856).
-# The setup script must still run; its .cjs extension keeps it CommonJS even
-# though the project package.json would otherwise make .js files ES modules.
+# The setup script must still run; its .mjs extension keeps it an ES module
+# regardless of the project package.json's "type" field.
 cp package-esm.json package.json
 exec devbox run -- node -e 'console.log("case3-ok")'
 stdout 'case3-ok'
