@@ -1,7 +1,7 @@
 <picture>
- <source media="(prefers-color-scheme: dark)" srcset="docs/app/static/img/devbox_logo_dark.svg">
- <source media="(prefers-color-scheme: light)" srcset="docs/app/static/img/devbox_logo_light.svg">
- <img alt="Devbox logo." src="docs/app/static/img/devbox_logo_light.svg">
+ <source media="(prefers-color-scheme: dark)" srcset="assets/devbox_logo_dark.svg">
+ <source media="(prefers-color-scheme: light)" srcset="assets/devbox_logo_light.svg">
+ <img alt="Devbox logo." src="assets/devbox_logo_light.svg">
 </picture>
 
 # Devbox
@@ -37,7 +37,7 @@ The example below creates a development environment with `python 3.10` and
 machine. You can run commands in the environment with `devbox run`, or start an
 interactive shell in it with `devbox shell`:
 
-![screen cast](docs/app/static/img/devbox_demo.svg)
+![screen cast](assets/devbox_demo.svg)
 
 ## Installing Devbox
 
