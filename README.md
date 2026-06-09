@@ -166,7 +166,7 @@ Read more on the
 `devbox help` - see all commands
 
 See the
-[CLI Reference](https://www.jetify.com/docs/devbox/cli_reference/devbox/) for
+[CLI Reference](https://www.jetify.com/docs/devbox/cli-reference/devbox) for
 the full list of commands.
 
 ## Join our Developer Community
