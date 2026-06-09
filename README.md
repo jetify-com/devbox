@@ -12,7 +12,7 @@
 ![License: Apache 2.0](https://img.shields.io/github/license/jetify-com/devbox)
 [![version](https://img.shields.io/github/v/release/jetify-com/devbox?color=green&label=version&sort=semver)](https://github.com/jetify-com/devbox/releases)
 [![tests](https://github.com/jetify-com/devbox/actions/workflows/cli-post-release.yml/badge.svg)](https://github.com/jetify-com/devbox/actions/workflows/cli-release.yml?branch=main)
-[![Built with Devbox](https://www.jetify.com/img/devbox/shield_galaxy.svg)](https://www.jetify.com/devbox/docs/contributor-quickstart/)
+[![Built with Devbox](https://www.jetify.com/img/devbox/shield_galaxy.svg)](CONTRIBUTING.md)
 
 ## What is it?
 
@@ -48,7 +48,7 @@ curl -fsSL https://get.jetify.com/devbox | bash
 ```
 
 Read more on the
-[Devbox docs](https://www.jetify.com/devbox/docs/installing-devbox/).
+[Devbox docs](https://www.jetify.com/docs/devbox/installing-devbox).
 
 ## Benefits
 
@@ -159,14 +159,14 @@ ensuring we don't pollute your machine.
    ```
 
 Read more on the
-[Devbox docs Quickstart](https://www.jetify.com/devbox/docs/quickstart/).
+[Devbox docs Quickstart](https://www.jetify.com/docs/devbox/quickstart).
 
 ## Additional commands
 
 `devbox help` - see all commands
 
 See the
-[CLI Reference](https://www.jetify.com/devbox/docs/cli_reference/devbox/) for
+[CLI Reference](https://www.jetify.com/docs/devbox/cli-reference/devbox) for
 the full list of commands.
 
 ## Join our Developer Community
