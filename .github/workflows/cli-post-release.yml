@@ -11,9 +11,28 @@ permissions:
   id-token: write # Needed for aws-actions/configure-aws-credentials@v1
 
 jobs:
+  # Make sure the cli-release workflow that built this tag actually succeeded
+  # before we promote it to stable. The `released` event can fire even when
+  # cli-release failed partway (or a release was published by other means), so
+  # guard against finalizing a broken release.
+  check-release:
+    runs-on: ubuntu-latest
+    steps:
+      # The `released` event can fire before the cli-release run has finished,
+      # so wait for it to complete. The action exits with failure if the waited
+      # workflow failed, which blocks the publish job below.
+      - name: Wait for cli-release to succeed for this tag
+        uses: int128/wait-for-workflows-action@v1.76.0
+        with:
+          sha: ${{ github.sha }}
+          # cli-release is triggered by the tag push, not the release event.
+          filter-workflow-events: push
+          filter-workflow-names: cli-release
+
   publish:
     runs-on: ubuntu-latest
     environment: release
+    needs: check-release
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
