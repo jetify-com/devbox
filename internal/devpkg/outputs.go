@@ -1,5 +1,11 @@
 package devpkg
 
+import (
+	"strings"
+
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+)
+
 type Output struct {
 	Name     string
 	CacheURI string
@@ -32,6 +38,18 @@ func (out *outputs) GetNames(pkg *Package) ([]string, error) {
 func (out *outputs) initDefaultNames(pkg *Package) error {
 	sysInfo, err := pkg.sysInfoIfExists()
 	if err != nil {
+		// Provide better error for npm packages not found in Nixpkgs
+		errMsg := strings.TrimSpace(err.Error())
+		if strings.Contains(errMsg, "package not found") && strings.HasPrefix(pkg.Raw, "nodePackages.") {
+			npmPkg := strings.TrimPrefix(pkg.Raw, `nodePackages."`)
+			npmPkg = strings.TrimSuffix(npmPkg, `"`)
+			return usererr.New(
+				"npm package %s was not found in Nixpkgs.\n"+
+					"This may mean the package isn't packaged yet. Check https://search.nixos.org/packages for availability.\n"+
+					"As a workaround, you can install it manually in your devbox shell using npm after running: npm config set prefix '~/.npm-global'",
+				npmPkg,
+			)
+		}
 		return err
 	}
 
