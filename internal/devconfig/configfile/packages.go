@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -14,6 +16,12 @@ import (
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/ux"
+)
+
+var versionPattern = regexp.MustCompile(
+	`\d+\.\d+\.\d+` + // MAJOR.MINOR.PATCH
+		`(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?` + // optional pre-release
+		`(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?`, // optional build metadata
 )
 
 type PackagesMutator struct {
@@ -345,6 +353,9 @@ func (p *Package) UnmarshalJSON(data []byte) error {
 		*p = Package(*alias)
 	}
 
+	// If the version is a file path, read and clean the version from it.
+	p.Version = resolveVersionFromFile(p.Version)
+
 	if p.Patch == "" {
 		if p.PatchGlibc {
 			// Force patching if the user has an old config with the deprecated
@@ -380,4 +391,31 @@ func packagesFromLegacyList(packages []string) []Package {
 		packagesList = append(packagesList, NewVersionOnlyPackage(name, version))
 	}
 	return packagesList
+}
+
+// resolveVersionFromFile checks if version is a path to an existing file.
+// If so, it reads the file and extracts a version string (e.g. "1.2.3").
+// Otherwise it returns the version unchanged.
+func resolveVersionFromFile(version string) string {
+	if version == "" {
+		return version
+	}
+
+	info, err := os.Stat(version)
+	if err != nil || info.IsDir() {
+		return version
+	}
+
+	data, err := os.ReadFile(version)
+	if err != nil {
+		return version
+	}
+
+	cleaned := strings.TrimSpace(string(data))
+	match := versionPattern.FindString(cleaned)
+	if match == "" {
+		return version
+	}
+
+	return match
 }
