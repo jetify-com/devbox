@@ -46,10 +46,25 @@ func (d *Devbox) executePreRunHook(ctx context.Context, hook *configfile.RunHook
 		Success: true,
 	}
 
+	// Set hook context environment variables
+	env := make(map[string]string)
+	for k, v := range hookCtx.Env {
+		env[k] = v
+	}
+	
+	// Convert hook context to JSON for environment variables
+	argsJSON, _ := json.Marshal(hookCtx.Args)
+	envJSON, _ := json.Marshal(hookCtx.Env)
+	
+	env["DEVBOX_HOOK_COMMAND"] = hookCtx.Command
+	env["DEVBOX_HOOK_ARGS"] = string(argsJSON)
+	env["DEVBOX_HOOK_ENV"] = string(envJSON)
+	env["DEVBOX_HOOK_DIR"] = hookCtx.Dir
+
 	// Execute the hook command
 	cmd := exec.CommandContext(ctx, "sh", "-c", hook.Command)
 	cmd.Dir = d.projectDir
-	cmd.Env = d.envSlice(hookCtx.Env)
+	cmd.Env = d.envSlice(env)
 
 	// Capture stdout and stderr
 	var stdoutBuf, stderrBuf bytes.Buffer
@@ -81,22 +96,49 @@ func (d *Devbox) executePreRunHook(ctx context.Context, hook *configfile.RunHook
 		}
 	}
 
+	// Filter hook results based on capability gates
+	filteredResult := &HookResult{
+		Success:  result.Success,
+		ExitCode: result.ExitCode,
+	}
+
+	// Only allow blocking if capability is granted
+	if hook.CanBlock {
+		filteredResult.Block = result.Block
+		filteredResult.BlockReason = result.BlockReason
+	}
+
+	// Only allow arg modifications if capability is granted
+	if hook.CanModifyArgs {
+		filteredResult.ModifiedArgs = result.ModifiedArgs
+	}
+
+	// Only allow env modifications if capability is granted
+	if hook.CanModifyEnv {
+		filteredResult.ModifiedEnv = result.ModifiedEnv
+	}
+
+	// Only allow stdin modifications if capability is granted
+	if hook.CanModifyStdin {
+		// Note: stdin modification not yet implemented
+	}
+
 	// Check if hook blocked execution
-	if result.Block && hook.CanBlock {
-		return result, nil
+	if filteredResult.Block {
+		return filteredResult, nil
 	}
 
 	// Apply modifications if capabilities allow
-	if hook.CanModifyArgs && result.ModifiedArgs != nil {
-		hookCtx.Args = result.ModifiedArgs
+	if hook.CanModifyArgs && filteredResult.ModifiedArgs != nil {
+		hookCtx.Args = filteredResult.ModifiedArgs
 	}
-	if hook.CanModifyEnv && result.ModifiedEnv != nil {
-		for k, v := range result.ModifiedEnv {
+	if hook.CanModifyEnv && filteredResult.ModifiedEnv != nil {
+		for k, v := range filteredResult.ModifiedEnv {
 			hookCtx.Env[k] = v
 		}
 	}
 
-	return result, nil
+	return filteredResult, nil
 }
 
 // executePostRunHook executes a post_run hook with the given context
@@ -148,7 +190,28 @@ func (d *Devbox) executePostRunHook(ctx context.Context, hook *configfile.RunHoo
 		}
 	}
 
-	return result, nil
+	// Filter hook results based on capability gates
+	filteredResult := &HookResult{
+		Success:  result.Success,
+		ExitCode: result.ExitCode,
+	}
+
+	// Only allow exit code modifications if capability is granted
+	if hook.CanModifyExit {
+		filteredResult.ModifiedExit = result.ModifiedExit
+	}
+
+	// Only allow stdout modifications if capability is granted
+	if hook.CanModifyStdout {
+		filteredResult.ModifiedStdout = result.ModifiedStdout
+	}
+
+	// Only allow stderr modifications if capability is granted
+	if hook.CanModifyStderr {
+		filteredResult.ModifiedStderr = result.ModifiedStderr
+	}
+
+	return filteredResult, nil
 }
 
 // envSlice converts a map to environment variable slice
