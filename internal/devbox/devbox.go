@@ -346,7 +346,36 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		Dir:     d.projectDir,
 	}
 
-	for _, hook := range d.cfg.Root.PreRunHooks() {
+	// Use streaming pipeline if hooks or wrapper are configured
+	preRunHooks := d.cfg.Root.PreRunHooks()
+	postRunHooks := d.cfg.Root.PostRunHooks()
+	wrapper := d.cfg.Root.CommandWrapper()
+	
+	// Check if we need streaming (hooks that modify stdin/stdout or wrapper)
+	needsStreaming := false
+	for _, hook := range preRunHooks {
+		if hook.CanModifyStdin {
+			needsStreaming = true
+			break
+		}
+	}
+	for _, hook := range postRunHooks {
+		if hook.CanModifyStdout || hook.CanModifyStderr {
+			needsStreaming = true
+			break
+		}
+	}
+	if wrapper != "" {
+		needsStreaming = true
+	}
+	
+	if needsStreaming {
+		// Use streaming pipeline
+		return d.executeWithStreamingPipeline(ctx, hookCtx, cmdWithArgs, wrapper)
+	}
+	
+	// Legacy non-streaming path for backward compatibility
+	for _, hook := range preRunHooks {
 		result, err := d.executePreRunHook(ctx, hook, hookCtx)
 		if err != nil {
 			return errors.Wrap(err, "pre_run hook failed")
@@ -367,28 +396,54 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 	}
 
 	// Apply command wrapper if configured
-	wrapper := d.cfg.Root.CommandWrapper()
+	wrapper = d.cfg.Root.CommandWrapper()
 	if wrapper != "" {
 		cmdWithArgs = applyCommandWrapper(cmdWithArgs, wrapper)
 	}
 
 	// Execute the command
-	// Note: For now, we don't capture stdout/stderr for post-run hooks
-	// This would require modifying nix.RunScript to support output capture
-	// which is a larger change. Post-run hooks can still access exit code.
+	// Capture output if post-run hooks exist that need it
+	postRunHooks = d.cfg.Root.PostRunHooks()
+	needsCapture := false
+	for _, hook := range postRunHooks {
+		if hook.CanModifyStdout || hook.CanModifyStderr {
+			needsCapture = true
+			break
+		}
+	}
+
 	exitCode := 0
-	err := nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
-	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			exitCode = exitErr.ExitCode()
-		} else {
-			return err
+	stdout := ""
+	stderr := ""
+	
+	if needsCapture {
+		output, err := nix.RunScriptWithOutput(d.projectDir, strings.Join(cmdWithArgs, " "), env, true)
+		if err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				exitCode = exitErr.ExitCode()
+			} else {
+				return err
+			}
+		}
+		if output != nil {
+			exitCode = output.ExitCode
+			stdout = output.Stdout
+			stderr = output.Stderr
+		}
+	} else {
+		err := nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
+		if err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				exitCode = exitErr.ExitCode()
+			} else {
+				return err
+			}
 		}
 	}
 
 	// Execute post_run hooks
-	for _, hook := range d.cfg.Root.PostRunHooks() {
-		result, err := d.executePostRunHook(ctx, hook, hookCtx, exitCode, "", "")
+	for _, hook := range postRunHooks {
+		result, err := d.executePostRunHook(ctx, hook, hookCtx, exitCode, stdout, stderr)
 		if err != nil {
 			slog.Warn("post_run hook failed", "error", err)
 			// Don't fail the whole command if post_run hook fails
@@ -398,6 +453,20 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		if hook.CanModifyExit && result.ModifiedExit != nil {
 			exitCode = *result.ModifiedExit
 		}
+		// Apply stdout modification if allowed
+		if hook.CanModifyStdout && result.ModifiedStdout != "" {
+			stdout = result.ModifiedStdout
+		}
+		// Apply stderr modification if allowed
+		if hook.CanModifyStderr && result.ModifiedStderr != "" {
+			stderr = result.ModifiedStderr
+		}
+	}
+	
+	// Print output if we captured it (either original or modified)
+	if needsCapture {
+		fmt.Fprint(d.stderr, stdout)
+		fmt.Fprint(d.stderr, stderr)
 	}
 
 	// Return error if exit code is non-zero

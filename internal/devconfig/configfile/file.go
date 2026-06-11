@@ -91,6 +91,11 @@ type RunHook struct {
 	CanModifyEnv   bool `json:"can_modify_env,omitempty"`
 	CanModifyStdin bool `json:"can_modify_stdin,omitempty"`
 
+	// Read capability gates - control access to stream data
+	CanReadStdin  bool `json:"can_read_stdin,omitempty"`
+	CanReadStdout bool `json:"can_read_stdout,omitempty"`
+	CanReadStderr bool `json:"can_read_stderr,omitempty"`
+
 	// Post-run specific capability gates
 	CanModifyExit   bool `json:"can_modify_exit,omitempty"`
 	CanModifyStdout bool `json:"can_modify_stdout,omitempty"`

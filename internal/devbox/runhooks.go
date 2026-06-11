@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -16,6 +17,13 @@ import (
 	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 )
+
+// closedReader is an io.Reader that always returns EOF
+type closedReader struct{}
+
+func (cr *closedReader) Read(p []byte) (n int, err error) {
+	return 0, io.EOF
+}
 
 // HookContext provides context to hooks about the command being run
 type HookContext struct {
@@ -40,6 +48,11 @@ type HookResult struct {
 
 // executePreRunHook executes a pre_run hook with the given context
 func (d *Devbox) executePreRunHook(ctx context.Context, hook *configfile.RunHook, hookCtx *HookContext) (*HookResult, error) {
+	return d.executePreRunHookWithStreams(ctx, hook, hookCtx, os.Stdin, os.Stdout, os.Stderr)
+}
+
+// executePreRunHookWithStreams executes a pre_run hook with custom streams
+func (d *Devbox) executePreRunHookWithStreams(ctx context.Context, hook *configfile.RunHook, hookCtx *HookContext, stdin io.Reader, stdout, stderr io.Writer) (*HookResult, error) {
 	slog.Debug("Executing pre_run hook", "command", hook.Command)
 
 	result := &HookResult{
@@ -66,10 +79,15 @@ func (d *Devbox) executePreRunHook(ctx context.Context, hook *configfile.RunHook
 	cmd.Dir = d.projectDir
 	cmd.Env = d.envSlice(env)
 
-	// Capture stdout and stderr
-	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = &stdoutBuf
-	cmd.Stderr = &stderrBuf
+	// Set up streams with read capability checks
+	// If hook doesn't have can_read_stdin, provide a closed reader to prevent access
+	if hook.CanReadStdin {
+		cmd.Stdin = stdin
+	} else {
+		cmd.Stdin = &closedReader{}
+	}
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 
 	// If hook can modify stdin, we could pipe stdin here
 	// For now, we'll keep it simple
@@ -84,15 +102,20 @@ func (d *Devbox) executePreRunHook(ctx context.Context, hook *configfile.RunHook
 		}
 	}
 
-	// Parse hook output if it returned JSON
-	if result.Success && stdoutBuf.Len() > 0 {
-		var hookOutput HookResult
-		if err := json.Unmarshal(stdoutBuf.Bytes(), &hookOutput); err == nil {
-			// Hook returned valid JSON, use it
-			result = &hookOutput
-		} else {
-			// Hook returned non-JSON output, log it but don't fail
-			slog.Debug("Hook returned non-JSON output", "output", stdoutBuf.String())
+	// For non-streaming hooks, parse JSON output from stdout
+	// We can detect streaming by checking if stdout is os.Stdout
+	if buf, ok := stdout.(*bytes.Buffer); ok {
+		// Non-streaming case with buffer - parse JSON output
+		// Limit JSON output size to prevent OOM (1MB limit)
+		const maxJSONSize = 1 * 1024 * 1024 // 1MB
+		output := buf.String()
+		if len(output) > maxJSONSize {
+			slog.Warn("Hook JSON output too large, skipping parsing", "size", len(output), "max_size", maxJSONSize)
+		} else if output != "" {
+			if err := json.Unmarshal([]byte(output), result); err != nil {
+				// If JSON parsing fails, just use the default result
+				slog.Debug("Failed to parse hook JSON output", "error", err)
+			}
 		}
 	}
 
@@ -143,16 +166,19 @@ func (d *Devbox) executePreRunHook(ctx context.Context, hook *configfile.RunHook
 
 // executePostRunHook executes a post_run hook with the given context
 func (d *Devbox) executePostRunHook(ctx context.Context, hook *configfile.RunHook, hookCtx *HookContext, exitCode int, stdout, stderr string) (*HookResult, error) {
+	return d.executePostRunHookWithStreams(ctx, hook, hookCtx, exitCode, os.Stdin, os.Stdout, os.Stderr)
+}
+
+// executePostRunHookWithStreams executes a post_run hook with custom streams
+func (d *Devbox) executePostRunHookWithStreams(ctx context.Context, hook *configfile.RunHook, hookCtx *HookContext, exitCode int, stdin io.Reader, stdout, stderr io.Writer) (*HookResult, error) {
 	slog.Debug("Executing post_run hook", "command", hook.Command)
 
-	// We'll pass exit code and output via environment variables for simplicity
+	// We'll pass exit code via environment variable for simplicity
 	env := make(map[string]string)
 	for k, v := range hookCtx.Env {
 		env[k] = v
 	}
 	env["DEVBOX_HOOK_EXIT_CODE"] = fmt.Sprintf("%d", exitCode)
-	env["DEVBOX_HOOK_STDOUT"] = stdout
-	env["DEVBOX_HOOK_STDERR"] = stderr
 
 	result := &HookResult{
 		Success: true,
@@ -163,10 +189,15 @@ func (d *Devbox) executePostRunHook(ctx context.Context, hook *configfile.RunHoo
 	cmd.Dir = d.projectDir
 	cmd.Env = d.envSlice(env)
 
-	// Capture stdout and stderr
-	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = &stdoutBuf
-	cmd.Stderr = &stderrBuf
+	// Set up streams with read capability checks
+	// If hook doesn't have can_read_stdin, provide a closed reader to prevent access
+	if hook.CanReadStdin {
+		cmd.Stdin = stdin
+	} else {
+		cmd.Stdin = &closedReader{}
+	}
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 
 	err := cmd.Run()
 	if err != nil {
@@ -178,15 +209,20 @@ func (d *Devbox) executePostRunHook(ctx context.Context, hook *configfile.RunHoo
 		}
 	}
 
-	// Parse hook output if it returned JSON
-	if result.Success && stdoutBuf.Len() > 0 {
-		var hookOutput HookResult
-		if err := json.Unmarshal(stdoutBuf.Bytes(), &hookOutput); err == nil {
-			// Hook returned valid JSON, use it
-			result = &hookOutput
-		} else {
-			// Hook returned non-JSON output, log it but don't fail
-			slog.Debug("Hook returned non-JSON output", "output", stdoutBuf.String())
+	// For non-streaming hooks, parse JSON output from stdout
+	// We can detect streaming by checking if stdout is os.Stdout
+	if buf, ok := stdout.(*bytes.Buffer); ok {
+		// Non-streaming case with buffer - parse JSON output
+		// Limit JSON output size to prevent OOM (1MB limit)
+		const maxJSONSize = 1 * 1024 * 1024 // 1MB
+		output := buf.String()
+		if len(output) > maxJSONSize {
+			slog.Warn("Hook JSON output too large, skipping parsing", "size", len(output), "max_size", maxJSONSize)
+		} else if output != "" {
+			if err := json.Unmarshal([]byte(output), result); err != nil {
+				// If JSON parsing fails, just use the default result
+				slog.Debug("Failed to parse hook JSON output", "error", err)
+			}
 		}
 	}
 
@@ -237,4 +273,144 @@ func applyCommandWrapper(cmdWithArgs []string, wrapper string) []string {
 
 	// Prepend wrapper to command
 	return append(wrapperParts, cmdWithArgs...)
+}
+
+// executeWithStreamingPipeline executes the command with a streaming hook pipeline
+// Pipeline: stdin -> [pre_run hooks] -> [command_wrapper] -> [post_run hooks] -> stdout
+func (d *Devbox) executeWithStreamingPipeline(ctx context.Context, hookCtx *HookContext, cmdWithArgs []string, wrapper string) error {
+	// Get hooks from config
+	cfg := d.cfg
+	
+	preRunHooks := cfg.Root.PreRunHooks()
+	postRunHooks := cfg.Root.PostRunHooks()
+	
+	// If no hooks and no wrapper, run directly
+	if len(preRunHooks) == 0 && len(postRunHooks) == 0 && wrapper == "" {
+		return d.executeCommandDirectly(ctx, hookCtx, cmdWithArgs)
+	}
+	
+	// Build the pipeline
+	var stdin io.Reader = os.Stdin
+	var stdout io.Writer = os.Stdout
+	var stderr io.Writer = os.Stderr
+	
+	// Stage 1: Pre-run hooks
+	for i := range preRunHooks {
+		// Create pipe for this hook's output
+		pr, pw := io.Pipe()
+		
+		// Execute hook with current stdin, writing to pipe
+		result, err := d.executePreRunHookWithStreams(ctx, preRunHooks[i], hookCtx, stdin, pw, stderr)
+		pw.Close()
+		
+		if err != nil {
+			pr.Close()
+			return errors.Wrap(err, "pre_run hook failed")
+		}
+		
+		// Check if hook blocked execution
+		if result.Block {
+			pr.Close()
+			if result.BlockReason != "" {
+				return errors.New(result.BlockReason)
+			}
+			return errors.New("command blocked by pre_run hook")
+		}
+		
+		// Next stage reads from this pipe
+		stdin = pr
+	}
+	
+	// Stage 2: Command wrapper + actual command
+	// Apply wrapper if present
+	finalCmd := cmdWithArgs
+	if wrapper != "" {
+		finalCmd = applyCommandWrapper(cmdWithArgs, wrapper)
+	}
+	
+	// Create pipe for command output
+	cmdPr, cmdPw := io.Pipe()
+	
+	// Execute the command with streaming
+	cmdString := strings.Join(finalCmd, " ")
+	
+	// We need to run the command in a goroutine to stream output
+	// but also capture the exit code for post-run hooks
+	type commandResult struct {
+		exitCode int
+		err      error
+	}
+	cmdResultChan := make(chan commandResult, 1)
+	
+	go func() {
+		defer cmdPw.Close()
+		// Run the command with stdin from pre-run hooks, stdout to pipe
+		output, err := d.nix.RunScriptWithStreams(d.projectDir, cmdString, hookCtx.Env, stdin, cmdPw, stderr, false)
+		if err != nil {
+			// Still return output even on error for exit code
+			cmdResultChan <- commandResult{exitCode: output.ExitCode, err: err}
+			return
+		}
+		cmdResultChan <- commandResult{exitCode: output.ExitCode, err: nil}
+	}()
+	
+	// Stage 3: Post-run hooks (process streaming stdin from command)
+	// Process command output through post-run hooks
+	currentReader := cmdPr
+	var exitCode int
+	
+	for i := range postRunHooks {
+		// Create pipe for this hook's output
+		hookPr, hookPw := io.Pipe()
+		
+		// Execute hook with stdin from previous stage
+		result, err := d.executePostRunHookWithStreams(ctx, postRunHooks[i], hookCtx, exitCode, currentReader, hookPw, stderr)
+		hookPw.Close()
+		
+		if err != nil {
+			hookPr.Close()
+			currentReader.Close()
+			return errors.Wrap(err, "post_run hook failed")
+		}
+		
+		// Apply exit code modification if allowed
+		if postRunHooks[i].CanModifyExit && result.ModifiedExit != nil {
+			exitCode = *result.ModifiedExit
+		}
+		
+		// Close previous stage's reader
+		currentReader.Close()
+		
+		// Next stage reads from this pipe
+		currentReader = hookPr
+	}
+	
+	// Final output goes to stdout
+	go func() {
+		io.Copy(stdout, currentReader)
+		currentReader.Close()
+	}()
+	
+	// Wait for command to complete
+	result := <-cmdResultChan
+	exitCode = result.exitCode
+	
+	// Return the command error if any
+	if result.err != nil {
+		return result.err
+	}
+	
+	// If exit code was modified and is non-zero, return an error
+	if exitCode != 0 {
+		return fmt.Errorf("command exited with code %d", exitCode)
+	}
+	
+	return nil
+}
+
+// executeCommandDirectly executes a command without any hooks
+func (d *Devbox) executeCommandDirectly(ctx context.Context, hookCtx *HookContext, cmdWithArgs []string) error {
+	cmdString := strings.Join(cmdWithArgs, " ")
+	_, err := d.nix.RunScriptWithStreams(d.projectDir, cmdString, hookCtx.Env, os.Stdin, os.Stdout, os.Stderr, false)
+	return err
 }

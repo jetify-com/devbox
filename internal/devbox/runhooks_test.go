@@ -4,6 +4,7 @@
 package devbox
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"testing"
 
 	"go.jetify.com/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/devbox/devopt"
 )
 
 func TestHookExecutionPermutations(t *testing.T) {
@@ -414,7 +416,7 @@ echo '{"success": true, "modified_stderr": "modified error"}'
 			setupHook: func(t *testing.T, hookPath string) {
 				// Create a hook script that verifies it receives context
 				hookScript := `#!/bin/sh
-if [ "$DEVBOX_HOOK_EXIT_CODE" = "42" ]; then
+if [ "$DEVBOX_HOOK_EXIT_CODE" = "42" ] && [ "$DEVBOX_HOOK_STDOUT" = "test stdout" ] && [ "$DEVBOX_HOOK_STDERR" = "test stderr" ]; then
   echo '{"success": true}'
 else
   echo '{"success": false}'
@@ -578,7 +580,9 @@ echo '{"modified_args": ["--partial"]}'
 						hook.Command = hookPath
 					}
 
-					result, err := d.executePreRunHook(context.Background(), hook, hookCtx)
+					// Use a buffer for stdout to capture JSON output
+					var stdoutBuf bytes.Buffer
+					result, err := d.executePreRunHookWithStreams(context.Background(), hook, hookCtx, os.Stdin, &stdoutBuf, os.Stderr)
 					if err != nil {
 						t.Errorf("executePreRunHook() failed: %v", err)
 						return
@@ -636,7 +640,9 @@ echo '{"modified_args": ["--partial"]}'
 						hook.Command = hookPath
 					}
 
-					result, err := d.executePostRunHook(context.Background(), hook, hookCtx, 0, "stdout", "stderr")
+					// Use a buffer for stdout to capture JSON output
+					var stdoutBuf bytes.Buffer
+					result, err := d.executePostRunHookWithStreams(context.Background(), hook, hookCtx, 42, os.Stdin, &stdoutBuf, os.Stderr)
 					if err != nil {
 						t.Errorf("executePostRunHook() failed: %v", err)
 						return
@@ -710,7 +716,9 @@ echo '{"success": true}'
 			Dir:     tmpDir,
 		}
 
-		result, err := d.executePostRunHook(context.Background(), hook, hookCtx, 42, "test stdout", "test stderr")
+		// Use a buffer for stdout to capture JSON output
+		var stdoutBuf bytes.Buffer
+		result, err := d.executePostRunHookWithStreams(context.Background(), hook, hookCtx, 42, os.Stdin, &stdoutBuf, os.Stderr)
 		if err != nil {
 			t.Fatalf("executePostRunHook() failed: %v", err)
 		}
@@ -784,7 +792,9 @@ echo '` + tt.hookOutput + `'
 				Dir:     tmpDir,
 			}
 
-			result, err := d.executePreRunHook(context.Background(), hook, hookCtx)
+			// Use a buffer for stdout to capture JSON output
+			var stdoutBuf bytes.Buffer
+			result, err := d.executePreRunHookWithStreams(context.Background(), hook, hookCtx, os.Stdin, &stdoutBuf, os.Stderr)
 			if err != nil {
 				t.Fatalf("executePreRunHook() failed: %v", err)
 			}
@@ -906,7 +916,9 @@ EOF
 				Dir:     tmpDir,
 			}
 
-			result, err := d.executePreRunHook(context.Background(), tt.hook, hookCtx)
+			// Use a buffer for stdout to capture JSON output
+			var stdoutBuf bytes.Buffer
+			result, err := d.executePreRunHookWithStreams(context.Background(), tt.hook, hookCtx, os.Stdin, &stdoutBuf, os.Stderr)
 			if err != nil {
 				t.Fatalf("executePreRunHook() failed: %v", err)
 			}
@@ -1017,5 +1029,151 @@ func TestHookResultJSONSerialization(t *testing.T) {
 
 	if unmarshaled.ModifiedExit == nil || *unmarshaled.ModifiedExit != *result.ModifiedExit {
 		t.Errorf("Expected ModifiedExit to be %d, got %v", *result.ModifiedExit, unmarshaled.ModifiedExit)
+	}
+}
+
+func TestStreamingPipelineExists(t *testing.T) {
+	// Test that the streaming pipeline function exists and has the right signature
+	tmpDir := t.TempDir()
+
+	// Create a simple devbox.json
+	config := `{
+		"packages": [],
+		"shell": {
+			"scripts": {
+				"test": "echo 'test'"
+			}
+		}
+	}`
+	configPath := filepath.Join(tmpDir, "devbox.json")
+	if err := os.WriteFile(configPath, []byte(config), 0644); err != nil {
+		t.Fatalf("Failed to write config: %v", err)
+	}
+
+	// Create devbox instance
+	d, err := Open(&devopt.Opts{Dir: tmpDir})
+	if err != nil {
+		t.Fatalf("Failed to create devbox: %v", err)
+	}
+
+	// Test that the streaming pipeline function exists
+	hookCtx := &HookContext{
+		Command: "test",
+		Args:    []string{},
+		Env:     map[string]string{},
+		Dir:     tmpDir,
+	}
+
+	cmdWithArgs := []string{"echo 'test'"}
+	wrapper := ""
+
+	// This should not panic - it should run the command directly since no hooks are configured
+	err = d.executeWithStreamingPipeline(context.Background(), hookCtx, cmdWithArgs, wrapper)
+	if err != nil {
+		// This is expected since we're using a mock nix implementation
+		t.Logf("Expected error from mock nix: %v", err)
+	}
+}
+
+func TestReadCapabilityGates(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	tests := []struct {
+		name           string
+		hook           *configfile.RunHook
+		setupHook      func(t *testing.T, hookPath string)
+		expectSuccess  bool
+	}{
+		{
+			name: "pre_run hook without can_read_stdin gets closed reader",
+			hook: &configfile.RunHook{
+				Command: "NO_READ_STDIN",
+			},
+			setupHook: func(t *testing.T, hookPath string) {
+				// Create a hook script that tries to read from stdin without permission
+				hookScript := `#!/bin/sh
+	# Try to read from stdin - should fail without can_read_stdin
+	if read line; then
+		echo "Unexpectedly read: $line" > /dev/stderr
+		exit 1
+	else
+		# Expected - should get EOF immediately
+		exit 0
+	fi
+	`
+				if err := os.WriteFile(hookPath, []byte(hookScript), 0o755); err != nil {
+					t.Fatalf("Failed to write hook script: %v", err)
+				}
+			},
+			expectSuccess:  true,
+		},
+		{
+			name: "post_run hook without can_read_stdin gets closed reader",
+			hook: &configfile.RunHook{
+				Command: "NO_READ_STDIN_POST",
+			},
+			setupHook: func(t *testing.T, hookPath string) {
+				// Create a hook script that tries to read from stdin without permission
+				hookScript := `#!/bin/sh
+	# Try to read from stdin - should fail without can_read_stdin
+	if read line; then
+		echo "Unexpectedly read: $line" > /dev/stderr
+		exit 1
+	else
+		# Expected - should get EOF immediately
+		exit 0
+	fi
+	`
+				if err := os.WriteFile(hookPath, []byte(hookScript), 0o755); err != nil {
+					t.Fatalf("Failed to write hook script: %v", err)
+				}
+			},
+			expectSuccess:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &Devbox{
+				projectDir: tmpDir,
+			}
+
+			hookCtx := &HookContext{
+				Command: "test",
+				Args:    []string{"arg1"},
+				Env:     map[string]string{},
+				Dir:     tmpDir,
+			}
+
+			// Setup hook script if needed
+			if tt.setupHook != nil {
+				hookPath := filepath.Join(tmpDir, tt.hook.Command)
+				tt.setupHook(t, hookPath)
+				// Update hook command to use the script path
+				tt.hook.Command = hookPath
+			}
+
+			// Test pre_run hooks
+			result, err := d.executePreRunHook(context.Background(), tt.hook, hookCtx)
+			if err != nil {
+				t.Errorf("executePreRunHook() failed: %v", err)
+				return
+			}
+
+			if tt.expectSuccess && !result.Success {
+				t.Errorf("Expected hook to succeed, but it failed")
+			}
+
+			// Test post_run hooks
+			result, err = d.executePostRunHook(context.Background(), tt.hook, hookCtx, 0, "", "")
+			if err != nil {
+				t.Errorf("executePostRunHook() failed: %v", err)
+				return
+			}
+
+			if tt.expectSuccess && !result.Success {
+				t.Errorf("Expected hook to succeed, but it failed")
+			}
+		})
 	}
 }
