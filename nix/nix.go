@@ -333,7 +333,11 @@ func (i Info) semver() string {
 	if strings.Count(base, ".") == 1 {
 		base += ".0"
 	}
-	return "v" + base + suffix
+	coerced := "v" + base + suffix
+	if !semver.IsValid(coerced) {
+		return ""
+	}
+	return coerced
 }
 
 // sourceProfileMutex guards against multiple goroutines attempting to source
