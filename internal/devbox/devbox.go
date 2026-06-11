@@ -338,7 +338,74 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{runCmd}, cmdArgs...), " ")
 	}
 
-	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
+	// Execute pre_run hooks
+	hookCtx := &HookContext{
+		Command: cmdName,
+		Args:    cmdArgs,
+		Env:     env,
+		Dir:     d.projectDir,
+	}
+
+	for _, hook := range d.cfg.Root.PreRunHooks() {
+		result, err := d.executePreRunHook(ctx, hook, hookCtx)
+		if err != nil {
+			return errors.Wrap(err, "pre_run hook failed")
+		}
+		if result.Block {
+			return errors.Errorf("command blocked by pre_run hook: %s", result.BlockReason)
+		}
+		// Update env if modified by hook
+		if result.ModifiedEnv != nil {
+			for k, v := range result.ModifiedEnv {
+				env[k] = v
+			}
+		}
+		// Update args if modified by hook
+		if result.ModifiedArgs != nil {
+			cmdArgs = result.ModifiedArgs
+		}
+	}
+
+	// Apply command wrapper if configured
+	wrapper := d.cfg.Root.CommandWrapper()
+	if wrapper != "" {
+		cmdWithArgs = applyCommandWrapper(cmdWithArgs, wrapper)
+	}
+
+	// Execute the command
+	// Note: For now, we don't capture stdout/stderr for post-run hooks
+	// This would require modifying nix.RunScript to support output capture
+	// which is a larger change. Post-run hooks can still access exit code.
+	exitCode := 0
+	err := nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			exitCode = exitErr.ExitCode()
+		} else {
+			return err
+		}
+	}
+
+	// Execute post_run hooks
+	for _, hook := range d.cfg.Root.PostRunHooks() {
+		result, err := d.executePostRunHook(ctx, hook, hookCtx, exitCode, "", "")
+		if err != nil {
+			slog.Warn("post_run hook failed", "error", err)
+			// Don't fail the whole command if post_run hook fails
+			continue
+		}
+		// Apply exit code modification if allowed
+		if hook.CanModifyExit && result.ModifiedExit != nil {
+			exitCode = *result.ModifiedExit
+		}
+	}
+
+	// Return error if exit code is non-zero
+	if exitCode != 0 {
+		return &exec.ExitError{ProcessState: nil}
+	}
+
+	return nil
 }
 
 // Install ensures that all the packages in the config are installed

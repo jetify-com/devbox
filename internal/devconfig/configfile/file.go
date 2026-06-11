@@ -69,6 +69,32 @@ type shellConfig struct {
 	// InitHook contains commands that will run at shell startup.
 	InitHook *shellcmd.Commands            `json:"init_hook,omitempty"`
 	Scripts  map[string]*shellcmd.Commands `json:"scripts,omitempty"`
+
+	// PreRun hooks run before command execution with capability gates
+	PreRun []*RunHook `json:"pre_run,omitempty"`
+
+	// CommandWrapper is a simple string wrapper for commands (e.g., "rtk exec --")
+	CommandWrapper string `json:"command_wrapper,omitempty"`
+
+	// PostRun hooks run after command execution with capability gates
+	PostRun []*RunHook `json:"post_run,omitempty"`
+}
+
+// RunHook defines a hook with explicit capability gates for security
+type RunHook struct {
+	// Command is the hook command to execute
+	Command string `json:"command"`
+
+	// Capability gates - all default to false for security
+	CanBlock       bool `json:"can_block,omitempty"`
+	CanModifyArgs  bool `json:"can_modify_args,omitempty"`
+	CanModifyEnv   bool `json:"can_modify_env,omitempty"`
+	CanModifyStdin bool `json:"can_modify_stdin,omitempty"`
+
+	// Post-run specific capability gates
+	CanModifyExit   bool `json:"can_modify_exit,omitempty"`
+	CanModifyStdout bool `json:"can_modify_stdout,omitempty"`
+	CanModifyStderr bool `json:"can_modify_stderr,omitempty"`
 }
 
 type NixpkgsConfig struct {
@@ -112,6 +138,30 @@ func (c *ConfigFile) InitHook() *shellcmd.Commands {
 		return &shellcmd.Commands{}
 	}
 	return c.Shell.InitHook
+}
+
+// PreRunHooks returns the pre_run hooks, defaulting to empty slice
+func (c *ConfigFile) PreRunHooks() []*RunHook {
+	if c == nil || c.Shell == nil || c.Shell.PreRun == nil {
+		return []*RunHook{}
+	}
+	return c.Shell.PreRun
+}
+
+// CommandWrapper returns the command wrapper string
+func (c *ConfigFile) CommandWrapper() string {
+	if c == nil || c.Shell == nil {
+		return ""
+	}
+	return c.Shell.CommandWrapper
+}
+
+// PostRunHooks returns the post_run hooks, defaulting to empty slice
+func (c *ConfigFile) PostRunHooks() []*RunHook {
+	if c == nil || c.Shell == nil || c.Shell.PostRun == nil {
+		return []*RunHook{}
+	}
+	return c.Shell.PostRun
 }
 
 // SaveTo writes the config to a file.
@@ -165,6 +215,7 @@ func validateConfig(cfg *ConfigFile) error {
 		ValidateNixpkg,
 		validateScripts,
 		validateAliases,
+		validateRunHooks,
 	}
 
 	for _, fn := range fns {
@@ -226,5 +277,49 @@ func ValidateNixpkg(cfg *ConfigFile) error {
 			len(hash),
 		)
 	}
+	return nil
+}
+
+func validateRunHooks(cfg *ConfigFile) error {
+	if cfg.Shell == nil {
+		return nil
+	}
+
+	// Validate pre_run hooks
+	for i, hook := range cfg.Shell.PreRun {
+		if err := validateRunHook(hook, "pre_run", i); err != nil {
+			return err
+		}
+	}
+
+	// Validate post_run hooks
+	for i, hook := range cfg.Shell.PostRun {
+		if err := validateRunHook(hook, "post_run", i); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateRunHook(hook *RunHook, hookType string, index int) error {
+	if hook == nil {
+		return errors.Errorf("hook at %s[%d] is nil", hookType, index)
+	}
+
+	if strings.TrimSpace(hook.Command) == "" {
+		return errors.Errorf("hook command cannot be empty in %s[%d]", hookType, index)
+	}
+
+	// Validate that post-run specific capabilities are only used in post_run hooks
+	if hookType == "pre_run" {
+		if hook.CanModifyExit || hook.CanModifyStdout || hook.CanModifyStderr {
+			return errors.Errorf(
+				"post-run capabilities (can_modify_exit, can_modify_stdout, can_modify_stderr) cannot be used in pre_run hook at index %d",
+				index,
+			)
+		}
+	}
+
 	return nil
 }
