@@ -1,0 +1,32 @@
+{
+  "name": "devbox-hooks-example",
+  "description": "Example demonstrating the hook system for devbox run",
+  "packages": [],
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to devbox hooks example!'"
+    ],
+    "scripts": {
+      "hello": "echo 'Hello from devbox!'",
+      "test": "echo 'Running tests...'"
+    },
+    "pre_run": [
+      {
+        "command": "echo 'Pre-run hook: About to execute command'",
+        "can_block": false,
+        "can_modify_args": false,
+        "can_modify_env": false,
+        "can_modify_stdin": false
+      }
+    ],
+    "command_wrapper": "",
+    "post_run": [
+      {
+        "command": "echo 'Post-run hook: Command finished'",
+        "can_modify_exit": false,
+        "can_modify_stdout": false,
+        "can_modify_stderr": false
+      }
+    ]
+  }
+}

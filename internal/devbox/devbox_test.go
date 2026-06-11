@@ -6,6 +6,7 @@ package devbox
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -64,6 +65,10 @@ func (n *testNix) PrintDevEnv(ctx context.Context, args *nix.PrintDevEnvArgs) (*
 			},
 		},
 	}, nil
+}
+
+func (n *testNix) RunScriptWithStreams(projectDir, cmdWithArgs string, env map[string]string, stdin io.Reader, stdout, stderr io.Writer, capture bool) (*nix.RunScriptOutput, error) {
+	return &nix.RunScriptOutput{}, nil
 }
 
 func TestComputeEnv(t *testing.T) {

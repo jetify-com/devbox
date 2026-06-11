@@ -72,7 +72,8 @@ environment by following the steps below.
    correctness.
 3. Run `devbox run lint` and `devbox run test`.
 4. Run `go mod tidy` if you added any new dependencies.
-5. Submit your pull request and someone will take a look!
+5. Update documentation if your changes affect user-facing features (see [docs/](docs/)).
+6. Submit your pull request and someone will take a look!
 
 ### Style Guide
 
