@@ -179,8 +179,10 @@ const (
 //
 // The semantic component is sourced from <https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string>.
 // It's been modified to tolerate Nix prerelease versions, which don't have a
-// hyphen before the prerelease component and contain underscores.
-var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
+// hyphen before the prerelease component and contain underscores. The patch
+// component is optional because newer Nix releases drop it (e.g. "2.33" or
+// "2.33pre20251107_479b6b73").
+var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)(?:\.(?P<patch>0|[1-9]\d*))?(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
 
 // preReleaseRegexp matches Nix prerelease version strings, which are not valid
 // semvers.
@@ -295,15 +297,43 @@ func (i Info) AtLeast(version string) bool {
 	if !semver.IsValid(version) {
 		panic(fmt.Sprintf("nix.atLeast: invalid version %q", version[1:]))
 	}
+	current := i.semver()
+	if !semver.IsValid(current) {
+		return false
+	}
+	return semver.Compare(current, version) >= 0
+}
+
+// semver converts i.Version into a valid semantic version string with a
+// leading "v" so it can be compared with the semver package. It returns an
+// empty string when i.Version is empty or cannot be coerced.
+//
+// Nix prerelease versions (e.g. "2.23.0pre20240526_7de033d6") aren't valid
+// semvers, and newer Nix releases drop the patch component entirely (e.g.
+// "2.33" or "2.33pre20251107_479b6b73"). This coerces both forms into a valid
+// semver, e.g. "v2.33.0-pre.20251107+479b6b73".
+func (i Info) semver() string {
+	if i.Version == "" {
+		return ""
+	}
 	if semver.IsValid("v" + i.Version) {
-		return semver.Compare("v"+i.Version, version) >= 0
+		return "v" + i.Version
 	}
 
-	// If the version isn't a valid semver, check to see if it's a
-	// prerelease (e.g., 2.23.0pre20240526_7de033d6) and coerce it to a
-	// valid version (2.23.0-pre.20240526+7de033d6) so we can compare it.
-	prerelease := preReleaseRegexp.ReplaceAllString(i.Version, "-pre.$date+$commit")
-	return semver.Compare("v"+prerelease, version) >= 0
+	// Coerce a Nix prerelease suffix (e.g. "pre20240526_7de033d6") into a
+	// semver prerelease+build component (e.g. "-pre.20240526+7de033d6").
+	v := preReleaseRegexp.ReplaceAllString(i.Version, "-pre.$date+$commit")
+
+	// semver requires a major.minor.patch base for prerelease versions, but
+	// newer Nix releases omit the patch. Insert ".0" when it's missing.
+	base, suffix := v, ""
+	if idx := strings.IndexAny(v, "-+"); idx >= 0 {
+		base, suffix = v[:idx], v[idx:]
+	}
+	if strings.Count(base, ".") == 1 {
+		base += ".0"
+	}
+	return "v" + base + suffix
 }
 
 // sourceProfileMutex guards against multiple goroutines attempting to source
