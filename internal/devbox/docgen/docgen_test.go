@@ -6,7 +6,7 @@ import (
 )
 
 func TestEnvWithRelativePaths(t *testing.T) {
-	projectDir := "/home/carloratm/ooo/oha"
+	projectDir := "/home/user/myproject"
 
 	t.Run("replaces project dir with relative path", func(t *testing.T) {
 		env := map[string]string{

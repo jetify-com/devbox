@@ -2,6 +2,7 @@ package docgen
 
 import (
 	_ "embed"
+	"maps"
 	"os"
 	"strings"
 	"text/template"
@@ -71,7 +72,7 @@ func GenerateReadme(
 // scripts in the generated README.
 func envWithRelativePaths(env map[string]string, projectDir string) map[string]string {
 	if projectDir == "" {
-		return env
+		return maps.Clone(env)
 	}
 	result := make(map[string]string, len(env))
 	for key, value := range env {
