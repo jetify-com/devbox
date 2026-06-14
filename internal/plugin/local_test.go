@@ -74,6 +74,39 @@ func TestLocalPluginHashIncludesCreateFilesContent(t *testing.T) {
 	}
 }
 
+// TestLocalPluginHashIncludesCreateFilesDestinations verifies that changing a
+// create_files destination (a plugin-only field not covered by
+// configfile.ConfigFile.Hash()) changes the plugin config hash.
+func TestLocalPluginHashIncludesCreateFilesDestinations(t *testing.T) {
+	local, contentPath := newTestLocalPlugin(t, "123")
+
+	pluginJSON, err := local.Fetch()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := buildConfig(local, filepath.Dir(contentPath), string(pluginJSON))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	before, err := cfg.Hash()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Point the same source file at a different destination in the virtenv.
+	cfg.CreateFiles = map[string]string{"renamed.txt": "test.txt"}
+
+	after, err := cfg.Hash()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if before == after {
+		t.Errorf("hash did not change after changing create_files destination: %q", before)
+	}
+}
+
 // TestLocalPluginHashStableWithoutContentChange verifies the hash is stable when
 // the referenced files don't change.
 func TestLocalPluginHashStableWithoutContentChange(t *testing.T) {
