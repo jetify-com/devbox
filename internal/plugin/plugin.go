@@ -17,6 +17,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
+	"go.jetify.com/devbox/internal/cachehash"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
@@ -68,6 +69,53 @@ func (c *Config) Services() (services.Services, error) {
 		return services.FromProcessCompose(file)
 	}
 	return nil, nil
+}
+
+// Hash returns a hash of the plugin config. It shadows the embedded
+// configfile.ConfigFile.Hash() so that, for local plugins, the contents of the
+// files referenced by create_files are folded into the hash.
+//
+// Devbox uses this hash (via Devbox.ConfigHash) to decide whether the cached
+// environment is still up to date. Local plugin files can be edited without any
+// corresponding change to devbox.json or the lockfile, so without this a local
+// plugin's create_files would never be regenerated in the virtenv after the
+// source files change. See https://github.com/jetify-com/devbox/issues/2755.
+//
+// Built-in plugin files are embedded in the Devbox binary (covered by the
+// Devbox version in the state hash) and remote plugins are addressed by an
+// immutable ref, so for those the config hash alone is sufficient.
+func (c *Config) Hash() (string, error) {
+	configHash, err := c.ConfigFile.Hash()
+	if err != nil {
+		return "", err
+	}
+
+	local, ok := c.Source.(*LocalPlugin)
+	if !ok {
+		return configHash, nil
+	}
+
+	buf := bytes.Buffer{}
+	buf.WriteString(configHash)
+
+	// Sort the content paths so the resulting hash is deterministic.
+	contentPaths := make([]string, 0, len(c.CreateFiles))
+	for _, contentPath := range c.CreateFiles {
+		if contentPath != "" {
+			contentPaths = append(contentPaths, contentPath)
+		}
+	}
+	slices.Sort(contentPaths)
+
+	for _, contentPath := range contentPaths {
+		content, err := local.FileContent(contentPath)
+		if err != nil {
+			return "", errors.WithStack(err)
+		}
+		buf.Write(content)
+	}
+
+	return cachehash.Bytes(buf.Bytes()), nil
 }
 
 func (m *Manager) CreateFilesForConfig(cfg *Config) error {
