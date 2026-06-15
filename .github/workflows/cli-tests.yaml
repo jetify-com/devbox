@@ -180,26 +180,34 @@ jobs:
           enable-cache: true
       - name: Setup Nix GitHub authentication
         run: |
-          # Setup github authentication to ensure Github's rate limits are not hit
-          # For macOS, we need to configure the system-wide nix.conf because the Nix daemon
-          # runs as a different user and doesn't read the user's ~/.config/nix/nix.conf
+          # Setup github authentication to ensure GitHub's API rate limits are not
+          # hit when Nix resolves `github:` flake refs (e.g. fetching the latest
+          # commit of nixpkgs-unstable). Anonymous requests are limited to 60/hr,
+          # which is quickly exhausted by the parallel test suite and surfaces as
+          # "unable to download '.../commits/...': HTTP error 403".
+          #
+          # `access-tokens` set via NIX_CONFIG or the user's ~/.config/nix/nix.conf
+          # is only honored when the invoking user is a trusted user. The Nix daemon
+          # (which can run as a different user) does not read the user config at all.
+          # The system-wide /etc/nix/nix.conf is always trusted and read by both the
+          # client and the daemon, so write the token there on every platform.
+          echo "Configuring system-wide Nix config (/etc/nix/nix.conf)"
+          sudo mkdir -p /etc/nix
+          if [ ! -f /etc/nix/nix.conf ]; then
+            echo "# Nix configuration" | sudo tee /etc/nix/nix.conf > /dev/null
+          fi
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" | sudo tee -a /etc/nix/nix.conf
+
+          # Restart the Nix daemon so it picks up the new configuration.
           if [ "$RUNNER_OS" == "macOS" ]; then
-            echo "Configuring system-wide Nix config for macOS daemon"
-            # Ensure /etc/nix directory exists
-            if [ ! -d /etc/nix ]; then
-              sudo mkdir -p /etc/nix
-            fi
-            # Check if file exists, create it if not
-            if [ ! -f /etc/nix/nix.conf ]; then
-              echo "# Nix configuration" | sudo tee /etc/nix/nix.conf > /dev/null
-            fi
-            echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" | sudo tee -a /etc/nix/nix.conf
-            # Restart nix daemon to pick up the new configuration
             sudo launchctl stop org.nixos.nix-daemon || true
             sudo launchctl start org.nixos.nix-daemon || true
-            sleep 2  # Give daemon time to restart
+            sleep 2  # Give the daemon time to restart
+          else
+            sudo systemctl restart nix-daemon || true
           fi
-          # For Linux and as a backup for macOS, also configure user config
+
+          # Also configure the user config as a backup for trusted-user setups.
           mkdir -p ~/.config/nix
           echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" > ~/.config/nix/nix.conf
       - name: Run fast tests
@@ -289,7 +297,12 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v4
         with:
           logger: pretty
-          extra-conf: experimental-features = ca-derivations fetch-closure
+          # access-tokens is written to the system-wide /etc/nix/nix.conf so both
+          # the Nix client and daemon authenticate to GitHub and avoid the
+          # anonymous API rate limit (HTTP 403) when resolving `github:` flake refs.
+          extra-conf: |
+            experimental-features = ca-derivations fetch-closure
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
           nix-package-url: https://releases.nixos.org/nix/nix-${{ matrix.nix-version }}/nix-${{ matrix.nix-version }}-${{ runner.arch == 'X64' && 'x86_64' || 'aarch64' }}-${{ runner.os == 'macOS' && 'darwin' || 'linux' }}.tar.xz
       - name: Run devbox install, devbox run, devbox rm
         run: |
