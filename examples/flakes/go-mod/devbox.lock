@@ -1,4 +1,13 @@
 {
   "lockfile_version": "1",
-  "packages": {}
+  "packages": {
+    "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62": {
+      "last_modified": "1970-01-01T00:00:00Z",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    },
+    "path:ory-cli#ory-cli": {
+      "last_modified": "2026-06-15T04:41:58Z",
+      "resolved": "path:/home/user/devbox/examples/flakes/go-mod/ory-cli?lastModified=1781498518&narHash=sha256-aulCJvv1ChlfHN2%2FevchTK8%2BCwJgtfpzM9AQPxVl%2F2U%3D#ory-cli"
+    }
+  }
 }

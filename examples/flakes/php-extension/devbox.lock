@@ -1,4 +1,13 @@
 {
   "lockfile_version": "1",
-  "packages": {}
+  "packages": {
+    "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62": {
+      "last_modified": "1970-01-01T00:00:00Z",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    },
+    "path:my-php-flake": {
+      "last_modified": "2026-06-15T04:41:58Z",
+      "resolved": "path:/home/user/devbox/examples/flakes/php-extension/my-php-flake?lastModified=1781498518&narHash=sha256-iw%2FV7QWrAZki9OZcyy5oqO0Tc10er0pKD5vYdj5VKVQ%3D"
+    }
+  }
 }

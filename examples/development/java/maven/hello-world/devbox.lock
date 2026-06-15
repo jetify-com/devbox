@@ -2,170 +2,174 @@
   "lockfile_version": "1",
   "packages": {
     "binutils@latest": {
-      "last_modified": "2024-02-10T18:15:24Z",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#binutils",
+      "last_modified": "2026-05-21T08:15:18Z",
+      "resolved": "github:NixOS/nixpkgs/4a29d733e8a7d5b824c3d8c958a946a9867b3eb2#binutils",
       "source": "devbox-search",
-      "version": "2.40",
+      "version": "2.46",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/72v83qn1k6pr4kxcjlryynskq3bj3h9d-binutils-wrapper-2.40",
+              "path": "/nix/store/23w8np8g4zn7hamxzvjvkx3imb953pal-binutils-wrapper-2.46",
               "default": true
             },
             {
               "name": "man",
-              "path": "/nix/store/fhd1r6qk3i5nm68qiv9p8bs0xcc6iwzv-binutils-wrapper-2.40-man",
+              "path": "/nix/store/5ynpn02ggpxzqqwlg65hyhd86w4011al-binutils-wrapper-2.46-man",
               "default": true
             },
             {
               "name": "info",
-              "path": "/nix/store/cfsi6sp6b92w8y7m0mqp45pyhyy1r6vf-binutils-wrapper-2.40-info"
+              "path": "/nix/store/g6balk9c1p522zzl4nfc7pxnsglyn9rm-binutils-wrapper-2.46-info"
             }
           ],
-          "store_path": "/nix/store/72v83qn1k6pr4kxcjlryynskq3bj3h9d-binutils-wrapper-2.40"
+          "store_path": "/nix/store/23w8np8g4zn7hamxzvjvkx3imb953pal-binutils-wrapper-2.46"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/i9sn0vb5q396nd4pza5j8jlvx4481cl1-binutils-wrapper-2.40",
+              "path": "/nix/store/80qdvnjd83wlh75pds2mp21h9l3a7ny7-binutils-wrapper-2.46",
               "default": true
             },
             {
               "name": "man",
-              "path": "/nix/store/fh8ygh36nak7y1bhp3mnk06nc4bq6kyk-binutils-wrapper-2.40-man",
+              "path": "/nix/store/h1fmpvqhryyb5aipjzlppgr27i7w1nmr-binutils-wrapper-2.46-man",
               "default": true
             },
             {
               "name": "info",
-              "path": "/nix/store/h72hdlcah3qb7xyn8i46bjppjynfg4j0-binutils-wrapper-2.40-info"
+              "path": "/nix/store/9w0q0i5mhz1j5bhdi41v2shv9hd02h6v-binutils-wrapper-2.46-info"
             }
           ],
-          "store_path": "/nix/store/i9sn0vb5q396nd4pza5j8jlvx4481cl1-binutils-wrapper-2.40"
+          "store_path": "/nix/store/80qdvnjd83wlh75pds2mp21h9l3a7ny7-binutils-wrapper-2.46"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/2fa09bf11m22ya0q2kv8kh1ngfw2d7fp-binutils-wrapper-2.40",
+              "path": "/nix/store/vfw0rx7ag6yhv4cffc7chn2w70305mvn-binutils-wrapper-2.46",
               "default": true
             },
             {
               "name": "man",
-              "path": "/nix/store/cnnhp31cib3izbc27sds4hq9havxihcs-binutils-wrapper-2.40-man",
+              "path": "/nix/store/hykmjaa37w1lzhy51v5ja2z1ih2fgw81-binutils-wrapper-2.46-man",
               "default": true
             },
             {
               "name": "info",
-              "path": "/nix/store/p8psm83qbdbvpgsbgglmdghbl7wm7awh-binutils-wrapper-2.40-info"
+              "path": "/nix/store/mh2frifm5d0fqp7fj7abwq044gldbkan-binutils-wrapper-2.46-info"
             }
           ],
-          "store_path": "/nix/store/2fa09bf11m22ya0q2kv8kh1ngfw2d7fp-binutils-wrapper-2.40"
+          "store_path": "/nix/store/vfw0rx7ag6yhv4cffc7chn2w70305mvn-binutils-wrapper-2.46"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/c53f8hagyblvx52zylsnqcc0b3nxbrcl-binutils-wrapper-2.40",
+              "path": "/nix/store/mbyy19mdwnfvfwmdi0gqgggx0njvpl1w-binutils-wrapper-2.46",
               "default": true
             },
             {
               "name": "man",
-              "path": "/nix/store/hwki1x4g9i0i5msg19d36im92sczd0mf-binutils-wrapper-2.40-man",
+              "path": "/nix/store/8zd61mzpnwpq1x9p45w9ifii7rpxgrq7-binutils-wrapper-2.46-man",
               "default": true
             },
             {
               "name": "info",
-              "path": "/nix/store/p939zzxcwdsqh6z50dw5wz5y6d2ibl0x-binutils-wrapper-2.40-info"
+              "path": "/nix/store/mlfnw3b798bj39i25nn145kdyrxsirwp-binutils-wrapper-2.46-info"
             }
           ],
-          "store_path": "/nix/store/c53f8hagyblvx52zylsnqcc0b3nxbrcl-binutils-wrapper-2.40"
+          "store_path": "/nix/store/mbyy19mdwnfvfwmdi0gqgggx0njvpl1w-binutils-wrapper-2.46"
         }
       }
     },
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2026-06-13T14:05:44Z",
+      "resolved": "github:NixOS/nixpkgs/9f11f828c213641c2369a9f1fa31fe31557e3156?lastModified=1781359544&narHash=sha256-iUuzKQcyXvopYDDzFpMK5eQKP3WIJExYny2kJtbgUcE%3D"
+    },
     "jdk@19": {
-      "last_modified": "2024-02-10T18:15:24Z",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#jdk",
+      "last_modified": "2024-07-31T08:48:38Z",
+      "resolved": "github:NixOS/nixpkgs/c3392ad349a5227f4a3464dce87bcc5046692fce#jdk19",
       "source": "devbox-search",
-      "version": "19.0.2+7",
+      "version": "19-ga",
       "systems": {
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/4k80c38mzlndgwmhlh7w38ymnw0dbd8p-openjdk-19.0.2+7",
+              "path": "/nix/store/d9zlyr1qmkfc0k5wd5rfslzi7dii993r-openjdk-19-ga",
               "default": true
             },
             {
               "name": "debug",
-              "path": "/nix/store/c3vdy8163ga3za7dk0gcz4887l56537d-openjdk-19.0.2+7-debug"
+              "path": "/nix/store/ik9y5b5xn23s97prygy7dachy80my5cj-openjdk-19-ga-debug"
             }
           ],
-          "store_path": "/nix/store/4k80c38mzlndgwmhlh7w38ymnw0dbd8p-openjdk-19.0.2+7"
+          "store_path": "/nix/store/d9zlyr1qmkfc0k5wd5rfslzi7dii993r-openjdk-19-ga"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/jz5ppnr1133z7a4vj53jd3a0gkv0iw6v-openjdk-19.0.2+7",
+              "path": "/nix/store/pa2q5fk7ws1117mmisrzzrpag540jin8-openjdk-19-ga",
               "default": true
             },
             {
               "name": "debug",
-              "path": "/nix/store/bdwn277irnz2dyx5yypxzz55qff2if11-openjdk-19.0.2+7-debug"
+              "path": "/nix/store/nkq5ciw3vx8394ipp7fqymqlr5yrscf7-openjdk-19-ga-debug"
             }
           ],
-          "store_path": "/nix/store/jz5ppnr1133z7a4vj53jd3a0gkv0iw6v-openjdk-19.0.2+7"
+          "store_path": "/nix/store/pa2q5fk7ws1117mmisrzzrpag540jin8-openjdk-19-ga"
         }
       }
     },
     "maven@latest": {
-      "last_modified": "2024-02-10T18:15:24Z",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#maven",
+      "last_modified": "2026-05-21T08:15:18Z",
+      "resolved": "github:NixOS/nixpkgs/4a29d733e8a7d5b824c3d8c958a946a9867b3eb2#maven",
       "source": "devbox-search",
-      "version": "3.9.6",
+      "version": "3.9.12",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/d2rk3mcj5rk8qs8wrk65b9bifaf618sa-apache-maven-3.9.6",
+              "path": "/nix/store/ihsrikvwhnz9imvqzlgmgajc1i88phdq-maven-3.9.12",
               "default": true
             }
           ],
-          "store_path": "/nix/store/d2rk3mcj5rk8qs8wrk65b9bifaf618sa-apache-maven-3.9.6"
+          "store_path": "/nix/store/ihsrikvwhnz9imvqzlgmgajc1i88phdq-maven-3.9.12"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/nvhsiva2qzviddp2vgdyzmvqp0bzjm5s-apache-maven-3.9.6",
+              "path": "/nix/store/5mmm91ljxfhkniscl8fspngizmq576qx-maven-3.9.12",
               "default": true
             }
           ],
-          "store_path": "/nix/store/nvhsiva2qzviddp2vgdyzmvqp0bzjm5s-apache-maven-3.9.6"
+          "store_path": "/nix/store/5mmm91ljxfhkniscl8fspngizmq576qx-maven-3.9.12"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/vxq3navpi6x6hcmz3rp2nsb7gn6b11zn-apache-maven-3.9.6",
+              "path": "/nix/store/nbhqg5sn1903p2gccby5wn76ylh56nr4-maven-3.9.12",
               "default": true
             }
           ],
-          "store_path": "/nix/store/vxq3navpi6x6hcmz3rp2nsb7gn6b11zn-apache-maven-3.9.6"
+          "store_path": "/nix/store/nbhqg5sn1903p2gccby5wn76ylh56nr4-maven-3.9.12"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/554ah9py5vk0bqf0l0k87l11im95clnf-apache-maven-3.9.6",
+              "path": "/nix/store/pfi6mjf7mi0hl0nzlbipdsycfq0z22p3-maven-3.9.12",
               "default": true
             }
           ],
-          "store_path": "/nix/store/554ah9py5vk0bqf0l0k87l11im95clnf-apache-maven-3.9.6"
+          "store_path": "/nix/store/pfi6mjf7mi0hl0nzlbipdsycfq0z22p3-maven-3.9.12"
         }
       }
     }

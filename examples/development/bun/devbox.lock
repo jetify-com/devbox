@@ -2,56 +2,56 @@
   "lockfile_version": "1",
   "packages": {
     "bun@latest": {
-      "last_modified": "2024-03-18T21:18:48Z",
-      "resolved": "github:NixOS/nixpkgs/ca00bc5e9419b97c1a11210f08f9338e6ba7515c#bun",
+      "last_modified": "2026-05-21T08:15:18Z",
+      "resolved": "github:NixOS/nixpkgs/4a29d733e8a7d5b824c3d8c958a946a9867b3eb2#bun",
       "source": "devbox-search",
-      "version": "1.0.33",
+      "version": "1.3.13",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/zz5pszqh3dpagdxqjj2vhy8g3v908x6j-bun-1.0.33",
+              "path": "/nix/store/jgl1hjr0cf6s32jcnqmkp44av4flamap-bun-1.3.13",
               "default": true
             }
           ],
-          "store_path": "/nix/store/zz5pszqh3dpagdxqjj2vhy8g3v908x6j-bun-1.0.33"
+          "store_path": "/nix/store/jgl1hjr0cf6s32jcnqmkp44av4flamap-bun-1.3.13"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/n77y6pv1wfjkky7hk5wsx8f9vr8yl229-bun-1.0.33",
+              "path": "/nix/store/ywc7zrq5vr32ashfgc7dp84a2f3rzic6-bun-1.3.13",
               "default": true
             }
           ],
-          "store_path": "/nix/store/n77y6pv1wfjkky7hk5wsx8f9vr8yl229-bun-1.0.33"
+          "store_path": "/nix/store/ywc7zrq5vr32ashfgc7dp84a2f3rzic6-bun-1.3.13"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/kgd534jkcbym2pwmjmv4kd2ms1kywhxq-bun-1.0.33",
+              "path": "/nix/store/1nphhxm1h3pya9j86kql2gpsvy6nizr4-bun-1.3.13",
               "default": true
             }
           ],
-          "store_path": "/nix/store/kgd534jkcbym2pwmjmv4kd2ms1kywhxq-bun-1.0.33"
+          "store_path": "/nix/store/1nphhxm1h3pya9j86kql2gpsvy6nizr4-bun-1.3.13"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/n02lmxaxkfcnbpvfc9r4n6pb3sqgqqf7-bun-1.0.33",
+              "path": "/nix/store/z1cxjx705fswwjjns0sw2ysbd5jqxfgm-bun-1.3.13",
               "default": true
             }
           ],
-          "store_path": "/nix/store/n02lmxaxkfcnbpvfc9r4n6pb3sqgqqf7-bun-1.0.33"
+          "store_path": "/nix/store/z1cxjx705fswwjjns0sw2ysbd5jqxfgm-bun-1.3.13"
         }
       }
     },
     "github:NixOS/nixpkgs/nixpkgs-unstable": {
-      "last_modified": "2025-06-18T03:01:18Z",
-      "resolved": "github:NixOS/nixpkgs/5395fb3ab3f97b9b7abca147249fa2e8ed27b192?lastModified=1750215678&narHash=sha256-Rc%2FytpamXRf6z8UA2SGa4aaWxUXRbX2MAWIu2C8M%2Bok%3D"
+      "last_modified": "2026-06-13T14:05:44Z",
+      "resolved": "github:NixOS/nixpkgs/9f11f828c213641c2369a9f1fa31fe31557e3156?lastModified=1781359544&narHash=sha256-iUuzKQcyXvopYDDzFpMK5eQKP3WIJExYny2kJtbgUcE%3D"
     }
   }
 }
