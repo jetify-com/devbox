@@ -17,6 +17,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
+	"go.jetify.com/devbox/internal/cachehash"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
@@ -52,6 +53,51 @@ type PluginOnlyData struct {
 	// 1. Built-in plugins are triggered by packages (See plugins.builtInMap)
 	// 2. Plugins can be added via the "include" field in devbox.json or plugin.json
 	Source Includable
+}
+
+// Hash returns a hash of the plugin's config that also incorporates the
+// contents of the files referenced by create_files. The embedded
+// ConfigFile.Hash only covers the plugin.json itself, so without this a change
+// to a create_files source file leaves the project's state hash unchanged and
+// the file is never re-created in the virtenv. This matters most for local
+// (path:) plugins under active development, whose source files can change
+// without any edit to devbox.json or the plugin.json.
+// See https://github.com/jetify-com/devbox/issues/2755
+func (c *Config) Hash() (string, error) {
+	h, err := c.ConfigFile.Hash()
+	if err != nil {
+		return "", err
+	}
+	if c.Source == nil || len(c.CreateFiles) == 0 {
+		return h, nil
+	}
+
+	buf := bytes.Buffer{}
+	buf.WriteString(h)
+
+	// Iterate deterministically so the hash is stable across runs.
+	filePaths := make([]string, 0, len(c.CreateFiles))
+	for filePath := range c.CreateFiles {
+		filePaths = append(filePaths, filePath)
+	}
+	slices.Sort(filePaths)
+
+	for _, filePath := range filePaths {
+		buf.WriteString(filePath)
+		contentPath := c.CreateFiles[filePath]
+		if contentPath == "" {
+			continue
+		}
+		content, err := c.Source.FileContent(contentPath)
+		if err != nil {
+			// A missing or unreadable source file should not hard-fail the
+			// shell; the path is still part of the hash above.
+			continue
+		}
+		buf.Write(content)
+	}
+
+	return cachehash.Bytes(buf.Bytes()), nil
 }
 
 func (c *Config) ProcessComposeYaml() (string, string) {
