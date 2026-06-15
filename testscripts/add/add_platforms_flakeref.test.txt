@@ -10,7 +10,7 @@ json.superset devbox.json expected_devbox1.json
 
 # verify that the package is installed on this platform
 exec devbox run -- process-compose version
-stdout '1.110.0'
+stdout '1\.110\.0'
 
 -- devbox.json --
 {
