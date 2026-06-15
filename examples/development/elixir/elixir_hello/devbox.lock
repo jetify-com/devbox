@@ -1,9 +1,23 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "darwin.apple_sdk.frameworks.CoreServices": {
+      "resolved": "github:NixOS/nixpkgs/3a05eebede89661660945da1f151959900903b6a?narHash=sha256-Ly2fBL1LscV%2BKyCqPRufUBuiw%2BzmWrlJzpWOWbahplg%3D#darwin.apple_sdk.frameworks.CoreServices",
+      "source": "nixpkg",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "path": "/nix/store/mpq140x7nsx9gz73h4nfp9kpp297mshh-CoreServices-11.0",
+              "default": true
+            }
+          ]
+        }
+      }
+    },
     "elixir@latest": {
       "last_modified": "2024-12-27T03:08:00Z",
-      "plugin_version": "0.0.2",
+      "plugin_version": "0.0.1",
       "resolved": "github:NixOS/nixpkgs/7cc0bff31a3a705d3ac4fdceb030a17239412210#elixir",
       "source": "devbox-search",
       "version": "1.18.1",
@@ -51,8 +65,7 @@
       }
     },
     "github:NixOS/nixpkgs/nixpkgs-unstable": {
-      "last_modified": "2026-06-13T14:05:44Z",
-      "resolved": "github:NixOS/nixpkgs/9f11f828c213641c2369a9f1fa31fe31557e3156?lastModified=1781359544&narHash=sha256-iUuzKQcyXvopYDDzFpMK5eQKP3WIJExYny2kJtbgUcE%3D"
+      "resolved": "github:NixOS/nixpkgs/3a05eebede89661660945da1f151959900903b6a?lastModified=1740547748&narHash=sha256-Ly2fBL1LscV%2BKyCqPRufUBuiw%2BzmWrlJzpWOWbahplg%3D"
     }
   }
 }
