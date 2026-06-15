@@ -5,17 +5,19 @@ exec devbox install
 # aside: choose armv7l-linux to verify that the add actually works on the
 # current host that is unlikely to be armv7l-linux
 
-exec devbox add github:F1bonacc1/process-compose/v1.110.0 --exclude-platform armv7l-linux
+# Use GNU hello pinned to a fixed nixpkgs commit: it is tiny and available in
+# the binary cache (no build) and the commit never changes, so the test is
+# fast and does not need updating like a mutable upstream tag.
+exec devbox add 'github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello' --exclude-platform armv7l-linux
 json.superset devbox.json expected_devbox1.json
 
-# verify that the package is installed on this platform
-exec devbox run -- process-compose version
-stdout '1\.110\.0'
+# verify that the flake ref package is installed on this platform
+exec devbox run -- hello
+stdout 'Hello, world!'
 
 -- devbox.json --
 {
   "packages": [
-    "hello",
     "cowsay@latest"
   ]
 }
@@ -23,9 +25,8 @@ stdout '1\.110\.0'
 -- expected_devbox1.json --
 {
   "packages": {
-    "hello": "",
     "cowsay": "latest",
-    "github:F1bonacc1/process-compose/v1.110.0": {
+    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello": {
       "excluded_platforms": ["armv7l-linux"]
     }
   }
