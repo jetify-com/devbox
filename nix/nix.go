@@ -311,8 +311,9 @@ func (i Info) AtLeast(version string) bool {
 	// valid version (2.23.0-pre.20240526+7de033d6) so we can compare it.
 	prerelease := preReleaseRegexp.ReplaceAllString(i.Version, "-pre.$date+$commit")
 	// Some Nix prereleases omit the patch component (e.g.,
-	// 2.33pre20251107_479b6b73 -> 2.33-pre.20251107+479b6b73). semver
-	// requires a patch component when there's a prerelease, so insert ".0".
+	// 2.33pre20251107_479b6b73 -> 2.33-pre.20251107+479b6b73).
+	// golang.org/x/mod/semver won't parse a prerelease without an explicit
+	// patch component, so insert ".0".
 	prerelease = missingPatchRegexp.ReplaceAllString(prerelease, "${1}.0${2}")
 	return semver.Compare("v"+prerelease, version) >= 0
 }
