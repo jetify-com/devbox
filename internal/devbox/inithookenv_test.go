@@ -5,7 +5,6 @@ package devbox
 
 import (
 	"bytes"
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -47,7 +46,7 @@ func TestCaptureEnvWithInitHook(t *testing.T) {
 	}
 
 	var hookStdout bytes.Buffer
-	got, err := captureEnvWithInitHook(context.Background(), hooksPath, baseEnv, &hookStdout)
+	got, err := captureEnvWithInitHook(t.Context(), hooksPath, baseEnv, &hookStdout)
 	if err != nil {
 		t.Fatalf("captureEnvWithInitHook returned error: %v", err)
 	}
@@ -68,7 +67,7 @@ func TestCaptureEnvWithInitHook(t *testing.T) {
 func TestCaptureEnvWithInitHook_NoHooksFile(t *testing.T) {
 	baseEnv := map[string]string{"FOO": "bar"}
 	got, err := captureEnvWithInitHook(
-		context.Background(),
+		t.Context(),
 		filepath.Join(t.TempDir(), "does-not-exist.sh"),
 		baseEnv,
 		&bytes.Buffer{},

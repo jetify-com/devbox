@@ -7,7 +7,6 @@ import (
 	"context"
 	"io"
 	"log/slog"
-	"os"
 	"os/exec"
 	"runtime/trace"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/fileutil"
 	"go.jetify.com/devbox/internal/shellgen"
 )
 
@@ -66,8 +66,8 @@ func captureEnvWithInitHook(
 	baseEnv map[string]string,
 	hookStderr io.Writer,
 ) (map[string]string, error) {
-	if _, err := os.Stat(hooksPath); err != nil {
-		// No hooks file (or it's unreadable); nothing to source.
+	if !fileutil.Exists(hooksPath) {
+		// No hooks file; nothing to source.
 		return baseEnv, nil
 	}
 
