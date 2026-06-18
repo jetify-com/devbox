@@ -71,11 +71,19 @@ func captureEnvWithInitHook(
 		return baseEnv, nil
 	}
 
-	// Source the init hook with its stdout redirected to stderr (1>&2) so only
-	// our NUL-separated environment dump reaches stdout. NUL separators keep
-	// values that contain newlines intact.
-	script := ". \"" + hooksPath + "\" 1>&2\nexec env -0"
-	cmd := exec.CommandContext(ctx, "sh", "-c", script)
+	// Source the init hook, then print the resulting environment NUL-separated
+	// so values containing newlines stay intact.
+	//
+	//   - The hooks path is passed as a positional parameter ($1) rather than
+	//     interpolated into the script, so special characters in the path (e.g.
+	//     spaces, quotes, $(), backticks) can't change shell parsing.
+	//   - The hook's own stdout is redirected to stderr (1>&2) so only the env
+	//     dump reaches stdout and can't corrupt it.
+	//   - awk's POSIX ENVIRON is used instead of `env -0`: the latter isn't
+	//     supported by macOS' default /usr/bin/env, whereas awk is portable.
+	const script = `. "$1" 1>&2
+exec awk 'BEGIN { for (k in ENVIRON) printf "%s=%s%c", k, ENVIRON[k], 0 }'`
+	cmd := exec.CommandContext(ctx, "sh", "-c", script, "sh", hooksPath)
 	cmd.Env = envir.MapToPairs(baseEnv)
 	cmd.Stderr = hookStderr
 	out, err := cmd.Output()
@@ -85,7 +93,7 @@ func captureEnvWithInitHook(
 	return parseNulEnv(out), nil
 }
 
-// parseNulEnv parses the NUL-separated `env -0` output into a map.
+// parseNulEnv parses NUL-separated KEY=VALUE pairs into a map.
 func parseNulEnv(b []byte) map[string]string {
 	result := map[string]string{}
 	for _, pair := range strings.Split(string(b), "\x00") {
