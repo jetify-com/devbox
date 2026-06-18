@@ -95,9 +95,13 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		dbug.logToFile(err.Error())
 		return err
 	}
-	// Get env variables of a devbox shell
+	// Get env variables of a devbox shell, including any variables set by the
+	// project's init hook. The editor is launched directly (not through a
+	// devbox shell), so without this the init hook would never run and the
+	// variables it sets would be missing from the reopened environment. See
+	// issue #2703.
 	dbug.logToFile("Computing devbox environment")
-	envVars, err := box.EnvVars(cmd.Context())
+	envVars, err := box.EnvVarsWithInitHook(cmd.Context())
 	if err != nil {
 		dbug.logToFile(err.Error())
 		return err
