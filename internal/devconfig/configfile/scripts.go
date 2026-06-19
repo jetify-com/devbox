@@ -1,6 +1,7 @@
 package configfile
 
 import (
+	"slices"
 	"strings"
 
 	"go.jetify.com/devbox/internal/devbox/shellcmd"
@@ -12,6 +13,65 @@ type script struct {
 }
 
 type Scripts map[string]*script
+
+// ScriptWithName pairs a script with its name so callers can iterate over
+// scripts in a deterministic order. Scripts are stored in a map, and ranging
+// over a map (including in text/template) visits keys in alphabetical order,
+// which doesn't match the order scripts are defined in devbox.json. This type
+// is used when generating documentation so the output preserves the user's
+// ordering.
+type ScriptWithName struct {
+	Name     string
+	Commands *shellcmd.Commands
+	Comments string
+}
+
+// ScriptOrder returns the names of the scripts in the order they appear in the
+// devbox.json file. Names that can't be determined from the source file (for
+// example, when the config wasn't parsed from a file) are omitted; callers
+// should treat a missing name as "order unknown".
+func (c *ConfigFile) ScriptOrder() []string {
+	if c == nil || c.ast == nil {
+		return nil
+	}
+	return c.ast.objectKeysInOrder("shell", "scripts")
+}
+
+// InOrder returns the scripts as a slice ordered by the given names. Any
+// scripts not present in order (or when order is nil) are appended in
+// alphabetical order so the result stays deterministic.
+func (s Scripts) InOrder(order []string) []ScriptWithName {
+	result := make([]ScriptWithName, 0, len(s))
+	seen := make(map[string]bool, len(s))
+	add := func(name string) {
+		sc := s[name]
+		result = append(result, ScriptWithName{
+			Name:     name,
+			Commands: &sc.Commands,
+			Comments: sc.Comments,
+		})
+		seen[name] = true
+	}
+
+	for _, name := range order {
+		if _, ok := s[name]; ok && !seen[name] {
+			add(name)
+		}
+	}
+
+	rest := make([]string, 0, len(s))
+	for name := range s {
+		if !seen[name] {
+			rest = append(rest, name)
+		}
+	}
+	slices.Sort(rest)
+	for _, name := range rest {
+		add(name)
+	}
+
+	return result
+}
 
 func (c *ConfigFile) Scripts() Scripts {
 	if c == nil || c.Shell == nil {
