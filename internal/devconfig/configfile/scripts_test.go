@@ -70,6 +70,29 @@ func TestScriptsInOrderAppendsUnknownScripts(t *testing.T) {
 	)
 }
 
+func TestScriptsInOrderDedupesKeepingLastOccurrence(t *testing.T) {
+	// When a script name appears more than once in order (e.g. defined in
+	// both an included config and the root config), it should appear once, at
+	// the position of its last occurrence — matching the merge precedence
+	// where the later (root) definition wins.
+	scripts := Scripts{
+		"shared":      &script{},
+		"plugin-only": &script{},
+		"root-only":   &script{},
+	}
+
+	// Simulates: included config order ["shared", "plugin-only"] followed by
+	// root config order ["root-only", "shared"]. "shared" is overridden by
+	// root, so it should follow root-only rather than lead.
+	order := []string{"shared", "plugin-only", "root-only", "shared"}
+
+	ordered := scripts.InOrder(order)
+	assert.Equal(t,
+		[]string{"plugin-only", "root-only", "shared"},
+		scriptNames(ordered),
+	)
+}
+
 func TestScriptsInOrderCarriesCommands(t *testing.T) {
 	config := []byte(`{
 		"shell": {

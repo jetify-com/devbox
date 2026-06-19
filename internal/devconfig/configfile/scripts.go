@@ -15,10 +15,10 @@ type script struct {
 type Scripts map[string]*script
 
 // ScriptWithName pairs a script with its name so callers can iterate over
-// scripts in a deterministic order. Scripts are stored in a map, and ranging
-// over a map (including in text/template) visits keys in alphabetical order,
-// which doesn't match the order scripts are defined in devbox.json. This type
-// is used when generating documentation so the output preserves the user's
+// scripts in a deterministic order. Scripts are stored in a map, and Go's
+// text/template ranges over map keys in sorted (alphabetical) order, which
+// doesn't match the order scripts are defined in devbox.json. This type is
+// used when generating documentation so the output preserves the user's
 // ordering.
 type ScriptWithName struct {
 	Name     string
@@ -40,6 +40,12 @@ func (c *ConfigFile) ScriptOrder() []string {
 // InOrder returns the scripts as a slice ordered by the given names. Any
 // scripts not present in order (or when order is nil) are appended in
 // alphabetical order so the result stays deterministic.
+//
+// order may contain a name more than once when it's built by concatenating
+// multiple sources (e.g. included configs followed by the root config). In
+// that case only the last occurrence is used, so a script overridden by a
+// later definition appears at that definition's position. This matches the
+// merge precedence that produced its value in s (later definitions win).
 func (s Scripts) InOrder(order []string) []ScriptWithName {
 	result := make([]ScriptWithName, 0, len(s))
 	seen := make(map[string]bool, len(s))
@@ -53,7 +59,14 @@ func (s Scripts) InOrder(order []string) []ScriptWithName {
 		seen[name] = true
 	}
 
-	for _, name := range order {
+	lastIndex := make(map[string]int, len(order))
+	for i, name := range order {
+		lastIndex[name] = i
+	}
+	for i, name := range order {
+		if lastIndex[name] != i {
+			continue
+		}
 		if _, ok := s[name]; ok && !seen[name] {
 			add(name)
 		}
