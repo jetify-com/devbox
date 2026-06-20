@@ -108,21 +108,21 @@ func shellQuotedPositions(line string) []bool {
 	open := none // the quote char of the region currently open, or none
 	start := -1  // index of the opening quote of the current region
 	for i := 0; i < len(line); i++ {
-		c := line[i]
+		char := line[i]
 		switch open {
 		case none:
-			if c == '\'' || c == '"' {
-				open = c
+			if char == '\'' || char == '"' {
+				open = char
 				start = i
 			}
 		case '\'':
 			// Inside single quotes nothing is special except the closing '.
-			if c == '\'' {
+			if char == '\'' {
 				markQuoted(quoted, start+1, i)
 				open, start = none, -1
 			}
 		case '"':
-			if c == '"' && line[i-1] != '\\' {
+			if char == '"' && line[i-1] != '\\' {
 				markQuoted(quoted, start+1, i)
 				open, start = none, -1
 			}
