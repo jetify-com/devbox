@@ -41,8 +41,9 @@ func TestInitHookPathsAreQuoted(t *testing.T) {
 			}
 
 			for _, line := range initHookLines(t, plugin.Shell.InitHook) {
+				quoted := shellQuotedPositions(line)
 				for _, idx := range templateIndices(line) {
-					if !insideDoubleQuotes(line, idx) {
+					if !quoted[idx] {
 						t.Errorf(
 							"%s: init_hook line %q has an unquoted templated path; "+
 								"wrap it in double quotes so it survives project paths with spaces",
@@ -91,14 +92,48 @@ func templateIndices(line string) []int {
 	}
 }
 
-// insideDoubleQuotes reports whether the byte at pos is enclosed in an
-// unescaped pair of double quotes.
-func insideDoubleQuotes(line string, pos int) bool {
-	inQuotes := false
-	for i := 0; i < pos && i < len(line); i++ {
-		if line[i] == '"' && (i == 0 || line[i-1] != '\\') {
-			inQuotes = !inQuotes
+// shellQuotedPositions returns a slice the same length as line where element i
+// reports whether the byte at index i lies inside a properly closed shell quote
+// (single or double). It models the parts of POSIX shell quoting that matter for
+// word-splitting protection:
+//
+//   - Single and double quotes are mutually exclusive: a quote character is
+//     literal (does not open a region) while inside the other quote type.
+//   - A backslash escapes a double quote inside a double-quoted region.
+//   - A quote that is never closed leaves its bytes unquoted, so an
+//     unterminated segment is reported as unsafe rather than safe.
+func shellQuotedPositions(line string) []bool {
+	quoted := make([]bool, len(line))
+	const none = byte(0)
+	open := none // the quote char of the region currently open, or none
+	start := -1  // index of the opening quote of the current region
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+		switch open {
+		case none:
+			if c == '\'' || c == '"' {
+				open = c
+				start = i
+			}
+		case '\'':
+			// Inside single quotes nothing is special except the closing '.
+			if c == '\'' {
+				markQuoted(quoted, start+1, i)
+				open, start = none, -1
+			}
+		case '"':
+			if c == '"' && line[i-1] != '\\' {
+				markQuoted(quoted, start+1, i)
+				open, start = none, -1
+			}
 		}
 	}
-	return inQuotes
+	// A region left open at end-of-line was never closed: its bytes stay unquoted.
+	return quoted
+}
+
+func markQuoted(quoted []bool, lo, hi int) {
+	for i := lo; i < hi; i++ {
+		quoted[i] = true
+	}
 }
