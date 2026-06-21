@@ -316,6 +316,15 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		// which we don't want. So, one solution is to write the entire command and its arguments into the
 		// file itself, but that may not be great if the variables contain sensitive information. Instead,
 		// we save the entire command (with args) into the DEVBOX_RUN_CMD var, and then the script evals it.
+		//
+		// If cmdName is an alias defined in devbox.json, expand it to its command
+		// first, mirroring how a shell expands an alias that appears in command
+		// position. This lets `devbox run <alias>` work without an interactive
+		// shell (i.e. even when the init hook hasn't defined the alias).
+		runCmd := cmdName
+		if alias, ok := d.cfg.Aliases()[cmdName]; ok {
+			runCmd = alias
+		}
 		scriptBody, err := shellgen.ScriptBody(d, "eval $DEVBOX_RUN_CMD\n")
 		if err != nil {
 			return err
@@ -326,7 +335,7 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		}
 		script := shellgen.ScriptPath(d.ProjectDir(), arbitraryCmdFilename)
 		cmdWithArgs = []string{strconv.Quote(script)}
-		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
+		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{runCmd}, cmdArgs...), " ")
 	}
 
 	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)

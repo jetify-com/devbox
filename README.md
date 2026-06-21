@@ -1,7 +1,7 @@
 <picture>
- <source media="(prefers-color-scheme: dark)" srcset="docs/app/static/img/devbox_logo_dark.svg">
- <source media="(prefers-color-scheme: light)" srcset="docs/app/static/img/devbox_logo_light.svg">
- <img alt="Devbox logo." src="docs/app/static/img/devbox_logo_light.svg">
+ <source media="(prefers-color-scheme: dark)" srcset="assets/devbox_logo_dark.svg">
+ <source media="(prefers-color-scheme: light)" srcset="assets/devbox_logo_light.svg">
+ <img alt="Devbox logo." src="assets/devbox_logo_light.svg">
 </picture>
 
 # Devbox
@@ -12,7 +12,7 @@
 ![License: Apache 2.0](https://img.shields.io/github/license/jetify-com/devbox)
 [![version](https://img.shields.io/github/v/release/jetify-com/devbox?color=green&label=version&sort=semver)](https://github.com/jetify-com/devbox/releases)
 [![tests](https://github.com/jetify-com/devbox/actions/workflows/cli-post-release.yml/badge.svg)](https://github.com/jetify-com/devbox/actions/workflows/cli-release.yml?branch=main)
-[![Built with Devbox](https://www.jetify.com/img/devbox/shield_galaxy.svg)](https://github.com/jetify-com/devbox)
+[![Built with Devbox](https://www.jetify.com/img/devbox/shield_galaxy.svg)](https://github.com/jetify-com/devbox/blob/main/CONTRIBUTING.md)
 
 ## What is it?
 
@@ -32,11 +32,12 @@ internally powered by `nix`.
 
 ## Demo
 
-The example below creates a development environment with `python 2.7` and
+The example below creates a development environment with `python 3.10` and
 `go 1.18`, even though those packages are not installed in the underlying
-machine:
+machine. You can run commands in the environment with `devbox run`, or start an
+interactive shell in it with `devbox shell`:
 
-![screen cast](https://user-images.githubusercontent.com/279789/186491771-6b910175-18ec-4c65-92b0-ed1a91bb15ed.svg)
+![screen cast](assets/devbox_demo.svg)
 
 ## Installing Devbox
 

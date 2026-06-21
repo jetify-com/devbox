@@ -10,6 +10,9 @@
       ]
     }
   },
+  "aliases": {
+    "greet": "echo greeting-from-parent"
+  },
   "include": [
     "path:my-plugin/plugin.json"
   ]

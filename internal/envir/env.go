@@ -4,7 +4,12 @@
 package envir
 
 const (
-	DevboxCache   = "DEVBOX_CACHE"
+	DevboxCache = "DEVBOX_CACHE"
+	// DevboxConfig sets the default value for the --config flag, i.e. the path
+	// to the directory (or devbox.json file) of the devbox project to use. This
+	// is convenient for setting the config path in environments where passing
+	// the flag is awkward, such as a Dockerfile.
+	DevboxConfig  = "DEVBOX_CONFIG"
 	DevboxGateway = "DEVBOX_GATEWAY"
 	// DevboxLatestVersion is the latest version available of the devbox CLI binary.
 	// NOTE: it should NOT start with v (like 0.4.8)

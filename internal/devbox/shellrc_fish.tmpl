@@ -63,6 +63,14 @@ source "{{ .HooksFilePath }}"
 
 cd "$workingDir" || exit
 
+{{- if .ShellAliases }}
+
+# Set aliases defined in devbox.json. These run after the init hook so they can
+# rely on anything the hook sets up.
+{{ range .ShellAliases }}{{ . }}
+{{ end -}}
+{{- end }}
+
 {{- if .ShellStartTime }}
 # log that the shell is interactive now!
 devbox log shell-interactive {{ .ShellStartTime }}

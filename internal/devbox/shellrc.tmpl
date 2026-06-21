@@ -20,14 +20,14 @@ content readable.
 
 {{- if .OriginalInitPath -}}
 {{- if eq .ShellName "zsh" -}}
-if [ -f {{ .OriginalInitPath }} ]; then
+if [ -f "{{ .OriginalInitPath }}" ]; then
   local DEVBOX_ZDOTDIR="$ZDOTDIR"
   export ZDOTDIR="{{dirPath .OriginalInitPath}}"
   . "{{ .OriginalInitPath }}"
   export ZDOTDIR="$DEVBOX_ZDOTDIR"
 fi
 {{ else -}}
-if [ -f {{ .OriginalInitPath }} ]; then
+if [ -f "{{ .OriginalInitPath }}" ]; then
   . "{{ .OriginalInitPath }}"
 fi
 {{ end -}}
@@ -68,6 +68,14 @@ cd "{{ .ProjectDir }}" || exit
 . "{{ .HooksFilePath }}"
 
 cd "$working_dir" || exit
+
+{{- if .ShellAliases }}
+
+# Set aliases defined in devbox.json. These run after the init hook so they can
+# rely on anything the hook sets up.
+{{ range .ShellAliases }}{{ . }}
+{{ end -}}
+{{- end }}
 
 {{- if .ShellStartTime }}
 # log that the shell is interactive now!
