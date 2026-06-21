@@ -4,15 +4,51 @@
 package devbox
 
 import (
+	"fmt"
 	"os"
+	"regexp"
 	"slices"
 	"strings"
 
 	"go.jetify.com/devbox/internal/devbox/envpath"
 	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/ux"
 )
 
 const devboxSetPrefix = "__DEVBOX_SET_"
+
+// envNameRegexp matches a valid POSIX shell environment variable name: it must
+// start with a letter or underscore and contain only letters, digits, and
+// underscores. Names that don't match (e.g. a "//" comment key in devbox.json's
+// env block) can't be exported without producing invalid shell syntax.
+var envNameRegexp = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+
+func isValidEnvName(name string) bool {
+	return envNameRegexp.MatchString(name)
+}
+
+// warnInvalidEnvNames prints a single warning naming any environment variables
+// that were skipped because they aren't valid shell identifiers. The most common
+// cause is a "//" comment key in a devbox.json env block, which devbox would
+// otherwise emit as `export //=...` and break the entire shell with a cryptic
+// error.
+func warnInvalidEnvNames(names []string) {
+	if len(names) == 0 {
+		return
+	}
+	quoted := make([]string, len(names))
+	for i, name := range names {
+		quoted[i] = fmt.Sprintf("%q", name)
+	}
+	ux.Fwarningf(
+		os.Stderr,
+		"Skipping %d environment variable(s) with invalid names: %s.\n"+
+			"Environment variable names must match [a-zA-Z_][a-zA-Z0-9_]*. "+
+			"If these are \"//\" comments in your devbox.json env block, remove or rename them.\n",
+		len(names),
+		strings.Join(quoted, ", "),
+	)
+}
 
 // exportify formats vars as a line-separated string of shell export statements.
 // Each line is of the form `export key="value";` with any special characters in
@@ -28,6 +64,7 @@ func exportify(vars map[string]string) string {
 	}
 	slices.Sort(keys) // for reproducibility
 
+	var invalidNames []string
 	strb := strings.Builder{}
 	for _, key := range keys {
 		if strings.HasPrefix(key, "BASH_FUNC_") && strings.HasSuffix(key, "%%") {
@@ -41,7 +78,13 @@ func exportify(vars map[string]string) string {
 			strb.WriteString(funcName)
 			strb.WriteString("\n")
 		} else {
-			// Regular variable
+			// Regular variable. Skip names that aren't valid shell
+			// identifiers; exporting them would produce invalid syntax that
+			// breaks the whole shell (e.g. `export //=...`).
+			if !isValidEnvName(key) {
+				invalidNames = append(invalidNames, key)
+				continue
+			}
 			strb.WriteString("export ")
 			strb.WriteString(key)
 			strb.WriteString(`="`)
@@ -57,6 +100,7 @@ func exportify(vars map[string]string) string {
 			strb.WriteString("\";\n")
 		}
 	}
+	warnInvalidEnvNames(invalidNames)
 	return strings.TrimSpace(strb.String())
 }
 
@@ -82,6 +126,7 @@ func exportifyNushell(vars map[string]string) string {
 	}
 	slices.Sort(keys) // for reproducibility
 
+	var invalidNames []string
 	strb := strings.Builder{}
 	for _, key := range keys {
 		// Skip bash functions for nushell
@@ -91,6 +136,12 @@ func exportifyNushell(vars map[string]string) string {
 
 		// Skip nushell protected environment variables
 		if protectedVars[key] {
+			continue
+		}
+
+		// Skip names that aren't valid environment variable identifiers.
+		if !isValidEnvName(key) {
+			invalidNames = append(invalidNames, key)
 			continue
 		}
 
@@ -108,6 +159,7 @@ func exportifyNushell(vars map[string]string) string {
 		}
 		strb.WriteString("\"\n")
 	}
+	warnInvalidEnvNames(invalidNames)
 	return strings.TrimSpace(strb.String())
 }
 
