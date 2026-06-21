@@ -45,6 +45,12 @@ release:
   # exists, so a manually-written description is preserved.
   mode: keep-existing
   replace_existing_draft: false
+  # GitHub's "get release by tag" API doesn't return drafts, so this is required
+  # for goreleaser to actually find and attach assets to the existing draft.
+  use_existing_draft: true
+  # Allow re-runs on the same tag to overwrite already-uploaded assets instead of
+  # failing with a 422 conflict.
+  replace_existing_artifacts: true
   github:
     owner: jetify-com
     name: devbox
