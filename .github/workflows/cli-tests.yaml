@@ -133,11 +133,14 @@ jobs:
         # the devbox.json tests. We can require the other tests to complete before
         # merging, while keeping the others as an additional non-required signal
         run-project-tests: ["project-tests-only", "project-tests-off"]
-        # Run tests on:
-        # 1. the oldest supported nix version (Nixpkgs requires >= 2.18 as of 2026)
-        # 2. nix 2.19.2: version before nix profile changes
-        # 3. latest nix version (note, 2.20.1 introduced a new profile change)
-        nix-version: ["2.18.0", "2.19.2", "2.30.2"]
+        # NOTE: this job used to run a `nix-version` matrix, but the
+        # devbox-install-action we now use to install Nix doesn't let us pin a
+        # specific Nix version. The matrix legs were therefore running identical
+        # duplicates (3x the jobs, 3x the flake surface, no extra coverage), so
+        # it was removed. Cross-version coverage is currently provided by the
+        # separate `test-nix-versions` job. Once the install action supports
+        # specifying a Nix version, re-add the matrix here and wire it into the
+        # "Install devbox" step.
         exclude:
           # Only runs tests on macos if explicitly requested, or on a schedule
           - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-latest' }}"
