@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devpkg/pkgtype"
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/ux"
@@ -361,6 +362,17 @@ func (p *Package) UnmarshalJSON(data []byte) error {
 
 // parseVersionedName parses the name and version from package@version representation
 func parseVersionedName(versionedName string) (name, version string) {
+	// Flake references are not versioned Devbox packages, and they may
+	// legitimately contain an "@" in their URL (for example
+	// "git+ssh://git@gitlab.com/org/repo.git?dir=foo"). Splitting such a
+	// reference on "@" produces a name that is not unique across flakes that
+	// differ only by their query parameters (such as "dir"), which causes
+	// distinct inputs to be incorrectly deduplicated. Treat the whole
+	// reference as the name in that case. See issue #2704.
+	if pkgtype.IsFlake(versionedName) {
+		return versionedName, "" /*version*/
+	}
+
 	var found bool
 	name, version, found = searcher.ParseVersionedPackage(versionedName)
 	if !found {

@@ -1,6 +1,7 @@
 package devconfig
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -427,6 +428,34 @@ func TestDefault(t *testing.T) {
 	}
 	if string(inBytes) != string(outBytes) {
 		t.Errorf("got different JSON after load/save/load:\ninput:\n%s\noutput:\n%s", inBytes, outBytes)
+	}
+}
+
+// TestPackagesDoesNotDedupDistinctGitFlakes is a regression test for issue
+// #2704. Two git flake references that point at the same repository but
+// different subdirectories (via the "dir" query parameter) are distinct
+// inputs and must both be preserved by Config.Packages(). Previously they
+// were deduplicated because the "@" in the "git@host" portion of the URL was
+// mistaken for a version delimiter, giving both packages the same parsed name.
+func TestPackagesDoesNotDedupDistinctGitFlakes(t *testing.T) {
+	pkgA := "git+ssh://git@gitlab.com/org/repo.git?dir=betteralign&ref=master&rev=17d2bedca4884176e0d08078aa42311053e531c2"
+	pkgB := "git+ssh://git@gitlab.com/org/repo.git?dir=recovergoroutine&ref=master&rev=593d44945851d912f0c2158c46cc76da445adc43"
+
+	jsonConfig := fmt.Sprintf(`{"packages":[%q,%q]}`, pkgA, pkgB)
+	cfg, err := loadBytes([]byte(jsonConfig))
+	if err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+
+	packages := cfg.Packages(false /*includeRemovedTriggerPackages*/)
+	got := make([]string, len(packages))
+	for i, p := range packages {
+		got[i] = p.VersionedName()
+	}
+
+	want := []string{pkgA, pkgB}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Config.Packages() dropped a distinct git flake input (-want +got):\n%s", diff)
 	}
 }
 
