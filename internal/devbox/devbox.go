@@ -394,9 +394,9 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 	// Use the appropriate export format based on shell type
 	var envStr string
 	if opts.ShellFormat == devopt.ShellFormatNushell {
-		envStr = exportifyNushell(envs)
+		envStr = exportifyNushell(d.stderr, envs)
 	} else {
-		envStr = exportify(envs)
+		envStr = exportify(d.stderr, envs)
 	}
 
 	if opts.RunHooks {
