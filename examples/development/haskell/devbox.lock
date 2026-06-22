@@ -291,8 +291,8 @@
       }
     },
     "zlib@latest": {
-      "last_modified": "2024-02-21T16:29:05Z",
-      "resolved": "github:NixOS/nixpkgs/ac4c5a60bebfb783f1106d126b9f39cc8e809e0e#zlib",
+      "last_modified": "2024-08-04T20:22:49Z",
+      "resolved": "github:NixOS/nixpkgs/785feb91183a50959823ff9ba9ef673105259cd5#zlib",
       "source": "devbox-search",
       "version": "1.3.1",
       "systems": {
@@ -300,73 +300,73 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/5vxnm68mfnf34cjpf5brj3lg1ffd4k1d-zlib-1.3.1",
+              "path": "/nix/store/0ib2jb462dh3mg5yrv77g4zv7x5m2gy3-zlib-1.3.1",
               "default": true
             },
             {
               "name": "static",
-              "path": "/nix/store/663pj0krvcj3wid127r5i5gbv84q2d4k-zlib-1.3.1-static"
+              "path": "/nix/store/4fj2pdvfkjswrar0psn7hs83izdsz5p1-zlib-1.3.1-static"
             },
             {
               "name": "dev",
-              "path": "/nix/store/qz1q53jk52ffnpfmwhvqryp5ann0k693-zlib-1.3.1-dev"
+              "path": "/nix/store/f2xa3kz4yi0dld22v26gx7szqqvcrh32-zlib-1.3.1-dev"
             }
           ],
-          "store_path": "/nix/store/5vxnm68mfnf34cjpf5brj3lg1ffd4k1d-zlib-1.3.1"
+          "store_path": "/nix/store/0ib2jb462dh3mg5yrv77g4zv7x5m2gy3-zlib-1.3.1"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/954aj4dkyymarz6ww6m5zpn52p9hsdax-zlib-1.3.1",
+              "path": "/nix/store/s6wl1gipyv3zrg2qxg3r95fz8fr3wx9v-zlib-1.3.1",
               "default": true
             },
             {
               "name": "static",
-              "path": "/nix/store/rbgas3a7sadhhhicj86lw2fvrzjq69f1-zlib-1.3.1-static"
+              "path": "/nix/store/cfc0kw9iw953753my6hnbi3issc01i39-zlib-1.3.1-static"
             },
             {
               "name": "dev",
-              "path": "/nix/store/qv4acdy7fggx875sqai32ywifnhkviga-zlib-1.3.1-dev"
+              "path": "/nix/store/b1nffz5ndqpxfhbmga9rln62cqp2v69h-zlib-1.3.1-dev"
             }
           ],
-          "store_path": "/nix/store/954aj4dkyymarz6ww6m5zpn52p9hsdax-zlib-1.3.1"
+          "store_path": "/nix/store/s6wl1gipyv3zrg2qxg3r95fz8fr3wx9v-zlib-1.3.1"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/clnaq3v7r49zap82mg0jhdf01763yjja-zlib-1.3.1",
+              "path": "/nix/store/nkvmqr2m7p5i3grkrlypnj4jgp7gkl15-zlib-1.3.1",
               "default": true
             },
             {
               "name": "dev",
-              "path": "/nix/store/zblqarh0jgf1wi77kw7pwx6f5wcsdns4-zlib-1.3.1-dev"
+              "path": "/nix/store/bh4s6742cgmqqyxjc018b6wynlmbq2rc-zlib-1.3.1-dev"
             },
             {
               "name": "static",
-              "path": "/nix/store/sl3f07nmv0rl30jmspprimk4jmncrwd4-zlib-1.3.1-static"
+              "path": "/nix/store/sdsilixvl5q3mpi3yybns6k3malr28p2-zlib-1.3.1-static"
             }
           ],
-          "store_path": "/nix/store/clnaq3v7r49zap82mg0jhdf01763yjja-zlib-1.3.1"
+          "store_path": "/nix/store/nkvmqr2m7p5i3grkrlypnj4jgp7gkl15-zlib-1.3.1"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/ilr7br1ck7i6wcgfkynwpnjp7n964h38-zlib-1.3.1",
+              "path": "/nix/store/phnpfqk1j35nil4hqgaslqm9a1q2gffy-zlib-1.3.1",
               "default": true
             },
             {
               "name": "dev",
-              "path": "/nix/store/fhrwzmzvkj5yjsb4mb37w6smbg6banrs-zlib-1.3.1-dev"
+              "path": "/nix/store/fw1jqi1ia1sinknci20m95mybpidrbhc-zlib-1.3.1-dev"
             },
             {
               "name": "static",
-              "path": "/nix/store/si3l39cj0skq2gz0809nh6rhin879chy-zlib-1.3.1-static"
+              "path": "/nix/store/3wwn6ydps6ph61yzh0iiaib4a452h8k7-zlib-1.3.1-static"
             }
           ],
-          "store_path": "/nix/store/ilr7br1ck7i6wcgfkynwpnjp7n964h38-zlib-1.3.1"
+          "store_path": "/nix/store/phnpfqk1j35nil4hqgaslqm9a1q2gffy-zlib-1.3.1"
         }
       }
     }
