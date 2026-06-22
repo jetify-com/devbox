@@ -1,5 +1,5 @@
-{{- if .RootUser }}FROM jetpackio/devbox-root-user:latest
-{{- else }}FROM jetpackio/devbox:latest
+{{- if .RootUser }}FROM docker.io/jetpackio/devbox-root-user:latest
+{{- else }}FROM docker.io/jetpackio/devbox:latest
 {{- end}}
 
 # Installing your devbox project

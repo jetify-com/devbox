@@ -1,0 +1,13 @@
+exec devbox init
+
+# When run with --init-hook (as the direnv integration does via
+# `devbox shellenv --init-hook`), we are fully entering the Devbox
+# environment, so DEVBOX_SHELL_ENABLED must be exported. See issue #2746.
+exec devbox shellenv --init-hook
+stdout 'export DEVBOX_SHELL_ENABLED="1";'
+
+# Plain shellenv (used by the global integration `devbox global shellenv`,
+# which runs in every shell) must NOT set DEVBOX_SHELL_ENABLED, otherwise
+# shell-inception detection would break in every shell.
+exec devbox shellenv
+! stdout 'DEVBOX_SHELL_ENABLED'
