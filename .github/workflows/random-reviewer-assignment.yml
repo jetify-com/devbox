@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Randomly assign reviewer from team
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             const TRIAGE_USERNAME = 'Lagoja';
