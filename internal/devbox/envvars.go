@@ -5,6 +5,7 @@ package devbox
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"slices"
@@ -32,7 +33,7 @@ func isValidEnvName(name string) bool {
 // cause is a "//" comment key in a devbox.json env block, which devbox would
 // otherwise emit as `export //=...` and break the entire shell with a cryptic
 // error.
-func warnInvalidEnvNames(names []string) {
+func warnInvalidEnvNames(w io.Writer, names []string) {
 	if len(names) == 0 {
 		return
 	}
@@ -41,9 +42,9 @@ func warnInvalidEnvNames(names []string) {
 		quoted[i] = fmt.Sprintf("%q", name)
 	}
 	ux.Fwarningf(
-		os.Stderr,
+		w,
 		"Skipping %d environment variable(s) with invalid names: %s.\n"+
-			"Environment variable names must match [a-zA-Z_][a-zA-Z0-9_]*. "+
+			"Environment variable names must match ^[a-zA-Z_][a-zA-Z0-9_]*$. "+
 			"If these are \"//\" comments in your devbox.json env block, remove or rename them.\n",
 		len(names),
 		strings.Join(quoted, ", "),
@@ -55,7 +56,7 @@ func warnInvalidEnvNames(names []string) {
 // value escaped. This means that the shell will always interpret values as
 // literal strings; no variable expansion or command substitution will take
 // place.
-func exportify(vars map[string]string) string {
+func exportify(w io.Writer, vars map[string]string) string {
 	keys := make([]string, len(vars))
 	i := 0
 	for k := range vars {
@@ -100,13 +101,13 @@ func exportify(vars map[string]string) string {
 			strb.WriteString("\";\n")
 		}
 	}
-	warnInvalidEnvNames(invalidNames)
+	warnInvalidEnvNames(w, invalidNames)
 	return strings.TrimSpace(strb.String())
 }
 
 // exportifyNushell formats vars as nushell environment variable assignments.
 // Each line is of the form `$env.KEY = "value"` with special characters escaped.
-func exportifyNushell(vars map[string]string) string {
+func exportifyNushell(w io.Writer, vars map[string]string) string {
 	// Nushell protected environment variables that cannot be set manually
 	// See: https://www.nushell.sh/book/environment.html#automatic-environment-variables
 	protectedVars := map[string]bool{
@@ -159,7 +160,7 @@ func exportifyNushell(vars map[string]string) string {
 		}
 		strb.WriteString("\"\n")
 	}
-	warnInvalidEnvNames(invalidNames)
+	warnInvalidEnvNames(w, invalidNames)
 	return strings.TrimSpace(strb.String())
 }
 

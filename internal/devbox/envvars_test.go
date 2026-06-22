@@ -4,6 +4,7 @@
 package devbox
 
 import (
+	"io"
 	"strings"
 	"testing"
 )
@@ -28,7 +29,7 @@ func TestIsValidEnvName(t *testing.T) {
 // shell identifiers (e.g. a "//" comment key in devbox.json) are dropped instead
 // of producing invalid shell that breaks the whole shell.
 func TestExportifySkipsInvalidNames(t *testing.T) {
-	got := exportify(map[string]string{
+	got := exportify(io.Discard, map[string]string{
 		"GOOD":     "value",
 		"//":       "comment-as-json-hack",
 		"//ccache": "another comment",
@@ -39,7 +40,7 @@ func TestExportifySkipsInvalidNames(t *testing.T) {
 	if !strings.Contains(got, `export GOOD="value";`) {
 		t.Errorf("expected valid var to be exported, got:\n%s", got)
 	}
-	for _, bad := range []string{"//", "bad.name", "1leading"} {
+	for _, bad := range []string{"//", "//ccache", "bad.name", "1leading"} {
 		if strings.Contains(got, bad) {
 			t.Errorf("expected invalid name %q to be skipped, got:\n%s", bad, got)
 		}
@@ -47,7 +48,7 @@ func TestExportifySkipsInvalidNames(t *testing.T) {
 }
 
 func TestExportifyNushellSkipsInvalidNames(t *testing.T) {
-	got := exportifyNushell(map[string]string{
+	got := exportifyNushell(io.Discard, map[string]string{
 		"GOOD": "value",
 		"//":   "comment",
 	})
