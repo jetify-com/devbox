@@ -48,4 +48,5 @@ gem "webrick", "~> 1.8"
 # jekyll under Ruby 3.4+.
 gem "csv"
 gem "base64"
+gem "bigdecimal"
 gem "logger"
