@@ -9,11 +9,11 @@
     },
     "shell": {
         "init_hook": [
-            "node \"{{ .Virtenv }}/bin/setup-corepack.mjs\""
+            "node \"{{ .Virtenv }}/bin/setup-corepack.cjs\""
         ]
     },
     "create_files": {
       "{{ .Virtenv }}/corepack-bin": "",
-      "{{ .Virtenv }}/bin/setup-corepack.mjs": "nodejs/setup-corepack.mjs"
+      "{{ .Virtenv }}/bin/setup-corepack.cjs": "nodejs/setup-corepack.cjs"
     }
 }

@@ -379,6 +379,18 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 		return "", err
 	}
 
+	// When we also run the init hooks we are fully entering the Devbox
+	// environment (this is what the direnv integration does via
+	// `devbox shellenv --init-hook`), so mark the shell as Devbox-enabled.
+	// This mirrors Shell() and RunScript(), and matches the documented
+	// behavior that DEVBOX_SHELL_ENABLED is set whenever the environment is
+	// loaded. We intentionally gate this on RunHooks so that the global
+	// integration (`devbox global shellenv`, which does not run init hooks)
+	// does not set it in every shell and break shell-inception detection.
+	if opts.RunHooks {
+		envs[envir.DevboxShellEnabled] = "1"
+	}
+
 	// Use the appropriate export format based on shell type
 	var envStr string
 	if opts.ShellFormat == devopt.ShellFormatNushell {
