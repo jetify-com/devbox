@@ -58,14 +58,14 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
         with:
           go-version-file: ./go.mod
       - name: Build devbox
         run: go build -o dist/devbox ./cmd/devbox
       - name: Upload devbox artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
           path: ./dist/devbox
@@ -76,7 +76,7 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: crate-ci/typos@v1.16.26
 
   flake-test:
@@ -84,7 +84,7 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install devbox
         uses: jetify-com/devbox-install-action@jl/migrate-installer
         with:
@@ -104,7 +104,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install devbox
         uses: jetify-com/devbox-install-action@jl/migrate-installer
@@ -112,7 +112,7 @@ jobs:
           enable-cache: true
 
       - name: Mount golang cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/golangci-lint
@@ -160,9 +160,9 @@ jobs:
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Mount golang cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/go-build
@@ -240,9 +240,9 @@ jobs:
         use-detsys: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Download devbox
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
       - name: Add devbox to path
@@ -289,9 +289,9 @@ jobs:
         nix-version: [2.18.0, 2.19.2, 2.24.7, 2.30.2]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Download devbox
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: devbox-${{ runner.os }}-${{ runner.arch }}
       - name: Add devbox to path
