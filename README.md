@@ -1,7 +1,7 @@
 <picture>
- <source media="(prefers-color-scheme: dark)" srcset="docs/app/static/img/devbox_logo_dark.svg">
- <source media="(prefers-color-scheme: light)" srcset="docs/app/static/img/devbox_logo_light.svg">
- <img alt="Devbox logo." src="docs/app/static/img/devbox_logo_light.svg">
+ <source media="(prefers-color-scheme: dark)" srcset="assets/devbox_logo_dark.svg">
+ <source media="(prefers-color-scheme: light)" srcset="assets/devbox_logo_light.svg">
+ <img alt="Devbox logo." src="assets/devbox_logo_light.svg">
 </picture>
 
 # Devbox
@@ -12,7 +12,7 @@
 ![License: Apache 2.0](https://img.shields.io/github/license/jetify-com/devbox)
 [![version](https://img.shields.io/github/v/release/jetify-com/devbox?color=green&label=version&sort=semver)](https://github.com/jetify-com/devbox/releases)
 [![tests](https://github.com/jetify-com/devbox/actions/workflows/cli-post-release.yml/badge.svg)](https://github.com/jetify-com/devbox/actions/workflows/cli-release.yml?branch=main)
-[![Built with Devbox](https://www.jetify.com/img/devbox/shield_galaxy.svg)](https://www.jetify.com/docs/devbox/contributor-quickstart/)
+[![Built with Devbox](https://www.jetify.com/img/devbox/shield_galaxy.svg)](https://github.com/jetify-com/devbox/blob/main/CONTRIBUTING.md)
 
 ## What is it?
 
@@ -37,7 +37,7 @@ The example below creates a development environment with `python 3.10` and
 machine. You can run commands in the environment with `devbox run`, or start an
 interactive shell in it with `devbox shell`:
 
-![screen cast](docs/app/static/img/devbox_demo.svg)
+![screen cast](assets/devbox_demo.svg)
 
 ## Installing Devbox
 
@@ -166,7 +166,7 @@ Read more on the
 `devbox help` - see all commands
 
 See the
-[CLI Reference](https://www.jetify.com/docs/devbox/cli_reference/devbox/) for
+[CLI Reference](https://www.jetify.com/docs/devbox/cli-reference/devbox) for
 the full list of commands.
 
 ## Join our Developer Community

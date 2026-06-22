@@ -338,7 +338,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		HooksFilePath:      shellgen.ScriptPath(s.projectDir, shellgen.HooksFilename),
 		ShellStartTime:     telemetry.FormatShellStart(s.shellStartTime),
 		HistoryFile:        strings.TrimSpace(s.historyFile),
-		ExportEnv:          exportify(s.env),
+		ExportEnv:          exportify(s.devbox.stderr, s.env),
 		ShellName:          string(s.name),
 		ShellAliases:       s.aliasLines(),
 		RefreshAliasName:   s.devbox.refreshAliasName(),
