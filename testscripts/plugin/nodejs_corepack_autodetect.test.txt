@@ -30,6 +30,16 @@ cp package-esm.json package.json
 exec devbox run -- node -e 'console.log("case3-ok")'
 stdout 'case3-ok'
 
+# Case 4: a Node package that does not bundle Corepack, e.g. nodejs-slim
+# (issue #2791). Shell init must still succeed, and the plugin must print an
+# actionable warning instead of failing later with a cryptic
+# "corepack: command not found".
+exec devbox rm nodejs
+exec devbox add nodejs-slim
+exec devbox run -- node -e 'console.log("case4-ok")'
+stdout 'case4-ok'
+stderr 'command was not found'
+
 -- package-no-pkgmgr.json --
 {
   "name": "nodejs-corepack-autodetect",
