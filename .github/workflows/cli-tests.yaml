@@ -227,7 +227,11 @@ jobs:
           echo "::group::Resolved Nix config"
           nix show-config --extra-experimental-features nix-command
           echo "::endgroup::"
-          devbox run go test -v -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
+          # The testscripts are heavily I/O-bound (waiting on nix downloads and
+          # builds), so we oversubscribe the 4 vCPU runner with -parallel to let
+          # more scripts overlap their nix waits. See devbox.json for the
+          # equivalent flag on the project tests.
+          devbox run go test -v -parallel 8 -timeout $DEVBOX_GOLANG_TEST_TIMEOUT ./...
       - name: Run project (slow) tests
         if:  matrix.run-project-tests == 'project-tests-only'
         run: devbox run test-projects-only
