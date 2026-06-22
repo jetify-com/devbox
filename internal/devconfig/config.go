@@ -46,25 +46,26 @@ type Config struct {
 
 const defaultInitHook = "echo 'Welcome to devbox!' > /dev/null"
 
-func DefaultConfig() *Config {
-	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
-		"$schema": "https://raw.githubusercontent.com/jetify-com/devbox/%s/.schema/devbox.schema.json",
-		"packages": [],
-		"shell": {
-			"init_hook": [
-				"%s"
-			],
-			"scripts": {
-				"test": [
-					"echo \"Error: no test specified\" && exit 1"
-				]
-			}
+const defaultConfig = `{
+	"$schema": "https://raw.githubusercontent.com/jetify-com/devbox/%s/.schema/devbox.schema.json",
+	"packages": [],
+	"shell": {
+		"init_hook": [
+			"%s"
+		],
+		"scripts": {
+			"test": [
+				"echo \"Error: no test specified\" && exit 1"
+			]
 		}
 	}
-	`,
-		lo.Ternary(build.IsDev, "main", build.Version),
-		defaultInitHook,
-	)))
+}
+`
+
+func DefaultConfig() *Config {
+	schemaVersion := lo.Ternary(build.IsDev, "main", build.Version)
+
+	cfg, err := loadBytes([]byte(fmt.Sprintf(defaultConfig, schemaVersion, defaultInitHook)))
 	if err != nil {
 		panic("default devbox.json is invalid: " + err.Error())
 	}
