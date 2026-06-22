@@ -1,5 +1,6 @@
 events {}
 http{
+include mime.types;
 server {
          listen       $NGINX_WEB_PORT;
          listen       [::]:$NGINX_WEB_PORT;
