@@ -5,11 +5,11 @@ Used to produce the animated terminal demo in the README. The output strings
 mirror what the devbox CLI actually prints today, so refresh this script when
 those messages change.
 
-To regenerate docs/app/static/img/devbox_demo.svg:
+To regenerate assets/devbox_demo.svg:
 
     python3 scripts/gen_cast.py /tmp/devbox.cast
     npx svg-term-cli --in /tmp/devbox.cast \\
-        --out docs/app/static/img/devbox_demo.svg \\
+        --out assets/devbox_demo.svg \\
         --window --width 84 --height 26
 """
 import json
