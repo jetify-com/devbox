@@ -199,15 +199,17 @@ jobs:
           if [ ! -f /etc/nix/nix.conf ]; then
             echo "# Nix configuration" | sudo tee /etc/nix/nix.conf > /dev/null
           fi
-          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" | sudo tee -a /etc/nix/nix.conf
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" | sudo tee -a /etc/nix/nix.conf > /dev/null
 
           # Restart the Nix daemon so it picks up the new configuration.
           if [ "$RUNNER_OS" == "macOS" ]; then
             sudo launchctl stop org.nixos.nix-daemon || true
             sudo launchctl start org.nixos.nix-daemon || true
             sleep 2  # Give the daemon time to restart
-          else
-            sudo systemctl restart nix-daemon || true
+          elif systemctl list-unit-files nix-daemon.service >/dev/null 2>&1; then
+            # Only restart when the unit exists, and let a real restart failure
+            # fail the job rather than silently keeping the old config.
+            sudo systemctl restart nix-daemon
           fi
 
           # Also configure the user config as a backup for trusted-user setups.
