@@ -1,5 +1,6 @@
 {
   "name": "nodejs-npm",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "build": "echo building...",

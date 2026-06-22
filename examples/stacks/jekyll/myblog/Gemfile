@@ -41,3 +41,11 @@ gem "kramdown-parser-gfm"
 gem "http_parser.rb", "~> 0.6.0", :platforms => [:jruby]
 
 gem "webrick", "~> 1.8"
+
+# Ruby 3.4 moved these from default gems to bundled gems, so they must be
+# declared explicitly or a `require` fails with a LoadError (e.g. jekyll 3.9
+# does `require "csv"` on startup). Needed because `bundler@latest` runs
+# jekyll under Ruby 3.4+.
+gem "csv"
+gem "base64"
+gem "logger"
