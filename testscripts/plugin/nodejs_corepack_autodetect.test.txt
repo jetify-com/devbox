@@ -1,0 +1,43 @@
+# Tests the nodejs plugin's packageManager autodetect via Corepack.
+#
+# When Corepack is enabled, the plugin's init_hook activates the package
+# manager pinned in package.json's "packageManager" field. It must gracefully
+# no-op (without breaking shell init) when package.json is missing or has no
+# "packageManager" field.
+
+env DEVBOX_COREPACK_ENABLED=1
+
+# Pin to a Node version that still bundles Corepack (unbundled as of Node 25).
+exec devbox init
+exec devbox add nodejs@22
+
+# Case 1: package.json does not exist.
+# The autodetect hook must be skipped and shell init must still succeed.
+! exists package.json
+exec devbox run -- node -e 'console.log("case1-ok")'
+stdout 'case1-ok'
+
+# Case 2: package.json exists but has no "packageManager" field.
+# The autodetect hook must no-op and shell init must still succeed.
+cp package-no-pkgmgr.json package.json
+exec devbox run -- node -e 'console.log("case2-ok")'
+stdout 'case2-ok'
+
+# Case 3: package.json declares "type": "module" (issue #2856).
+# The setup-corepack script must still load (it uses a .cjs extension so it is
+# always treated as CommonJS) and shell init must still succeed.
+cp package-esm.json package.json
+exec devbox run -- node -e 'console.log("case3-ok")'
+stdout 'case3-ok'
+
+-- package-no-pkgmgr.json --
+{
+  "name": "nodejs-corepack-autodetect",
+  "version": "1.0.0"
+}
+-- package-esm.json --
+{
+  "name": "nodejs-corepack-autodetect",
+  "version": "1.0.0",
+  "type": "module"
+}

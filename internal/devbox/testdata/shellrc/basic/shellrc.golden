@@ -1,4 +1,4 @@
-if [ -f testdata/shellrc/basic/shellrc ]; then
+if [ -f "testdata/shellrc/basic/shellrc" ]; then
   . "testdata/shellrc/basic/shellrc"
 fi
 # Begin Devbox Post-init Hook
