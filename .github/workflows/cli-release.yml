@@ -21,7 +21,7 @@ on:
 permissions:
   contents: write
   pull-requests: read
-  id-token: write # Needed for aws-actions/configure-aws-credentials@v1
+  id-token: write # Needed for aws-actions/configure-aws-credentials@v6
 
 jobs:
   tests:
@@ -34,14 +34,16 @@ jobs:
     steps:
       - name: Notify jetpack.io slack of release status (only if tests fail)
         id: slack
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v3.0.3
         with:
+          # v2+ moved the webhook URL from the SLACK_WEBHOOK_URL env var to the
+          # `webhook` input and made `webhook-type` required.
+          webhook: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
             {
               "status": "test ${{ needs.tests.result }}"
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
 
   edge:
     runs-on: ubuntu-latest
@@ -50,7 +52,7 @@ jobs:
     if: ${{ inputs.create_edge_release || github.event.schedule }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Needed by goreleaser to browse history.
       - name: Determine edge tag
@@ -61,11 +63,11 @@ jobs:
           git tag "$EDGE_TAG"
           git push origin "$EDGE_TAG"
       - name: Set up go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: ./go.mod
       - name: Build snapshot with goreleaser
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
           version: latest
@@ -85,7 +87,7 @@ jobs:
           version:  ${{ env.EDGE_TAG }}
           version_prefix: "devbox@"
       - name: Publish snapshot release to GitHub
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           prerelease: true
           body: "${{ env.EDGE_TAG }} edge release"
@@ -95,7 +97,7 @@ jobs:
             dist/checksums.txt
             dist/*.tar.gz
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: us-west-2
@@ -113,11 +115,11 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Needed by goreleaser to browse history.
       - name: Set up go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: ./go.mod
       - name: Create Sentry release
@@ -131,7 +133,7 @@ jobs:
           version: ${{ github.ref }}
           version_prefix: "devbox@"
       - name: Release with goreleaser
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
           version: latest
@@ -145,11 +147,13 @@ jobs:
       - name: Notify jetpack.io slack of release status
         id: slack
         if: always()
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v3.0.3
         with:
+          # v2+ moved the webhook URL from the SLACK_WEBHOOK_URL env var to the
+          # `webhook` input and made `webhook-type` required.
+          webhook: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
             {
               "status": "release ${{ job.status }}"
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
