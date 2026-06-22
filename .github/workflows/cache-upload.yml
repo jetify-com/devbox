@@ -34,12 +34,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Build devbox from scratch because released devbox has a bug that prevents 
       # DEVBOX_API_TOKEN use
       # we can remove this after 0.10.6 is out.
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: ./go.mod
       - name: Build devbox
