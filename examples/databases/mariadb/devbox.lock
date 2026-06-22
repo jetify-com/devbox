@@ -2,6 +2,7 @@
   "lockfile_version": "1",
   "packages": {
     "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62": {
+      "last_modified": "1970-01-01T00:00:00Z",
       "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
     },
     "mariadb@latest": {
