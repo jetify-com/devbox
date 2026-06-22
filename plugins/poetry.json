@@ -1,6 +1,6 @@
 {
     "name": "poetry",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "This plugin automatically configures poetry to use the version of python installed in your Devbox shell, instead of the Python version that it is bundled with. The pyproject.toml location can be configured by setting DEVBOX_PYPROJECT_DIR (defaults to the devbox.json's directory).",
     "env": {
         "DEVBOX_DEFAULT_PYPROJECT_DIR": "{{ .DevboxProjectDir }}",
@@ -13,7 +13,7 @@
     },
     "shell": {
         "init_hook": [
-            "{{ .Virtenv }}/bin/initHook.sh"
+            "\"{{ .Virtenv }}/bin/initHook.sh\""
         ]
     }
 }
