@@ -59,12 +59,10 @@ jobs:
         # This tag is semver and works with semver.Compare
         run: echo "EDGE_TAG=0.0.0-edge.$(date +%Y-%m-%d)" >> $GITHUB_ENV
       - name: Set edge tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: ${{ env.EDGE_TAG }}
-          tag_prefix: ""
+        # Force so a same-day rerun (the edge tag already exists) is idempotent.
+        run: |
+          git tag -f "$EDGE_TAG"
+          git push -f origin "refs/tags/$EDGE_TAG"
       - name: Set up go
         uses: actions/setup-go@v6
         with:
