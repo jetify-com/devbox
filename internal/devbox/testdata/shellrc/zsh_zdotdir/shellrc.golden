@@ -1,4 +1,4 @@
-if [ -f testdata/shellrc/zsh_zdotdir/shellrc ]; then
+if [ -f "testdata/shellrc/zsh_zdotdir/shellrc" ]; then
   local DEVBOX_ZDOTDIR="$ZDOTDIR"
   export ZDOTDIR="testdata/shellrc/zsh_zdotdir"
   . "testdata/shellrc/zsh_zdotdir/shellrc"
