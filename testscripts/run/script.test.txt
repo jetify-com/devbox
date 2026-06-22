@@ -19,6 +19,14 @@ stdout 'with script'
 exec devbox run -- hello -g directly
 stdout 'directly'
 
+# An alias defined in devbox.json should be runnable via `devbox run`
+exec devbox run greet
+stdout 'hello from alias'
+
+# Alias arguments should be passed through to the expanded command
+exec devbox run echo_args one two
+stdout 'args: one two'
+
 # TBD: Bad init hook should result in non-zero exit code
 #exec devbox --config bad_init run test
 #! stdout 'test'
@@ -41,6 +49,10 @@ stdout 'directly'
       "hook_runs": "echo $HOOK",
       "hello_with_script": "hello -g \"with script\""
     }
+  },
+  "aliases": {
+    "greet": "echo \"hello from alias\"",
+    "echo_args": "echo args:"
   }
 }
 

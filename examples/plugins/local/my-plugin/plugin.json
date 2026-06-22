@@ -20,5 +20,11 @@ this is a comment inside the create files
           "echo \"ran local plugin init hook\"",
           "export MY_INIT_HOOK_VAR=BAR"
       ]
+  },
+  // Aliases defined by the plugin. "greet" is overridden by the parent
+  // devbox.json, while "plugin_only" is provided solely by this plugin.
+  "aliases": {
+      "greet": "echo greeting-from-plugin",
+      "plugin_only": "echo from-plugin"
   }
 }

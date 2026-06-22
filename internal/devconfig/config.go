@@ -46,23 +46,24 @@ type Config struct {
 
 const defaultInitHook = "echo 'Welcome to devbox!' > /dev/null"
 
-func DefaultConfig() *Config {
-	cfg, err := loadBytes([]byte(fmt.Sprintf(`{
-		"$schema": "https://raw.githubusercontent.com/jetify-com/devbox/%s/.schema/devbox.schema.json",
-		"packages": [],
-		"init_hook": [
-			"%s"
-		],
-		"scripts": {
-			"test": [
-				"echo \"Error: no test specified\" && exit 1"
-			]
-		}
+const defaultConfig = `{
+	"$schema": "https://raw.githubusercontent.com/jetify-com/devbox/%s/.schema/devbox.schema.json",
+	"packages": [],
+	"init_hook": [
+		"%s"
+	],
+	"scripts": {
+		"test": [
+			"echo \"Error: no test specified\" && exit 1"
+		]
 	}
-	`,
-		lo.Ternary(build.IsDev, "main", build.Version),
-		defaultInitHook,
-	)))
+}
+`
+
+func DefaultConfig() *Config {
+	schemaVersion := lo.Ternary(build.IsDev, "main", build.Version)
+
+	cfg, err := loadBytes([]byte(fmt.Sprintf(defaultConfig, schemaVersion, defaultInitHook)))
 	if err != nil {
 		panic("default devbox.json is invalid: " + err.Error())
 	}
@@ -364,6 +365,18 @@ func (c *Config) InitHook() *shellcmd.Commands {
 	}
 	commands.Cmds = append(commands.Cmds, c.Root.InitHook().Cmds...)
 	return &commands
+}
+
+// Aliases returns the merged shell aliases from this config and any included
+// configs (plugins). Aliases defined in the root config take precedence over
+// those from included configs.
+func (c *Config) Aliases() map[string]string {
+	aliases := map[string]string{}
+	for _, i := range c.included {
+		maps.Copy(aliases, i.Aliases())
+	}
+	maps.Copy(aliases, c.Root.Aliases)
+	return aliases
 }
 
 func (c *Config) Scripts() configfile.Scripts {

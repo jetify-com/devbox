@@ -297,6 +297,106 @@ func mkNestedDirs(t *testing.T) (root, child, nested string) {
 	return root, child, nested
 }
 
+func TestAliases(t *testing.T) {
+	dir := t.TempDir()
+	cfgJSON := `{
+  "shell": {
+    "init_hook": "echo hi"
+  },
+  "aliases": {
+    "ll": "ls -la",
+    "gs": "git status"
+  }
+}`
+	if err := os.WriteFile(filepath.Join(dir, configfile.DefaultName), []byte(cfgJSON), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := Open(dir)
+	if err != nil {
+		t.Fatalf("Open error: %v", err)
+	}
+	got := cfg.Aliases()
+	want := map[string]string{"ll": "ls -la", "gs": "git status"}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Aliases() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestAliasesEmpty(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(
+		filepath.Join(dir, configfile.DefaultName),
+		[]byte(`{"shell": {"init_hook": "echo hi"}}`),
+		0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := Open(dir)
+	if err != nil {
+		t.Fatalf("Open error: %v", err)
+	}
+	if got := cfg.Aliases(); len(got) != 0 {
+		t.Errorf("Aliases() = %v, want empty", got)
+	}
+}
+
+func TestAliasesInvalid(t *testing.T) {
+	tests := map[string]string{
+		"empty name":         `{"aliases": {"": "ls -la"}}`,
+		"whitespace name":    `{"aliases": {"bad name": "ls -la"}}`,
+		"empty command":      `{"aliases": {"ll": ""}}`,
+		"whitespace command": `{"aliases": {"ll": "   "}}`,
+	}
+	for name, cfgJSON := range tests {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			if err := os.WriteFile(
+				filepath.Join(dir, configfile.DefaultName), []byte(cfgJSON), 0o644,
+			); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := Open(dir); err == nil {
+				t.Errorf("Open(%q) succeeded, want validation error", cfgJSON)
+			}
+		})
+	}
+}
+
+// TestExampleLocalPluginAliases loads the examples/plugins/local project and
+// verifies that aliases defined in the plugin are merged into the parent
+// config, and that an alias defined in the parent overrides the plugin's.
+func TestExampleLocalPluginAliases(t *testing.T) {
+	exampleDir, err := filepath.Abs(
+		filepath.Join("..", "..", "examples", "plugins", "local"),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := Open(exampleDir)
+	if err != nil {
+		t.Fatalf("Open(%q) error: %v", exampleDir, err)
+	}
+
+	lockfile, err := lock.GetFile(&testLockProject{dir: exampleDir})
+	if err != nil {
+		t.Fatalf("lock.GetFile error: %v", err)
+	}
+	if err := cfg.LoadRecursive(lockfile); err != nil {
+		t.Fatalf("LoadRecursive error: %v", err)
+	}
+
+	want := map[string]string{
+		// Parent devbox.json overrides the plugin's "greet" alias.
+		"greet": "echo greeting-from-parent",
+		// "plugin_only" is contributed solely by the plugin.
+		"plugin_only": "echo from-plugin",
+	}
+	if diff := cmp.Diff(want, cfg.Aliases()); diff != "" {
+		t.Errorf("Aliases() mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestDefault(t *testing.T) {
 	path := filepath.Join(t.TempDir())
 	cfg := DefaultConfig()
