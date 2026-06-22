@@ -38,7 +38,7 @@ exec devbox rm nodejs
 exec devbox add nodejs-slim
 exec devbox run -- node -e 'console.log("case4-ok")'
 stdout 'case4-ok'
-stderr 'command was not found'
+stderr 'Warning: DEVBOX_COREPACK_ENABLED is set but the .corepack. command was not found'
 
 -- package-no-pkgmgr.json --
 {

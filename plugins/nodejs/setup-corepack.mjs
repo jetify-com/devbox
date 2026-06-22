@@ -27,8 +27,9 @@ if (!corepackBinDir) {
   process.exit(0);
 }
 
-// Enable Corepack, installing the pnpm/yarn/npm shims into corepackBinDir. If
-// Corepack isn't available there's nothing more to do, so skip activation.
+// Enable Corepack, installing the pnpm/yarn/npm shims into corepackBinDir.
+// Only attempt package-manager activation if enabling succeeded; if it failed
+// for any reason (Corepack missing, offline, etc.) there's nothing to activate.
 if (enableCorepack()) {
   // Activate the package manager pinned in package.json's "packageManager"
   // field.
