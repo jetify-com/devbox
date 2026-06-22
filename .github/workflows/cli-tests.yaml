@@ -133,6 +133,12 @@ jobs:
         # the devbox.json tests. We can require the other tests to complete before
         # merging, while keeping the others as an additional non-required signal
         run-project-tests: ["project-tests-only", "project-tests-off"]
+        # The testscripts are bound by per-runner nix work (downloading package
+        # closures and evaluating flakes), which barely parallelizes within a
+        # single runner. We instead shard the scripts across multiple runners.
+        # The runner count here must match DEVBOX_TEST_SHARD_TOTAL below. The
+        # `test-result` job aggregates all shards into one required status check.
+        shard: [0, 1, 2]
         # NOTE: this job used to run a `nix-version` matrix, but the
         # devbox-install-action we now use to install Nix doesn't let us pin a
         # specific Nix version. The matrix legs were therefore running identical
@@ -153,6 +159,10 @@ jobs:
       # But we allow overriding via inputs.example-debug
       DEVBOX_DEBUG: ${{ (matrix.run-project-tests == 'project-tests-off' || inputs.example-debug) && '1' || '0' }}
       DEVBOX_GOLANG_TEST_TIMEOUT: "${{ (github.ref == 'refs/heads/main' || inputs.run-mac-tests) && '1h' || '30m' }}"
+      # Shard the testscripts across runners. DEVBOX_TEST_SHARD_TOTAL must match
+      # the length of the `shard` matrix axis above.
+      DEVBOX_TEST_SHARD_INDEX: ${{ matrix.shard }}
+      DEVBOX_TEST_SHARD_TOTAL: 3
     steps:
       - name: clear directories to reduce disk usage
         # https://github.com/actions/runner-images/issues/2840#issuecomment-1284059930
@@ -231,6 +241,26 @@ jobs:
       - name: Run project (slow) tests
         if:  matrix.run-project-tests == 'project-tests-only'
         run: devbox run test-projects-only
+
+  # Aggregates the sharded `test` matrix into a single status check. Because the
+  # shard matrix produces per-shard job names (e.g.
+  # "test (not-main, ubuntu-latest, project-tests-off, 0)"), branch protection
+  # should require this stable `test-result` check instead of the individual
+  # matrix jobs.
+  test-result:
+    name: test-result
+    if: always()
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check that all test shards passed
+        run: |
+          result="${{ needs.test.result }}"
+          echo "Aggregate result of the test matrix: $result"
+          if [ "$result" != "success" ]; then
+            echo "::error::One or more test shards did not succeed ($result)."
+            exit 1
+          fi
 
   auto-nix-install: # ensure Devbox installs nix and works properly after installation.
     needs: build-devbox
