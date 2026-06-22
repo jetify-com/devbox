@@ -23,8 +23,21 @@ cp package-no-pkgmgr.json package.json
 exec devbox run -- node -e 'console.log("case2-ok")'
 stdout 'case2-ok'
 
+# Case 3: package.json declares "type": "module" (issue #2856).
+# The setup-corepack script must still load (it uses a .mjs extension so it is
+# always treated as an ES module) and shell init must still succeed.
+cp package-esm.json package.json
+exec devbox run -- node -e 'console.log("case3-ok")'
+stdout 'case3-ok'
+
 -- package-no-pkgmgr.json --
 {
   "name": "nodejs-corepack-autodetect",
   "version": "1.0.0"
+}
+-- package-esm.json --
+{
+  "name": "nodejs-corepack-autodetect",
+  "version": "1.0.0",
+  "type": "module"
 }
