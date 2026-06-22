@@ -468,13 +468,29 @@ func (c *configAST) setEnv(env map[string]string) {
 
 // migrateShellToTopLevel moves the deprecated "shell.init_hook" and
 // "shell.scripts" members up to the root object and removes the "shell" object.
-// Comments and formatting are preserved. Members that already exist at the top
-// level are not overwritten.
+// Comments and formatting are preserved. Scalar fields (init_hook) that already
+// exist at the top level take precedence and are not overwritten. For the
+// "scripts" object, legacy scripts are merged into the existing top-level
+// "scripts" object per name, with top-level entries winning on conflicts. This
+// mirrors ConfigFile.Scripts()/MigrateShell().
 func (c *configAST) migrateShellToTopLevel() {
 	rootObj := c.root.Value.(*hujson.Object)
 	shellIdx := c.memberIndex(rootObj, "shell")
 	if shellIdx == -1 {
 		return
+	}
+
+	// Capture any comment attached to the "shell" member itself so it isn't
+	// dropped when the member is deleted below. It is transferred to the first
+	// field that ends up holding migrated content.
+	shellComment := slices.Clone(rootObj.Members[shellIdx].Name.BeforeExtra)
+	transferShellComment := func(member *hujson.ObjectMember) {
+		if !bytes.Contains(shellComment, []byte("//")) &&
+			!bytes.Contains(shellComment, []byte("/*")) {
+			return
+		}
+		member.Name.BeforeExtra = append(shellComment, member.Name.BeforeExtra...)
+		shellComment = nil
 	}
 
 	shellObj, ok := rootObj.Members[shellIdx].Value.Value.(*hujson.Object)
@@ -490,8 +506,19 @@ func (c *configAST) migrateShellToTopLevel() {
 		if srcIdx == -1 {
 			continue
 		}
-		// Don't clobber a field that already exists at the top level.
-		if c.memberIndex(rootObj, key) != -1 {
+		if dstIdx := c.memberIndex(rootObj, key); dstIdx != -1 {
+			// A field with this name already exists at the top level. For the
+			// "scripts" object, merge in any legacy scripts whose names aren't
+			// already present (top-level entries win). Other fields (init_hook)
+			// keep their existing top-level value.
+			if key == "scripts" {
+				if dstObj, ok := rootObj.Members[dstIdx].Value.Value.(*hujson.Object); ok {
+					if srcObj, ok := shellObj.Members[srcIdx].Value.Value.(*hujson.Object); ok {
+						c.mergeScriptMembers(dstObj, srcObj)
+					}
+				}
+			}
+			transferShellComment(&rootObj.Members[dstIdx])
 			continue
 		}
 		member := shellObj.Members[srcIdx]
@@ -499,6 +526,7 @@ func (c *configAST) migrateShellToTopLevel() {
 		if !slices.Contains(member.Name.BeforeExtra, '\n') {
 			member.Name.BeforeExtra = append([]byte{'\n'}, member.Name.BeforeExtra...)
 		}
+		transferShellComment(&member)
 		rootObj.Members = append(rootObj.Members, member)
 	}
 
@@ -506,4 +534,22 @@ func (c *configAST) migrateShellToTopLevel() {
 	shellIdx = c.memberIndex(rootObj, "shell")
 	rootObj.Members = slices.Delete(rootObj.Members, shellIdx, shellIdx+1)
 	c.root.Format()
+}
+
+// mergeScriptMembers copies script members from src into dst whenever a script
+// with the same name doesn't already exist in dst. Existing dst entries take
+// precedence, matching ConfigFile.Scripts()/MigrateShell().
+func (c *configAST) mergeScriptMembers(dst, src *hujson.Object) {
+	for i := range src.Members {
+		name := src.Members[i].Name.Value.(hujson.Literal).String()
+		if c.memberIndex(dst, name) != -1 {
+			continue
+		}
+		member := src.Members[i]
+		// Ensure the merged script starts on its own line.
+		if !slices.Contains(member.Name.BeforeExtra, '\n') {
+			member.Name.BeforeExtra = append([]byte{'\n'}, member.Name.BeforeExtra...)
+		}
+		dst.Members = append(dst.Members, member)
+	}
 }

@@ -110,6 +110,72 @@ func TestMigrateShellPreservesComments(t *testing.T) {
 		"expected comment to be preserved, got:\n%s", out)
 }
 
+// TestMigrateShellMergesScripts verifies that when a top-level "scripts" object
+// already exists, legacy shell scripts are merged in per name (top-level wins on
+// conflicts) instead of being dropped wholesale.
+func TestMigrateShellMergesScripts(t *testing.T) {
+	const json = `{
+		"scripts": {
+			"build": "go build ./top"
+		},
+		"shell": {
+			"scripts": {
+				"build": "go build ./legacy",
+				"test": "go test ./..."
+			}
+		}
+	}`
+
+	cfg, err := LoadBytes([]byte(json))
+	require.NoError(t, err)
+	cfg.MigrateShell()
+
+	scripts := cfg.Scripts()
+	require.Contains(t, scripts, "build")
+	require.Contains(t, scripts, "test", "non-conflicting legacy script should be merged")
+	// Top-level entry wins on a name conflict.
+	assert.Equal(t, []string{"go build ./top"}, scripts["build"].Cmds)
+	assert.Equal(t, []string{"go test ./..."}, scripts["test"].Cmds)
+
+	out := string(cfg.Bytes())
+	assert.NotContains(t, out, `"shell"`)
+
+	// The migrated config should round-trip and keep both scripts.
+	reparsed, err := LoadBytes(cfg.Bytes())
+	require.NoError(t, err)
+	assert.False(t, reparsed.UsesDeprecatedShellField())
+	require.Contains(t, reparsed.Scripts(), "build")
+	require.Contains(t, reparsed.Scripts(), "test")
+}
+
+// TestMigrateShellPreservesShellComment verifies that a comment attached to the
+// "shell" member itself is transferred to a migrated field instead of being
+// dropped when the "shell" object is removed.
+func TestMigrateShellPreservesShellComment(t *testing.T) {
+	const json = `{
+		// configure the shell
+		"shell": {
+			"init_hook": ["echo hi"],
+			"scripts": {
+				"build": "go build ./..."
+			}
+		}
+	}`
+
+	cfg, err := LoadBytes([]byte(json))
+	require.NoError(t, err)
+	cfg.MigrateShell()
+
+	out := string(cfg.Bytes())
+	assert.NotContains(t, out, `"shell"`)
+	assert.True(t, strings.Contains(out, "configure the shell"),
+		"expected the comment on the shell member to be preserved, got:\n%s", out)
+
+	// The migrated config should still parse.
+	_, err = LoadBytes(cfg.Bytes())
+	require.NoError(t, err)
+}
+
 // TestMigrateShellNoShell is a no-op when there's no shell object.
 func TestMigrateShellNoShell(t *testing.T) {
 	cfg, err := LoadBytes([]byte(`{"packages": []}`))
