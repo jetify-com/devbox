@@ -316,6 +316,15 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		// which we don't want. So, one solution is to write the entire command and its arguments into the
 		// file itself, but that may not be great if the variables contain sensitive information. Instead,
 		// we save the entire command (with args) into the DEVBOX_RUN_CMD var, and then the script evals it.
+		//
+		// If cmdName is an alias defined in devbox.json, expand it to its command
+		// first, mirroring how a shell expands an alias that appears in command
+		// position. This lets `devbox run <alias>` work without an interactive
+		// shell (i.e. even when the init hook hasn't defined the alias).
+		runCmd := cmdName
+		if alias, ok := d.cfg.Aliases()[cmdName]; ok {
+			runCmd = alias
+		}
 		scriptBody, err := shellgen.ScriptBody(d, "eval $DEVBOX_RUN_CMD\n")
 		if err != nil {
 			return err
@@ -326,7 +335,7 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		}
 		script := shellgen.ScriptPath(d.ProjectDir(), arbitraryCmdFilename)
 		cmdWithArgs = []string{strconv.Quote(script)}
-		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{cmdName}, cmdArgs...), " ")
+		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{runCmd}, cmdArgs...), " ")
 	}
 
 	return nix.RunScript(d.projectDir, strings.Join(cmdWithArgs, " "), env)
@@ -370,12 +379,24 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 		return "", err
 	}
 
+	// When we also run the init hooks we are fully entering the Devbox
+	// environment (this is what the direnv integration does via
+	// `devbox shellenv --init-hook`), so mark the shell as Devbox-enabled.
+	// This mirrors Shell() and RunScript(), and matches the documented
+	// behavior that DEVBOX_SHELL_ENABLED is set whenever the environment is
+	// loaded. We intentionally gate this on RunHooks so that the global
+	// integration (`devbox global shellenv`, which does not run init hooks)
+	// does not set it in every shell and break shell-inception detection.
+	if opts.RunHooks {
+		envs[envir.DevboxShellEnabled] = "1"
+	}
+
 	// Use the appropriate export format based on shell type
 	var envStr string
 	if opts.ShellFormat == devopt.ShellFormatNushell {
-		envStr = exportifyNushell(envs)
+		envStr = exportifyNushell(d.stderr, envs)
 	} else {
-		envStr = exportify(envs)
+		envStr = exportify(d.stderr, envs)
 	}
 
 	if opts.RunHooks {

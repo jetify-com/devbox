@@ -129,6 +129,16 @@
             },
             "additionalProperties": false
         },
+        "aliases": {
+            "description": "Shell aliases set up when entering the devbox shell, after the init_hook runs. Works in bash, zsh, and fish.",
+            "type": "object",
+            "patternProperties": {
+                ".*": {
+                    "description": "The command the alias expands to.",
+                    "type": "string"
+                }
+            }
+        },
         "include": {
             "description": "List of additional plugins to activate within your devbox shell",
             "type": "array",

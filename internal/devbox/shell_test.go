@@ -8,6 +8,7 @@ import (
 	"flag"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devconfig"
 	"go.jetify.com/devbox/internal/envir"
 	"go.jetify.com/devbox/internal/shellgen"
 	"go.jetify.com/devbox/internal/xdg"
@@ -108,6 +110,86 @@ Generated shellrc != shellrc.golden (-shellrc.golden +shellrc):
 If the new shellrc is correct, you can update the golden file with:
 
 	go test -run "^%s$" -update`), diff, t.Name())
+			}
+		})
+	}
+}
+
+func TestWriteDevboxShellrcAliases(t *testing.T) {
+	cfgJSON := `{
+  "shell": {
+    "init_hook": "echo hi"
+  },
+  "aliases": {
+    "ll": "ls -la",
+    "gs": "git status",
+    "say": "echo it's here"
+  }
+}`
+	dir := t.TempDir()
+	if err := os.WriteFile(
+		filepath.Join(dir, "devbox.json"), []byte(cfgJSON), 0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := devconfig.Open(dir)
+	if err != nil {
+		t.Fatalf("Open config error: %v", err)
+	}
+
+	tests := []struct {
+		shell name
+		want  []string
+	}{
+		{
+			shell: shBash,
+			want: []string{
+				`alias gs='git status'`,
+				`alias ll='ls -la'`,
+				`alias say='echo it'\''s here'`,
+			},
+		},
+		{
+			shell: shFish,
+			want: []string{
+				`alias gs='git status'`,
+				`alias ll='ls -la'`,
+				`alias say='echo it\'s here'`,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(string(test.shell), func(t *testing.T) {
+			s := &DevboxShell{
+				devbox:     &Devbox{projectDir: dir, cfg: cfg},
+				projectDir: dir,
+				name:       test.shell,
+			}
+			path, err := s.writeDevboxShellrc()
+			if err != nil {
+				t.Fatalf("writeDevboxShellrc error: %v", err)
+			}
+			b, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got := string(b)
+
+			// Aliases must appear after the init hook is sourced.
+			hookIdx := strings.Index(got, ".hooks")
+			if hookIdx < 0 {
+				t.Fatalf("hooks not sourced in shellrc:\n%s", got)
+			}
+			for _, line := range test.want {
+				idx := strings.Index(got, line)
+				if idx < 0 {
+					t.Errorf("expected alias line %q in shellrc:\n%s", line, got)
+					continue
+				}
+				if idx < hookIdx {
+					t.Errorf("alias %q injected before init hook was sourced", line)
+				}
 			}
 		})
 	}
@@ -404,5 +486,64 @@ func TestWriteDevboxShellrcWithZDOTDIR(t *testing.T) {
 	// Check that it sources the custom .zshrc
 	if !strings.Contains(contentStr, customZshrcPath) {
 		t.Error("Expected shellrc to source the custom .zshrc file")
+	}
+}
+
+// TestWriteDevboxShellrcZDOTDIRWithSpaces guards against a regression where the
+// `[ -f <path> ]` guard around sourcing the user's shellrc was unquoted. When
+// ZDOTDIR contains spaces (e.g. ".../Application Support/..."), the unquoted
+// path expands to multiple words and `[` fails with "too many arguments", so
+// the user's real shellrc never gets sourced.
+func TestWriteDevboxShellrcZDOTDIRWithSpaces(t *testing.T) {
+	// A ZDOTDIR with a space, like the one some terminal integrations inject.
+	zdotdir := filepath.Join(t.TempDir(), "Application Support", "zsh")
+	if err := os.MkdirAll(zdotdir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("ZDOTDIR", zdotdir)
+
+	zshrcPath := filepath.Join(zdotdir, ".zshrc")
+	if err := os.WriteFile(zshrcPath, []byte("# user zshrc"), 0o644); err != nil {
+		t.Fatalf("Failed to create test .zshrc: %v", err)
+	}
+
+	shell := initShellBinaryFields("/usr/bin/zsh")
+	shell.devbox = &Devbox{projectDir: "/test/project"}
+	shell.projectDir = "/test/project"
+
+	shellrcPath, err := shell.writeDevboxShellrc()
+	if err != nil {
+		t.Fatalf("Failed to write devbox shellrc: %v", err)
+	}
+	content, err := os.ReadFile(shellrcPath)
+	if err != nil {
+		t.Fatalf("Failed to read generated shellrc: %v", err)
+	}
+	contentStr := string(content)
+
+	// The guard must quote the path so the space doesn't split into words.
+	wantGuard := `if [ -f "` + zshrcPath + `" ]; then`
+	if !strings.Contains(contentStr, wantGuard) {
+		t.Errorf("expected quoted guard %q in generated shellrc:\n%s", wantGuard, contentStr)
+	}
+
+	// Run the actual generated guard line through /bin/sh to prove it doesn't
+	// error with "too many arguments" on a space-containing path.
+	var guardLine string
+	for _, line := range strings.Split(contentStr, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "if [ -f ") {
+			guardLine = strings.TrimSpace(line) + " echo sourced; fi"
+			break
+		}
+	}
+	if guardLine == "" {
+		t.Fatalf("could not find guard line in generated shellrc:\n%s", contentStr)
+	}
+	out, err := exec.Command("/bin/sh", "-c", guardLine).CombinedOutput()
+	if err != nil {
+		t.Fatalf("guard line failed to execute (%v): %s\nline: %s", err, out, guardLine)
+	}
+	if strings.TrimSpace(string(out)) != "sourced" {
+		t.Errorf("guard line did not take the true branch; output: %q\nline: %s", out, guardLine)
 	}
 }
