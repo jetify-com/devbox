@@ -41,3 +41,10 @@ gem "kramdown-parser-gfm"
 gem "http_parser.rb", "~> 0.6.0", :platforms => [:jruby]
 
 gem "webrick", "~> 1.8"
+
+# csv, base64, and bigdecimal were removed from Ruby's default gems in
+# Ruby 3.4, but jekyll 3.9 (and its dependencies) still require them. Declare
+# them explicitly so they resolve on Ruby >= 3.4.
+gem "csv"
+gem "base64"
+gem "bigdecimal"

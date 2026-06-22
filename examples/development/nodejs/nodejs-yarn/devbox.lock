@@ -1,6 +1,54 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "corepack@latest": {
+      "last_modified": "2026-05-21T08:15:18Z",
+      "resolved": "github:NixOS/nixpkgs/4a29d733e8a7d5b824c3d8c958a946a9867b3eb2#corepack",
+      "source": "devbox-search",
+      "version": "0.35.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/l3awryym5fh66w3ilk9f1gcxkq06fi2r-corepack-0.35.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/l3awryym5fh66w3ilk9f1gcxkq06fi2r-corepack-0.35.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/mnqyciqkz9fnmsy6i6w7d7hlc8arq819-corepack-0.35.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/mnqyciqkz9fnmsy6i6w7d7hlc8arq819-corepack-0.35.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/yzwg1favqdxjgj20jax6isk3m87kbyba-corepack-0.35.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/yzwg1favqdxjgj20jax6isk3m87kbyba-corepack-0.35.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/pjqdmkidmqzbpi34xbs0wnl20ra5h9y0-corepack-0.35.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/pjqdmkidmqzbpi34xbs0wnl20ra5h9y0-corepack-0.35.0"
+        }
+      }
+    },
     "github:NixOS/nixpkgs/nixpkgs-unstable": {
       "last_modified": "2026-06-01T17:55:45Z",
       "resolved": "github:NixOS/nixpkgs/4df1b885d76a54e1aa1a318f8d16fd6005b6401f?lastModified=1780336545&narHash=sha256-vhVhuXzFrIOfcssC%2F9hDHx7MHzDKjF3keHuREOQqQiQ%3D"
