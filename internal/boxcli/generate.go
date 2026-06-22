@@ -6,6 +6,7 @@ package boxcli
 import (
 	"cmp"
 	"fmt"
+	"path/filepath"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -16,6 +17,7 @@ import (
 	"go.jetify.com/devbox/internal/devbox"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/devbox/docgen"
+	"go.jetify.com/devbox/internal/devbox/flakegen"
 )
 
 type generateCmdFlags struct {
@@ -44,6 +46,14 @@ type GenerateAliasCmdFlags struct {
 	noPrefix bool
 }
 
+type genFlakeWrapperCmdFlags struct {
+	config  configFlags
+	force   bool
+	nixpkgs string
+	attr    string
+	print   bool
+}
+
 func generateCmd() *cobra.Command {
 	flags := &generateCmdFlags{}
 
@@ -59,6 +69,7 @@ func generateCmd() *cobra.Command {
 	command.AddCommand(dockerfileCmd())
 	command.AddCommand(debugCmd())
 	command.AddCommand(direnvCmd())
+	command.AddCommand(genFlakeWrapperCmd())
 	command.AddCommand(genReadmeCmd())
 	flags.config.register(command)
 
@@ -255,6 +266,46 @@ func genAliasCmd() *cobra.Command {
 	return command
 }
 
+func genFlakeWrapperCmd() *cobra.Command {
+	flags := &genFlakeWrapperCmdFlags{}
+	command := &cobra.Command{
+		Use:   "flake-wrapper [path]",
+		Short: "Generate a flake.nix wrapping an existing .nix expression",
+		Long: "Generate a flake.nix next to an existing .nix expression so " +
+			"the directory can be consumed as a local flake in devbox.json " +
+			"(e.g. \"packages\": { \"./my-pkg\": \"\" }). The path may be a " +
+			"directory containing a default.nix, or a specific .nix file. " +
+			"The generated flake imports the sibling .nix file via " +
+			"pkgs.callPackage.",
+		Args: cobra.MaximumNArgs(1),
+		// This command is pure text templating and does not need Nix.
+		// Override the parent generate command's ensureNixInstalled check.
+		PersistentPreRunE: func(*cobra.Command, []string) error { return nil },
+		RunE: func(cmd *cobra.Command, args []string) error {
+			target := "."
+			if len(args) == 1 {
+				target = args[0]
+			}
+			return runGenFlakeWrapperCmd(cmd, target, flags)
+		},
+	}
+	flags.config.register(command)
+	command.Flags().BoolVarP(
+		&flags.force, "force", "f", false,
+		"overwrite flake.nix if it already exists")
+	command.Flags().StringVar(
+		&flags.nixpkgs, "nixpkgs", "",
+		"nixpkgs input URL to pin (defaults to the project's stdenv if run "+
+			"inside a devbox project, else "+flakegen.DefaultNixpkgsURL+")")
+	command.Flags().StringVar(
+		&flags.attr, "attr", "default",
+		"attribute name to expose under packages.${system}")
+	command.Flags().BoolVar(
+		&flags.print, "print", false,
+		"print the generated flake.nix to stdout instead of writing it")
+	return command
+}
+
 func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	// Check the directory exists.
 	box, err := devbox.Open(&devopt.Opts{
@@ -309,4 +360,62 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	}
 
 	return box.GenerateEnvrcFile(cmd.Context(), generateEnvrcOpts)
+}
+
+func runGenFlakeWrapperCmd(
+	cmd *cobra.Command,
+	target string,
+	flags *genFlakeWrapperCmdFlags,
+) error {
+	nixPath, err := flakegen.ResolveNixFile(target)
+	if err != nil {
+		return err
+	}
+	flakePath, err := flakegen.Generate(flakegen.Opts{
+		NixFile:    nixPath,
+		NixpkgsURL: resolveFlakeWrapperNixpkgs(cmd, flags),
+		Attr:       flags.attr,
+		Force:      flags.force,
+		Print:      flags.print,
+		Out:        cmd.OutOrStdout(),
+	})
+	if err != nil {
+		return err
+	}
+	if flags.print {
+		return nil
+	}
+	out := cmd.OutOrStdout()
+	fmt.Fprintf(out, "Wrote %s.\n", flakePath)
+	fmt.Fprintln(out, "Add it to devbox.json:")
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "  \"packages\": {")
+	fmt.Fprintf(out, "    \"./%s\": \"\"\n", filepath.Base(filepath.Dir(nixPath)))
+	fmt.Fprintln(out, "  }")
+	return nil
+}
+
+// resolveFlakeWrapperNixpkgs determines which nixpkgs URL to pin in the
+// generated flake. An explicit --nixpkgs flag wins; otherwise, if the command
+// is run inside a devbox project we use that project's stdenv so the wrapper
+// matches it; otherwise fall back to flakegen.DefaultNixpkgsURL.
+func resolveFlakeWrapperNixpkgs(
+	cmd *cobra.Command,
+	flags *genFlakeWrapperCmdFlags,
+) string {
+	if flags.nixpkgs != "" {
+		return flags.nixpkgs
+	}
+	box, err := devbox.Open(&devopt.Opts{
+		Dir:    flags.config.path,
+		Stderr: cmd.ErrOrStderr(),
+	})
+	if err != nil {
+		return flakegen.DefaultNixpkgsURL
+	}
+	stdenv := box.Stdenv().String()
+	if stdenv == "" {
+		return flakegen.DefaultNixpkgsURL
+	}
+	return stdenv
 }
