@@ -1,9 +1,10 @@
 # Tests installing an insecure package.
-# This test is pretty slow, maybe there's a different package we can
-# use for testing.
-
-# we could also isolate this test and run on its own.
+#
+# We use nodejs@16 (16.20.2) because it is flagged insecure in nixpkgs (Node 16
+# is EOL) yet has a prebuilt binary on cache.nixos.org, so the test exercises the
+# --allow-insecure flow with a fast substitution instead of a slow source build.
+# (The previous python@2.7.18.6 was not cached and compiled from source, ~4min.)
 
 exec devbox init
-exec devbox add python@2.7.18.6 --allow-insecure python-2.7.18.6
+exec devbox add nodejs@16 --allow-insecure nodejs-16.20.2
 exec devbox install

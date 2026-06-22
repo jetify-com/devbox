@@ -33,6 +33,11 @@ func RunDevboxTestscripts(t *testing.T, dir string) {
 		t.Error(err)
 	}
 
+	shard := shardFromEnv(t)
+	// projectIdx counts the projects that are actually run (in deterministic
+	// WalkDir order) so we can assign each to a shard. It is incremented only
+	// after all skip conditions, keeping the numbering identical on every runner.
+	projectIdx := 0
 	err = filepath.WalkDir(dir, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -72,6 +77,14 @@ func RunDevboxTestscripts(t *testing.T, dir string) {
 		if strings.Contains(path, "drupal") {
 			// drupal has errors like: https://gist.github.com/savil/9c67ffa50a2c51d118f3a4ce29ab920d
 			t.Logf("skipping drupal, config at: %s\n", path)
+			return nil
+		}
+
+		// Assign this project a stable shard slot, then skip it if it does not
+		// belong to the current runner.
+		idx := projectIdx
+		projectIdx++
+		if !shard.includes(idx) {
 			return nil
 		}
 

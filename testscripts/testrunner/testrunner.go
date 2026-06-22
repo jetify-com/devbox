@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -30,41 +31,86 @@ func Main(m *testing.M) {
 
 func RunTestscripts(t *testing.T, testscriptsDir string) {
 	globPattern := filepath.Join(testscriptsDir, "**/*.test.txt")
-	dirs := globDirs(globPattern)
-	require.NotEmpty(t, dirs, "no test scripts found")
+	scripts := globScripts(globPattern)
+	require.NotEmpty(t, scripts, "no test scripts found")
 
-	// Loop through all the directories and run all tests scripts (files ending
-	// in .test.txt)
-	for _, dir := range dirs {
-		// The testrunner dir has the testscript we use for projects in examples/ directory.
-		// We should skip that one since it is run separately (see RunExamplesTestscripts).
-		if filepath.Base(dir) == "testrunner" {
+	shard := shardFromEnv(t)
+
+	// Run each test script (a file ending in .test.txt) in its own
+	// testscript.Run call so that we can shard at the granularity of an
+	// individual script. The scripts still run as parallel subtests.
+	for i, script := range scripts {
+		if !shard.includes(i) {
 			continue
 		}
-
-		testscript.Run(t, getTestscriptParams(dir))
+		params := getTestscriptParams(filepath.Dir(script))
+		// Pass the single script explicitly rather than its directory so that
+		// sharding partitions scripts, not whole directories.
+		params.Dir = ""
+		params.Files = []string{script}
+		testscript.Run(t, params)
 	}
 }
 
-// Return directories that contain files matching the pattern.
-func globDirs(pattern string) []string {
+// globScripts returns the test script files matching pattern, sorted for a
+// deterministic order (so sharding is stable across runners). The testrunner
+// dir is skipped: it holds the generic testscript used for projects in the
+// examples/ directory, which is run separately (see RunDevboxTestscripts).
+func globScripts(pattern string) []string {
 	scripts, err := doublestar.FilepathGlob(pattern)
 	if err != nil {
 		return nil
 	}
 
-	// List of directories with test scripts.
-	directories := []string{}
-	dups := map[string]bool{}
+	filtered := scripts[:0]
 	for _, script := range scripts {
-		dir := filepath.Dir(script)
-		if _, ok := dups[dir]; !ok {
-			directories = append(directories, dir)
-			dups[dir] = true
+		if filepath.Base(filepath.Dir(script)) == "testrunner" {
+			continue
 		}
+		filtered = append(filtered, script)
+	}
+	sort.Strings(filtered)
+	return filtered
+}
+
+// shard partitions the test scripts across CI runners. The testscripts are
+// bound by per-runner nix work (downloading package closures and evaluating
+// flakes), which does not parallelize well within a single runner, so we split
+// the scripts across several runners instead.
+type shard struct {
+	index int // 0-based index of this runner
+	total int // total number of runners
+}
+
+// shardFromEnv reads the shard configuration from the environment. When
+// DEVBOX_TEST_SHARD_TOTAL is unset (or 1), all scripts run on a single runner.
+// Otherwise each runner sets DEVBOX_TEST_SHARD_INDEX (0-based) and runs only the
+// scripts assigned to it.
+func shardFromEnv(t *testing.T) shard {
+	total := 1
+	if v := os.Getenv("DEVBOX_TEST_SHARD_TOTAL"); v != "" {
+		n, err := strconv.Atoi(v)
+		require.NoError(t, err, "invalid DEVBOX_TEST_SHARD_TOTAL=%q", v)
+		require.Positive(t, n, "DEVBOX_TEST_SHARD_TOTAL must be positive")
+		total = n
 	}
 
-	return directories
+	index := 0
+	if v := os.Getenv("DEVBOX_TEST_SHARD_INDEX"); v != "" {
+		n, err := strconv.Atoi(v)
+		require.NoError(t, err, "invalid DEVBOX_TEST_SHARD_INDEX=%q", v)
+		index = n
+	}
+	require.GreaterOrEqual(t, index, 0, "DEVBOX_TEST_SHARD_INDEX must be >= 0")
+	require.Less(t, index, total, "DEVBOX_TEST_SHARD_INDEX must be < DEVBOX_TEST_SHARD_TOTAL")
+	return shard{index: index, total: total}
+}
+
+// includes reports whether the item at position i (in a deterministic ordering)
+// belongs to this shard. Round-robin assignment keeps heavy scripts spread
+// across shards rather than clustered on one runner.
+func (s shard) includes(i int) bool {
+	return i%s.total == s.index
 }
 
 // copyFileCmd enables copying files within the WORKDIR
