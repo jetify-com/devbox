@@ -1,5 +1,5 @@
 {
-  "packages": ["nodejs@latest"],
+  "packages": ["nodejs@latest", "corepack@latest"],
   "env": {
     "DEVBOX_COREPACK_ENABLED": "true"
   },
