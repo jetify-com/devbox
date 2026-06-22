@@ -41,7 +41,7 @@
       "lint":               "go tool golangci-lint run --timeout 5m && scripts/gofumpt.sh",
       "fmt":                "scripts/gofumpt.sh",
       "test":               "go test -race -cover ./...",
-      "test-projects-only": "DEVBOX_RUN_PROJECT_TESTS=1 go test -v -parallel 8 -timeout ${DEVBOX_GOLANG_TEST_TIMEOUT:-30m} ./... -run \"TestExamples|TestScriptsWithProjects\"",
+      "test-projects-only": "DEVBOX_RUN_PROJECT_TESTS=1 go test -v -timeout ${DEVBOX_GOLANG_TEST_TIMEOUT:-30m} ./... -run \"TestExamples|TestScriptsWithProjects\"",
       "update-examples":    "devbox run build && go run testscripts/testrunner/updater/main.go",
       // Updates the Flake's vendorHash: First run `go mod vendor` to vendor
       // the dependencies, then hash the vendor directory with Nix.
