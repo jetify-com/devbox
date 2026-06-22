@@ -94,6 +94,7 @@ DEPENDENCIES
   jekyll (~> 3.9.2)
   jekyll-feed (~> 0.6)
   kramdown-parser-gfm
+  logger
   minima (~> 2.0)
   tzinfo (~> 1.2)
   tzinfo-data
