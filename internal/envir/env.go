@@ -11,6 +11,13 @@ const (
 	// the flag is awkward, such as a Dockerfile.
 	DevboxConfig  = "DEVBOX_CONFIG"
 	DevboxGateway = "DEVBOX_GATEWAY"
+	// DevboxNixBinaryCache overrides the default Nix binary cache that Devbox
+	// queries for prebuilt package outputs (https://cache.nixos.org). This is
+	// useful in network-restricted environments where the public cache is
+	// unreachable and an internal mirror/proxy must be used instead. The value
+	// should be a substituter URL serving the same store paths (e.g. an
+	// Artifactory/Nexus generic remote that mirrors cache.nixos.org).
+	DevboxNixBinaryCache = "DEVBOX_NIX_BINARY_CACHE"
 	// DevboxLatestVersion is the latest version available of the devbox CLI binary.
 	// NOTE: it should NOT start with v (like 0.4.8)
 	DevboxLatestVersion  = "DEVBOX_LATEST_VERSION"

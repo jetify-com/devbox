@@ -42,13 +42,16 @@
             {{ if $output.CacheURI -}}
             (builtins.trace "downloading {{ $pkg.Versioned }}" (builtins.fetchClosure {
               {{/*
-                HACK HACK HACK! fetchClosure only supports http(s) caches and not
-                s3 caches. Until we implement that, we put a fake store here.
-                Since we pre-build everything, fetchClosure will not actually
-                fetch anything and just use the local version. This may break
-                if user somehow removes the local store path.
+                fetchClosure only supports http(s) caches and not s3 caches.
+                fetchClosureStore returns the http(s) cache the output was found
+                in (the public cache or a configured mirror via
+                DEVBOX_NIX_BINARY_CACHE), falling back to the default binary
+                cache for s3 caches. Since we pre-build everything, fetchClosure
+                will not actually fetch anything for an s3 cache and just use the
+                local version. This may break if the user somehow removes the
+                local store path.
               */}}
-              fromStore = "https://cache.nixos.org";
+              fromStore = "{{ fetchClosureStore $output.CacheURI }}";
               fromPath = "{{ $pkg.InputAddressedPathForOutput $output.Name }}";
               inputAddressed = true;
             }))
