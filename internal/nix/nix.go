@@ -174,6 +174,9 @@ func IsExitErrorInsecurePackage(err error, pkgNameOrEmpty, installableOrEmpty st
 		if strings.Contains(string(exitErr.Stderr), "is marked as insecure") {
 			packageRegex := regexp.MustCompile(`Package ([^ ]+)`)
 			packageMatch := packageRegex.FindStringSubmatch(string(exitErr.Stderr))
+			if len(packageMatch) < 2 {
+				return false, nil
+			}
 
 			knownVulnerabilities := []string{}
 			if installableOrEmpty != "" {
