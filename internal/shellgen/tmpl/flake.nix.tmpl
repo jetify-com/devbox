@@ -51,7 +51,7 @@
                 local version. This may break if the user somehow removes the
                 local store path.
               */}}
-              fromStore = "{{ fetchClosureStore $output.CacheURI }}";
+              fromStore = {{ fetchClosureStore $output.CacheURI | nixString }};
               fromPath = "{{ $pkg.InputAddressedPathForOutput $output.Name }}";
               inputAddressed = true;
             }))

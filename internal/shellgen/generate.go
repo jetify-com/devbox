@@ -166,6 +166,7 @@ var templateFuncs = template.FuncMap{
 	"contains":          strings.Contains,
 	"debug":             debug.IsEnabled,
 	"fetchClosureStore": fetchClosureStore,
+	"nixString":         nixString,
 }
 
 // fetchClosureStore returns the store URL to use as the fromStore of a
@@ -182,6 +183,20 @@ func fetchClosureStore(cacheURI string) string {
 		return cacheURI
 	}
 	return devpkg.BinaryCache()
+}
+
+// nixString renders s as a double-quoted Nix string literal, escaping the
+// characters that are special inside one: backslash, double quote, and the
+// "${" antiquotation (interpolation) start. This keeps values that originate
+// from configuration (e.g. a cache URL from DEVBOX_NIX_BINARY_CACHE) from
+// breaking flake evaluation or being interpreted as Nix interpolation.
+func nixString(s string) string {
+	r := strings.NewReplacer(
+		`\`, `\\`,
+		`"`, `\"`,
+		`${`, `\${`,
+	)
+	return `"` + r.Replace(s) + `"`
 }
 
 func makeFlakeFile(d devboxer, plan *flakePlan) error {

@@ -53,11 +53,50 @@ func TestFetchClosureStore(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.envValue != "" {
-				t.Setenv(envir.DevboxNixBinaryCache, tt.envValue)
-			}
+			// Always set the env var (empty when unset) so the test is
+			// isolated from the caller's environment: t.Setenv with an empty
+			// value still exercises the default-cache path via
+			// GetValueOrDefault, and restores any prior value afterward.
+			t.Setenv(envir.DevboxNixBinaryCache, tt.envValue)
 			if got := fetchClosureStore(tt.cacheURI); got != tt.want {
 				t.Errorf("fetchClosureStore(%q) = %q, want %q", tt.cacheURI, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNixString(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{
+			name: "plain url is just quoted",
+			in:   "https://cache.nixos.org",
+			want: `"https://cache.nixos.org"`,
+		},
+		{
+			name: "double quote is escaped",
+			in:   `a"b`,
+			want: `"a\"b"`,
+		},
+		{
+			name: "backslash is escaped",
+			in:   `a\b`,
+			want: `"a\\b"`,
+		},
+		{
+			name: "antiquotation start is escaped",
+			in:   "a${b}",
+			want: `"a\${b}"`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := nixString(tt.in); got != tt.want {
+				t.Errorf("nixString(%q) = %q, want %q", tt.in, got, tt.want)
 			}
 		})
 	}
