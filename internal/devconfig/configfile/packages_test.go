@@ -288,6 +288,22 @@ func TestParseVersionedName(t *testing.T) {
 			expectedName:    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
 			expectedVersion: "",
 		},
+		{
+			// Git flake refs contain "@" in their URL (git@host) but are
+			// not versioned packages. The whole ref must be the name so
+			// that refs differing only by query params (e.g. "dir") stay
+			// distinct. See issue #2704.
+			name:            "git-ssh-flake-with-dir",
+			input:           "git+ssh://git@gitlab.com/org/repo.git?dir=betteralign&ref=master&rev=17d2bedca4884176e0d08078aa42311053e531c2",
+			expectedName:    "git+ssh://git@gitlab.com/org/repo.git?dir=betteralign&ref=master&rev=17d2bedca4884176e0d08078aa42311053e531c2",
+			expectedVersion: "",
+		},
+		{
+			name:            "git-ssh-flake-without-query",
+			input:           "git+ssh://git@github.com/org/repo.git",
+			expectedName:    "git+ssh://git@github.com/org/repo.git",
+			expectedVersion: "",
+		},
 	}
 
 	for _, testCase := range testCases {
