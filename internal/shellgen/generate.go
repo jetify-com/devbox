@@ -17,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/cuecfg"
 	"go.jetify.com/devbox/internal/debug"
+	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/redact"
 )
 
@@ -161,9 +162,41 @@ func toJSON(a any) string {
 }
 
 var templateFuncs = template.FuncMap{
-	"json":     toJSON,
-	"contains": strings.Contains,
-	"debug":    debug.IsEnabled,
+	"json":              toJSON,
+	"contains":          strings.Contains,
+	"debug":             debug.IsEnabled,
+	"fetchClosureStore": fetchClosureStore,
+	"nixString":         nixString,
+}
+
+// fetchClosureStore returns the store URL to use as the fromStore of a
+// builtins.fetchClosure in the generated flake.
+//
+// fetchClosure only supports http(s) stores, so when a package's outputs were
+// found in an http(s) cache we use that cache directly (it's where the path
+// actually lives, which may be the public cache or a configured mirror via
+// DEVBOX_NIX_BINARY_CACHE). For s3 caches fetchClosure can't fetch directly, so
+// we fall back to the configured binary cache as a placeholder store — the path
+// is already built locally, so fetchClosure won't actually fetch from it.
+func fetchClosureStore(cacheURI string) string {
+	if strings.HasPrefix(cacheURI, "http://") || strings.HasPrefix(cacheURI, "https://") {
+		return cacheURI
+	}
+	return devpkg.BinaryCache()
+}
+
+// nixString renders s as a double-quoted Nix string literal, escaping the
+// characters that are special inside one: backslash, double quote, and the
+// "${" antiquotation (interpolation) start. This keeps values that originate
+// from configuration (e.g. a cache URL from DEVBOX_NIX_BINARY_CACHE) from
+// breaking flake evaluation or being interpreted as Nix interpolation.
+func nixString(s string) string {
+	r := strings.NewReplacer(
+		`\`, `\\`,
+		`"`, `\"`,
+		`${`, `\${`,
+	)
+	return `"` + r.Replace(s) + `"`
 }
 
 func makeFlakeFile(d devboxer, plan *flakePlan) error {

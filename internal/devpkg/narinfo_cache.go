@@ -15,15 +15,29 @@ import (
 	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/debug"
 	"go.jetify.com/devbox/internal/devbox/providers/nixcache"
+	"go.jetify.com/devbox/internal/envir"
 	"go.jetify.com/devbox/internal/goutil"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
 	"golang.org/x/sync/errgroup"
 )
 
-// binaryCache is the store from which to fetch this package's binaries.
-// It is used as FromStore in builtins.fetchClosure.
-const binaryCache = "https://cache.nixos.org"
+// defaultBinaryCache is the public Nix binary cache that Devbox queries by
+// default for prebuilt package outputs.
+const defaultBinaryCache = "https://cache.nixos.org"
+
+// BinaryCache is the store from which to fetch a package's binaries. It is
+// used as the FromStore in builtins.fetchClosure and as the first cache
+// queried when checking whether a package's outputs are already built.
+//
+// It defaults to the public cache (https://cache.nixos.org) but can be
+// overridden with the DEVBOX_NIX_BINARY_CACHE environment variable. This is
+// useful in network-restricted environments where the public cache is
+// unreachable and an internal mirror/proxy serving the same store paths must
+// be used instead.
+func BinaryCache() string {
+	return envir.GetValueOrDefault(envir.DevboxNixBinaryCache, defaultBinaryCache)
+}
 
 // useDefaultOutputs is a special value for the outputName parameter of
 // fetchNarInfoStatusOnce, which indicates that the default outputs should be
@@ -320,7 +334,7 @@ func fetchNarInfoStatusFromS3(
 var nixCacheIsConfigured = goutil.OnceValueWithContext(nixcache.IsConfigured)
 
 func readCaches(ctx context.Context) ([]string, error) {
-	cacheURIs := []string{binaryCache}
+	cacheURIs := []string{BinaryCache()}
 	if !nixCacheIsConfigured.Do(ctx) {
 		return cacheURIs, nil
 	}
