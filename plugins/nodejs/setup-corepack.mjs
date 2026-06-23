@@ -28,10 +28,42 @@ if (!corepackBinDir) {
 }
 
 // Enable Corepack, installing the pnpm/yarn/npm shims into corepackBinDir.
-run("corepack", ["enable", "--install-directory", corepackBinDir]);
+// Only attempt package-manager activation if enabling succeeded; if it failed
+// for any reason (Corepack missing, offline, etc.) there's nothing to activate.
+if (enableCorepack()) {
+  // Activate the package manager pinned in package.json's "packageManager"
+  // field.
+  activatePinnedPackageManager();
+}
 
-// Activate the package manager pinned in package.json's "packageManager" field.
-activatePinnedPackageManager();
+// enableCorepack runs `corepack enable`. It returns true on success. If the
+// `corepack` binary itself is missing it prints an actionable warning and
+// returns false, because some Node packages (such as nodejs-slim, and Node.js
+// 25+) no longer bundle Corepack (see issue #2791). Other failures (e.g. being
+// offline) are ignored so they don't block shell initialization.
+function enableCorepack() {
+  try {
+    execFileSync("corepack", ["enable", "--install-directory", corepackBinDir], {
+      stdio: "inherit",
+    });
+    return true;
+  } catch (err) {
+    if (err && err.code === "ENOENT") {
+      warnCorepackUnavailable();
+    }
+    return false;
+  }
+}
+
+function warnCorepackUnavailable() {
+  process.stderr.write(
+    "[devbox] Warning: DEVBOX_COREPACK_ENABLED is set but the `corepack` " +
+      "command was not found. Some Node packages (such as nodejs-slim, and " +
+      "Node.js 25+) no longer bundle Corepack. Add the `corepack` package to " +
+      "your devbox.json (for example, run `devbox add corepack`) to use " +
+      "Yarn or pnpm.\n",
+  );
+}
 
 function activatePinnedPackageManager() {
   if (process.env.DEVBOX_DISABLE_NODEJS_PACKAGE_MANAGER_AUTODETECT) {
