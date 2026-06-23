@@ -126,6 +126,19 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		customProcessComposeFile: opts.CustomProcessComposeFile,
 	}
 
+	if !opts.IgnoreWarnings && cfg.Root.UsesDeprecatedShellField() {
+		stderr := box.stderr
+		if stderr == nil {
+			stderr = os.Stderr
+		}
+		ux.Fwarning(
+			stderr,
+			`The "shell" field in devbox.json is deprecated and will be removed in `+
+				"an upcoming version. Move init_hook and scripts to the top level, "+
+				"or run `devbox config fmt` to migrate automatically.\n",
+		)
+	}
+
 	lock, err := lock.GetFile(box)
 	if err != nil {
 		return nil, err
