@@ -395,7 +395,7 @@ func (p *Package) normalizePackageAttributePath() (string, error) {
 	// We prefer nix.Search over just trying to parse the package's "URL" because
 	// nix.Search will guarantee that the package exists for the current system.
 	var infos map[string]*nix.PkgInfo
-	if p.IsDevboxPackage && !p.IsRunX() {
+	if p.IsDevboxPackage && p.IsNix() {
 		// Perf optimization: For queries of the form nixpkgs/<commit>#foo, we can
 		// use a nix.Search cache.
 		//
@@ -657,12 +657,23 @@ func (p *Package) IsRunX() bool {
 	return pkgtype.IsRunX(p.Raw)
 }
 
+func (p *Package) IsHomebrew() bool {
+	return pkgtype.IsHomebrew(p.Raw)
+}
+
 func (p *Package) IsNix() bool {
 	return IsNix(p, 0)
 }
 
 func (p *Package) RunXPath() string {
 	return strings.TrimPrefix(p.Raw, pkgtype.RunXPrefix)
+}
+
+// HomebrewFormula returns the Homebrew formula identifier for this package,
+// i.e. the package string with the "homebrew:" prefix removed. For example,
+// "homebrew:python@3.10" returns "python@3.10".
+func (p *Package) HomebrewFormula() string {
+	return strings.TrimPrefix(p.Raw, pkgtype.HomebrewPrefix)
 }
 
 func (p *Package) String() string {
@@ -680,17 +691,25 @@ func (p *Package) LockfileKey() string {
 }
 
 func IsNix(p *Package, _ int) bool {
-	return !p.IsRunX()
+	return !p.IsRunX() && !p.IsHomebrew()
 }
 
 func IsRunX(p *Package, _ int) bool {
 	return p.IsRunX()
 }
 
+func IsHomebrew(p *Package, _ int) bool {
+	return p.IsHomebrew()
+}
+
 func (p *Package) DocsURL() string {
 	if p.IsRunX() {
 		path, _, _ := strings.Cut(p.RunXPath(), "@")
 		return fmt.Sprintf("https://www.github.com/%s", path)
+	}
+	if p.IsHomebrew() {
+		name, _, _ := strings.Cut(p.HomebrewFormula(), "@")
+		return fmt.Sprintf("https://formulae.brew.sh/formula/%s", name)
 	}
 	if p.IsDevboxPackage {
 		return fmt.Sprintf("https://www.nixhub.io/packages/%s", p.CanonicalName())
@@ -701,7 +720,7 @@ func (p *Package) DocsURL() string {
 // GetOutputNames returns the names of the nix package outputs. Outputs can be
 // specified in devbox.json package fields or as part of the flake reference.
 func (p *Package) GetOutputNames() ([]string, error) {
-	if p.IsRunX() {
+	if !p.IsNix() {
 		return []string{}, nil
 	}
 
