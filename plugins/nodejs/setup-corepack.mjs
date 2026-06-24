@@ -28,7 +28,22 @@ if (!corepackBinDir) {
 }
 
 // Enable Corepack, installing the pnpm/yarn/npm shims into corepackBinDir.
-run("corepack", ["enable", "--install-directory", corepackBinDir]);
+try {
+  execFileSync("corepack", ["enable", "--install-directory", corepackBinDir], {
+    stdio: "inherit",
+  });
+} catch (err) {
+  if (err && err.code === "ENOENT") {
+    // Corepack isn't bundled with this Node.js package (e.g. nodejs-slim, or
+    // Node.js 25+, see issue #2791). Without a message the user is later left
+    // with a cryptic "command not found" for yarn/pnpm and no idea why, so warn
+    // with actionable guidance and stop: there is nothing to activate.
+    warnCorepackMissing();
+    process.exit(0);
+  }
+  // Any other failure (e.g. a non-zero exit while offline) is non-fatal: fall
+  // through and still attempt activation, as the plugin did before.
+}
 
 // Activate the package manager pinned in package.json's "packageManager" field.
 activatePinnedPackageManager();
@@ -65,11 +80,25 @@ function activatePinnedPackageManager() {
 }
 
 // Run a command, inheriting stdio so Corepack's output is visible. Failures
-// must not block shell initialization.
+// must not block shell initialization, so errors are reported but never
+// rethrown.
 function run(command, args) {
   try {
     execFileSync(command, args, { stdio: "inherit" });
   } catch {
     // Ignore: e.g. Corepack unavailable, or offline during activation.
   }
+}
+
+// Print actionable guidance when the `corepack` binary is missing, so the user
+// understands why yarn/pnpm aren't available and how to fix it.
+function warnCorepackMissing() {
+  console.error(
+    "[devbox] nodejs plugin: `corepack` was not found, so Corepack-managed " +
+      "package managers (such as yarn and pnpm) will be unavailable.",
+  );
+  console.error(
+    "[devbox] Your Node.js package does not bundle Corepack (e.g. nodejs-slim, " +
+      "or Node.js 25+). Add it explicitly with `devbox add corepack` to enable it.",
+  );
 }
