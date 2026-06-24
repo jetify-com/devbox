@@ -3,61 +3,105 @@
   "packages": {
     "argo": {
       "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#argo",
-      "source": "nixpkg"
+      "source": "nixpkg",
+      "systems": {
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "path": "/nix/store/z8x67nxis5iqpgrigknk2hnd4yv924zl-argo-3.4.11",
+              "default": true
+            }
+          ]
+        }
+      }
     },
     "docker": {
       "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#docker",
-      "source": "nixpkg"
+      "source": "nixpkg",
+      "systems": {
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "man",
+              "path": "/nix/store/lddgshfw5zbv4f3nhhrz3mh8sxyi2wcj-docker-20.10.26-man",
+              "default": true
+            },
+            {
+              "path": "/nix/store/lxsvr9qjzamnc9smwr1m4gd4k7r2jzld-docker-20.10.26",
+              "default": true
+            }
+          ]
+        }
+      }
+    },
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2026-06-13T14:05:44Z",
+      "resolved": "github:NixOS/nixpkgs/9f11f828c213641c2369a9f1fa31fe31557e3156?lastModified=1781359544&narHash=sha256-iUuzKQcyXvopYDDzFpMK5eQKP3WIJExYny2kJtbgUcE%3D"
     },
     "kubectl": {
       "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#kubectl",
-      "source": "nixpkg"
+      "source": "nixpkg",
+      "systems": {
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "path": "/nix/store/k3bhqxjgpxzlb6i28cyaxp84p13ky5q8-kubectl-1.28.3",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/n591fkha0bzh2vikpwzvqp34ffvw5r4g-kubectl-1.28.3-man",
+              "default": true
+            }
+          ]
+        }
+      }
     },
     "minikube@latest": {
-      "last_modified": "2024-02-19T01:51:04Z",
-      "resolved": "github:NixOS/nixpkgs/a332040396d7e3c47883e9c115c1da485712805e#minikube",
+      "last_modified": "2026-06-05T19:07:58Z",
+      "resolved": "github:NixOS/nixpkgs/891eaa77f0eed53352194677991bd30978f9b0ad#minikube",
       "source": "devbox-search",
-      "version": "1.32.0",
+      "version": "1.38.1",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/q44p9dih0mpv1djc3ibmfjp456kxwjhj-minikube-1.32.0",
+              "path": "/nix/store/jqfr96ijbn635lcizrf2v6x6aykk5x7j-minikube-1.38.1",
               "default": true
             }
           ],
-          "store_path": "/nix/store/q44p9dih0mpv1djc3ibmfjp456kxwjhj-minikube-1.32.0"
+          "store_path": "/nix/store/jqfr96ijbn635lcizrf2v6x6aykk5x7j-minikube-1.38.1"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/rd4sjsb4q02vlaw5l6ilzhkqgsr2vsvj-minikube-1.32.0",
+              "path": "/nix/store/vsixli87aq3p7r2n2jk3sq7qgcvlcyi3-minikube-1.38.1",
               "default": true
             }
           ],
-          "store_path": "/nix/store/rd4sjsb4q02vlaw5l6ilzhkqgsr2vsvj-minikube-1.32.0"
+          "store_path": "/nix/store/vsixli87aq3p7r2n2jk3sq7qgcvlcyi3-minikube-1.38.1"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/xalb2k5x86gc2q0zg26jja6m3193pgs1-minikube-1.32.0",
+              "path": "/nix/store/sfj7g3862ybbnd5cnal9y7l5kqnyn3k0-minikube-1.38.1",
               "default": true
             }
           ],
-          "store_path": "/nix/store/xalb2k5x86gc2q0zg26jja6m3193pgs1-minikube-1.32.0"
+          "store_path": "/nix/store/sfj7g3862ybbnd5cnal9y7l5kqnyn3k0-minikube-1.38.1"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/9dwg6dw2rdh4m6ikbk5pzns191dl9skh-minikube-1.32.0",
+              "path": "/nix/store/3wbmg3dvglimp1xd1w8mkfpxix91qbpz-minikube-1.38.1",
               "default": true
             }
           ],
-          "store_path": "/nix/store/9dwg6dw2rdh4m6ikbk5pzns191dl9skh-minikube-1.32.0"
+          "store_path": "/nix/store/3wbmg3dvglimp1xd1w8mkfpxix91qbpz-minikube-1.38.1"
         }
       }
     }

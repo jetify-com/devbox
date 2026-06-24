@@ -1,51 +1,56 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2026-06-13T14:05:44Z",
+      "resolved": "github:NixOS/nixpkgs/9f11f828c213641c2369a9f1fa31fe31557e3156?lastModified=1781359544&narHash=sha256-iUuzKQcyXvopYDDzFpMK5eQKP3WIJExYny2kJtbgUcE%3D"
+    },
     "valkey@latest": {
-      "last_modified": "2024-05-22T06:18:38Z",
-      "resolved": "github:NixOS/nixpkgs/3f316d2a50699a78afe5e77ca486ad553169061e#valkey",
+      "last_modified": "2026-05-21T08:15:18Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/4a29d733e8a7d5b824c3d8c958a946a9867b3eb2#valkey",
       "source": "devbox-search",
-      "version": "7.2.5",
+      "version": "9.0.4",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/sn76cyfbi5lpyhyn7sc8aqdy99sdd191-valkey-7.2.5",
+              "path": "/nix/store/ypprai26r8k2fg78rj3xw1vc0i1wr2k9-valkey-9.0.4",
               "default": true
             }
           ],
-          "store_path": "/nix/store/sn76cyfbi5lpyhyn7sc8aqdy99sdd191-valkey-7.2.5"
+          "store_path": "/nix/store/ypprai26r8k2fg78rj3xw1vc0i1wr2k9-valkey-9.0.4"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/lr5k23d54ip8794jjdzwv0rbfj1rfakw-valkey-7.2.5",
+              "path": "/nix/store/lzzj84zc1br6l5mgxw5av6fmycw96jw0-valkey-9.0.4",
               "default": true
             }
           ],
-          "store_path": "/nix/store/lr5k23d54ip8794jjdzwv0rbfj1rfakw-valkey-7.2.5"
+          "store_path": "/nix/store/lzzj84zc1br6l5mgxw5av6fmycw96jw0-valkey-9.0.4"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/3mv8kr5skz6yd9xqrsv667gz8xnn4zy0-valkey-7.2.5",
+              "path": "/nix/store/689969qv7z4qrzkbcndhhb1v29czy9c1-valkey-9.0.4",
               "default": true
             }
           ],
-          "store_path": "/nix/store/3mv8kr5skz6yd9xqrsv667gz8xnn4zy0-valkey-7.2.5"
+          "store_path": "/nix/store/689969qv7z4qrzkbcndhhb1v29czy9c1-valkey-9.0.4"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/7rhhn4kc4352jwq8saw2bfy6s5fnpv82-valkey-7.2.5",
+              "path": "/nix/store/p7pb61xqh52agajvwrr6xqci2g2brr76-valkey-9.0.4",
               "default": true
             }
           ],
-          "store_path": "/nix/store/7rhhn4kc4352jwq8saw2bfy6s5fnpv82-valkey-7.2.5"
+          "store_path": "/nix/store/p7pb61xqh52agajvwrr6xqci2g2brr76-valkey-9.0.4"
         }
       }
     }
