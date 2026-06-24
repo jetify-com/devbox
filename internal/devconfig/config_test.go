@@ -49,6 +49,69 @@ func TestOpen(t *testing.T) {
 	})
 }
 
+func TestOpenDotConfig(t *testing.T) {
+	t.Run("FindsConfigInDotConfigDir", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+		dotConfig := filepath.Join(root, ".config")
+		if err := os.MkdirAll(dotConfig, 0o777); err != nil {
+			t.Fatalf("os.MkdirAll(%q) error: %v", dotConfig, err)
+		}
+		if _, err := Init(dotConfig); err != nil {
+			t.Fatalf("Init(%q) error: %v", dotConfig, err)
+		}
+
+		cfg, err := Open(root)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", root, err)
+		}
+		want := filepath.Join(dotConfig, configfile.DefaultName)
+		if cfg.Root.AbsRootPath != want {
+			t.Errorf("cfg.Root.AbsRootPath = %q, want %q", cfg.Root.AbsRootPath, want)
+		}
+	})
+	t.Run("TopLevelConfigTakesPrecedence", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+		dotConfig := filepath.Join(root, ".config")
+		if err := os.MkdirAll(dotConfig, 0o777); err != nil {
+			t.Fatalf("os.MkdirAll(%q) error: %v", dotConfig, err)
+		}
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+		if _, err := Init(dotConfig); err != nil {
+			t.Fatalf("Init(%q) error: %v", dotConfig, err)
+		}
+
+		cfg, err := Open(root)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", root, err)
+		}
+		want := filepath.Join(root, configfile.DefaultName)
+		if cfg.Root.AbsRootPath != want {
+			t.Errorf("cfg.Root.AbsRootPath = %q, want %q", cfg.Root.AbsRootPath, want)
+		}
+	})
+	t.Run("FindWalksUpToParentDotConfig", func(t *testing.T) {
+		root, child, _ := mkNestedDirs(t)
+		dotConfig := filepath.Join(root, ".config")
+		if err := os.MkdirAll(dotConfig, 0o777); err != nil {
+			t.Fatalf("os.MkdirAll(%q) error: %v", dotConfig, err)
+		}
+		if _, err := Init(dotConfig); err != nil {
+			t.Fatalf("Init(%q) error: %v", dotConfig, err)
+		}
+
+		cfg, err := Find(child)
+		if err != nil {
+			t.Fatalf("Find(%q) error: %v", child, err)
+		}
+		want := filepath.Join(dotConfig, configfile.DefaultName)
+		if cfg.Root.AbsRootPath != want {
+			t.Errorf("cfg.Root.AbsRootPath = %q, want %q", cfg.Root.AbsRootPath, want)
+		}
+	})
+}
+
 func TestOpenError(t *testing.T) {
 	t.Run("NotExist", func(t *testing.T) {
 		root, _, _ := mkNestedDirs(t)
