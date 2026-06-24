@@ -2,7 +2,9 @@ package docgen
 
 import (
 	_ "embed"
+	"maps"
 	"os"
+	"strings"
 	"text/template"
 
 	"go.jetify.com/devbox/internal/devbox"
@@ -55,11 +57,28 @@ func GenerateReadme(
 		"Description": devbox.Config().Root.Description,
 		"Scripts": devbox.Config().Scripts().
 			WithRelativePaths(devbox.ProjectDir()),
-		"EnvVars":  devbox.Config().Env(),
+		"EnvVars":  envWithRelativePaths(devbox.Config().Env(), devbox.ProjectDir()),
 		"InitHook": devbox.Config().InitHook(),
 		"Packages": devbox.TopLevelPackages(),
 		// TODO add includes
 	})
+}
+
+// envWithRelativePaths returns a copy of env where occurrences of the absolute
+// project directory are replaced with ".". This keeps generated READMEs free of
+// machine-specific absolute paths (such as a user's home directory) that plugins
+// expand into environment variables like PGDATA and PGHOST. It mirrors the
+// behavior of configfile.Scripts.WithRelativePaths, which is already applied to
+// scripts in the generated README.
+func envWithRelativePaths(env map[string]string, projectDir string) map[string]string {
+	if projectDir == "" {
+		return maps.Clone(env)
+	}
+	result := make(map[string]string, len(env))
+	for key, value := range env {
+		result[key] = strings.ReplaceAll(value, projectDir, ".")
+	}
+	return result
 }
 
 func SaveDefaultReadmeTemplate(outputPath string) error {
