@@ -27,11 +27,22 @@ if (!corepackBinDir) {
   process.exit(0);
 }
 
-// Enable Corepack, installing the pnpm/yarn/npm shims into corepackBinDir. If
-// Corepack itself is missing, stop here: there is nothing to activate, and
-// run() has already printed actionable guidance.
-if (!run("corepack", ["enable", "--install-directory", corepackBinDir])) {
-  process.exit(0);
+// Enable Corepack, installing the pnpm/yarn/npm shims into corepackBinDir.
+try {
+  execFileSync("corepack", ["enable", "--install-directory", corepackBinDir], {
+    stdio: "inherit",
+  });
+} catch (err) {
+  if (err && err.code === "ENOENT") {
+    // Corepack isn't bundled with this Node.js package (e.g. nodejs-slim, or
+    // Node.js 25+, see issue #2791). Without a message the user is later left
+    // with a cryptic "command not found" for yarn/pnpm and no idea why, so warn
+    // with actionable guidance and stop: there is nothing to activate.
+    warnCorepackMissing();
+    process.exit(0);
+  }
+  // Any other failure (e.g. a non-zero exit while offline) is non-fatal: fall
+  // through and still attempt activation, as the plugin did before.
 }
 
 // Activate the package manager pinned in package.json's "packageManager" field.
@@ -68,31 +79,26 @@ function activatePinnedPackageManager() {
   run("corepack", ["prepare", "--activate", packageManager]);
 }
 
-// Run a command, inheriting stdio so Corepack's output is visible. Returns
-// true on success and false on failure. Failures must not block shell
-// initialization, so errors are reported but never rethrown.
+// Run a command, inheriting stdio so Corepack's output is visible. Failures
+// must not block shell initialization, so errors are reported but never
+// rethrown.
 function run(command, args) {
   try {
     execFileSync(command, args, { stdio: "inherit" });
-    return true;
-  } catch (err) {
-    // ENOENT means the command itself is missing. For Corepack this happens
-    // with nodejs-slim and Node.js 25+, which no longer bundle it (see issue
-    // #2791). Without a message, the user is left with a cryptic
-    // "command not found" for yarn/pnpm and no idea why, so point them at the
-    // fix instead of failing silently.
-    if (err && err.code === "ENOENT") {
-      console.error(
-        `[devbox] nodejs plugin: \`${command}\` was not found, so Corepack-managed ` +
-          `package managers (such as yarn and pnpm) will be unavailable.`,
-      );
-      console.error(
-        `[devbox] Your Node.js package does not bundle Corepack (e.g. nodejs-slim, ` +
-          `or Node.js 25+). Add it explicitly with \`devbox add corepack\` to enable it.`,
-      );
-      return false;
-    }
-    // Other failures (e.g. offline during activation) are non-fatal.
-    return false;
+  } catch {
+    // Ignore: e.g. Corepack unavailable, or offline during activation.
   }
+}
+
+// Print actionable guidance when the `corepack` binary is missing, so the user
+// understands why yarn/pnpm aren't available and how to fix it.
+function warnCorepackMissing() {
+  console.error(
+    "[devbox] nodejs plugin: `corepack` was not found, so Corepack-managed " +
+      "package managers (such as yarn and pnpm) will be unavailable.",
+  );
+  console.error(
+    "[devbox] Your Node.js package does not bundle Corepack (e.g. nodejs-slim, " +
+      "or Node.js 25+). Add it explicitly with `devbox add corepack` to enable it.",
+  );
 }
