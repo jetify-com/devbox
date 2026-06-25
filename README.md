@@ -169,6 +169,11 @@ See the
 [CLI Reference](https://www.jetify.com/docs/devbox/cli-reference/devbox) for
 the full list of commands.
 
+### Advanced Features
+
+- **Hooks**: Intercept and modify command execution with [hooks](docs/hooks.md) for policy enforcement, instrumentation, and command wrapping
+- **Shell Aliases**: Define custom shell aliases in your `devbox.json`
+
 ## Join our Developer Community
 
 - Chat with us by joining the [Jetify Discord Server](https://discord.gg/jetify)
