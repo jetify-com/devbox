@@ -63,6 +63,43 @@ environment by following the steps below.
        go build ./cmd/devbox
        ./devbox run -- echo hello, world
 
+### Debugging Devbox Locally
+
+Several Devbox commands (for example `devbox shell` and `devbox services up`)
+do little work themselves. Instead, they re-exec a nested `devbox` subprocess
+inside the project's shell environment, and that subprocess does the real work.
+The nested process is resolved from your `PATH`, so it is usually the *installed*
+version of Devbox rather than the local build you are editing. As a result,
+`devbox run build && dist/devbox services up` may not pick up your changes, and
+debug logs (`DEVBOX_DEBUG=1`) or breakpoints you add won't fire, because the
+interesting work happens in a different binary.
+
+There are two ways to work around this:
+
+1. **Make the launcher use your local build (most faithful).** The Devbox
+   launcher selects which CLI binary to run based on the `DEVBOX_USE_VERSION`
+   environment variable, looking it up in its binary cache. Place your build
+   there and point the launcher at it:
+
+       devbox run build
+       mkdir -p "$HOME/.cache/devbox/bin/0.0.0-dev_$(go env GOOS)_$(go env GOARCH)"
+       cp dist/devbox "$HOME/.cache/devbox/bin/0.0.0-dev_$(go env GOOS)_$(go env GOARCH)/devbox"
+       export DEVBOX_USE_VERSION=0.0.0-dev
+
+   With `DEVBOX_USE_VERSION` exported, every `devbox` invocation — including the
+   nested subprocesses — runs your local build, so debug logs and breakpoints
+   work end to end. Rebuild and re-copy the binary whenever you change the code.
+
+2. **Run the work in the current process (quick).** Many commands accept a
+   hidden `--run-in-current-shell` flag that skips the nested re-exec and does
+   the work in place:
+
+       dist/devbox services up --run-in-current-shell
+
+   This is fast to iterate on, but because it bypasses the nested subprocess its
+   behavior differs slightly from a normal invocation, so some issues won't
+   reproduce this way.
+
 ## Pull Request Process
 
 1. For new features or non-trivial changes, consider first filing an issue to
