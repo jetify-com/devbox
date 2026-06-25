@@ -82,8 +82,9 @@ There are two ways to work around this:
    there and point the launcher at it:
 
        devbox run build
-       mkdir -p "$HOME/.cache/devbox/bin/0.0.0-dev_$(go env GOOS)_$(go env GOARCH)"
-       cp dist/devbox "$HOME/.cache/devbox/bin/0.0.0-dev_$(go env GOOS)_$(go env GOARCH)/devbox"
+       cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/devbox/bin/0.0.0-dev_$(go env GOOS)_$(go env GOARCH)"
+       mkdir -p "$cache_dir"
+       cp dist/devbox "$cache_dir/devbox"
        export DEVBOX_USE_VERSION=0.0.0-dev
 
    With `DEVBOX_USE_VERSION` exported, every `devbox` invocation — including the
