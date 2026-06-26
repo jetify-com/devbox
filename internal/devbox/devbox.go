@@ -379,6 +379,16 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 		return "", err
 	}
 
+	// For `devbox shellenv`, only emit the variables that Devbox actually adds
+	// or changes relative to the current shell. Re-exporting unrelated variables
+	// (e.g. HOSTNAME, LANG) is redundant, and can fail when the user's shell
+	// marks some of them read-only (e.g. PROFILEREAD on openSUSE). See #2826.
+	// In pure mode we keep the full environment, since the goal there is a
+	// complete, self-contained environment rather than a diff.
+	if opts.OnlyModifiedEnv && !opts.EnvOptions.Pure {
+		envs = onlyModifiedEnvVars(envs, envir.PairsToMap(os.Environ()))
+	}
+
 	// Use the appropriate export format based on shell type
 	var envStr string
 	if opts.ShellFormat == devopt.ShellFormatNushell {
