@@ -79,8 +79,15 @@ const (
 type EnvExportsOpts struct {
 	EnvOptions     EnvOptions
 	NoRefreshAlias bool
-	RunHooks       bool
-	ShellFormat    ShellFormat
+	// OnlyModifiedEnv restricts the exported variables to those that Devbox adds
+	// or changes relative to the current environment. It is used by
+	// `devbox shellenv` so it does not re-export unrelated (and possibly
+	// read-only) variables. It is ignored in pure mode, where the intent is to
+	// emit a complete, self-contained environment rather than a diff against the
+	// current shell.
+	OnlyModifiedEnv bool
+	RunHooks        bool
+	ShellFormat     ShellFormat
 }
 
 // EnvOptions configure the Devbox Environment in the `computeEnv` function.

@@ -164,6 +164,22 @@ func exportifyNushell(w io.Writer, vars map[string]string) string {
 	return strings.TrimSpace(strb.String())
 }
 
+// onlyModifiedEnvVars returns the subset of env whose values are new or differ
+// from the ambient environment. Variables whose value already matches the
+// ambient environment are omitted: re-exporting them is redundant, and at worst
+// it breaks `eval "$(devbox shellenv)"` when the user's shell marks some of
+// those variables read-only (e.g. PROFILEREAD on openSUSE, which produces
+// "read-only variable: PROFILEREAD"). See issue #2826.
+func onlyModifiedEnvVars(env, ambient map[string]string) map[string]string {
+	modified := make(map[string]string, len(env))
+	for key, val := range env {
+		if ambientVal, ok := ambient[key]; !ok || ambientVal != val {
+			modified[key] = val
+		}
+	}
+	return modified
+}
+
 // addEnvIfNotPreviouslySetByDevbox adds the key-value pairs from new to existing,
 // but only if the key was not previously set by devbox
 // Caveat, this won't mark the values as set by devbox automatically. Instead,
