@@ -63,7 +63,8 @@ flowchart TD
 
 Devbox's Plugin System provides a few special placeholders that should be used when specifying paths for env variables and helper files:
 
-* `{{ .DevboxDirRoot }}` – points to the root folder of their project, where the user's `devbox.json` is stored.
+* `{{ .DevboxProjectDir }}` – points to the root folder of the user's project, where their `devbox.json` is stored.
+* `{{ .DevboxDirRoot }}` – points to `<projectDir>/devbox.d`, the shared parent directory of every plugin's `DevboxDir`. (Despite its name, this is *not* the project root — use `{{ .DevboxProjectDir }}` for that.)
 * `{{ .DevboxDir }}` – points to `<projectDir>/devbox.d/<plugin.name>`. This directory is public and added to source control by default. This directory is not modified or recreated by Devbox after the initial package installation. You should use this location for files that a user will want to modify and check-in to source control alongside their project (e.g., `.conf` files or other configs).
 * `{{ .Virtenv }}` – points to `<projectDir>/.devbox/virtenv/<plugin_name>` whenever the plugin activates. This directory is hidden and added to `.gitignore` by default You should use this location for files or variables that a user should not check-in or edit directly. Files in this directory should be considered managed by Devbox, and may be recreated or modified after the initial installation.
 
