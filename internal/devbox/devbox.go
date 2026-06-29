@@ -738,6 +738,15 @@ func (d *Devbox) computeEnv(
 		for k, v := range nixEnv {
 			env[k] = v
 		}
+
+		// The Nix dev-env sets the SSL certificate-bundle variables to a Nix
+		// store path whenever a package pulls in nss-cacert (e.g. httpie,
+		// python). That clobbers a value the user deliberately set in their own
+		// environment — most importantly a corporate MITM/proxy CA bundle —
+		// breaking outbound TLS for the rest of the project. Restore the user's
+		// own value so custom CA bundles keep working, mirroring how `nix shell`
+		// leaves these untouched. See jetify-com/devbox#2604.
+		preserveUserSSLCertFiles(env, originalEnv)
 	}
 	slog.Debug("nix environment PATH", "path", env["PATH"])
 
@@ -1098,6 +1107,27 @@ var ignoreDevEnvVar = map[string]bool{
 	"TMPDIR":             true,
 	"TZ":                 true,
 	"UID":                true,
+}
+
+// sslCertFileEnvVars are the certificate-bundle environment variables that
+// Nix's build environment sets (via packages such as nss-cacert, pulled in by
+// httpie, python, etc.). They point at a Nix store CA bundle, which is the right
+// default when the user hasn't set one themselves but is wrong when they have:
+// a user who exports one of these — typically to a corporate MITM/proxy CA
+// bundle — needs that value preserved for outbound TLS to keep working.
+var sslCertFileEnvVars = []string{"NIX_SSL_CERT_FILE", "SSL_CERT_FILE"}
+
+// preserveUserSSLCertFiles restores the user's own certificate-bundle variables
+// (taken from userEnv, the ambient environment captured before the Nix dev-env
+// is layered on) into env, so that a value the user explicitly set wins over the
+// Nix store path injected by the dev-env. Variables the user did not set are
+// left as-is, keeping the Nix default. See jetify-com/devbox#2604.
+func preserveUserSSLCertFiles(env, userEnv map[string]string) {
+	for _, key := range sslCertFileEnvVars {
+		if val, ok := userEnv[key]; ok && val != "" {
+			env[key] = val
+		}
+	}
 }
 
 func (d *Devbox) ProjectDirHash() string {
