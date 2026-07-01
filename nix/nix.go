@@ -318,6 +318,12 @@ func (i Info) AtLeast(version string) bool {
 	// becomes 2.33-pre.20251107+479b6b73). x/mod/semver requires major.minor.patch
 	// before a prerelease, so insert a ".0" patch when it's missing.
 	prerelease = majorMinorNoPatchRegexp.ReplaceAllString(prerelease, "$1.0$2")
+	// If the coercion didn't produce a valid semver (e.g. i.Version was empty
+	// or in an unrecognized format), report false rather than relying on
+	// semver.Compare's handling of invalid inputs.
+	if !semver.IsValid("v" + prerelease) {
+		return false
+	}
 	return semver.Compare("v"+prerelease, version) >= 0
 }
 
