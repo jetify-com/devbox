@@ -180,11 +180,22 @@ const (
 // The semantic component is sourced from <https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string>.
 // It's been modified to tolerate Nix prerelease versions, which don't have a
 // hyphen before the prerelease component and contain underscores.
-var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
+//
+// The patch component is optional: recent Nix prereleases report versions like
+// "2.33pre20251107_479b6b73" (major.minor only, no patch) instead of the older
+// "2.23.0pre20240526_7de033d6" form. Without this, such versions failed to
+// parse and Devbox reported an empty version. See issue #2766.
+var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)(?:\.(?P<patch>0|[1-9]\d*))?(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
 
 // preReleaseRegexp matches Nix prerelease version strings, which are not valid
 // semvers.
 var preReleaseRegexp = regexp.MustCompile(`pre(?P<date>[0-9]+)_(?P<commit>[a-f0-9]{4,40})$`)
+
+// majorMinorNoPatchRegexp matches a version that begins with major.minor but has
+// no patch component (e.g. "2.33" or "2.33-pre.20251107"). Group 1 captures the
+// "major.minor" prefix and group 2 captures the rest (prerelease/build), so a
+// ".0" patch can be inserted between them.
+var majorMinorNoPatchRegexp = regexp.MustCompile(`^(\d+\.\d+)([^.\d].*|)$`)
 
 // Info contains information about a Nix installation.
 type Info struct {
@@ -303,6 +314,16 @@ func (i Info) AtLeast(version string) bool {
 	// prerelease (e.g., 2.23.0pre20240526_7de033d6) and coerce it to a
 	// valid version (2.23.0-pre.20240526+7de033d6) so we can compare it.
 	prerelease := preReleaseRegexp.ReplaceAllString(i.Version, "-pre.$date+$commit")
+	// Some prereleases omit the patch component (e.g. 2.33pre20251107_479b6b73
+	// becomes 2.33-pre.20251107+479b6b73). x/mod/semver requires major.minor.patch
+	// before a prerelease, so insert a ".0" patch when it's missing.
+	prerelease = majorMinorNoPatchRegexp.ReplaceAllString(prerelease, "$1.0$2")
+	// If the coercion didn't produce a valid semver (e.g. i.Version was empty
+	// or in an unrecognized format), report false rather than relying on
+	// semver.Compare's handling of invalid inputs.
+	if !semver.IsValid("v" + prerelease) {
+		return false
+	}
 	return semver.Compare("v"+prerelease, version) >= 0
 }
 
