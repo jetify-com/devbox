@@ -379,6 +379,15 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 		return "", err
 	}
 
+	// Only export the variables that Devbox actually adds or changes relative to
+	// the current environment. The output of this function is meant to be eval'd
+	// in the caller's shell (e.g. `eval "$(devbox shellenv)"`), so re-exporting
+	// variables that are already set to the same value is unnecessary and can
+	// fail in shells that mark some inherited variables as read-only (e.g.
+	// PROFILEREAD on openSUSE). See
+	// https://github.com/jetify-com/devbox/issues/2826.
+	envs = onlyModifiedEnvs(envs, envir.PairsToMap(os.Environ()))
+
 	// Use the appropriate export format based on shell type
 	var envStr string
 	if opts.ShellFormat == devopt.ShellFormatNushell {

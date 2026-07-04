@@ -14,6 +14,27 @@ import (
 
 const devboxSetPrefix = "__DEVBOX_SET_"
 
+// onlyModifiedEnvs returns the subset of envs whose values differ from those in
+// baseEnv (or that are absent from baseEnv entirely).
+//
+// It is used to avoid emitting `export` statements for variables that Devbox did
+// not actually change. Re-exporting a variable with the value it already has is
+// not only redundant, it can break shells that mark some inherited variables as
+// read-only. For example, openSUSE marks PROFILEREAD read-only, so
+// `eval "$(devbox global shellenv)"` failed with
+// "read-only variable: PROFILEREAD". See
+// https://github.com/jetify-com/devbox/issues/2826.
+func onlyModifiedEnvs(envs, baseEnv map[string]string) map[string]string {
+	modified := make(map[string]string, len(envs))
+	for k, v := range envs {
+		if base, ok := baseEnv[k]; ok && base == v {
+			continue
+		}
+		modified[k] = v
+	}
+	return modified
+}
+
 // exportify formats vars as a line-separated string of shell export statements.
 // Each line is of the form `export key="value";` with any special characters in
 // value escaped. This means that the shell will always interpret values as
