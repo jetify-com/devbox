@@ -34,6 +34,11 @@ func System() string {
 	return Default.System()
 }
 
+// LookPath calls [Nix.LookPath] on the default Nix installation.
+func LookPath() (string, error) {
+	return Default.LookPath()
+}
+
 // Version calls [Nix.Version] on the default Nix installation.
 func Version() string {
 	return Default.Version()
@@ -88,22 +93,44 @@ func (n *Nix) resolvePath() (string, error) {
 		return path, nil
 	}
 
-	try := []string{
-		"/nix/var/nix/profiles/default/bin/nix",
-		"/run/current-system/sw/bin",
-	}
-	for _, path := range try {
+	for _, path := range nixBinaryFallbackPaths() {
 		stat, err := os.Stat(path)
-		if err == nil {
-			// Is it executable and not a directory?
-			m := stat.Mode()
-			if !m.IsDir() && m.Perm()&0o111 != 0 {
-				n.lookPath.Store(&path)
-				return path, nil
-			}
+		if err != nil {
+			continue
+		}
+		// Is it an executable file (and not a directory)?
+		m := stat.Mode()
+		if !m.IsDir() && m.Perm()&0o111 != 0 {
+			n.lookPath.Store(&path)
+			return path, nil
 		}
 	}
 	return "", pathErr
+}
+
+// LookPath returns the absolute path to the nix executable. It searches $PATH
+// (after attempting to source the Nix profile) and, failing that, the
+// well-known installation locations in [nixBinaryFallbackPaths]. It returns an
+// error if nix cannot be found.
+//
+// Because Devbox invokes nix by absolute path, a non-error result here means
+// nix commands will run even when nix is not on $PATH — which happens, for
+// example, when the login shell has not sourced the Nix profile (common with
+// non-POSIX shells such as fish).
+func (n *Nix) LookPath() (string, error) {
+	return n.resolvePath()
+}
+
+// nixBinaryFallbackPaths returns well-known absolute paths to the nix
+// executable, searched in order when nix is not found on $PATH. Each entry must
+// point at the nix binary itself, not the directory that contains it.
+func nixBinaryFallbackPaths() []string {
+	return []string{
+		"/nix/var/nix/profiles/default/bin/nix",
+		// On NixOS, nix is provided through the current system profile rather
+		// than /nix/var/nix/profiles/default.
+		"/run/current-system/sw/bin/nix",
+	}
 }
 
 func (n *Nix) logger() *slog.Logger {
