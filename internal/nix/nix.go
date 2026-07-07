@@ -45,6 +45,13 @@ type PrintDevEnvArgs struct {
 	FlakeDir             string
 	PrintDevEnvCachePath string
 	UsePrintDevEnvCache  bool
+
+	// AllowUnfree and AllowInsecure report whether the user has opted into
+	// unfree or insecure packages through the resolved devbox config (for
+	// example via NIXPKGS_ALLOW_UNFREE in devbox.json's "env"). They are in
+	// addition to the same variables read from the process environment.
+	AllowUnfree   bool
+	AllowInsecure bool
 }
 
 // PrintDevEnv calls `nix print-dev-env -f <path>` and returns its output. The output contains
@@ -75,10 +82,27 @@ func (*NixInstance) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*Pr
 	ref := flake.Ref{Type: flake.TypePath, Path: flakeDirResolved}
 
 	if len(data) == 0 {
+		// Honor unfree/insecure opt-in from either the process environment
+		// or the resolved devbox config.
+		allowUnfree := args.AllowUnfree || IsUnfreeAllowed()
+		allowInsecure := args.AllowInsecure || IsInsecureAllowed()
+
 		cmd := Command("print-dev-env", "--json")
-		if usePrintDevEnvImpure() {
+		if usePrintDevEnvImpure(allowUnfree, allowInsecure) {
 			cmd.Args = append(cmd.Args, "--impure")
-			cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
+			// Only inject the allow-* variables the user actually opted
+			// into. When impure mode is enabled solely via the feature
+			// flag, cmd.Env is left inheriting the parent environment.
+			if allowUnfree || allowInsecure {
+				env := os.Environ()
+				if allowUnfree {
+					env = allowUnfreeEnv(env)
+				}
+				if allowInsecure {
+					env = allowInsecureEnv(env)
+				}
+				cmd.Env = env
+			}
 		}
 		cmd.Args = append(cmd.Args, ref)
 		slog.Debug("running print-dev-env cmd", "cmd", cmd)
@@ -109,10 +133,8 @@ func (*NixInstance) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*Pr
 // when building and installing packages. Pure mode is kept otherwise because
 // --impure disables Nix's evaluation caching, which makes the command slower.
 // See https://github.com/jetify-com/devbox/issues/2196.
-func usePrintDevEnvImpure() bool {
-	return featureflag.ImpurePrintDevEnv.Enabled() ||
-		IsUnfreeAllowed() ||
-		IsInsecureAllowed()
+func usePrintDevEnvImpure(allowUnfree, allowInsecure bool) bool {
+	return featureflag.ImpurePrintDevEnv.Enabled() || allowUnfree || allowInsecure
 }
 
 func savePrintDevEnvCache(path string, out PrintDevEnvOut) error {

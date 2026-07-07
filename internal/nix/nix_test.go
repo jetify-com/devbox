@@ -28,25 +28,35 @@ func TestIsUnfreeAllowed(t *testing.T) {
 // those environment variables are honored.
 func TestUsePrintDevEnvImpure(t *testing.T) {
 	cases := []struct {
-		name   string
-		unfree string
-		insec  string
-		want   bool
+		name          string
+		allowUnfree   bool
+		allowInsecure bool
+		want          bool
 	}{
-		{name: "neither set", want: false},
-		{name: "unfree disabled", unfree: "0", want: false},
-		{name: "unfree allowed", unfree: "1", want: true},
-		{name: "insecure allowed", insec: "true", want: true},
-		{name: "both allowed", unfree: "1", insec: "1", want: true},
+		{name: "neither opted in", want: false},
+		{name: "unfree opted in", allowUnfree: true, want: true},
+		{name: "insecure opted in", allowInsecure: true, want: true},
+		{name: "both opted in", allowUnfree: true, allowInsecure: true, want: true},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv("NIXPKGS_ALLOW_UNFREE", tt.unfree)
-			t.Setenv("NIXPKGS_ALLOW_INSECURE", tt.insec)
-			if got := usePrintDevEnvImpure(); got != tt.want {
-				t.Errorf("usePrintDevEnvImpure() = %v, want %v", got, tt.want)
+			// Keep the result independent of any ambient feature-flag env.
+			t.Setenv("DEVBOX_FEATURE_IMPURE_PRINT_DEV_ENV", "0")
+			if got := usePrintDevEnvImpure(tt.allowUnfree, tt.allowInsecure); got != tt.want {
+				t.Errorf("usePrintDevEnvImpure(%v, %v) = %v, want %v",
+					tt.allowUnfree, tt.allowInsecure, got, tt.want)
 			}
 		})
+	}
+}
+
+// TestUsePrintDevEnvImpureFeatureFlag verifies that the IMPURE_PRINT_DEV_ENV
+// feature flag forces impure mode even when the user hasn't opted into unfree
+// or insecure packages.
+func TestUsePrintDevEnvImpureFeatureFlag(t *testing.T) {
+	t.Setenv("DEVBOX_FEATURE_IMPURE_PRINT_DEV_ENV", "1")
+	if !usePrintDevEnvImpure(false, false) {
+		t.Error("usePrintDevEnvImpure(false, false) = false with feature flag set, want true")
 	}
 }
 
