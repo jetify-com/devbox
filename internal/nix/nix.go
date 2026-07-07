@@ -76,8 +76,9 @@ func (*NixInstance) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*Pr
 
 	if len(data) == 0 {
 		cmd := Command("print-dev-env", "--json")
-		if featureflag.ImpurePrintDevEnv.Enabled() {
+		if usePrintDevEnvImpure() {
 			cmd.Args = append(cmd.Args, "--impure")
+			cmd.Env = allowUnfreeEnv(allowInsecureEnv(os.Environ()))
 		}
 		cmd.Args = append(cmd.Args, ref)
 		slog.Debug("running print-dev-env cmd", "cmd", cmd)
@@ -98,6 +99,20 @@ func (*NixInstance) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*Pr
 	}
 
 	return &out, nil
+}
+
+// usePrintDevEnvImpure reports whether `nix print-dev-env` should be run with
+// the --impure flag. By default print-dev-env runs in pure mode, which ignores
+// the NIXPKGS_ALLOW_UNFREE and NIXPKGS_ALLOW_INSECURE environment variables.
+// When the user has opted into unfree or insecure packages, we run with
+// --impure so those variables take effect, matching what devbox already does
+// when building and installing packages. Pure mode is kept otherwise because
+// --impure disables Nix's evaluation caching, which makes the command slower.
+// See https://github.com/jetify-com/devbox/issues/2196.
+func usePrintDevEnvImpure() bool {
+	return featureflag.ImpurePrintDevEnv.Enabled() ||
+		IsUnfreeAllowed() ||
+		IsInsecureAllowed()
 }
 
 func savePrintDevEnvCache(path string, out PrintDevEnvOut) error {

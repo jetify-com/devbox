@@ -4,6 +4,52 @@ import (
 	"testing"
 )
 
+func TestIsUnfreeAllowed(t *testing.T) {
+	cases := map[string]bool{
+		"":      false,
+		"0":     false,
+		"false": false,
+		"1":     true,
+		"true":  true,
+	}
+	for value, want := range cases {
+		t.Run(value, func(t *testing.T) {
+			t.Setenv("NIXPKGS_ALLOW_UNFREE", value)
+			if got := IsUnfreeAllowed(); got != want {
+				t.Errorf("IsUnfreeAllowed() with NIXPKGS_ALLOW_UNFREE=%q = %v, want %v", value, got, want)
+			}
+		})
+	}
+}
+
+// TestUsePrintDevEnvImpure verifies the fix for
+// https://github.com/jetify-com/devbox/issues/2196: print-dev-env must run
+// with --impure whenever the user opts into unfree or insecure packages so
+// those environment variables are honored.
+func TestUsePrintDevEnvImpure(t *testing.T) {
+	cases := []struct {
+		name   string
+		unfree string
+		insec  string
+		want   bool
+	}{
+		{name: "neither set", want: false},
+		{name: "unfree disabled", unfree: "0", want: false},
+		{name: "unfree allowed", unfree: "1", want: true},
+		{name: "insecure allowed", insec: "true", want: true},
+		{name: "both allowed", unfree: "1", insec: "1", want: true},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("NIXPKGS_ALLOW_UNFREE", tt.unfree)
+			t.Setenv("NIXPKGS_ALLOW_INSECURE", tt.insec)
+			if got := usePrintDevEnvImpure(); got != tt.want {
+				t.Errorf("usePrintDevEnvImpure() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestParseInsecurePackagesFromExitError(t *testing.T) {
 	errorText := `
   at /nix/store/xwl0am98klc8mz074jdyvpnyc6vwzlla-source/lib/customisation.nix:267:17:
