@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -334,15 +335,37 @@ func (c *Config) Packages(
 		}
 	}
 
-	// Keep only the last occurrence of each package (by name).
+	// Keep only the last occurrence of each package. Plain packages are
+	// deduped by name so that a later "pkg@v2" replaces an earlier
+	// "pkg@v1". Flake references, however, can install several distinct
+	// outputs from the same flake via a "#fragment" (for example
+	// "git+https://host/repo.git#toolA" and "...#toolB"). Once parsed those
+	// share a name (and for URLs containing "user@host" the name is even
+	// truncated to the part before the "@"), so keying on name alone
+	// collapses them into a single package. Key such references on their
+	// full reference so each output is preserved. See jetify-com/devbox#2662.
 	mutable.Reverse(packages)
 	packages = lo.UniqBy(
 		packages,
-		func(p configfile.Package) string { return p.Name },
+		func(p configfile.Package) string {
+			if ref := p.VersionedName(); isFlakeReference(ref) {
+				return ref
+			}
+			return p.Name
+		},
 	)
 	mutable.Reverse(packages)
 
 	return packages
+}
+
+// isFlakeReference reports whether ref looks like a flake installable rather
+// than a plain "name@version" package. Flake references contain a URL scheme
+// separator ("://") or an output fragment ("#"); plain package versions never
+// do. Such references may point at distinct outputs of the same flake, so they
+// must not be collapsed by package name.
+func isFlakeReference(ref string) bool {
+	return strings.Contains(ref, "://") || strings.Contains(ref, "#")
 }
 
 func (c *Config) NixPkgsCommitHash() string {

@@ -560,6 +560,63 @@ func TestLoadRecursiveMultipleBuiltinPluginIncludes(t *testing.T) {
 	}
 }
 
+// TestPackagesPreservesMultipleFlakeOutputs is a regression test for
+// jetify-com/devbox#2662: adding two outputs from the same remote flake used to
+// drop the first one. Both outputs are parsed with the same package Name (the
+// "#fragment" that distinguishes them, and part of the "user@host" URL, is
+// parsed into the version), so deduping by Name alone collapsed them.
+func TestPackagesPreservesMultipleFlakeOutputs(t *testing.T) {
+	cfg, err := loadBytes([]byte(`{
+		"packages": [
+			"kubectl@latest",
+			"git+http://git@example.com/group/utils.git#kubeupdate",
+			"git+http://git@example.com/group/utils.git#getcrds"
+		]
+	}`))
+	if err != nil {
+		t.Fatalf("loadBytes error: %v", err)
+	}
+
+	got := map[string]bool{}
+	for _, pkg := range cfg.Packages(false /*includeRemovedTriggerPackages*/) {
+		got[pkg.VersionedName()] = true
+	}
+
+	want := []string{
+		"kubectl@latest",
+		"git+http://git@example.com/group/utils.git#kubeupdate",
+		"git+http://git@example.com/group/utils.git#getcrds",
+	}
+	for _, name := range want {
+		if !got[name] {
+			t.Errorf("Packages() dropped %q; got %v", name, got)
+		}
+	}
+	if len(got) != len(want) {
+		t.Errorf("Packages() returned %d packages, want %d: %v", len(got), len(want), got)
+	}
+}
+
+// TestPackagesDedupesByNameForPlainPackages verifies that the flake-aware
+// dedup key preserves the original "last version wins" behavior for plain
+// (non-flake) packages.
+func TestPackagesDedupesByNameForPlainPackages(t *testing.T) {
+	cfg, err := loadBytes([]byte(`{
+		"packages": ["python@3.10", "python@3.11"]
+	}`))
+	if err != nil {
+		t.Fatalf("loadBytes error: %v", err)
+	}
+
+	pkgs := cfg.Packages(false /*includeRemovedTriggerPackages*/)
+	if len(pkgs) != 1 {
+		t.Fatalf("Packages() returned %d packages, want 1: %v", len(pkgs), pkgs)
+	}
+	if got := pkgs[0].VersionedName(); got != "python@3.11" {
+		t.Errorf("Packages() kept %q, want the last occurrence \"python@3.11\"", got)
+	}
+}
+
 // testLockProject satisfies the unexported lock.devboxProject interface for tests.
 type testLockProject struct {
 	dir string
