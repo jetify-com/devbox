@@ -577,9 +577,10 @@ func TestPackagesPreservesMultipleFlakeOutputs(t *testing.T) {
 		t.Fatalf("loadBytes error: %v", err)
 	}
 
-	got := map[string]bool{}
-	for _, pkg := range cfg.Packages(false /*includeRemovedTriggerPackages*/) {
-		got[pkg.VersionedName()] = true
+	pkgs := cfg.Packages(false /*includeRemovedTriggerPackages*/)
+	counts := map[string]int{}
+	for _, pkg := range pkgs {
+		counts[pkg.VersionedName()]++
 	}
 
 	want := []string{
@@ -588,12 +589,18 @@ func TestPackagesPreservesMultipleFlakeOutputs(t *testing.T) {
 		"git+http://git@example.com/group/utils.git#getcrds",
 	}
 	for _, name := range want {
-		if !got[name] {
-			t.Errorf("Packages() dropped %q; got %v", name, got)
+		switch counts[name] {
+		case 0:
+			t.Errorf("Packages() dropped %q; got %v", name, pkgs)
+		case 1: // expected
+		default:
+			t.Errorf("Packages() returned %q %d times, want exactly once", name, counts[name])
 		}
 	}
-	if len(got) != len(want) {
-		t.Errorf("Packages() returned %d packages, want %d: %v", len(got), len(want), got)
+	// Assert on the slice length (not the deduped map) so an accidental
+	// regression that returns duplicates is also caught.
+	if len(pkgs) != len(want) {
+		t.Errorf("Packages() returned %d packages, want %d: %v", len(pkgs), len(want), pkgs)
 	}
 }
 
