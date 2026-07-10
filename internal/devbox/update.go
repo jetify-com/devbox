@@ -85,11 +85,13 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		return err
 	}
 
-	// With --no-install we only refresh the lockfile, so skip every step that
-	// shells out to Nix. This keeps `devbox update --no-install` usable in
-	// environments where Nix isn't fully set up (e.g. CI/Renovate), where
-	// running "nix flake update" or "nix path-info" would otherwise fail.
-	// See jetify-com/devbox#2585.
+	// With --no-install, skip the two post-update steps that shell out to Nix:
+	// "nix flake update" (via FlakeUpdate) and "nix path-info" (via
+	// FixMissingStorePaths). This keeps `devbox update --no-install` usable in
+	// environments where Nix isn't fully set up (e.g. CI/Renovate), where those
+	// calls would otherwise fail. Earlier steps in the update flow may still
+	// resolve flake refs via Nix; --no-install only avoids these install-like
+	// steps. See jetify-com/devbox#2585.
 	if !opts.NoInstall {
 		// I'm not entirely sure this is even needed, so ignoring the error.
 		// It's definitely not needed for non-flakes. (which is 99.9% of packages)
