@@ -85,15 +85,22 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		return err
 	}
 
-	// I'm not entirely sure this is even needed, so ignoring the error.
-	// It's definitely not needed for non-flakes. (which is 99.9% of packages)
-	// It will return an error if .devbox/gen/flake is missing
-	// TODO: Remove this if it's not needed.
-	_ = nix.FlakeUpdate(shellgen.FlakePath(d))
+	// With --no-install we only refresh the lockfile, so skip every step that
+	// shells out to Nix. This keeps `devbox update --no-install` usable in
+	// environments where Nix isn't fully set up (e.g. CI/Renovate), where
+	// running "nix flake update" or "nix path-info" would otherwise fail.
+	// See jetify-com/devbox#2585.
+	if !opts.NoInstall {
+		// I'm not entirely sure this is even needed, so ignoring the error.
+		// It's definitely not needed for non-flakes. (which is 99.9% of packages)
+		// It will return an error if .devbox/gen/flake is missing
+		// TODO: Remove this if it's not needed.
+		_ = nix.FlakeUpdate(shellgen.FlakePath(d))
 
-	// fix any missing store paths.
-	if err = d.FixMissingStorePaths(ctx); err != nil {
-		return errors.WithStack(err)
+		// fix any missing store paths.
+		if err = d.FixMissingStorePaths(ctx); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	return plugin.Update()
