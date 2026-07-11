@@ -14,7 +14,7 @@
   },
   "create_files": {
     "{{ .Virtenv }}/temp": "",
-    "{{ .DevboxDir }}/mime.types": "nginx/mime.types",
+    "{{ .Virtenv }}/mime.types": "nginx/mime.types",
     "{{ .Virtenv }}/process-compose.yaml": "nginx/process-compose.yaml",
     "{{ .DevboxDir }}/nginx.template": "nginx/nginx.template",
     "{{ .DevboxDir }}/nginx.conf": "nginx/nginx.conf",

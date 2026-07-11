@@ -4,6 +4,7 @@ processes:
   nginx:
     command: |
       if [ -f $NGINX_CONFDIR/nginx.template ]; then envsubst $(awk 'BEGIN {for (k in ENVIRON) {printf "$"k","}}') < $NGINX_CONFDIR/nginx.template > $NGINX_CONFDIR/nginx.conf; fi
+      if [ ! -f $NGINX_CONFDIR/mime.types ] && [ -f $NGINX_PATH_PREFIX/mime.types ]; then cp $NGINX_PATH_PREFIX/mime.types $NGINX_CONFDIR/mime.types; fi
       nginx -p $NGINX_PATH_PREFIX -c $NGINX_CONFDIR/nginx.conf -e error.log -g "pid nginx.pid;daemon off;"
     availability:
       restart: on_failure
