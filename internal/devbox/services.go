@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"text/tabwriter"
 
+	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/services"
@@ -107,18 +108,20 @@ func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error
 	// non-empty (see jetify-com/devbox#2611). ListServices queries the running
 	// process-compose server directly, independent of any compose file.
 	if services.ProcessManagerIsRunning(d.projectDir) {
-		tw := tabwriter.NewWriter(d.stderr, 3, 2, 8, ' ', tabwriter.TabIndent)
 		pcSvcs, err := services.ListServices(ctx, d.projectDir, d.stderr)
 		if err != nil {
-			fmt.Fprintln(d.stderr, "Error listing services: ", err)
-		} else {
-			fmt.Fprintln(d.stderr, "Services running in process-compose:")
-			fmt.Fprintln(tw, "PID\tNAME\tNAMESPACE\tSTATUS\tAGE\tHEALTH\tRESTARTS\tEXIT CODE")
-			for _, s := range pcSvcs {
-				fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\t%s\t%d\t%d\n", s.PID, s.Name, s.Namespace, s.Status, s.Age, s.Health, s.Restarts, s.ExitCode)
-			}
-			tw.Flush()
+			// Surface the failure so the command exits non-zero (e.g. if we
+			// cannot reach the running process-compose server), rather than
+			// hiding it and exiting successfully.
+			return errors.WithStack(err)
 		}
+		tw := tabwriter.NewWriter(d.stderr, 3, 2, 8, ' ', tabwriter.TabIndent)
+		fmt.Fprintln(d.stderr, "Services running in process-compose:")
+		fmt.Fprintln(tw, "PID\tNAME\tNAMESPACE\tSTATUS\tAGE\tHEALTH\tRESTARTS\tEXIT CODE")
+		for _, s := range pcSvcs {
+			fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\t%s\t%d\t%d\n", s.PID, s.Name, s.Namespace, s.Status, s.Age, s.Health, s.Restarts, s.ExitCode)
+		}
+		tw.Flush()
 		return nil
 	}
 
