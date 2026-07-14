@@ -602,11 +602,23 @@ func (p *Package) InputAddressedPaths() ([]string, error) {
 }
 
 func (p *Package) InputAddressedPathForOutput(output string) (string, error) {
-	if inCache, err := p.IsInBinaryCache(); err != nil {
+	// Check that this specific output is in the binary cache, rather than
+	// requiring every one of the package's default outputs to be cached.
+	//
+	// The flake template calls this per-output, and only for outputs it has
+	// already determined are cached (via GetOutputsWithCache, which checks each
+	// output individually). A multi-output package can have the requested
+	// output cached while some other default output is not. Guarding with the
+	// stricter IsInBinaryCache (which requires all default outputs) would
+	// spuriously fail in that case with "cannot be fetched from binary cache
+	// store", even though the output being fetched here is present. This also
+	// matches InstallableForOutput, which already gates on IsOutputInBinaryCache.
+	// See issue #2921.
+	if inCache, err := p.IsOutputInBinaryCache(output); err != nil {
 		return "", err
 	} else if !inCache {
 		return "",
-			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
+			errors.Errorf("Package %q output %q cannot be fetched from binary cache store", p.Raw, output)
 	}
 
 	entry, err := p.lockfile.Resolve(p.LockfileKey())
