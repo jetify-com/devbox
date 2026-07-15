@@ -45,8 +45,9 @@ This example configures a few environment variables in `devbox.json`:
 - Adding `$GOPATH/bin` to `PATH` makes tools installed with `go install`
   available inside the Devbox shell.
 
-The `init_hook` exports `GOROOT` so that the Go toolchain provided by Nix is
-used:
+Which Go toolchain is active is determined by the `go` binary on `PATH` (here,
+the one provided by Nix). The `init_hook` sets `GOROOT` to match that
+installation, which some tooling relies on:
 
 ```json
 "shell": {
@@ -58,6 +59,11 @@ used:
 
 > **Note on `GOPATH`:** avoid setting `GOPATH` to your project directory (e.g.
 > `"GOPATH": "$PWD"`). When a module (a directory containing `go.mod`) lives
-> inside `GOPATH`, the Go toolchain prints `go: warning: ignoring go.mod in
-> $GOPATH` and falls back to legacy `GOPATH` mode. Using `$HOME/go` (as above)
-> keeps module-aware builds working as expected.
+> inside `GOPATH`, the Go toolchain falls back to legacy `GOPATH` mode and
+> prints a warning:
+>
+> ```
+> go: warning: ignoring go.mod in $GOPATH /path/to/your/project
+> ```
+>
+> Using `$HOME/go` (as above) keeps module-aware builds working as expected.
