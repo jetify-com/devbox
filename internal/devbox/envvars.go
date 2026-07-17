@@ -93,7 +93,15 @@ func exportify(w io.Writer, vars map[string]string) string {
 				switch r {
 				// Special characters inside double quotes:
 				// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
-				case '$', '`', '"', '\\', '\n':
+				//
+				// Note: a newline is NOT escaped. Inside double quotes a bare
+				// newline is already a literal newline, whereas a backslash
+				// followed by a newline is a line continuation that the shell
+				// removes entirely. Escaping newlines would collapse a
+				// multi-line value onto a single line and silently corrupt it
+				// (e.g. a PROMPT_COMMAND containing `... 2>&1\n__bp_...` would
+				// become `... 2>&1__bp_...`, causing an "ambiguous redirect").
+				case '$', '`', '"', '\\':
 					strb.WriteRune('\\')
 				}
 				strb.WriteRune(r)
