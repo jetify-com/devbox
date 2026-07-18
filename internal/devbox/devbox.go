@@ -820,6 +820,18 @@ func (d *Devbox) computeEnv(
 
 	slog.Debug("computed environment PATH", "path", env["PATH"])
 
+	// Expose the Devbox profile's share directory through XDG_DATA_DIRS so that
+	// data files installed by packages are discoverable inside the Devbox
+	// environment. Most notably this includes shell completions (which Nix
+	// packages install under share/bash-completion/completions), but also man
+	// pages, icons, and other XDG data. Tools such as bash-completion look these
+	// up via XDG_DATA_DIRS, so without the profile's share directory the
+	// completions shipped by packages like kubectl are never loaded. This is
+	// done even in --pure mode so completions keep working there too.
+	// See https://github.com/jetify-com/devbox/issues/2776
+	profileShareDir := filepath.Join(d.projectDir, nix.ProfilePath, "share")
+	env["XDG_DATA_DIRS"] = envpath.JoinPathLists(profileShareDir, env["XDG_DATA_DIRS"])
+
 	if !envOpts.Pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
 		env["XDG_DATA_DIRS"] = envpath.JoinPathLists(env["XDG_DATA_DIRS"], os.Getenv("XDG_DATA_DIRS"))

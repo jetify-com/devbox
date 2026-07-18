@@ -1,0 +1,13 @@
+# The Devbox profile's share directory must be exposed through XDG_DATA_DIRS so
+# that data files installed by packages are discoverable inside the Devbox
+# environment. Most importantly this lets tools like bash-completion find the
+# shell completions that packages install under share/bash-completion/completions.
+# https://github.com/jetify-com/devbox/issues/2776
+
+exec devbox run echo '$XDG_DATA_DIRS'
+stdout '\.devbox/nix/profile/default/share'
+
+-- devbox.json --
+{
+  "packages": []
+}
