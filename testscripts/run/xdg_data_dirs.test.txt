@@ -7,6 +7,11 @@
 exec devbox run echo '$XDG_DATA_DIRS'
 stdout '\.devbox/nix/profile/default/share'
 
+# The profile's share directory must also be exposed in --pure mode, where the
+# host's XDG_DATA_DIRS is not inherited, so completions keep working there too.
+exec devbox run --pure echo '$XDG_DATA_DIRS'
+stdout '\.devbox/nix/profile/default/share'
+
 -- devbox.json --
 {
   "packages": []
