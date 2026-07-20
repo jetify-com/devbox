@@ -89,8 +89,8 @@ func exportify(w io.Writer, vars map[string]string) string {
 			strb.WriteString("export ")
 			strb.WriteString(key)
 			strb.WriteString(`="`)
-			for _, r := range vars[key] {
-				switch r {
+			for _, char := range vars[key] {
+				switch char {
 				// Special characters inside double quotes:
 				// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
 				// Note: a newline is NOT escaped. Inside double quotes a bare
@@ -101,7 +101,7 @@ func exportify(w io.Writer, vars map[string]string) string {
 				case '$', '`', '"', '\\':
 					strb.WriteRune('\\')
 				}
-				strb.WriteRune(r)
+				strb.WriteRune(char)
 			}
 			strb.WriteString("\";\n")
 		}
