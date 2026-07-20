@@ -47,6 +47,29 @@ func TestExportifySkipsInvalidNames(t *testing.T) {
 	}
 }
 
+// TestExportifyPreservesNewlines ensures that env var values containing newlines
+// (e.g. a PROMPT_COMMAND whose commands are newline-separated, as set up by
+// bash-preexec) are emitted with literal newlines rather than backslash-newline
+// line continuations. A backslash-newline is deleted by the shell, which would
+// glue adjacent lines together and corrupt the value (see issue #2814, where
+// `... 2>&1\n__bp_interactive_mode` became `... 2>&1__bp_interactive_mode` and
+// produced a "1__bp_interactive_mode: ambiguous redirect" error).
+func TestExportifyPreservesNewlines(t *testing.T) {
+	got := exportify(io.Discard, map[string]string{
+		"PROMPT_COMMAND": "__bp_precmd_invoke_cmd\ncmd >/dev/null 2>&1\n__bp_interactive_mode",
+	})
+
+	want := "export PROMPT_COMMAND=\"__bp_precmd_invoke_cmd\ncmd >/dev/null 2>&1\n__bp_interactive_mode\";"
+	if got != want {
+		t.Errorf("exportify did not preserve newlines\ngot:\n%q\nwant:\n%q", got, want)
+	}
+	// A backslash immediately before a newline is a shell line continuation and
+	// must not appear, since it would delete the newline and join the lines.
+	if strings.Contains(got, "\\\n") {
+		t.Errorf("exportify emitted a backslash-newline line continuation, which corrupts multi-line values:\n%q", got)
+	}
+}
+
 func TestExportifyNushellSkipsInvalidNames(t *testing.T) {
 	got := exportifyNushell(io.Discard, map[string]string{
 		"GOOD": "value",
