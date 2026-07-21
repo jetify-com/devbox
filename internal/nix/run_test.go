@@ -4,6 +4,8 @@
 package nix
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -23,7 +25,12 @@ func TestRunScriptUsesBashForBashisms(t *testing.T) {
 	}
 
 	// `source` fails under dash (`source: not found`) but succeeds under bash.
-	err := RunScript(t.TempDir(), "source /dev/null", map[string]string{})
+	dir := t.TempDir()
+	sourced := filepath.Join(dir, "sourced.sh")
+	if err := os.WriteFile(sourced, []byte("SOURCED=1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	err := RunScript(dir, "source "+sourced, map[string]string{})
 	if err != nil {
 		t.Fatalf("RunScript should run bashisms under bash, got error: %v", err)
 	}

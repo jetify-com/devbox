@@ -45,8 +45,18 @@ func RunScript(projectDir, cmdWithArgs string, env map[string]string) error {
 // path) when bash isn't available.
 // See https://github.com/jetify-com/devbox/issues/2607
 func scriptRunnerPath() string {
+	// Prefer bash on PATH.
 	if bashPath := cmdutil.GetPathOrDefault("bash", ""); bashPath != "" {
 		return bashPath
 	}
+	// bash may be installed at a well-known location even when it isn't on
+	// PATH (e.g. a restricted environment where PATH doesn't include /bin or
+	// /usr/bin). Check those before giving up on bash.
+	for _, p := range []string{"/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"} {
+		if fi, err := os.Stat(p); err == nil && !fi.IsDir() {
+			return p
+		}
+	}
+	// Fall back to POSIX sh.
 	return cmdutil.GetPathOrDefault("sh", "/bin/sh")
 }
