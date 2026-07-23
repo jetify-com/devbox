@@ -28,6 +28,21 @@
               --add-flags '--basedir=$out --datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
           fi
 
+          # Point the client binaries at the project's socket. Unlike the MySQL
+          # client, the MariaDB client does not honor the MYSQL_UNIX_PORT
+          # environment variable, so without this it falls back to its
+          # compile-time default (e.g. /run/mysqld/mysqld.sock).
+          # https://github.com/jetify-com/devbox/issues/2522
+          if [ -e "$out/bin/mysql" ]; then
+            wrapProgram "$out/bin/mysql" \
+              --add-flags '--socket=''$MYSQL_UNIX_PORT';
+          fi
+
+          if [ -e "$out/bin/mariadb" ]; then
+            wrapProgram "$out/bin/mariadb" \
+              --add-flags '--socket=''$MYSQL_UNIX_PORT';
+          fi
+
           wrapProgram "$out/bin/mysql_install_db" \
             --add-flags '--basedir=$out --datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --basedir=''$MYSQL_BASEDIR';
 
