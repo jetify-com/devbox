@@ -47,6 +47,28 @@ func TestExportifySkipsInvalidNames(t *testing.T) {
 	}
 }
 
+// TestExportifyPreservesNewlines ensures multi-line env values (e.g. a
+// PROMPT_COMMAND that spans several lines) survive round-tripping through the
+// shell. A newline must be emitted literally, not as a backslash-newline: inside
+// double quotes the latter is a line continuation that the shell removes, which
+// silently joins adjacent lines and corrupts the value. See issue #2814, where a
+// multi-line PROMPT_COMMAND collapsed into `... 2>&1__bp_interactive_mode` and
+// produced a "bash: ...: ambiguous redirect" error at every prompt.
+func TestExportifyPreservesNewlines(t *testing.T) {
+	value := "line1 >/dev/null 2>&1\n__bp_interactive_mode"
+	got := exportify(io.Discard, map[string]string{"PROMPT_COMMAND": value})
+
+	// The value must be emitted with a literal newline, never a
+	// backslash-newline (which bash would strip as a line continuation).
+	if strings.Contains(got, "2>&1\\\n") {
+		t.Errorf("newline was escaped as a line continuation, which corrupts the value:\n%s", got)
+	}
+	want := "export PROMPT_COMMAND=\"line1 >/dev/null 2>&1\n__bp_interactive_mode\";"
+	if got != want {
+		t.Errorf("exportify(...) = %q, want %q", got, want)
+	}
+}
+
 func TestExportifyNushellSkipsInvalidNames(t *testing.T) {
 	got := exportifyNushell(io.Discard, map[string]string{
 		"GOOD": "value",
