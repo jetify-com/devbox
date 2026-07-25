@@ -4,7 +4,6 @@
 package generate
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,7 +42,7 @@ func generateDevDockerfile(t *testing.T, rootUser bool) string {
 		Path:     dir,
 		RootUser: rootUser,
 	}
-	if err := g.CreateDockerfile(context.Background(), CreateDockerfileOptions{
+	if err := g.CreateDockerfile(t.Context(), CreateDockerfileOptions{
 		ForType: "dev",
 	}); err != nil {
 		t.Fatalf("CreateDockerfile failed: %v", err)
