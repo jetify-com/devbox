@@ -22,7 +22,7 @@ const (
 	region = "us-east-2"
 )
 
-func assumeRole(ctx context.Context, c *devopt.Credentials) (*aws.Config, error) {
+func assumeRole(ctx context.Context, cred *devopt.Credentials) (*aws.Config, error) {
 	// STS needs an explicit region to resolve its endpoint. Without one,
 	// users who don't have an AWS region configured in their environment hit
 	// "Invalid Configuration: Missing Region" when running `devbox global
@@ -36,8 +36,8 @@ func assumeRole(ctx context.Context, c *devopt.Credentials) (*aws.Config, error)
 		ctx,
 		&sts.AssumeRoleWithWebIdentityInput{
 			RoleArn:          aws.String(roleArn),
-			RoleSessionName:  aws.String(c.Email),
-			WebIdentityToken: aws.String(c.IDToken),
+			RoleSessionName:  aws.String(cred.Email),
+			WebIdentityToken: aws.String(cred.IDToken),
 		},
 	)
 	if err != nil {

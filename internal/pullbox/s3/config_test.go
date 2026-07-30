@@ -1,7 +1,6 @@
 package s3
 
 import (
-	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -29,7 +28,7 @@ func TestConfigPinsRegion(t *testing.T) {
 	t.Setenv("AWS_CONFIG_FILE", "/dev/null")
 	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", "/dev/null")
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// Without an explicit region, the loaded config has no region. This is the
 	// condition that produced the "Missing Region" error before the fix.
