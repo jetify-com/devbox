@@ -22,23 +22,31 @@ const (
 	region = "us-east-2"
 )
 
-func assumeRole(ctx context.Context, c *devopt.Credentials) (*aws.Config, error) {
-	noPermsConfig, _ := config.LoadDefaultConfig(ctx)
+func assumeRole(ctx context.Context, cred *devopt.Credentials) (*aws.Config, error) {
+	// STS needs an explicit region to resolve its endpoint. Without one,
+	// users who don't have an AWS region configured in their environment hit
+	// "Invalid Configuration: Missing Region" when running `devbox global
+	// push`. Pin it to the bucket's region, same as the config below.
+	noPermsConfig, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 	stsClient := sts.NewFromConfig(noPermsConfig)
 	creds, err := stsClient.AssumeRoleWithWebIdentity(
 		ctx,
 		&sts.AssumeRoleWithWebIdentityInput{
 			RoleArn:          aws.String(roleArn),
-			RoleSessionName:  aws.String(c.Email),
-			WebIdentityToken: aws.String(c.IDToken),
+			RoleSessionName:  aws.String(cred.Email),
+			WebIdentityToken: aws.String(cred.IDToken),
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	config, err := config.LoadDefaultConfig(
+	cfg, err := config.LoadDefaultConfig(
 		ctx,
+		config.WithRegion(region),
 		config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
 				*creds.Credentials.AccessKeyId,
@@ -47,9 +55,8 @@ func assumeRole(ctx context.Context, c *devopt.Credentials) (*aws.Config, error)
 			),
 		),
 	)
-	config.Region = region
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return &config, err
+	return &cfg, nil
 }
