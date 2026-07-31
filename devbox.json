@@ -2,16 +2,19 @@
   "name":        "devbox",
   "description": "Instant, easy, and predictable development environments",
   "packages": {
-    "fd":  "latest",
-    "git": "latest",
-    "go":  "latest"
+    "git": "",
+    "go":  "",
+    "fd":  "",
+  },
+  "nixpkgs": {
+    "commit": "8623c4c20aa4ca2f5fb81510d2944066c3fb0d96",
   },
   "env": {
     "GOENV": "off",
     "PATH":  "$PWD/dist/tools:$PATH:$PWD/dist",
-     // Disabling CGO is a workaround for a clang linker error in macos
-     // This should be okay, because Devbox doesn't require CGO
-     // https://github.com/NixOS/nixpkgs/issues/433688#issuecomment-3231557942
+    // Disabling CGO is a workaround for a clang linker error in macos
+    // This should be okay, because Devbox doesn't require CGO
+    // https://github.com/NixOS/nixpkgs/issues/433688#issuecomment-3231557942
     "CGO_ENABLED": "0",
   },
   "shell": {
@@ -21,7 +24,7 @@
       "test -z $FISH_VERSION && \\",
       "unset       GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK || \\",
       "set --erase GO111MODULE GOARCH GOFLAGS GOMOD GOOS GOROOT GOTOOLCHAIN GOWORK",
-      "GOBIN=$PWD/dist/tools go install tool"
+      "GOBIN=$PWD/dist/tools go install tool",
     ],
     "scripts": {
       // Build devbox for the current platform
@@ -34,7 +37,7 @@
         "devbox run build-darwin-amd64",
         "devbox run build-darwin-arm64",
         "devbox run build-linux-amd64",
-        "devbox run build-linux-arm64"
+        "devbox run build-linux-arm64",
       ],
       // Open VSCode
       "code":               "code .",
@@ -52,10 +55,10 @@
         "vendor=$(realpath $(mktemp -d))",
         "trap \"rm -rf $vendor\" EXIT",
         "go mod vendor -o $vendor",
-        "nix hash path $vendor >vendor-hash"
+        "nix hash path $vendor >vendor-hash",
       ],
       "build-flake": "nix build .",
-      "tidy": ["go mod tidy", "devbox run update-hash"],
+      "tidy":        ["go mod tidy", "devbox run update-hash"],
       // docker-testscripts runs the testscripts with Docker to exercise
       // Linux-specific tests. It invokes the test binary directly, so any extra
       // test runner flags must have their "-test." prefix.
@@ -74,8 +77,8 @@
         "GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c -o testscripts-linux-amd64",
         "GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go test -c -o testscripts-linux-arm64",
         "image=$(docker build --quiet --tag devbox-testscripts-ubuntu:noble --platform linux/amd64 .)",
-        "docker run --rm --mount type=volume,src=devbox-testscripts-amd64,dst=/nix --platform linux/amd64 -e DEVBOX_RUN_FAILING_TESTS -e DEVBOX_RUN_PROJECT_TESTS -e DEVBOX_DEBUG $image \"$@\""
-      ]
-    }
-  }
+        "docker run --rm --mount type=volume,src=devbox-testscripts-amd64,dst=/nix --platform linux/amd64 -e DEVBOX_RUN_FAILING_TESTS -e DEVBOX_RUN_PROJECT_TESTS -e DEVBOX_DEBUG $image \"$@\"",
+      ],
+    },
+  },
 }
