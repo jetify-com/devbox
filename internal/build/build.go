@@ -63,45 +63,6 @@ func OS() string {
 	return osName
 }
 
-func Issuer() string {
-	if IsDev {
-		return "https://laughing-agnesi-vzh2rap9f6.projects.oryapis.com"
-	}
-	return "https://accounts.jetify.com"
-}
-
-func ClientID() string {
-	if IsDev {
-		return "3945b320-bd31-4313-af27-846b67921acb"
-	}
-	return "ff3d4c9c-1ac8-42d9-bef1-f5218bb1a9f6"
-}
-
-func JetpackAPIHost() string {
-	if IsDev {
-		return "https://api.jetpack.dev"
-	}
-	return "https://api.jetpack.io"
-}
-
-func SuccessRedirect() string {
-	if IsDev {
-		return "https://auth.dev-jetify.com/account/login/success"
-	}
-	return "https://auth.jetify.com/account/login/success"
-}
-
-func Audience() []string {
-	return []string{"https://api.jetpack.io"}
-}
-
-func DashboardHostname() string {
-	if IsDev {
-		return "http://localhost:8080"
-	}
-	return "https://cloud.jetify.com"
-}
-
 // SourceDir searches for the source code directory that built the current
 // binary.
 func SourceDir() (string, error) {
