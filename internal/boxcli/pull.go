@@ -12,13 +12,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devbox"
 	"go.jetify.com/devbox/internal/devbox/devopt"
-	"go.jetify.com/devbox/internal/devbox/providers/identity"
-	"go.jetify.com/devbox/internal/goutil"
-	"go.jetify.com/devbox/internal/pullbox/s3"
-	"go.jetify.com/pkg/auth"
 )
 
 type pullCmdFlags struct {
@@ -32,10 +27,10 @@ func pullCmd() *cobra.Command {
 		Use:     "pull <file> | <url>",
 		Short:   "Pull a config from a file or URL",
 		Long:    "Pull a config from a file or URL. URLs must be prefixed with 'http://' or 'https://'.",
-		Args:    cobra.MaximumNArgs(1),
+		Args:    cobra.ExactArgs(1),
 		PreRunE: ensureNixInstalled,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return pullCmdFunc(cmd, goutil.GetDefaulted(args, 0), &flags)
+			return pullCmdFunc(cmd, args[0], &flags)
 		},
 	}
 
@@ -64,22 +59,9 @@ func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 		return errors.WithStack(err)
 	}
 
-	var creds devopt.Credentials
-	t, err := identity.GenSession(cmd.Context())
-	if err != nil && !errors.Is(err, auth.ErrNotLoggedIn) {
-		return errors.WithStack(err)
-	} else if t != nil && err == nil {
-		creds = devopt.Credentials{
-			IDToken: t.IDToken,
-			Email:   t.IDClaims().Email,
-			Sub:     t.IDClaims().Subject,
-		}
-	}
-
 	err = box.Pull(cmd.Context(), devopt.PullboxOpts{
-		URL:         pullPath,
-		Overwrite:   flags.force,
-		Credentials: creds,
+		URL:       pullPath,
+		Overwrite: flags.force,
 	})
 	if prompt := pullErrorPrompt(err); prompt != "" {
 		prompt := &survey.Confirm{Message: prompt}
@@ -90,15 +72,9 @@ func pullCmdFunc(cmd *cobra.Command, url string, flags *pullCmdFlags) error {
 			return nil
 		}
 		err = box.Pull(cmd.Context(), devopt.PullboxOpts{
-			URL:         pullPath,
-			Overwrite:   flags.force,
-			Credentials: creds,
+			URL:       pullPath,
+			Overwrite: flags.force,
 		})
-	}
-	if errors.Is(err, s3.ErrProfileNotFound) {
-		return usererr.New(
-			"Profile not found. Use `devbox global push` to create a new profile.",
-		)
 	}
 	if err != nil {
 		return err
