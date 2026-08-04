@@ -58,7 +58,6 @@ func RootCmd() *cobra.Command {
 	if featureflag.Auth.Enabled() {
 		command.AddCommand(authCmd())
 	}
-	command.AddCommand(cacheCmd())
 	command.AddCommand(createCmd())
 	command.AddCommand(secretsCmd())
 	command.AddCommand(generateCmd())
