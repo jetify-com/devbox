@@ -15,7 +15,6 @@ import (
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/pullbox/git"
-	"go.jetify.com/devbox/internal/pullbox/s3"
 	"go.jetify.com/devbox/internal/pullbox/tar"
 	"go.jetify.com/devbox/internal/ux"
 )
@@ -42,6 +41,10 @@ func (p *pullbox) Pull(ctx context.Context) error {
 	defer trace.StartRegion(ctx, "Pull").End()
 	var err error
 
+	if p.URL == "" {
+		return usererr.New("Nothing to pull from. Pass a git repo, URL, or file path to pull from.")
+	}
+
 	notEmpty, err := profileIsNotEmpty(p.ProjectDir())
 	if err != nil {
 		return err
@@ -49,24 +52,9 @@ func (p *pullbox) Pull(ctx context.Context) error {
 		return fs.ErrExist
 	}
 
-	if p.URL != "" {
-		ux.Finfof(os.Stderr, "Pulling global config from %s\n", p.URL)
-	} else {
-		ux.Finfof(os.Stderr, "Pulling global config\n")
-	}
+	ux.Finfof(os.Stderr, "Pulling global config from %s\n", p.URL)
 
 	var tmpDir string
-
-	if p.URL == "" {
-		if p.Credentials.IDToken == "" {
-			return usererr.New("Not logged in")
-		}
-		profile := "default" // TODO: make this editable
-		if tmpDir, err = s3.PullToTmp(ctx, &p.Credentials, profile); err != nil {
-			return err
-		}
-		return p.copyToProfile(tmpDir)
-	}
 
 	if git.IsRepoURL(p.URL) {
 		if tmpDir, err = git.CloneToTmp(p.URL); err != nil {
@@ -102,24 +90,9 @@ func (p *pullbox) Pull(ctx context.Context) error {
 }
 
 func (p *pullbox) Push(ctx context.Context) error {
-	if p.URL != "" {
-		ux.Finfof(os.Stderr, "Pushing global config to %s\n", p.URL)
-	} else {
-		ux.Finfof(os.Stderr, "Pushing global config\n")
-	}
-
 	if p.URL == "" {
-		profile := "default" // TODO: make this editable
-		if p.Credentials.IDToken == "" {
-			return usererr.New("Not logged in")
-		}
-		ux.Finfof(
-			os.Stderr,
-			"Logged in as %s, pushing to to devbox cloud (profile: %s)\n",
-			p.Credentials.Email,
-			profile,
-		)
-		return s3.Push(ctx, &p.Credentials, p.ProjectDir(), profile)
+		return usererr.New("Nowhere to push to. Pass a git repo to push to.")
 	}
+	ux.Finfof(os.Stderr, "Pushing global config to %s\n", p.URL)
 	return git.Push(ctx, p.ProjectDir(), p.URL)
 }

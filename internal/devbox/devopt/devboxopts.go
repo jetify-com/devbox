@@ -42,16 +42,8 @@ type EnvrcOpts struct {
 }
 
 type PullboxOpts struct {
-	Overwrite   bool
-	URL         string
-	Credentials Credentials
-}
-
-type Credentials struct {
-	IDToken string
-	// TODO We can just parse these out, but don't want to add a dependency right now
-	Email string
-	Sub   string
+	Overwrite bool
+	URL       string
 }
 
 type AddOpts struct {
