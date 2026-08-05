@@ -5,14 +5,11 @@ package boxcli
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"go.jetify.com/devbox/internal/build"
-	"go.jetify.com/devbox/internal/devbox"
-	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/devbox/providers/identity"
 	"go.jetify.com/devbox/internal/ux"
 	"go.jetify.com/pkg/api"
@@ -26,7 +23,6 @@ func authCmd() *cobra.Command {
 
 	cmd.AddCommand(loginCmd())
 	cmd.AddCommand(logoutCmd())
-	cmd.AddCommand(whoAmICmd())
 	cmd.AddCommand(authNewTokenCommand())
 
 	return cmd
@@ -73,47 +69,6 @@ func logoutCmd() *cobra.Command {
 			return err
 		},
 	}
-
-	return cmd
-}
-
-type whoAmICmdFlags struct {
-	showTokens bool
-}
-
-func whoAmICmd() *cobra.Command {
-	flags := &whoAmICmdFlags{}
-	cmd := &cobra.Command{
-		Use:   "whoami",
-		Short: "Show the current user",
-		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			wd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-			box, err := devbox.Open(&devopt.Opts{Dir: wd, Stderr: cmd.ErrOrStderr()})
-			if err != nil {
-				return err
-			}
-			// TODO: WhoAmI should be a function in opensource/pkg/auth that takes in a session.
-			// That way we don't need to handle failed refresh token errors here.
-			err = box.UninitializedSecrets(cmd.Context()).
-				WhoAmI(cmd.Context(), cmd.OutOrStdout(), flags.showTokens)
-			if identity.IsRefreshTokenError(err) {
-				ux.Fwarningf(cmd.ErrOrStderr(), "Your session is expired. Please login again.\n")
-				return loginCmd().RunE(cmd, args)
-			}
-			return err
-		},
-	}
-
-	cmd.Flags().BoolVar(
-		&flags.showTokens,
-		"show-tokens",
-		false,
-		"Show the access, id, and refresh tokens",
-	)
 
 	return cmd
 }
