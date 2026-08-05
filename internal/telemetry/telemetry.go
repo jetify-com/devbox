@@ -26,7 +26,6 @@ import (
 	"github.com/pkg/errors"
 	segment "github.com/segmentio/analytics-go"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
-	"go.jetify.com/devbox/internal/devbox/providers/identity"
 	"go.jetify.com/devbox/nix"
 
 	"go.jetify.com/devbox/internal/build"
@@ -68,11 +67,6 @@ func Start() {
 }
 
 func userID() string {
-	// TODO, once we add access token parsing, use that instead of id token.
-	// that will work with API_TOKEN as well.
-	if tok, err := identity.Peek(); err == nil && tok.IDClaims() != nil {
-		return tok.IDClaims().Subject
-	}
 	if username := os.Getenv(envir.GitHubUsername); username != "" {
 		const uidSalt = "d6134cd5-347d-4b7c-a2d0-295c0f677948"
 		const githubPrefix = "github:"
@@ -80,15 +74,6 @@ func userID() string {
 		// userID is a v5 UUID which is basically a SHA hash of the username.
 		// See https://www.uuidtools.com/uuid-versions-explained for a comparison of UUIDs.
 		return uuid.NewSHA1(uuid.MustParse(uidSalt), []byte(githubPrefix+username)).String()
-	}
-	return ""
-}
-
-func orgID() string {
-	// TODO, once we add access token parsing, use that instead of id token.
-	// that will work with API_TOKEN as well.
-	if tok, err := identity.Peek(); err == nil && tok.IDClaims() != nil {
-		return tok.IDClaims().OrgID
 	}
 	return ""
 }

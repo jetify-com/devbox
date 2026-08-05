@@ -68,7 +68,6 @@ func newTrackMessage(name string, meta Metadata) *segment.Track {
 			"command_args": meta.CommandFlags,
 			"duration":     dur.Milliseconds(),
 			"nix_version":  nixVersion,
-			"org_id":       orgID(),
 			"packages":     meta.Packages,
 			"shell":        os.Getenv(envir.Shell),
 			"shell_access": shellAccess(),
