@@ -25,6 +25,9 @@ Data directory: /nix/store/m0ns07v8by0458yp6k30rfq1rs3kaz6g-nix-2.21.2/share
 	if got, want := info.Name, "nix"; got != want {
 		t.Errorf("got Name = %q, want %q", got, want)
 	}
+	if got, want := info.Implementation, "Nix"; got != want {
+		t.Errorf("got Implementation = %q, want %q", got, want)
+	}
 	if got, want := info.Version, "2.21.2"; got != want {
 		t.Errorf("got Version = %q, want %q", got, want)
 	}
@@ -72,6 +75,9 @@ Data directory: /nix/store/12asl5a17ffj78njcy2fj31v59rdmanx-lix-2.90-beta.1/shar
 	}
 	if got, want := info.Name, "nix"; got != want {
 		t.Errorf("got Name = %q, want %q", got, want)
+	}
+	if got, want := info.Implementation, "Lix, like Nix"; got != want {
+		t.Errorf("got Implementation = %q, want %q", got, want)
 	}
 	if got, want := info.Version, "2.90.0-beta.1"; got != want {
 		t.Errorf("got Version = %q, want %q", got, want)
@@ -203,4 +209,71 @@ func TestVersionInfoAtLeast(t *testing.T) {
 		}()
 		info.AtLeast(v)
 	})
+}
+
+func TestInfoIsLix(t *testing.T) {
+	cases := []struct {
+		implementation string
+		want           bool
+	}{
+		{"Nix", false},
+		{"Lix, like Nix", true},
+		{"lix", true},
+		{"", false},
+	}
+	for _, tt := range cases {
+		t.Run(tt.implementation, func(t *testing.T) {
+			info := Info{Implementation: tt.implementation}
+			if got := info.IsLix(); got != tt.want {
+				t.Errorf("Info{Implementation:%q}.IsLix() = %v, want %v", tt.implementation, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestInfoSupportsFetchClosure(t *testing.T) {
+	cases := []struct {
+		name string
+		info Info
+		want bool
+	}{
+		{
+			name: "nix",
+			info: Info{Implementation: "Nix", Version: "2.34.6"},
+			want: true,
+		},
+		{
+			name: "lix before 2.95",
+			info: Info{Implementation: "Lix, like Nix", Version: "2.94.0"},
+			want: true,
+		},
+		{
+			name: "lix prerelease before 2.95",
+			info: Info{Implementation: "Lix, like Nix", Version: "2.90.0-beta.1"},
+			want: true,
+		},
+		{
+			name: "lix 2.95",
+			info: Info{Implementation: "Lix, like Nix", Version: "2.95.0"},
+			want: false,
+		},
+		{
+			name: "lix after 2.95",
+			info: Info{Implementation: "Lix, like Nix", Version: "2.95.2"},
+			want: false,
+		},
+		{
+			// Unknown version: assume support to avoid a false positive.
+			name: "lix unknown version",
+			info: Info{Implementation: "Lix, like Nix"},
+			want: true,
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.info.SupportsFetchClosure(); got != tt.want {
+				t.Errorf("SupportsFetchClosure() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
