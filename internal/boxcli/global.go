@@ -115,7 +115,7 @@ func ensureGlobalEnvEnabled(cmd *cobra.Command, args []string) error {
 Add the following line to your shell's rcfile and restart your shell:
 
 For bash/zsh (~/.bashrc or ~/.zshrc):
-	eval "$(devbox global shellenv)"
+	eval "$(devbox global shellenv --init-hook)"
 
 For nushell: See NUSHELL.md for setup instructions
 `,
