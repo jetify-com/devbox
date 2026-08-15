@@ -117,6 +117,9 @@ Add the following line to your shell's rcfile and restart your shell:
 For bash/zsh (~/.bashrc or ~/.zshrc):
 	eval "$(devbox global shellenv --init-hook)"
 
+For fish (~/.config/fish/config.fish):
+	devbox global shellenv --init-hook | source
+
 For nushell: See NUSHELL.md for setup instructions
 `,
 		)
