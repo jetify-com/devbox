@@ -120,7 +120,14 @@ For bash/zsh (~/.bashrc or ~/.zshrc):
 For fish (~/.config/fish/config.fish):
 	devbox global shellenv --init-hook | source
 
-For nushell: See NUSHELL.md for setup instructions
+For nushell (~/.config/nushell/env.nu):
+	devbox global shellenv --format nushell --preserve-path-stack -r
+	| lines
+	| parse "$env.{name} = \"{value}\""
+	| where name != null
+	| transpose -r
+	| into record
+	| load-env
 `,
 		)
 	}
