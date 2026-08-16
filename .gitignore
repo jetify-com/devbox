@@ -42,3 +42,6 @@ __pycache__/
 # Nix
 vendor/
 result
+
+# Devbox generated state (virtenv, plugin-created files)
+.devbox/

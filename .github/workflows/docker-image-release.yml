@@ -11,6 +11,11 @@ on:
         required: true
         default: ''
         type: string
+      push_latest:
+        description: 'Also move the `latest` tag to this build?'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   docker-image-build-push:
@@ -18,6 +23,16 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
+      - name: Decide whether to move the `latest` tag
+        id: latest
+        # Prereleases must not become `latest`. Publishing 0.17.0-dev and
+        # 0.17.0-deva each overwrote jetpackio/devbox:latest with a prerelease.
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "push=${{ github.event.release.prerelease && 'false' || 'true' }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "push=${{ inputs.push_latest }}" >> "$GITHUB_OUTPUT"
+          fi
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
       - name: Docker meta
@@ -69,6 +84,7 @@ jobs:
           tags: ${{ steps.metaroot.outputs.tags }}
       - name: Docker meta latest
         id: metalatest
+        if: steps.latest.outputs.push == 'true'
         uses: docker/metadata-action@v6
         with:
           images: |
@@ -78,6 +94,7 @@ jobs:
           flavor: |
             latest=true
       - name: Build and push latest
+        if: steps.latest.outputs.push == 'true'
         uses: docker/build-push-action@v7
         with:
           context: ./internal/devbox/generate/tmpl/
@@ -87,6 +104,7 @@ jobs:
           tags: ${{ steps.metalatest.outputs.tags }}
       - name: Docker meta root latest
         id: metarootlatest
+        if: steps.latest.outputs.push == 'true'
         uses: docker/metadata-action@v6
         with:
           images: |
@@ -96,6 +114,7 @@ jobs:
           flavor: |
             latest=true
       - name: Build and push root user latest
+        if: steps.latest.outputs.push == 'true'
         uses: docker/build-push-action@v7
         with:
           context: ./internal/devbox/generate/tmpl/
