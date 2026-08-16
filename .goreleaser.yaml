@@ -38,19 +38,21 @@ checksum:
   name_template: "checksums.txt"
   algorithm: sha256
 release:
-  prerelease: auto
-  draft: true
-  # Reuse an existing draft release for this tag instead of creating a new one.
-  # `keep-existing` leaves the release (and its description) as is if one already
-  # exists, so a manually-written description is preserved.
-  mode: keep-existing
-  replace_existing_draft: false
-  # GitHub's "get release by tag" API doesn't return drafts, so this is required
-  # for goreleaser to actually find and attach assets to the existing draft.
-  use_existing_draft: true
-  # Allow re-runs on the same tag to overwrite already-uploaded assets instead of
-  # failing with a 422 conflict.
-  replace_existing_artifacts: true
+  # This disables the *release* pipe only: goreleaser still builds every binary,
+  # archive and checksum into dist/ exactly as before. All it no longer does is
+  # create the GitHub release and upload the assets — cli-release does that with
+  # `gh release upload`, onto the draft scripts/release.ts made (title,
+  # hand-written notes, prerelease flag) before the tag was pushed.
+  #
+  # goreleaser used to do the upload with `use_existing_draft: true`, but that
+  # matches an existing draft by *title* (`r.GetDraft() && r.GetName() == tag` in
+  # its findDraftRelease), not by tag. Any draft whose title isn't verbatim the
+  # tag — i.e. every release with a real title — went unmatched and goreleaser
+  # silently created a second draft for the same tag, with a bare list of commit
+  # SHAs for notes and all the artifacts on it. That is what happened to 0.17.5
+  # and 0.18.0. Even a matched draft had its title overwritten by
+  # `name_template`, so a custom title could never survive.
+  disable: true
   github:
     owner: jetify-com
     name: devbox

@@ -160,13 +160,16 @@ commits) stops with the command that fixes it.
 
 Don't work around these; they're why the script exists.
 
-- **Draft before tag.** goreleaser runs with `use_existing_draft` and attaches
-  its artifacts to whatever draft it finds, keeping the body. With no draft it
-  creates one whose body is a bare list of commit SHAs — that's what shipped as
-  the 0.17.5 release notes.
+- **Draft before tag.** goreleaser runs with `release.disable` and only builds
+  `dist/`; `cli-release` uploads that to the release for the tag, looking it up
+  by tag with `gh`. With no draft it creates one from GitHub's generated notes —
+  usable, but not the notes you wrote. (goreleaser used to do the upload itself,
+  but it matched drafts by *title*, so any release with a real title got a
+  silent duplicate draft with bare-commit-SHA notes. That's what shipped as the
+  0.17.5 release notes, and what stalled 0.18.0.)
 - **Publish after the build.** `docker-image-release` fires on the release event
   and immediately downloads the release tarballs to bake into the image.
-  Publishing before goreleaser uploads them fails the Docker build. That's
+  Publishing before `cli-release` uploads them fails the Docker build. That's
   exactly what happened on 0.17.3 and 0.17.5, both published from the GitHub UI,
   which creates the tag and publishes in one action.
 - **Flake bump before the `cli-tests` check.** The bump has to merge into `main`,
@@ -186,7 +189,7 @@ result and the current `flake.nix` version in one shot.
 | --- | --- | --- |
 | `cli-release` never started | Tag push didn't land | Re-run the same command |
 | `cli-release` failed in `tests` | Red `main` (see below) | Fix the test, re-run |
-| Draft has 0 assets | goreleaser didn't find the draft | Confirm the draft exists, re-run |
+| Draft has 0 assets | The upload step didn't run or failed | Check `cli-release`'s "Attach artifacts" step, re-run |
 | Published but installer serves the old version | `cli-post-release` failed or is still running | `gh run list --workflow=cli-post-release.yml` |
 | Docker build failed | Published before assets uploaded | Re-run `docker-image-release` via `workflow_dispatch` with the tag |
 

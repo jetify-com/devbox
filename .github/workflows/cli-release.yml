@@ -136,7 +136,7 @@ jobs:
           # match the version the binary reports.
           version: ${{ github.ref_name }}
           version_prefix: "devbox@"
-      - name: Release with goreleaser
+      - name: Build with goreleaser
         uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
@@ -148,6 +148,40 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      # `release.disable` is set in .goreleaser.yaml, so goreleaser only builds
+      # dist/ — the GitHub release belongs to this step. Both ways of cutting a
+      # release land here and both work:
+      #
+      #   * `devbox run draft-release` created the draft, with its real title and
+      #     hand-written notes, before pushing the tag. We upload onto it.
+      #   * the tag was pushed by hand with no draft. We create one, titled after
+      #     the tag with GitHub's generated notes, and upload onto that. It stays
+      #     a draft for a human to retitle, rewrite and publish.
+      #
+      # Either way the release is looked up by tag, so a tag always resolves to
+      # exactly one release. goreleaser used to do this itself, but it matched
+      # existing drafts by *title*, so any release with a real title went
+      # unmatched and got a silent duplicate. See .goreleaser.yaml.
+      - name: Attach artifacts to the release for this tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release for $TAG already exists — attaching artifacts to it."
+          else
+            echo "No release for $TAG (tag pushed outside draft-release?) —" \
+                 "creating a draft for it."
+            # Same rule as release.ts: a semver prerelease is anything with a "-".
+            prerelease=()
+            case "$TAG" in *-*) prerelease=(--prerelease) ;; esac
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft \
+              --title "$TAG" --generate-notes "${prerelease[@]}"
+          fi
+          # --clobber so a re-run of this workflow replaces the assets instead of
+          # failing on the ones already uploaded.
+          gh release upload "$TAG" dist/*.tar.gz dist/checksums.txt \
+            --repo "$GITHUB_REPOSITORY" --clobber
       - name: Notify jetpack.io slack of release status
         id: slack
         if: always()
