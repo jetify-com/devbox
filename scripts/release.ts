@@ -14,10 +14,15 @@
 // invents them. Everything else is mechanical and happens in a fixed order,
 // because that order is load-bearing:
 //
-//   1. The draft must exist before the tag is pushed. goreleaser runs with
-//      `use_existing_draft` and attaches its artifacts to whatever draft it
-//      finds, keeping the body. With no draft it creates one whose body is a
-//      bare list of commit SHAs — that is what shipped as the 0.17.5 notes.
+//   1. The draft must exist before the tag is pushed, or your title and notes
+//      aren't what ships. goreleaser runs with `release.disable` and only builds
+//      dist/; cli-release uploads that to the release for the tag, creating a
+//      draft with GitHub's generated notes only if it finds none. So a tag
+//      pushed by hand still produces a usable draft — it just won't have the
+//      notes you wrote here. (goreleaser used to do the upload itself, but it
+//      matched existing drafts by title instead of tag, so it quietly created a
+//      second draft — with bare-commit-SHA notes — for any release that had a
+//      real title. That is where the 0.17.5 and 0.18.0 duplicates came from.)
 //
 //   2. The release must not be published until the build has uploaded its
 //      artifacts. `docker-image-release` fires on the release event and
@@ -668,7 +673,7 @@ async function stepWait(version: string): Promise<void> {
   }
   ok("cli-release succeeded");
 
-  // goreleaser attaches the tarballs to the draft. Publishing without them
+  // cli-release uploads the tarballs to this draft. Publishing without them
   // fails the downstream Docker build, which downloads them immediately.
   const release = getRelease(version);
   if (!release || release.assetCount === 0) {
