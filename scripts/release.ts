@@ -29,7 +29,11 @@
 //      immediately downloads the tarballs to bake into the image; publishing
 //      early fails the Docker build, as happened on 0.17.3 and 0.17.5.
 //
-//   3. Publishing happens here, from your own credentials, not from CI. GitHub
+//   3. The flake.nix version bump is settled before main's CI is judged. The
+//      bump has to merge into main, which re-runs cli-tests there, so any
+//      result read before the bump is about a commit that won't be released.
+//
+//   4. Publishing happens here, from your own credentials, not from CI. GitHub
 //      does not trigger workflows from events raised by GITHUB_TOKEN, so a
 //      release published by a workflow would never reach cli-post-release or
 //      docker-image-release.
@@ -71,10 +75,24 @@ const info = (msg: string) => console.log(`  ${msg}`);
 const ok = (msg: string) => console.log(`  ${green("✓")} ${msg}`);
 const warn = (msg: string) => console.log(`  ${yellow("!")} ${msg}`);
 
-class ReleaseError extends Error {}
+// A halt is an expected stop — the release can't continue, but nothing went
+// wrong (the flake bump PR is waiting on review, say). It reads differently
+// from an error so a normal "come back later" doesn't look like a crash.
+class ReleaseError extends Error {
+  halted: boolean;
+
+  constructor(message: string, halted = false) {
+    super(message);
+    this.halted = halted;
+  }
+}
 
 function fail(msg: string): never {
   throw new ReleaseError(msg);
+}
+
+function halt(msg: string): never {
+  throw new ReleaseError(msg, true);
 }
 
 // ---------------------------------------------------------------------------
@@ -374,67 +392,122 @@ const tagPushed = (version: string) =>
 // Steps
 // ---------------------------------------------------------------------------
 
-function stepPreflight(opts: { requireCleanMain: boolean; checkMainCI: boolean }): void {
+function stepPreflight(opts: { requireCleanMain: boolean }): void {
   step("Preflight");
   requireCommand("git");
   requireCommand("gh");
   if (run("gh", ["auth", "status"]).status !== 0) {
     fail("gh is not authenticated — run 'gh auth login'");
   }
-
-  // Checks report in the order they run so the output reads top to bottom, but
-  // all of them run before we bail, so one command surfaces every problem.
-  let failures = 0;
-  const check = (passed: boolean, okMsg: string, failMsg: string) => {
-    if (passed) {
-      ok(okMsg);
-    } else {
-      console.log(`  ${red("✗")} ${failMsg}`);
-      failures++;
-    }
-  };
-
-  if (opts.requireCleanMain) {
-    const branch = git("rev-parse", "--abbrev-ref", "HEAD");
-    check(branch === MAIN_BRANCH, `on ${MAIN_BRANCH}`, `not on ${MAIN_BRANCH} (currently on '${branch}')`);
-
-    const dirty = gitStatus("diff", "--quiet") !== 0 || gitStatus("diff", "--cached", "--quiet") !== 0;
-    check(!dirty, "working tree clean", "working tree is dirty — commit or stash your changes");
-  }
+  ok("git and gh are ready");
 
   // --force on tags because a handful of old devbox tags were rewritten
   // upstream; without it every fetch fails with "would clobber existing tag".
   run("git", ["fetch", "--quiet", "origin", MAIN_BRANCH]);
   run("git", ["fetch", "--quiet", "--force", "--tags", "origin"]);
 
-  if (opts.requireCleanMain) {
-    const local = git("rev-parse", "HEAD");
-    const remote = git("rev-parse", `origin/${MAIN_BRANCH}`);
-    check(
-      local === remote,
-      `up to date with origin/${MAIN_BRANCH}`,
-      `HEAD (${local.slice(0, 8)}) differs from origin/${MAIN_BRANCH} (${remote.slice(0, 8)})`,
+  if (opts.requireCleanMain) syncMain();
+}
+
+// The release has to be cut from a clean checkout of origin/main, because the
+// tag lands on whatever HEAD happens to be. Each condition fails on its own
+// with the command that fixes it, rather than one lumped "preflight failed" —
+// and the one case that needs no human judgement, a main that is simply behind,
+// fast-forwards itself.
+function syncMain(): void {
+  const branch = git("rev-parse", "--abbrev-ref", "HEAD");
+  const dirty = gitStatus("diff", "--quiet") !== 0 || gitStatus("diff", "--cached", "--quiet") !== 0;
+
+  if (branch !== MAIN_BRANCH) {
+    fail(
+      `releases are cut from ${MAIN_BRANCH}, but you are on '${branch}'.\n` +
+      (dirty
+        ? `  Your working tree also has uncommitted changes, so switching needs them out of the way:\n` +
+          `    git stash\n    git switch ${MAIN_BRANCH}`
+        : `  Switch over and re-run:\n    git switch ${MAIN_BRANCH}`),
     );
   }
+  ok(`on ${MAIN_BRANCH}`);
 
-  // cli-release gates the build on the full test suite, so a red main means the
-  // tag push produces no artifacts at all. Only relevant when a build still has
-  // to happen — a draft that already has its artifacts doesn't care what main
-  // has done since.
-  if (opts.checkMainCI) {
-    const runs = ghJSON<{ conclusion: string | null }[]>(
-      "run", "list", "--repo", REPO, "--workflow=cli-tests.yaml",
-      "--branch", MAIN_BRANCH, "--limit", "1", "--json", "conclusion",
-    );
-    const conclusion = runs[0]?.conclusion ?? "none";
-    check(
-      conclusion === "success",
-      `latest cli-tests on ${MAIN_BRANCH} is green`,
-      `latest cli-tests on ${MAIN_BRANCH} is '${conclusion}' — cli-release will refuse to build`,
+  if (dirty) {
+    const changed = git("status", "--porcelain").split("\n").filter(Boolean);
+    const shown = changed.slice(0, 10).map((line) => `    ${line}`).join("\n");
+    const more = changed.length > 10 ? `\n    ...and ${changed.length - 10} more` : "";
+    fail(
+      `${MAIN_BRANCH} has uncommitted changes:\n${shown}${more}\n` +
+      `  The tag would be pushed without them. Commit or stash them, then re-run:\n` +
+      `    git stash`,
     );
   }
+  ok("working tree clean");
 
-  if (failures > 0) fail("preflight failed — fix the items above before releasing");
+  const local = git("rev-parse", "HEAD");
+  const remote = git("rev-parse", `origin/${MAIN_BRANCH}`);
+  if (local === remote) {
+    ok(`up to date with origin/${MAIN_BRANCH}`);
+    return;
+  }
+
+  // Behind and clean is the common case — you merged the flake bump PR in the
+  // browser and came straight back here. Just pull it.
+  if (gitStatus("merge-base", "--is-ancestor", "HEAD", `origin/${MAIN_BRANCH}`) === 0) {
+    const behind = git("rev-list", "--count", `HEAD..origin/${MAIN_BRANCH}`);
+    info(`${MAIN_BRANCH} is ${behind} commit(s) behind origin — fast-forwarding...`);
+    git("merge", "--ff-only", `origin/${MAIN_BRANCH}`);
+    ok(`pulled ${behind} commit(s), now at ${git("rev-parse", "--short", "HEAD")}`);
+    return;
+  }
+
+  const ahead = git("rev-list", "--count", `origin/${MAIN_BRANCH}..HEAD`);
+  const behind = git("rev-list", "--count", `HEAD..origin/${MAIN_BRANCH}`);
+  const shape = behind === "0"
+    ? `local ${MAIN_BRANCH} (${local.slice(0, 8)}) is ${ahead} commit(s) ahead of ` +
+      `origin/${MAIN_BRANCH} (${remote.slice(0, 8)})`
+    : `local ${MAIN_BRANCH} (${local.slice(0, 8)}) has diverged from origin/${MAIN_BRANCH} ` +
+      `(${remote.slice(0, 8)}): ${ahead} commit(s) here that origin doesn't have, ${behind} there that you don't`;
+  fail(
+    `${shape}.\n` +
+    `  A release ships what's on origin, so those ${ahead} commit(s) would be tagged but not\n` +
+    `  reviewed. Get them merged through a PR, or drop them, then re-run:\n` +
+    `    git log --oneline origin/${MAIN_BRANCH}..HEAD   # what's local-only\n` +
+    `    git reset --hard origin/${MAIN_BRANCH}          # discard them`,
+  );
+}
+
+// cli-release gates the build on the full test suite, so a red main means the
+// tag push produces no artifacts at all. This runs *after* the flake bump so a
+// red main doesn't hide the bump — the bump PR has to merge into main anyway,
+// which re-runs cli-tests and makes any result read here stale.
+function stepCheckMainCI(skip: boolean): void {
+  step(`Check cli-tests on ${MAIN_BRANCH}`);
+  if (skip) {
+    warn(`Skipped (--skip-cli-tests). cli-release still runs the suite and will fail the build if it's red.`);
+    return;
+  }
+
+  const runs = ghJSON<{ status: string; conclusion: string | null; url: string; headSha: string }[]>(
+    "run", "list", "--repo", REPO, "--workflow=cli-tests.yaml",
+    "--branch", MAIN_BRANCH, "--limit", "1", "--json", "status,conclusion,url,headSha",
+  );
+  const latest = runs[0];
+  const retry = `  Re-run once it's green, or pass --skip-cli-tests to release anyway.`;
+
+  if (!latest) {
+    fail(`no cli-tests run found for ${MAIN_BRANCH} — cli-release builds off that suite.\n${retry}`);
+  }
+  if (latest.status !== "completed") {
+    fail(
+      `cli-tests on ${MAIN_BRANCH} is still ${latest.status} (${latest.headSha.slice(0, 8)}).\n` +
+      `    ${latest.url}\n${retry}`,
+    );
+  }
+  if (latest.conclusion !== "success") {
+    fail(
+      `latest cli-tests on ${MAIN_BRANCH} is '${latest.conclusion}' — cli-release will refuse to build.\n` +
+      `    ${latest.url}\n${retry}`,
+    );
+  }
+  ok(`latest cli-tests on ${MAIN_BRANCH} is green (${latest.headSha.slice(0, 8)})`);
 }
 
 async function stepChooseVersion(preset?: string): Promise<string> {
@@ -470,6 +543,19 @@ async function stepChooseVersion(preset?: string): Promise<string> {
   }
 }
 
+const flakeBumpBranch = (version: string) => `bump-flake-${version}`;
+
+// Deliberately not tolerant of a failed lookup: "gh errored" and "there is no
+// open PR" have to stay distinct, because the second one leads to a
+// force-push over the bump branch.
+function openBumpPR(version: string): { url: string } | null {
+  const prs = ghJSON<{ url: string }[]>(
+    "pr", "list", "--repo", REPO, "--head", flakeBumpBranch(version),
+    "--state", "open", "--json", "url",
+  );
+  return prs[0] ?? null;
+}
+
 async function stepFlakeBump(version: string, autoYes: boolean): Promise<void> {
   step("Sync flake.nix");
   const current = flakeLastTag();
@@ -484,6 +570,17 @@ async function stepFlakeBump(version: string, autoYes: boolean): Promise<void> {
   warn(`flake.nix lastTag is ${current}, needs to be ${version}`);
   info("This has to land on main before the tag is pushed, or the tagged commit");
   info("ships the wrong version string.");
+
+  // A bump PR from an earlier run is the whole answer — don't rebuild the hash
+  // and open a second one.
+  const existingPR = openBumpPR(version);
+  if (existingPR) {
+    halt(
+      `the flake bump PR for ${version} is already open and unmerged:\n` +
+      `    ${existingPR.url}\n` +
+      `  Get it approved and merged, then re-run this command.`,
+    );
+  }
 
   if (!autoYes && !(await confirm(`Update flake.nix, vendor-hash and flake.lock now?`))) {
     fail(`flake.nix is out of date — bump lastTag to ${version} and merge before releasing`);
@@ -506,11 +603,68 @@ async function stepFlakeBump(version: string, autoYes: boolean): Promise<void> {
   console.log();
   console.log(git("--no-pager", "diff", "--stat", "--", "flake.nix", "flake.lock", "vendor-hash"));
   console.log();
-  fail(
-    `flake.nix is now updated locally but not merged. Open a PR, merge it, then re-run:\n` +
-    `    git switch -c bump-flake-${version}\n` +
-    `    git commit -am 'chore(release): bump flake lastTag to ${version}'\n` +
-    `    gh pr create --base ${MAIN_BRANCH} --fill`,
+
+  if (!autoYes && !(await confirm(`Open a PR to bump the flake version to ${version}?`))) {
+    fail(
+      `flake.nix is now updated locally but not merged. Open a PR, merge it, then re-run:\n` +
+      `    git switch -c ${flakeBumpBranch(version)}\n` +
+      `    git commit -am 'chore(release): bump flake lastTag to ${version}'\n` +
+      `    gh pr create --base ${MAIN_BRANCH} --fill`,
+    );
+  }
+
+  openFlakeBumpPR(version, current);
+}
+
+// Commits the working-tree bump onto its own branch, pushes it and opens the
+// PR, then puts you back where you started with a clean tree. The release
+// itself can't continue — the bump has to be reviewed and merged first — so
+// this always ends the run.
+function openFlakeBumpPR(version: string, previous: string): never {
+  const branch = flakeBumpBranch(version);
+  const startBranch = git("rev-parse", "--abbrev-ref", "HEAD");
+  const title = `chore(release): bump flake lastTag to ${version}`;
+  const body = [
+    `Bumps \`flake.nix\` \`lastTag\` from \`${previous}\` to \`${version}\` ahead of the ${version}`,
+    `release, and refreshes \`vendor-hash\` and \`flake.lock\` to match.`,
+    ``,
+    `Nothing syncs \`lastTag\` to the git tag, so without this the tagged commit builds`,
+    `a binary that reports the previous version. This has to merge before the tag is`,
+    `pushed.`,
+    ``,
+    `Opened by \`scripts/release.ts\`.`,
+  ].join("\n");
+
+  let url = "";
+  try {
+    // -C rather than -c so a branch left over from an interrupted run is reused
+    // instead of blocking the switch. Uncommitted changes come along with it.
+    git("switch", "-C", branch);
+    git("commit", "-a", "-m", title);
+    ok(`Committed on ${branch}`);
+
+    // --force-with-lease for the same reason: a previous attempt may have
+    // pushed a commit we've just rebuilt on top of the current main.
+    const pushed = run("git", ["push", "--force-with-lease", "-u", "origin", branch]);
+    if (pushed.status !== 0) fail(`failed to push ${branch}:\n${pushed.stderr || pushed.stdout}`);
+    ok(`Pushed ${branch}`);
+
+    url = gh("pr", "create", "--repo", REPO, "--base", MAIN_BRANCH, "--head", branch,
+      "--title", title, "--body", body);
+  } finally {
+    // Leaving the user stranded on the bump branch would make the next run's
+    // preflight complain about the wrong thing.
+    if (git("rev-parse", "--abbrev-ref", "HEAD") !== startBranch) {
+      run("git", ["switch", startBranch]);
+    }
+  }
+
+  ok(`Opened ${url}`);
+  halt(
+    `the ${version} release needs that flake bump on ${MAIN_BRANCH} first.\n` +
+    `    ${url}\n` +
+    `  Get it approved and merged, then re-run this command — it will pick up the\n` +
+    `  new ${MAIN_BRANCH} and carry on from here.`,
   );
 }
 
@@ -525,13 +679,29 @@ async function stepTitle(version: string, preset?: string): Promise<string> {
   return ask("Title", version);
 }
 
+// Release notes used to be written with every backtick escaped as \`, on the
+// theory that goreleaser interpolates the body into its Discord announcement.
+// It doesn't: the announcer is `enabled: false` in .goreleaser.yaml, and
+// nothing else re-reads the body. Markdown, meanwhile, renders \` as a literal
+// backtick instead of opening a code span — which is why 0.17.4 shipped with
+// backslashes and bare backticks strewn through its notes instead of inline
+// code. Unescape them wherever the notes came from.
+function unescapeBackticks(body: string): string {
+  const fixed = body.replaceAll("\\`", "`");
+  if (fixed !== body) {
+    const count = body.split("\\`").length - 1;
+    warn(`Unescaped ${count} \\\` sequence(s) — GitHub renders the backslash literally`);
+  }
+  return fixed;
+}
+
 async function stepNotes(version: string, notesFile?: string): Promise<string> {
   step("Release notes");
   if (notesFile) {
     const body = fs.readFileSync(notesFile, "utf8").trim();
     if (!body) fail(`${notesFile} is empty`);
     ok(`Using notes from ${notesFile} (${body.split("\n").length} lines)`);
-    return body;
+    return unescapeBackticks(body);
   }
 
   const prev = previousTag(version);
@@ -550,7 +720,7 @@ async function stepNotes(version: string, notesFile?: string): Promise<string> {
   const template = [
     `# Write the release notes for ${version}. Lines starting with "#" are ignored.`,
     `#`,
-    `# House style (see 0.17.4 for a good example):`,
+    `# House style (see 0.18.0 for a good example):`,
     `#   ## What's Changed`,
     `#   ### 💥 Breaking Changes   <- first, and say what to do instead`,
     `#   ### ✨ New Features`,
@@ -559,15 +729,15 @@ async function stepNotes(version: string, notesFile?: string): Promise<string> {
     `#`,
     `#   * **Bold lead-in** — impact, not the commit subject, by @author ([#1234](url))`,
     `#`,
-    `# Drop sections that have no content. Escape backticks as \\\` — goreleaser`,
-    `# interpolates this body into the Discord announcement template.`,
+    `# Drop sections that have no content. Write \`code\` with plain backticks —`,
+    `# nothing re-interprets this body, so escaping them just ships backslashes.`,
     `#`,
     `# Below is GitHub's auto-generated changelog. Rewrite it; don't ship it as is.`,
     ``,
     generated,
   ].join("\n");
 
-  return editText(template, `release-notes-${version}.md`);
+  return unescapeBackticks(await editText(template, `release-notes-${version}.md`));
 }
 
 async function stepConfirm(version: string, title: string, notes: string, mode: Mode, autoYes: boolean): Promise<void> {
@@ -723,6 +893,7 @@ type Options = {
   title?: string;
   notesFile?: string;
   autoYes: boolean;
+  skipCliTests: boolean;
 };
 
 // Resuming an existing draft skips straight to the tail of the pipeline: the
@@ -735,13 +906,22 @@ async function resumeDraft(version: string, opts: Options): Promise<void> {
   // that out before printing any step numbers.
   const needsTag = !tagPushed(version);
   const needsBuild = needsTag || release.assetCount === 0;
-  totalSteps = 3 + (needsTag ? 1 : 0) + (needsBuild ? 1 : 0);
+  // preflight, existing draft, publish [, cli-tests] [, tag] [, wait]
+  totalSteps = 3 + (needsBuild ? 2 : 0) + (needsTag ? 1 : 0);
 
-  stepPreflight({ requireCleanMain: false, checkMainCI: needsBuild });
+  // Resuming normally doesn't care where you're standing — the draft and its
+  // artifacts are already on GitHub. The exception is a draft whose tag was
+  // never pushed: stepTag tags local HEAD, so that push has the same
+  // requirements as a fresh release.
+  stepPreflight({ requireCleanMain: needsTag });
 
   step("Existing draft");
   ok(`Found draft ${version} with ${release.assetCount} assets`);
   info(release.url);
+
+  // A draft that already has its artifacts doesn't care what main has done
+  // since, so the CI check only matters when a build still has to happen.
+  if (needsBuild) stepCheckMainCI(opts.skipCliTests);
 
   if (needsTag) {
     warn(`Tag ${version} is not pushed yet — the build has not run`);
@@ -758,12 +938,14 @@ async function resumeDraft(version: string, opts: Options): Promise<void> {
 
 async function fullFlow(opts: Options): Promise<void> {
   const publishing = opts.mode === "publish";
-  // preflight, version, flake, title, notes, review, draft, tag, wait [, publish]
-  totalSteps = publishing ? 10 : 9;
+  // preflight, version, flake, cli-tests, title, notes, review, draft, tag,
+  // wait, then either publish or the closing "Done" — eleven either way.
+  totalSteps = 11;
 
-  stepPreflight({ requireCleanMain: true, checkMainCI: true });
+  stepPreflight({ requireCleanMain: true });
   const version = await stepChooseVersion(opts.version);
   await stepFlakeBump(version, opts.autoYes);
+  stepCheckMainCI(opts.skipCliTests);
   const title = await stepTitle(version, opts.title);
   const notes = await stepNotes(version, opts.notesFile);
   await stepConfirm(version, title, notes, opts.mode, opts.autoYes);
@@ -841,6 +1023,9 @@ ${bold("Flags")}   (each one skips the prompt it answers)
   --title <string>     Release title
   --notes-file <path>  Release notes, instead of opening \$EDITOR
   --yes                Skip confirmations (for scripted runs)
+  --skip-cli-tests     Don't require the latest cli-tests run on ${MAIN_BRANCH} to be
+                       green. cli-release still runs the suite and will fail
+                       the build if it isn't.
 `);
 }
 
@@ -922,6 +1107,7 @@ async function main(): Promise<void> {
     title: flag("title"),
     notesFile: flag("notes-file"),
     autoYes: argv.includes("--yes"),
+    skipCliTests: argv.includes("--skip-cli-tests"),
   };
 
   if (opts.version) validateVersion(opts.version);
@@ -940,6 +1126,8 @@ main()
   })
   .catch((err: unknown) => {
     closeReader();
-    console.error(`\n${red("error:")} ${err instanceof Error ? err.message : String(err)}\n`);
+    const halted = err instanceof ReleaseError && err.halted;
+    const label = halted ? yellow("stopped:") : red("error:");
+    console.error(`\n${label} ${err instanceof Error ? err.message : String(err)}\n`);
     process.exit(1);
   });
