@@ -21,7 +21,16 @@ COPY devbox.lock devbox.lock
 {{range $i, $element := .LocalFlakeDirs -}}
 COPY {{$element}} {{$element}}
 {{end}}
-RUN devbox run -- echo "Installed Packages." && nix-store --gc && nix-store --optimise
+{{- /*
+We run `nix-store --gc` to drop build-time dependencies and shrink the image,
+but intentionally do NOT run `nix-store --optimise`. Optimise hard-links
+duplicate files in the Nix store, and on Docker's default overlay2 storage
+driver the rename it performs fails with "cannot rename: Stale file handle",
+which breaks the image build. In a freshly built, single-purpose image there is
+little to no duplication to reclaim anyway, so the optimise pass provides
+negligible benefit. See https://github.com/jetify-com/devbox/issues/2616.
+*/ -}}
+RUN devbox run -- echo "Installed Packages." && nix-store --gc
 {{if .IsDevcontainer}}
 RUN devbox shellenv --init-hook >> ~/.profile
 {{- else}}
