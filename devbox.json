@@ -4,7 +4,18 @@
   "packages": {
     "fd":  "latest",
     "git": "latest",
-    "go":  "latest"
+    "go":  "latest",
+    // Runs scripts/release.ts. Node executes TypeScript directly via type
+    // stripping, so there's no build step and no node_modules — hence -slim,
+    // which is just the runtime without npm and the native-addon toolchain.
+    //
+    // The nodejs plugin is disabled because it adds a Corepack init_hook that
+    // would run on every `devbox run` in this repo. Nothing here uses Corepack;
+    // we only need the `node` binary.
+    "nodejs-slim": {
+      "version":        "latest",
+      "disable_plugin": true
+    }
   },
   "env": {
     "GOENV": "off",
@@ -55,6 +66,17 @@
         "nix hash path $vendor >vendor-hash"
       ],
       "build-flake": "nix build .",
+      // Release the CLI. Both walk every step and prompt for the tag, title and
+      // description; see .agents/skills/release-devbox/SKILL.md.
+      //
+      // draft-release   builds the release and leaves it as a draft
+      // publish-release builds and publishes, or finishes an existing draft
+      // release-changes shows what would ship and the recommended version bump
+      // release-status  shows where a release currently stands
+      "draft-release":   "node scripts/release.ts --draft",
+      "publish-release": "node scripts/release.ts --publish",
+      "release-changes": "node scripts/release.ts --changes",
+      "release-status":  "node scripts/release.ts --status",
       "tidy": ["go mod tidy", "devbox run update-hash"],
       // docker-testscripts runs the testscripts with Docker to exercise
       // Linux-specific tests. It invokes the test binary directly, so any extra
