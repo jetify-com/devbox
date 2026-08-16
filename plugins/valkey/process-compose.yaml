@@ -6,3 +6,6 @@ processes:
     availability:
       restart: on_failure
       max_restarts: 5
+    readiness_probe:
+      exec:
+        command: "valkey-cli -p $VALKEY_PORT ping"
