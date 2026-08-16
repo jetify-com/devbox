@@ -125,6 +125,10 @@ jobs:
   test:
     needs: build-devbox
     strategy:
+      # One failing shard shouldn't cancel the rest. This matrix gates releases
+      # via `cli-release`, so when it goes red we need the full picture of what
+      # broke, not just the first shard to fail.
+      fail-fast: false
       matrix:
         is-main:
           - ${{ github.ref == 'refs/heads/main' && 'is-main' || 'not-main' }}

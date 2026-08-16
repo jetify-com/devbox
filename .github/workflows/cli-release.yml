@@ -131,7 +131,10 @@ jobs:
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         with:
           environment: production
-          version: ${{ github.ref }}
+          # ref_name, not ref: `github.ref` is the full `refs/tags/0.17.5`, which
+          # produced Sentry releases named `devbox@refs/tags/0.17.5` that don't
+          # match the version the binary reports.
+          version: ${{ github.ref_name }}
           version_prefix: "devbox@"
       - name: Release with goreleaser
         uses: goreleaser/goreleaser-action@v7
