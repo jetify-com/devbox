@@ -540,13 +540,15 @@ async function stepChooseVersion(preset?: string): Promise<string> {
 
 const flakeBumpBranch = (version: string) => `bump-flake-${version}`;
 
-function openBumpPR(version: string): { url: string; state: string } | null {
-  const res = run("gh", [
+// Deliberately not tolerant of a failed lookup: "gh errored" and "there is no
+// open PR" have to stay distinct, because the second one leads to a
+// force-push over the bump branch.
+function openBumpPR(version: string): { url: string } | null {
+  const prs = ghJSON<{ url: string }[]>(
     "pr", "list", "--repo", REPO, "--head", flakeBumpBranch(version),
-    "--state", "open", "--json", "url,state",
-  ]);
-  if (res.status !== 0) return null;
-  return (JSON.parse(res.stdout) as { url: string; state: string }[])[0] ?? null;
+    "--state", "open", "--json", "url",
+  );
+  return prs[0] ?? null;
 }
 
 async function stepFlakeBump(version: string, autoYes: boolean): Promise<void> {
@@ -886,7 +888,11 @@ async function resumeDraft(version: string, opts: Options): Promise<void> {
   // preflight, existing draft, publish [, cli-tests] [, tag] [, wait]
   totalSteps = 3 + (needsBuild ? 2 : 0) + (needsTag ? 1 : 0);
 
-  stepPreflight({ requireCleanMain: false });
+  // Resuming normally doesn't care where you're standing — the draft and its
+  // artifacts are already on GitHub. The exception is a draft whose tag was
+  // never pushed: stepTag tags local HEAD, so that push has the same
+  // requirements as a fresh release.
+  stepPreflight({ requireCleanMain: needsTag });
 
   step("Existing draft");
   ok(`Found draft ${version} with ${release.assetCount} assets`);
@@ -911,8 +917,9 @@ async function resumeDraft(version: string, opts: Options): Promise<void> {
 
 async function fullFlow(opts: Options): Promise<void> {
   const publishing = opts.mode === "publish";
-  // preflight, version, flake, cli-tests, title, notes, review, draft, tag, wait [, publish]
-  totalSteps = publishing ? 11 : 10;
+  // preflight, version, flake, cli-tests, title, notes, review, draft, tag,
+  // wait, then either publish or the closing "Done" — eleven either way.
+  totalSteps = 11;
 
   stepPreflight({ requireCleanMain: true });
   const version = await stepChooseVersion(opts.version);
