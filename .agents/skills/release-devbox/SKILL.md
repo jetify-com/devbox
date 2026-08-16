@@ -132,10 +132,25 @@ Swap `--draft` for `--publish` to go live. Notes on driving it as an agent:
 - **It's resumable.** Every step is idempotent, so if it fails partway, fix the
   cause and re-run the same command — it picks up where it left off rather than
   duplicating work.
+- **`--skip-cli-tests` exists but is a loaded gun.** It only skips the *check*
+  that the latest `cli-tests` run on `main` is green; `cli-release` still runs
+  the whole suite and fails the build if it isn't. Use it when the check is
+  wrong (a run still in progress you've already inspected, a flake you've
+  confirmed), not to push past a genuinely red `main`.
 
-If `flake.nix` needs bumping, the script stops and tells you to open a PR. That
-bump has to merge into `main` before the tag is pushed, otherwise the tagged
-commit ships the wrong version string. Do that, wait for the merge, then re-run.
+If `flake.nix` needs bumping, the script offers to do the whole thing: it
+rewrites `lastTag`, refreshes `vendor-hash` and `flake.lock`, commits to
+`bump-flake-<version>`, pushes, opens the PR, and puts you back on `main` with a
+clean tree. Then it stops — that bump has to be reviewed and merged before the
+tag is pushed, otherwise the tagged commit ships the wrong version string. Get
+it merged and re-run the same command; preflight pulls the new `main` and
+carries on. A re-run while the PR is still open stops immediately with its URL
+rather than opening a second one.
+
+Preflight is picky about the checkout on purpose, since the tag lands on
+whatever `HEAD` is. A `main` that's merely behind `origin/main` and clean
+fast-forwards itself; anything else (wrong branch, dirty tree, local-only
+commits) stops with the command that fixes it.
 
 ## Why the order is what it is
 
@@ -150,6 +165,10 @@ Don't work around these; they're why the script exists.
   Publishing before goreleaser uploads them fails the Docker build. That's
   exactly what happened on 0.17.3 and 0.17.5, both published from the GitHub UI,
   which creates the tag and publishes in one action.
+- **Flake bump before the `cli-tests` check.** The bump has to merge into `main`,
+  which re-runs `cli-tests` there — so a result read before the bump is about a
+  commit that won't be released. Settling the bump first also means a red `main`
+  doesn't hide the fact that a bump PR is needed.
 - **Publish from local credentials, not CI.** GitHub doesn't trigger workflows
   from events raised by `GITHUB_TOKEN`. That's why CI-created edge releases never
   trigger `docker-image-release`, and why publishing can't just be a CI step.
@@ -171,10 +190,10 @@ result and the current `flake.nix` version in one shot.
 
 Check these are still true before blaming the release itself:
 
-- **`main` has been red since 2026-07-02.** The macOS `zig-hello-world` example
-  test fails (`error running script "run_test"`). `build.zig` uses the
-  pre-Zig-0.12 API (`.root_source_file = .{ .path = ... }`) while `devbox.lock`
-  pins zig 0.11.0. This blocks *all* releases — `cli-release` gates on the test
-  suite — and has already killed seven consecutive weekly edge builds.
+- **`main` was red from 2026-07-02 until #2951.** The macOS `zig-hello-world`
+  example test failed because `build.zig` used the pre-Zig-0.12 API while
+  `devbox.lock` pinned zig 0.11.0; the upgrade to zig 0.16 fixed it. A red
+  `main` blocks *all* releases — `cli-release` gates on the test suite — so
+  check the current state rather than assuming either way.
 - **`flake.nix` drifts.** It sat at `0.17.3` through both the 0.17.4 and 0.17.5
-  releases. Preflight catches this now.
+  releases. The script catches this now and opens the bump PR for you.
