@@ -674,13 +674,29 @@ async function stepTitle(version: string, preset?: string): Promise<string> {
   return ask("Title", version);
 }
 
+// Release notes used to be written with every backtick escaped as \`, on the
+// theory that goreleaser interpolates the body into its Discord announcement.
+// It doesn't: the announcer is `enabled: false` in .goreleaser.yaml, and
+// nothing else re-reads the body. Markdown, meanwhile, renders \` as a literal
+// backtick instead of opening a code span — which is why 0.17.4 shipped with
+// backslashes and bare backticks strewn through its notes instead of inline
+// code. Unescape them wherever the notes came from.
+function unescapeBackticks(body: string): string {
+  const fixed = body.replaceAll("\\`", "`");
+  if (fixed !== body) {
+    const count = body.split("\\`").length - 1;
+    warn(`Unescaped ${count} \\\` sequence(s) — GitHub renders the backslash literally`);
+  }
+  return fixed;
+}
+
 async function stepNotes(version: string, notesFile?: string): Promise<string> {
   step("Release notes");
   if (notesFile) {
     const body = fs.readFileSync(notesFile, "utf8").trim();
     if (!body) fail(`${notesFile} is empty`);
     ok(`Using notes from ${notesFile} (${body.split("\n").length} lines)`);
-    return body;
+    return unescapeBackticks(body);
   }
 
   const prev = previousTag(version);
@@ -699,7 +715,7 @@ async function stepNotes(version: string, notesFile?: string): Promise<string> {
   const template = [
     `# Write the release notes for ${version}. Lines starting with "#" are ignored.`,
     `#`,
-    `# House style (see 0.17.4 for a good example):`,
+    `# House style (see 0.18.0 for a good example):`,
     `#   ## What's Changed`,
     `#   ### 💥 Breaking Changes   <- first, and say what to do instead`,
     `#   ### ✨ New Features`,
@@ -708,15 +724,15 @@ async function stepNotes(version: string, notesFile?: string): Promise<string> {
     `#`,
     `#   * **Bold lead-in** — impact, not the commit subject, by @author ([#1234](url))`,
     `#`,
-    `# Drop sections that have no content. Escape backticks as \\\` — goreleaser`,
-    `# interpolates this body into the Discord announcement template.`,
+    `# Drop sections that have no content. Write \`code\` with plain backticks —`,
+    `# nothing re-interprets this body, so escaping them just ships backslashes.`,
     `#`,
     `# Below is GitHub's auto-generated changelog. Rewrite it; don't ship it as is.`,
     ``,
     generated,
   ].join("\n");
 
-  return editText(template, `release-notes-${version}.md`);
+  return unescapeBackticks(await editText(template, `release-notes-${version}.md`));
 }
 
 async function stepConfirm(version: string, title: string, notes: string, mode: Mode, autoYes: boolean): Promise<void> {

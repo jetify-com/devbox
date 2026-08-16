@@ -61,7 +61,7 @@ gh api repos/jetify-com/devbox/releases/generate-notes \
 ```
 
 That's a dump of PR titles. Rewrite it into user-facing notes in the house style
-that 0.17.4 established:
+that 0.17.4 established and 0.18.0 is the cleanest example of:
 
 ````markdown
 ## What's Changed
@@ -100,8 +100,12 @@ Rules that matter:
   replaces it, or that nothing does.
 - **Only include sections with content.** Drop the ones that are empty.
 - **Keep attribution.** Every bullet ends with `by @author` and its PR link.
-- **Escape backticks as `` \` ``.** goreleaser interpolates the body into the
-  Discord announcement template and bare backticks break it.
+- **Use plain backticks for code.** Do *not* escape them as `` \` ``. Nothing
+  re-interprets the body — goreleaser's Discord announcer is `enabled: false` in
+  `.goreleaser.yaml` — and Markdown renders `` \` `` as a literal backtick
+  rather than opening a code span. That's why 0.17.4's published notes are full
+  of stray backslashes. The script unescapes any that slip through, but don't
+  write them.
 
 For the title, default to the bare version (`0.18.0`). A short theme suffix is
 fine when the release has one: `0.18.0 — Devbox goes fully local`.
