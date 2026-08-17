@@ -48,7 +48,11 @@ func runCmd(defaults runFlagDefaults) *cobra.Command {
 		Long: "Start a new shell and runs your script or command in it, exiting when done.\n\n" +
 			"The script must be defined in `devbox.json`, or else it will be interpreted as an " +
 			"arbitrary command. You can pass arguments to your script or command. Everything " +
-			"after `--` will be passed verbatim into your command (see examples).\n\n",
+			"after `--` will be passed verbatim into your command (see examples).\n\n" +
+			"Scripts and commands always run from the project's root directory (the directory " +
+			"containing your `devbox.json`), not the current working directory. If you invoke " +
+			"`devbox run` from a subdirectory and need to run there, change into it as part of " +
+			"your command, e.g. `devbox run -- sh -c 'cd subdir && <command>'`.\n\n",
 		Example: "\nRun a command directly:\n\n  devbox add cowsay\n  devbox run cowsay hello\n  " +
 			"devbox run -- cowsay -d hello\n\nRun a script (defined as `\"moo\": \"cowsay moo\"`) " +
 			"in your devbox.json:\n\n  devbox run moo",
