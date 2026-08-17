@@ -47,6 +47,29 @@ func TestExportifySkipsInvalidNames(t *testing.T) {
 	}
 }
 
+// TestExportifyPreservesNewlines ensures that a value containing newlines is
+// emitted with literal (unescaped) newlines. Escaping a newline as `\<newline>`
+// makes the shell treat it as a line continuation and strip it, collapsing a
+// multi-line value onto a single line. That corrupted, for example, a
+// PROMPT_COMMAND whose `... 2>&1` and `__bp_interactive_mode` lines got joined
+// into `... 2>&1__bp_interactive_mode`, yielding a "1__bp_...: ambiguous
+// redirect" error at every prompt. See issue #2814.
+func TestExportifyPreservesNewlines(t *testing.T) {
+	value := "cmd_a >/dev/null 2>&1\n__bp_interactive_mode"
+	got := exportify(io.Discard, map[string]string{"PROMPT_COMMAND": value})
+
+	want := "export PROMPT_COMMAND=\"cmd_a >/dev/null 2>&1\n__bp_interactive_mode\";"
+	if got != want {
+		t.Errorf("exportify newline handling:\n got: %q\nwant: %q", got, want)
+	}
+
+	// A backslash-newline (line continuation) must not appear: that is the
+	// exact corruption this test guards against.
+	if strings.Contains(got, "\\\n") {
+		t.Errorf("exportify escaped a newline as a line continuation, corrupting the value:\n%s", got)
+	}
+}
+
 func TestExportifyNushellSkipsInvalidNames(t *testing.T) {
 	got := exportifyNushell(io.Discard, map[string]string{
 		"GOOD": "value",
