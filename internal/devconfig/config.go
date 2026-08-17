@@ -141,8 +141,15 @@ func Find(path string) (*Config, error) {
 
 // searchDir looks for a config file in dir. It does not search parent
 // directories.
+//
+// It first looks for devbox.json directly in dir, and then falls back to
+// dir/.config/devbox.json. The latter lets projects keep their root directory
+// tidy by storing the config under .config. See jetify-com/devbox#2792.
 func searchDir(dir string) (*Config, error) {
-	try := []string{configfile.DefaultName}
+	try := []string{
+		configfile.DefaultName,
+		filepath.Join(configfile.ConfigSubdir, configfile.DefaultName),
+	}
 	for _, name := range try {
 		path := filepath.Join(dir, name)
 		slog.Debug("trying config file", "path", path)

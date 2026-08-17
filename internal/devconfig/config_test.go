@@ -95,6 +95,63 @@ func TestOpenError(t *testing.T) {
 	})
 }
 
+// TestConfigSubdir verifies that Devbox discovers a config file stored in a
+// .config subdirectory, so that projects can keep devbox.json out of their
+// root directory. See jetify-com/devbox#2792.
+func TestConfigSubdir(t *testing.T) {
+	t.Run("Open", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+		configDir := mkConfigSubdir(t, root)
+		if _, err := Init(configDir); err != nil {
+			t.Fatalf("Init(%q) error: %v", configDir, err)
+		}
+
+		cfg, err := Open(root)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", root, err)
+		}
+		gotDir := filepath.Dir(cfg.Root.AbsRootPath)
+		if gotDir != configDir {
+			t.Errorf("filepath.Dir(cfg.Root.AbsRootPath) = %q, want %q", gotDir, configDir)
+		}
+	})
+	t.Run("RootConfigTakesPrecedence", func(t *testing.T) {
+		root, _, _ := mkNestedDirs(t)
+		if _, err := Init(root); err != nil {
+			t.Fatalf("Init(%q) error: %v", root, err)
+		}
+		configDir := mkConfigSubdir(t, root)
+		if _, err := Init(configDir); err != nil {
+			t.Fatalf("Init(%q) error: %v", configDir, err)
+		}
+
+		cfg, err := Open(root)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", root, err)
+		}
+		gotDir := filepath.Dir(cfg.Root.AbsRootPath)
+		if gotDir != root {
+			t.Errorf("filepath.Dir(cfg.Root.AbsRootPath) = %q, want %q", gotDir, root)
+		}
+	})
+	t.Run("FindFromChildDir", func(t *testing.T) {
+		root, child, _ := mkNestedDirs(t)
+		configDir := mkConfigSubdir(t, root)
+		if _, err := Init(configDir); err != nil {
+			t.Fatalf("Init(%q) error: %v", configDir, err)
+		}
+
+		cfg, err := Find(child)
+		if err != nil {
+			t.Fatalf("Find(%q) error: %v", child, err)
+		}
+		gotDir := filepath.Dir(cfg.Root.AbsRootPath)
+		if gotDir != configDir {
+			t.Errorf("filepath.Dir(cfg.Root.AbsRootPath) = %q, want %q", gotDir, configDir)
+		}
+	})
+}
+
 func TestFind(t *testing.T) {
 	t.Run("StartInSameDir", func(t *testing.T) {
 		root, child, _ := mkNestedDirs(t)
@@ -295,6 +352,19 @@ func mkNestedDirs(t *testing.T) (root, child, nested string) {
 		t.Fatalf("os.MkdirAll(%q, %O) error: %v", nested, perm, err)
 	}
 	return root, child, nested
+}
+
+// mkConfigSubdir creates a .config subdirectory inside dir and returns its
+// path, for tests that store devbox.json under .config.
+func mkConfigSubdir(t *testing.T, dir string) string {
+	t.Helper()
+
+	configDir := filepath.Join(dir, configfile.ConfigSubdir)
+	perm := fs.FileMode(0o777)
+	if err := os.MkdirAll(configDir, perm); err != nil {
+		t.Fatalf("os.MkdirAll(%q, %O) error: %v", configDir, perm, err)
+	}
+	return configDir
 }
 
 func TestAliases(t *testing.T) {
