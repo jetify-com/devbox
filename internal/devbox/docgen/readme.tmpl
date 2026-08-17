@@ -33,6 +33,16 @@ Scripts are custom commands that can be run using this project's environment. Th
 {{- end }}
 {{ end }}
 
+{{- if .Services }}
+## Services
+Services are long-running processes (such as databases or web servers) provided by this project's packages and plugins. This project has the following services:
+{{ range $name, $_ := .Services }}
+* {{ $name }}
+{{- end }}
+
+Start all services with `devbox services up`, and stop them with `devbox services stop`. You can also target an individual service by name, for example `devbox services up <service>`. Run `devbox services ls` to list the services and their status.
+{{ end }}
+
 {{- if .EnvVars }}
 ## Environment
 
