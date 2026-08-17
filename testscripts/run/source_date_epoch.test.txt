@@ -1,0 +1,15 @@
+# The nixpkgs stdenv sets SOURCE_DATE_EPOCH to a fixed timestamp
+# (315532800 = 1980-01-01) so that builds are reproducible. Devbox must not
+# leak that value into the interactive shell, otherwise timestamp-respecting
+# tools (docker build, tar, gzip, ...) stamp their output with 1980 -- e.g.
+# Docker images show up as created "45 years ago". See
+# https://github.com/jetify-com/devbox/issues/2597.
+
+exec devbox run echo 'epoch=<$SOURCE_DATE_EPOCH>'
+stdout 'epoch=<'
+! stdout '315532800'
+
+-- devbox.json --
+{
+  "packages": []
+}

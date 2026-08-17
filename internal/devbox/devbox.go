@@ -1058,8 +1058,9 @@ var ignoreCurrentEnvVar = map[string]bool{
 // ignoreDevEnvVar contains environment variables that Devbox should remove from
 // the slice of [Devbox.PrintDevEnv] variables before sourcing them.
 //
-// This list comes directly from the "nix develop" source:
+// Most of this list comes directly from the "nix develop" source:
 // https://github.com/NixOS/nix/blob/f08ad5bdbac02167f7d9f5e7f9bab57cf1c5f8c4/src/nix/develop.cc#L257-L275
+// Entries not in that list are called out below.
 var ignoreDevEnvVar = map[string]bool{
 	"BASHOPTS":           true,
 	"HOME":               true,
@@ -1070,13 +1071,28 @@ var ignoreDevEnvVar = map[string]bool{
 	"PPID":               true,
 	"SHELL":              true,
 	"SHELLOPTS":          true,
-	"TEMP":               true,
-	"TEMPDIR":            true,
-	"TERM":               true,
-	"TMP":                true,
-	"TMPDIR":             true,
-	"TZ":                 true,
-	"UID":                true,
+
+	// SOURCE_DATE_EPOCH is set by the nixpkgs stdenv to a fixed timestamp
+	// (315532800 = 1980-01-01) so that *builds* are reproducible. Leaking it
+	// into the interactive Devbox shell makes any timestamp-respecting tool run
+	// there stamp its output with 1980 instead of the current time. The most
+	// visible symptom is Docker images showing up as created "45 years ago"
+	// (which can trip age-based registry cleanup), but it also affects tar,
+	// gzip, and other build tools. Ignore the Nix-provided value so the shell
+	// falls back to the current environment (normally unset, so tools use the
+	// real time). Users who genuinely want reproducible builds can still set
+	// SOURCE_DATE_EPOCH explicitly via devbox.json's env block, which is layered
+	// on top of these variables. See
+	// https://github.com/jetify-com/devbox/issues/2597.
+	"SOURCE_DATE_EPOCH": true,
+
+	"TEMP":    true,
+	"TEMPDIR": true,
+	"TERM":    true,
+	"TMP":     true,
+	"TMPDIR":  true,
+	"TZ":      true,
+	"UID":     true,
 }
 
 func (d *Devbox) ProjectDirHash() string {
