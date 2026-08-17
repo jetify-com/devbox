@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"text/tabwriter"
 
@@ -271,7 +272,24 @@ func (d *Devbox) StartProcessManager(
 // defaults for the `devbox services` scenario.
 func (d *Devbox) runDevboxServicesScript(ctx context.Context, cmdArgs []string) error {
 	cmdArgs = append([]string{"services"}, cmdArgs...)
-	return d.RunScript(ctx, devopt.EnvOptions{}, "devbox", cmdArgs)
+	return d.RunScript(ctx, devopt.EnvOptions{}, devboxBinaryForSelfInvocation(), cmdArgs)
+}
+
+// devboxBinaryForSelfInvocation returns a shell-quoted reference to the
+// currently running devbox binary. `devbox services ...` re-invokes devbox
+// inside the computed environment, and using the actual executable path (rather
+// than a hardcoded "devbox") ensures this works even when the binary has been
+// installed or renamed to something other than "devbox". If the executable path
+// can't be determined, it falls back to "devbox", relying on a PATH lookup as
+// before. See https://github.com/jetify-com/devbox/issues/1321.
+func devboxBinaryForSelfInvocation() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return "devbox"
+	}
+	// Quote the path so it survives being eval'd by the generated run script
+	// (e.g. when the path contains spaces).
+	return strconv.Quote(exe)
 }
 
 func (d *Devbox) ShowProcessComposePort(ctx context.Context, writer io.Writer) error {
