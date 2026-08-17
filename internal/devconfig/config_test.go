@@ -281,6 +281,86 @@ func TestFindError(t *testing.T) {
 	})
 }
 
+func TestJSONCConfig(t *testing.T) {
+	const jsonc = "{\n  // devbox lets you comment your config\n  \"packages\": []\n}\n"
+
+	t.Run("OpenDiscoversJSONC", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, configfile.AltName)
+		if err := os.WriteFile(path, []byte(jsonc), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := Open(dir)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", dir, err)
+		}
+		if cfg.Root.AbsRootPath != path {
+			t.Errorf("cfg.Root.AbsRootPath = %q, want %q", cfg.Root.AbsRootPath, path)
+		}
+	})
+
+	t.Run("FindDiscoversJSONCInParent", func(t *testing.T) {
+		root, child, _ := mkNestedDirs(t)
+		path := filepath.Join(root, configfile.AltName)
+		if err := os.WriteFile(path, []byte(jsonc), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := Find(child)
+		if err != nil {
+			t.Fatalf("Find(%q) error: %v", child, err)
+		}
+		if cfg.Root.AbsRootPath != path {
+			t.Errorf("cfg.Root.AbsRootPath = %q, want %q", cfg.Root.AbsRootPath, path)
+		}
+	})
+
+	t.Run("DefaultNameWinsWhenBothExist", func(t *testing.T) {
+		dir := t.TempDir()
+		jsonPath := filepath.Join(dir, configfile.DefaultName)
+		if err := os.WriteFile(jsonPath, []byte(`{"packages": []}`), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, configfile.AltName), []byte(jsonc), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := Open(dir)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", dir, err)
+		}
+		if cfg.Root.AbsRootPath != jsonPath {
+			t.Errorf("cfg.Root.AbsRootPath = %q, want %q", cfg.Root.AbsRootPath, jsonPath)
+		}
+	})
+
+	t.Run("SaveWritesBackToJSONC", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, configfile.AltName)
+		if err := os.WriteFile(path, []byte(jsonc), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := Open(dir)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", dir, err)
+		}
+		if err := cfg.Root.SaveTo(dir); err != nil {
+			t.Fatalf("SaveTo(%q) error: %v", dir, err)
+		}
+
+		// Saving must write back to devbox.jsonc, not create a devbox.json.
+		if _, err := os.Stat(filepath.Join(dir, configfile.DefaultName)); !errors.Is(err, fs.ErrNotExist) {
+			t.Errorf("SaveTo created a %s; want it to update %s in place",
+				configfile.DefaultName, configfile.AltName)
+		}
+		if _, err := os.Stat(path); err != nil {
+			t.Errorf("os.Stat(%q) after save: %v", path, err)
+		}
+	})
+}
+
 // mkNestedDirs sets up a nested directory structure for Find and Open tests.
 func mkNestedDirs(t *testing.T) (root, child, nested string) {
 	t.Helper()

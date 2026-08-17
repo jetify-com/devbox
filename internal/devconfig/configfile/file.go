@@ -21,7 +21,18 @@ import (
 
 const (
 	DefaultName = "devbox.json"
+	// AltName is an alternate config filename that devbox also recognizes.
+	// devbox.json already permits comments (it is parsed as JSONC), but
+	// editors and GitHub diffs flag comments in a .json file as errors. Naming
+	// the file devbox.jsonc lets those tools highlight it correctly without any
+	// extra configuration. See https://github.com/jetify-com/devbox/issues/2602
+	AltName = "devbox.jsonc"
 )
+
+// ValidNames are the config filenames devbox recognizes, in the order they are
+// searched for within a directory. devbox.json is listed first so it wins when
+// a directory happens to contain both files.
+var ValidNames = []string{DefaultName, AltName}
 
 // ConfigFile defines a devbox environment as JSON.
 type ConfigFile struct {
@@ -114,9 +125,21 @@ func (c *ConfigFile) InitHook() *shellcmd.Commands {
 	return c.Shell.InitHook
 }
 
-// SaveTo writes the config to a file.
-func (c *ConfigFile) SaveTo(path string) error {
-	return os.WriteFile(filepath.Join(path, DefaultName), c.Bytes(), 0o644)
+// FileName returns the base name of the config file (e.g. "devbox.json" or
+// "devbox.jsonc"). It preserves whatever name the config was loaded from so
+// that saving writes back to the same file. It falls back to [DefaultName] when
+// the config has no on-disk path (for example, a config loaded from a URL).
+func (c *ConfigFile) FileName() string {
+	if c.AbsRootPath != "" {
+		return filepath.Base(c.AbsRootPath)
+	}
+	return DefaultName
+}
+
+// SaveTo writes the config into the directory dir, using the config's original
+// filename (see [ConfigFile.FileName]).
+func (c *ConfigFile) SaveTo(dir string) error {
+	return os.WriteFile(filepath.Join(dir, c.FileName()), c.Bytes(), 0o644)
 }
 
 // TODO: Can we remove SaveTo and just use Save()?
