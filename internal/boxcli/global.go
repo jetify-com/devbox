@@ -31,6 +31,7 @@ func globalCmd() *cobra.Command {
 	addCommandAndHideConfigFlag(globalCmd, addCmd())
 	addCommandAndHideConfigFlag(globalCmd, infoCmd())
 	addCommandAndHideConfigFlag(globalCmd, installCmd())
+	addCommandAndHideConfigFlag(globalCmd, listCmd())
 	addCommandAndHideConfigFlag(globalCmd, pathCmd())
 	addCommandAndHideConfigFlag(globalCmd, pullCmd())
 	addCommandAndHideConfigFlag(globalCmd, pushCmd())
@@ -43,7 +44,6 @@ func globalCmd() *cobra.Command {
 		omitNixEnv: true,
 	}))
 	addCommandAndHideConfigFlag(globalCmd, updateCmd())
-	addCommandAndHideConfigFlag(globalCmd, listCmd())
 
 	return globalCmd
 }
