@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDirExistsAndIsNotEmpty(t *testing.T) {
+func TestNixDirIsInstalled(t *testing.T) {
 	tests := []struct {
 		name     string
 		setup    func(string) error
@@ -34,10 +34,9 @@ func TestDirExistsAndIsNotEmpty(t *testing.T) {
 			expected: true,
 		},
 		{
-			name: "directory with subdirectories",
+			name: "directory with nix store",
 			setup: func(dir string) error {
-				subdir := filepath.Join(dir, "subdir")
-				return os.MkdirAll(subdir, 0o755)
+				return os.MkdirAll(filepath.Join(dir, "store"), 0o755)
 			},
 			expected: true,
 		},
@@ -46,6 +45,26 @@ func TestDirExistsAndIsNotEmpty(t *testing.T) {
 			setup: func(dir string) error {
 				file := filepath.Join(dir, ".hidden")
 				return os.WriteFile(file, []byte("hidden content"), 0o644)
+			},
+			expected: true,
+		},
+		{
+			// Regression test for jetify-com/devbox#2601: mounting an empty
+			// /nix volume in Docker/Kubernetes often leaves a lost+found
+			// directory, which must not be mistaken for an existing install.
+			name: "directory with only lost+found",
+			setup: func(dir string) error {
+				return os.MkdirAll(filepath.Join(dir, "lost+found"), 0o755)
+			},
+			expected: false,
+		},
+		{
+			name: "directory with lost+found and nix store",
+			setup: func(dir string) error {
+				if err := os.MkdirAll(filepath.Join(dir, "lost+found"), 0o755); err != nil {
+					return err
+				}
+				return os.MkdirAll(filepath.Join(dir, "store"), 0o755)
 			},
 			expected: true,
 		},
@@ -70,7 +89,7 @@ func TestDirExistsAndIsNotEmpty(t *testing.T) {
 			}
 
 			// Run the function
-			result := dirExistsAndIsNotEmpty(tempDir)
+			result := nixDirIsInstalled(tempDir)
 
 			// Check results
 			assert.Equal(t, curTest.expected, result)
