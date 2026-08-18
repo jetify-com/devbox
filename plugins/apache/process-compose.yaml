@@ -2,7 +2,7 @@ version: "0.5"
 
 processes:
   apache:
-    command: "echo \"Apache starting on port $HTTPD_PORT\ http://localhost:$HTTPD_PORT\" && apachectl start -f $HTTPD_CONFDIR/httpd.conf -D FOREGROUND"
+    command: "echo \"Apache starting on port $HTTPD_PORT\ http://localhost:$HTTPD_PORT\" && apachectl start -f \"$HTTPD_CONFDIR/httpd.conf\" -D FOREGROUND"
     availability:
       restart: on_failure
       max_restarts: 5
@@ -12,10 +12,10 @@ processes:
       apache-access:
         condition: process_started
   apache-error:
-    command: "tail -f $HTTPD_ERROR_LOG_FILE"
+    command: "tail -f \"$HTTPD_ERROR_LOG_FILE\""
     availability:
       restart: "always"
   apache-access:
-    command: "tail -f $HTTPD_ACCESS_LOG_FILE"
+    command: "tail -f \"$HTTPD_ACCESS_LOG_FILE\""
     availability:
       restart: "always"
