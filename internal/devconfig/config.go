@@ -390,6 +390,19 @@ func (c *Config) Scripts() configfile.Scripts {
 	return scripts
 }
 
+// ScriptOrder returns script names in the order they are defined, with scripts
+// from included plugins first (matching Scripts' merge precedence) followed by
+// the root config's scripts. Duplicate names are de-duplicated by the consumer
+// (Scripts.InOrder).
+func (c *Config) ScriptOrder() []string {
+	var order []string
+	for _, i := range c.included {
+		order = append(order, i.ScriptOrder()...)
+	}
+	order = append(order, c.Root.ScriptOrder()...)
+	return order
+}
+
 func (c *Config) Hash() (string, error) {
 	data := []byte{}
 	for _, i := range c.included {

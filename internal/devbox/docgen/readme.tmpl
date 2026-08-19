@@ -28,8 +28,8 @@ devbox run <script>
 {{- if .Scripts }}
 ## Scripts
 Scripts are custom commands that can be run using this project's environment. This project has the following scripts:
-{{ range $name, $_ := .Scripts }}
-* [{{ $name }}](#devbox-run-{{ $name }})
+{{ range .Scripts }}
+* [{{ .Name }}](#devbox-run-{{ .Name }})
 {{- end }}
 {{ end }}
 
@@ -61,13 +61,13 @@ on `devbox shell` and on `devbox run`.
 
 {{- if .Scripts }}
 ## Script Details
-{{ range $name, $commands := .Scripts }}
-### devbox run {{ $name }}
+{{ range .Scripts }}
+### devbox run {{ .Name }}
 {{- if .Comments }}
 {{ .Comments }}
 {{-  end }}
 ```sh
-{{ $commands }}
+{{ .Commands }}
 ```
 &ensp;
 {{ end }}
