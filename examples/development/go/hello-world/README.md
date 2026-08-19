@@ -26,3 +26,44 @@ If you need additional C libraries, you can add them along with `gcc` to your pa
     "libcap"
 ]
 ```
+
+## Setting up the Go environment
+
+This example configures a few environment variables in `devbox.json`:
+
+```json
+"env": {
+    "GOPATH": "$HOME/go/",
+    "PATH":   "$PATH:$HOME/go/bin"
+}
+```
+
+- `GOPATH` is set to `$HOME/go`, which is Go's default location. Keeping the
+  `GOPATH` outside of your project directory lets the module cache
+  (`$GOPATH/pkg/mod`) be shared across projects and keeps build artifacts out of
+  your source tree.
+- Adding `$GOPATH/bin` to `PATH` makes tools installed with `go install`
+  available inside the Devbox shell.
+
+Which Go toolchain is active is determined by the `go` binary on `PATH` (here,
+the one provided by Nix). The `init_hook` sets `GOROOT` to match that
+installation, which some tooling relies on:
+
+```json
+"shell": {
+    "init_hook": [
+        "export \"GOROOT=$(go env GOROOT)\""
+    ]
+}
+```
+
+> **Note on `GOPATH`:** avoid setting `GOPATH` to your project directory (e.g.
+> `"GOPATH": "$PWD"`). When a module (a directory containing `go.mod`) lives
+> inside `GOPATH`, the Go toolchain falls back to legacy `GOPATH` mode and
+> prints a warning:
+>
+> ```
+> go: warning: ignoring go.mod in $GOPATH /path/to/your/project
+> ```
+>
+> Using `$HOME/go` (as above) keeps module-aware builds working as expected.
