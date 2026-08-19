@@ -179,12 +179,20 @@ const (
 //
 // The semantic component is sourced from <https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string>.
 // It's been modified to tolerate Nix prerelease versions, which don't have a
-// hyphen before the prerelease component and contain underscores.
-var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
+// hyphen before the prerelease component and contain underscores. The patch
+// component is also optional because newer Nix prereleases omit it, e.g.
+// "2.33pre20251107_479b6b73" (see jetify-com/devbox#2766).
+var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)(?:\.(?P<patch>0|[1-9]\d*))?(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
 
 // preReleaseRegexp matches Nix prerelease version strings, which are not valid
 // semvers.
 var preReleaseRegexp = regexp.MustCompile(`pre(?P<date>[0-9]+)_(?P<commit>[a-f0-9]{4,40})$`)
+
+// missingPatchRegexp matches a "major.minor" version immediately followed by a
+// "pre" prerelease component, i.e. a Nix prerelease that omits the patch
+// component (e.g. "2.33pre20251107_479b6b73"). It is used to insert a ".0"
+// patch so the version can be coerced into a valid semver.
+var missingPatchRegexp = regexp.MustCompile(`^([0-9]+\.[0-9]+)pre`)
 
 // Info contains information about a Nix installation.
 type Info struct {
@@ -302,7 +310,11 @@ func (i Info) AtLeast(version string) bool {
 	// If the version isn't a valid semver, check to see if it's a
 	// prerelease (e.g., 2.23.0pre20240526_7de033d6) and coerce it to a
 	// valid version (2.23.0-pre.20240526+7de033d6) so we can compare it.
-	prerelease := preReleaseRegexp.ReplaceAllString(i.Version, "-pre.$date+$commit")
+	// Newer Nix prereleases omit the patch component
+	// (e.g. 2.33pre20251107_479b6b73), so insert a ".0" patch first to keep
+	// the coerced string a valid semver (see jetify-com/devbox#2766).
+	current := missingPatchRegexp.ReplaceAllString(i.Version, "$1.0pre")
+	prerelease := preReleaseRegexp.ReplaceAllString(current, "-pre.$date+$commit")
 	return semver.Compare("v"+prerelease, version) >= 0
 }
 
