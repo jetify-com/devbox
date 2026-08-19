@@ -82,3 +82,21 @@ func lookupProcessCompose(projectDir, path string) string {
 
 	return ""
 }
+
+// LookupProcessComposeOverride finds the process-compose override file in the given directory.
+// process-compose supports override files that are merged with the base configuration.
+// See: https://f1bonacc1.github.io/process-compose/merge/
+func LookupProcessComposeOverride(projectDir string) string {
+	overrideFiles := []string{
+		filepath.Join(projectDir, "process-compose.override.yaml"),
+		filepath.Join(projectDir, "process-compose.override.yml"),
+	}
+
+	for _, p := range overrideFiles {
+		if fi, err := os.Stat(p); err == nil && !fi.IsDir() {
+			return p
+		}
+	}
+
+	return ""
+}
