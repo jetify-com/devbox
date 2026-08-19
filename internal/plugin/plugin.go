@@ -17,6 +17,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
+	"go.jetify.com/devbox/internal/cachehash"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
@@ -68,6 +69,67 @@ func (c *Config) Services() (services.Services, error) {
 		return services.FromProcessCompose(file)
 	}
 	return nil, nil
+}
+
+// Hash returns a hash of the plugin config. It shadows the embedded
+// configfile.ConfigFile.Hash() so that, for local plugins, the plugin-only
+// fields and the contents of the files referenced by create_files are folded
+// into the hash.
+//
+// Devbox uses this hash (via Devbox.ConfigHash) to decide whether the cached
+// environment is still up to date. configfile.ConfigFile.Hash() only hashes the
+// ConfigFile fields, so on its own it omits plugin-only fields (create_files,
+// version, ...) and the create_files content files. For a local plugin all of
+// these live on disk and can be edited without any corresponding change to
+// devbox.json or the lockfile, so without this a local plugin's create_files
+// would never be regenerated in the virtenv after the source changes. See
+// https://github.com/jetify-com/devbox/issues/2755.
+//
+// Built-in plugin files are embedded in the Devbox binary (covered by the
+// Devbox version in the state hash) and remote plugins are addressed by an
+// immutable ref, so for those the config hash alone is sufficient.
+func (c *Config) Hash() (string, error) {
+	configHash, err := c.ConfigFile.Hash()
+	if err != nil {
+		return "", err
+	}
+
+	local, ok := c.Source.(*LocalPlugin)
+	if !ok {
+		return configHash, nil
+	}
+
+	// Hash each referenced file independently, keyed by its source path, rather
+	// than concatenating raw bytes. Concatenation is ambiguous (different
+	// file/content splits can produce identical byte streams) and would buffer
+	// every file at once.
+	fileHashes := make(map[string]string, len(c.CreateFiles))
+	for _, contentPath := range c.CreateFiles {
+		if contentPath == "" {
+			continue
+		}
+		content, err := local.FileContent(contentPath)
+		if err != nil {
+			return "", errors.WithStack(err)
+		}
+		fileHashes[contentPath] = cachehash.Bytes(content)
+	}
+
+	return cachehash.JSON(struct {
+		ConfigHash           string            `json:"config_hash"`
+		CreateFiles          map[string]string `json:"create_files"`
+		Version              string            `json:"version"`
+		Readme               string            `json:"readme"`
+		RemoveTriggerPackage bool              `json:"remove_trigger_package"`
+		FileHashes           map[string]string `json:"file_hashes"`
+	}{
+		ConfigHash:           configHash,
+		CreateFiles:          c.CreateFiles,
+		Version:              c.Version,
+		Readme:               c.DeprecatedDescription,
+		RemoveTriggerPackage: c.RemoveTriggerPackage,
+		FileHashes:           fileHashes,
+	})
 }
 
 func (m *Manager) CreateFilesForConfig(cfg *Config) error {
