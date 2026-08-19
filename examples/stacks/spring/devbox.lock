@@ -1,86 +1,126 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "gradle@latest": {
-      "last_modified": "2024-02-10T18:15:24Z",
-      "plugin_version": "0.0.1",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#gradle",
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2026-06-13T14:05:44Z",
+      "resolved": "github:NixOS/nixpkgs/9f11f828c213641c2369a9f1fa31fe31557e3156?lastModified=1781359544&narHash=sha256-iUuzKQcyXvopYDDzFpMK5eQKP3WIJExYny2kJtbgUcE%3D"
+    },
+    "glibcLocales@latest": {
+      "last_modified": "2026-05-21T08:15:18Z",
+      "resolved": "github:NixOS/nixpkgs/4a29d733e8a7d5b824c3d8c958a946a9867b3eb2#glibcLocales",
       "source": "devbox-search",
-      "version": "8.6",
+      "version": "2.42-61",
       "systems": {
-        "aarch64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/5qg6ddwbn5gr3zijrh8s1fjfza406xnf-gradle-8.6",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/5qg6ddwbn5gr3zijrh8s1fjfza406xnf-gradle-8.6"
-        },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/5qy4yfyy0wn2l858fjx4mkya480ic47s-gradle-8.6",
+              "path": "/nix/store/dlq1phn9xxacdc7pqfi7n4yn6b2npz6g-glibc-locales-2.42-61",
               "default": true
             }
           ],
-          "store_path": "/nix/store/5qy4yfyy0wn2l858fjx4mkya480ic47s-gradle-8.6"
-        },
-        "x86_64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/c47x8pzqgxicmmz4bd8hfgnpifzm14j3-gradle-8.6",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/c47x8pzqgxicmmz4bd8hfgnpifzm14j3-gradle-8.6"
+          "store_path": "/nix/store/dlq1phn9xxacdc7pqfi7n4yn6b2npz6g-glibc-locales-2.42-61"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/iwqv2a8ffp3y7cn77z4d33qrgwblzq29-gradle-8.6",
+              "path": "/nix/store/78i8xfh6bdkcnzc1bs3fpj7dbgvxxa4h-glibc-locales-2.42-61",
               "default": true
             }
           ],
-          "store_path": "/nix/store/iwqv2a8ffp3y7cn77z4d33qrgwblzq29-gradle-8.6"
+          "store_path": "/nix/store/78i8xfh6bdkcnzc1bs3fpj7dbgvxxa4h-glibc-locales-2.42-61"
         }
       }
     },
-    "jdk@17": {
-      "last_modified": "2024-02-10T18:15:24Z",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#jdk17",
+    "gradle@latest": {
+      "last_modified": "2026-05-21T08:15:18Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/4a29d733e8a7d5b824c3d8c958a946a9867b3eb2#gradle",
       "source": "devbox-search",
-      "version": "17.0.10",
+      "version": "8.14.4",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/cj4knn6zm57bgxqm7xyspyyf65inzq43-zulu-ca-jdk-17.0.10",
+              "path": "/nix/store/aw6qljbxnj0awzzcsh61kxmgqifnvnvk-gradle-8.14.4",
               "default": true
             }
           ],
-          "store_path": "/nix/store/cj4knn6zm57bgxqm7xyspyyf65inzq43-zulu-ca-jdk-17.0.10"
+          "store_path": "/nix/store/aw6qljbxnj0awzzcsh61kxmgqifnvnvk-gradle-8.14.4"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/4rbvgkk1pw4v2rsz0jr7i3gp1xq565hs-gradle-8.14.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/4rbvgkk1pw4v2rsz0jr7i3gp1xq565hs-gradle-8.14.4"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/d5g0pn5mnn02p8nsyfdr8z0557jr1civ-zulu-ca-jdk-17.0.10",
+              "path": "/nix/store/sfcgdgq7ffzp0vmbijahsbcb6k0c8jmh-gradle-8.14.4",
               "default": true
             }
           ],
-          "store_path": "/nix/store/d5g0pn5mnn02p8nsyfdr8z0557jr1civ-zulu-ca-jdk-17.0.10"
+          "store_path": "/nix/store/sfcgdgq7ffzp0vmbijahsbcb6k0c8jmh-gradle-8.14.4"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/npzf468wf93gijr7fcksa5mc7bl2zmln-gradle-8.14.4",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/npzf468wf93gijr7fcksa5mc7bl2zmln-gradle-8.14.4"
+        }
+      }
+    },
+    "jdk@17": {
+      "last_modified": "2025-10-22T20:59:19Z",
+      "resolved": "github:NixOS/nixpkgs/01b6809f7f9d1183a2b3e081f0a1e6f8f415cb09#jdk17",
+      "source": "devbox-search",
+      "version": "17.0.12",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/hlm8a8cnp4hm8xkg0a2yy4kv7cq44jii-zulu-ca-jdk-17.0.12",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/hlm8a8cnp4hm8xkg0a2yy4kv7cq44jii-zulu-ca-jdk-17.0.12"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/i4zgq9685y6284hbf5a7ac9ysb88dvlz-zulu-ca-jdk-17.0.12",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/i4zgq9685y6284hbf5a7ac9ysb88dvlz-zulu-ca-jdk-17.0.12"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "path": "/nix/store/w7s5fm9zkdpbc6j3ns5zkr41gaj7y9xa-openjdk-17.0.17+8",
+              "default": true
+            }
+          ]
         }
       }
     },
     "mysql80@latest": {
       "last_modified": "2024-02-10T18:15:24Z",
-      "plugin_version": "0.0.3",
+      "plugin_version": "0.0.4",
       "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#mysql80",
       "source": "devbox-search",
       "version": "8.0.36",

@@ -3,30 +3,100 @@
   "packages": {
     "curl": {
       "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#curl",
-      "source": "nixpkg"
+      "source": "nixpkg",
+      "systems": {
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "bin",
+              "path": "/nix/store/0g1lq3vff290wainxdlbz9a18m28pr4r-curl-8.4.0-bin",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/lkd767gq8g9nmjb29vyrngc3dhbi61qc-curl-8.4.0-man",
+              "default": true
+            }
+          ]
+        }
+      }
+    },
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2026-06-13T14:05:44Z",
+      "resolved": "github:NixOS/nixpkgs/9f11f828c213641c2369a9f1fa31fe31557e3156?lastModified=1781359544&narHash=sha256-iUuzKQcyXvopYDDzFpMK5eQKP3WIJExYny2kJtbgUcE%3D"
     },
     "glow": {
       "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#glow",
-      "source": "nixpkg"
+      "source": "nixpkg",
+      "systems": {
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "path": "/nix/store/z6avagi2znq36d1qpic7yagqc2jlwh3r-glow-1.5.1",
+              "default": true
+            }
+          ]
+        }
+      }
     },
     "gnuplot": {
       "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#gnuplot",
-      "source": "nixpkg"
+      "source": "nixpkg",
+      "systems": {
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "path": "/nix/store/anr74f3l7shw30k43j0s9h26kgc8ph2q-gnuplot-5.4.9",
+              "default": true
+            }
+          ]
+        }
+      }
     },
     "graphviz": {
       "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#graphviz",
-      "source": "nixpkg"
+      "source": "nixpkg",
+      "systems": {
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "path": "/nix/store/00kqi7d8qnh7vzllsn718pv8q46z728y-graphviz-9.0.0",
+              "default": true
+            }
+          ]
+        }
+      }
     },
     "openjdk17@latest": {
       "last_modified": "2023-02-24T09:01:09Z",
       "resolved": "github:NixOS/nixpkgs/7d0ed7f2e5aea07ab22ccb338d27fbe347ed2f11#openjdk17",
       "source": "devbox-search",
-      "version": "17.0.5+8"
+      "version": "17.0.5+8",
+      "systems": {
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "path": "/nix/store/q08fiz2cbvqqsk03lvjpi3lqy9rmvfd9-openjdk-17.0.5+8",
+              "default": true
+            }
+          ]
+        }
+      }
     },
     "ruby_3_1": {
       "plugin_version": "0.0.2",
       "resolved": "github:NixOS/nixpkgs/75a52265bda7fd25e06e3a67dee3f0354e73243c#ruby_3_1",
-      "source": "nixpkg"
+      "source": "nixpkg",
+      "systems": {
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "path": "/nix/store/1v1znb9xdqwc226p1v6ypayzqgyvn5h4-ruby-3.1.4",
+              "default": true
+            }
+          ]
+        }
+      }
     }
   }
 }

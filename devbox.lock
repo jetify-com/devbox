@@ -50,8 +50,8 @@
       }
     },
     "git@latest": {
-      "last_modified": "2026-05-21T08:15:18Z",
-      "resolved": "github:NixOS/nixpkgs/4a29d733e8a7d5b824c3d8c958a946a9867b3eb2#git",
+      "last_modified": "2026-06-08T15:01:26Z",
+      "resolved": "github:NixOS/nixpkgs/8c3cede7ddc26bd659d2d383b5610efbd2c7a16e#git",
       "source": "devbox-search",
       "version": "2.54.0",
       "systems": {
