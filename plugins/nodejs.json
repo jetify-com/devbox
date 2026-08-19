@@ -1,8 +1,8 @@
 {
     "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/main/.schema/devbox-plugin.schema.json",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "name": "nodejs",
-    "readme": "Devbox automatically configures Corepack for Nodejs when DEVBOX_COREPACK_ENABLED=1. You can install Yarn or Pnpm by adding them to your `package.json` file using `packageManager`\nCorepack binaries will be installed in your local `.devbox` directory\n\nWhen Corepack is enabled, Devbox also activates the package manager pinned in your `package.json` `packageManager` field automatically. Set DEVBOX_DISABLE_NODEJS_PACKAGE_MANAGER_AUTODETECT=1 to disable this behavior.\n\nNote: newer versions of Nodejs (25+) no longer bundle Corepack, so you must add the `corepack` package to your devbox.json separately for Corepack to be available.",
+    "readme": "Devbox automatically configures Corepack for Nodejs when DEVBOX_COREPACK_ENABLED=1. You can install Yarn or Pnpm by adding them to your `package.json` file using `packageManager`\nCorepack binaries will be installed in your local `.devbox` directory\n\nWhen Corepack is enabled, Devbox also activates the package manager pinned in your `package.json` `packageManager` field automatically. Set DEVBOX_DISABLE_NODEJS_PACKAGE_MANAGER_AUTODETECT=1 to disable this behavior.\n\nNote: some Nodejs packages do not bundle Corepack, including `nodejs-slim` and newer Nodejs versions (25+). With those packages you must add the `corepack` package to your devbox.json separately (for example, run `devbox add corepack`) for Corepack to be available.",
     "env": {
         "DEVBOX_COREPACK_BIN_DIR": "{{ .Virtenv }}/corepack-bin",
         "PATH": "{{ .Virtenv }}/corepack-bin:$PATH"
