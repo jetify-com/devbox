@@ -2,6 +2,7 @@
 package nix
 
 import (
+	"path/filepath"
 	"slices"
 	"testing"
 )
@@ -203,4 +204,26 @@ func TestVersionInfoAtLeast(t *testing.T) {
 		}()
 		info.AtLeast(v)
 	})
+}
+
+func TestNixBinaryFallbackPaths(t *testing.T) {
+	paths := nixBinaryFallbackPaths()
+	if len(paths) == 0 {
+		t.Fatal("expected at least one fallback path")
+	}
+	// Every fallback must point at the nix binary itself, not a directory that
+	// contains it. resolvePath rejects directories, so a bare bin dir here
+	// would silently never match (regression guard for issue #2787).
+	for _, p := range paths {
+		if filepath.Base(p) != "nix" {
+			t.Errorf("fallback path %q must end in the nix binary, got base %q", p, filepath.Base(p))
+		}
+		if !filepath.IsAbs(p) {
+			t.Errorf("fallback path %q must be absolute", p)
+		}
+	}
+	// The NixOS system-profile location must be covered.
+	if !slices.Contains(paths, "/run/current-system/sw/bin/nix") {
+		t.Errorf("expected NixOS system-profile nix path in fallbacks, got %v", paths)
+	}
 }
