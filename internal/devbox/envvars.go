@@ -89,14 +89,21 @@ func exportify(w io.Writer, vars map[string]string) string {
 			strb.WriteString("export ")
 			strb.WriteString(key)
 			strb.WriteString(`="`)
-			for _, r := range vars[key] {
-				switch r {
+			for _, char := range vars[key] {
+				switch char {
 				// Special characters inside double quotes:
 				// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
-				case '$', '`', '"', '\\', '\n':
+				//
+				// Note: a literal newline is NOT escaped. Inside double quotes
+				// a bare newline is preserved verbatim, whereas a backslash
+				// immediately followed by a newline is a line continuation that
+				// the shell deletes. Escaping it would join a multi-line value's
+				// adjacent lines and corrupt values like a multi-command
+				// PROMPT_COMMAND (see jetify-com/devbox#2814).
+				case '$', '`', '"', '\\':
 					strb.WriteRune('\\')
 				}
-				strb.WriteRune(r)
+				strb.WriteRune(char)
 			}
 			strb.WriteString("\";\n")
 		}
