@@ -149,9 +149,10 @@ func shellEnvFunc(
 			Pure:              flags.pure,
 			SkipRecompute:     !flags.recomputeEnv,
 		},
-		NoRefreshAlias: flags.noRefreshAlias,
-		RunHooks:       flags.runInitHook,
-		ShellFormat:    shellFormat,
+		NoRefreshAlias:  flags.noRefreshAlias,
+		OnlyModifiedEnv: true,
+		RunHooks:        flags.runInitHook,
+		ShellFormat:     shellFormat,
 	})
 	if err != nil {
 		return "", err
