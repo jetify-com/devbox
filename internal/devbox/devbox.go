@@ -628,10 +628,19 @@ func (d *Devbox) execPrintDevEnv(ctx context.Context, usePrintDevEnvCache bool) 
 		spinny.Start()
 	}
 
+	// Allow unfree/insecure packages to evaluate when the user opts in via
+	// devbox.json's "env" (the process environment is handled separately
+	// inside PrintDevEnv). See https://github.com/jetify-com/devbox/issues/2196.
+	configEnv := d.cfg.Env()
+	allowUnfree, _ := strconv.ParseBool(configEnv["NIXPKGS_ALLOW_UNFREE"])
+	allowInsecure, _ := strconv.ParseBool(configEnv["NIXPKGS_ALLOW_INSECURE"])
+
 	vaf, err := d.nix.PrintDevEnv(ctx, &nix.PrintDevEnvArgs{
 		FlakeDir:             d.flakeDir(),
 		PrintDevEnvCachePath: d.nixPrintDevEnvCachePath(),
 		UsePrintDevEnvCache:  usePrintDevEnvCache,
+		AllowUnfree:          allowUnfree,
+		AllowInsecure:        allowInsecure,
 	})
 	if spinny != nil {
 		spinny.Stop()
