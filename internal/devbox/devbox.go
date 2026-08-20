@@ -1009,7 +1009,17 @@ func (d *Devbox) configEnvs(
 	} else if d.cfg.Root.IsdotEnvEnabled() {
 		// if env_from points to a .env file, parse and add it
 		parsedEnvs, err := d.cfg.Root.ParseEnvsFromDotEnv()
-		if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			// A missing env_from file should not stop Devbox from enabling the
+			// environment. The referenced file is often untracked and may be
+			// created by a command in init_hook (e.g. `cp -n .env.example
+			// .env`). Warn and continue instead of erroring out. See #2504.
+			ux.Fwarningf(
+				d.stderr,
+				"Ignoring env_from directive: file %q does not exist.\n",
+				d.cfg.Root.EnvFrom,
+			)
+		} else if err != nil {
 			// it's fine to include the error ParseEnvsFromDotEnv here because
 			// the error message is relevant to the user
 			return nil, usererr.New(

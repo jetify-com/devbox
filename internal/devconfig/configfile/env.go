@@ -35,7 +35,10 @@ func (c *ConfigFile) ParseEnvsFromDotEnv() (map[string]string, error) {
 	}
 	file, err := os.Open(envFileAbsPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %s", envFileAbsPath)
+		// Wrap the underlying error (which is os.ErrNotExist for a missing
+		// file) so callers can distinguish a missing env_from file from a
+		// genuine parse error via errors.Is(err, os.ErrNotExist).
+		return nil, fmt.Errorf("failed to open file: %s: %w", envFileAbsPath, err)
 	}
 	defer file.Close()
 
