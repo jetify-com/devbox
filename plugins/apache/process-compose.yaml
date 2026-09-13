@@ -11,6 +11,12 @@ processes:
         condition: process_started
       apache-access:
         condition: process_started
+    readiness_probe:
+      http_get:
+        host: localhost
+        port: ${HTTPD_PORT}
+        path: /
+      initial_delay_seconds: 1
   apache-error:
     command: "tail -f $HTTPD_ERROR_LOG_FILE"
     availability:
