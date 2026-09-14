@@ -5,9 +5,9 @@ package devbox
 
 import (
 	"os"
-	"strconv"
 	"testing"
 
+	"al.essio.dev/pkg/shellescape"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,7 +26,6 @@ func TestDevboxBinaryForSelfInvocation(t *testing.T) {
 
 	// It should reference the actual running binary (shell-quoted), not the
 	// literal command name "devbox".
-	assert.Equal(t, strconv.Quote(exe), got)
+	assert.Equal(t, shellescape.Quote(exe), got)
 	assert.NotEqual(t, "devbox", got)
-	assert.NotEqual(t, strconv.Quote("devbox"), got)
 }

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"text/tabwriter"
 
+	"al.essio.dev/pkg/shellescape"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/services"
@@ -287,9 +288,9 @@ func devboxBinaryForSelfInvocation() string {
 	if err != nil {
 		return "devbox"
 	}
-	// Quote the path so it survives being eval'd by the generated run script
-	// (e.g. when the path contains spaces).
-	return strconv.Quote(exe)
+	// Shell-quote the path so it survives being eval'd by the generated run
+	// script (e.g. when the path contains spaces or other special characters).
+	return shellescape.Quote(exe)
 }
 
 func (d *Devbox) ShowProcessComposePort(ctx context.Context, writer io.Writer) error {
