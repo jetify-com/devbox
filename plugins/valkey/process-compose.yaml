@@ -2,7 +2,7 @@ version: "0.5"
 
 processes:
   valkey:
-    command: "valkey-server $VALKEY_CONF --port $VALKEY_PORT"
+    command: "valkey-server \"$VALKEY_CONF\" --port $VALKEY_PORT"
     availability:
       restart: on_failure
       max_restarts: 5

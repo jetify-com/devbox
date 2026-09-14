@@ -1,6 +1,6 @@
 {
   "name": "php",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "PHP is compiled with default extensions. If you would like to use non-default extensions you can add them with devbox add php81Extensions.{extension} . For example, for the memcache extension you can do `devbox add php81Extensions.memcached`.",
   "packages": [
     "path:{{ .Virtenv }}/flake",
