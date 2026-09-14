@@ -45,6 +45,11 @@ func GenerateReadme(
 		outputPath = defaultName
 	}
 
+	services, err := devbox.Services()
+	if err != nil {
+		return err
+	}
+
 	f, err := os.Create(outputPath)
 	if err != nil {
 		return err
@@ -58,6 +63,7 @@ func GenerateReadme(
 		"EnvVars":  devbox.Config().Env(),
 		"InitHook": devbox.Config().InitHook(),
 		"Packages": devbox.TopLevelPackages(),
+		"Services": services,
 		// TODO add includes
 	})
 }
