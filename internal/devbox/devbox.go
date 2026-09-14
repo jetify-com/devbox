@@ -1094,17 +1094,11 @@ var ignoreDevEnvVar = map[string]bool{
 	"SHELLOPTS":          true,
 
 	// SOURCE_DATE_EPOCH is set by the nixpkgs stdenv to a fixed timestamp
-	// (315532800 = 1980-01-01) so that *builds* are reproducible. Leaking it
-	// into the interactive Devbox shell makes any timestamp-respecting tool run
-	// there stamp its output with 1980 instead of the current time. The most
-	// visible symptom is Docker images showing up as created "45 years ago"
-	// (which can trip age-based registry cleanup), but it also affects tar,
-	// gzip, and other build tools. Ignore the Nix-provided value so the shell
-	// falls back to the current environment (normally unset, so tools use the
-	// real time). Users who genuinely want reproducible builds can still set
-	// SOURCE_DATE_EPOCH explicitly via devbox.json's env block, which is layered
-	// on top of these variables. See
-	// https://github.com/jetify-com/devbox/issues/2597.
+	// (315532800 = 1980-01-01) for reproducible builds. Leaking it into the
+	// interactive shell makes timestamp-respecting tools (docker build, tar,
+	// gzip) stamp output with 1980 -- e.g. Docker images shown as created "45
+	// years ago". Ignore it like HOME/TMPDIR; users can still set it explicitly
+	// via devbox.json's env. See https://github.com/jetify-com/devbox/issues/2597.
 	"SOURCE_DATE_EPOCH": true,
 
 	"TEMP":    true,
