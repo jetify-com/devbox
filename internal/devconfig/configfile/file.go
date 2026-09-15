@@ -21,6 +21,12 @@ import (
 
 const (
 	DefaultName = "devbox.json"
+
+	// ConfigSubdir is a subdirectory that Devbox also searches for a config
+	// file. It lets projects keep their root directory tidy by placing
+	// devbox.json inside a .config directory (e.g. .config/devbox.json)
+	// instead of at the top level. See jetify-com/devbox#2792.
+	ConfigSubdir = ".config"
 )
 
 // ConfigFile defines a devbox environment as JSON.
