@@ -5,17 +5,15 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"strings"
 
 	"go.jetify.com/devbox/internal/debug"
 )
 
 type BuildArgs struct {
-	AllowInsecure     bool
-	Env               []string
-	ExtraSubstituters []string
-	Flags             []string
-	Writer            io.Writer
+	AllowInsecure bool
+	Env           []string
+	Flags         []string
+	Writer        io.Writer
 }
 
 func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
@@ -27,14 +25,6 @@ func Build(ctx context.Context, args *BuildArgs, installables ...string) error {
 	cmd := Command("build", "--impure")
 	cmd.Args = appendArgs(cmd.Args, args.Flags)
 	cmd.Args = appendArgs(cmd.Args, installables)
-	// Adding extra substituters only here to be conservative, but this could also
-	// be added to ExperimentalFlags() in the future.
-	if len(args.ExtraSubstituters) > 0 {
-		cmd.Args = append(cmd.Args,
-			"--extra-substituters",
-			strings.Join(args.ExtraSubstituters, " "),
-		)
-	}
 	cmd.Env = append(allowUnfreeEnv(os.Environ()), args.Env...)
 	if args.AllowInsecure {
 		slog.Debug("Setting Allow-insecure env-var\n")

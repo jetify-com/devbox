@@ -39,7 +39,7 @@ type ConfigFile struct {
 	// Env allows specifying env variables
 	Env map[string]string `json:"env,omitempty"`
 
-	// Only allows "envsec" for now
+	// EnvFrom is the path to a .env file to load env variables from.
 	EnvFrom string `json:"env_from,omitempty"`
 
 	// Shell configures the devbox shell environment.

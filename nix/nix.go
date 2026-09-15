@@ -179,8 +179,12 @@ const (
 //
 // The semantic component is sourced from <https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string>.
 // It's been modified to tolerate Nix prerelease versions, which don't have a
-// hyphen before the prerelease component and contain underscores.
-var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
+// hyphen before the prerelease component and contain underscores. The patch
+// component is also optional: some Nix builds report a two-component version
+// followed directly by a prerelease, e.g. "2.33pre20251107_479b6b73" (see
+// https://github.com/jetify-com/devbox/issues/2766). normalizeVersion inserts
+// the missing ".0" patch so the result is comparable as a semver.
+var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)(?:\.(?P<patch>0|[1-9]\d*))?(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
 
 // preReleaseRegexp matches Nix prerelease version strings, which are not valid
 // semvers.
@@ -255,7 +259,7 @@ func parseInfo(data []byte) (Info, error) {
 		return info, redact.Errorf("parse nix version: %s", redact.Safe(lines[0]))
 	}
 	info.Name = matches[1]
-	info.Version = matches[2]
+	info.Version = normalizeVersion(matches)
 	for _, line := range lines {
 		name, value, found := strings.Cut(line, ": ")
 		if !found {
@@ -282,6 +286,21 @@ func parseInfo(data []byte) (Info, error) {
 		}
 	}
 	return info, nil
+}
+
+// normalizeVersion returns the semantic version string from a versionRegexp
+// match, inserting a ".0" patch component when Nix omits it (e.g. it turns
+// "2.33pre20251107_479b6b73" into "2.33.0pre20251107_479b6b73"). A patch
+// component is required for the version to be comparable as a semver, both
+// directly and via AtLeast's prerelease coercion.
+func normalizeVersion(matches []string) string {
+	version := matches[2]
+	if matches[versionRegexp.SubexpIndex("patch")] != "" {
+		return version
+	}
+	majorMinor := matches[versionRegexp.SubexpIndex("major")] +
+		"." + matches[versionRegexp.SubexpIndex("minor")]
+	return majorMinor + ".0" + strings.TrimPrefix(version, majorMinor)
 }
 
 // AtLeast returns true if i.Version is >= version per semantic versioning. It

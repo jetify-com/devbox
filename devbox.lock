@@ -172,6 +172,80 @@
           "store_path": "/nix/store/33fw5m31lfcnk4ff2f0df7j2bxnh8lgk-go-1.26.3"
         }
       }
+    },
+    "nodejs-slim@latest": {
+      "last_modified": "2026-08-10T07:49:06Z",
+      "resolved": "github:NixOS/nixpkgs/d482ef84049d9b7276b83a06e4e4d76983830097#nodejs-slim_26",
+      "source": "devbox-search",
+      "version": "26.7.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3x3996i7b5awrcx4mh28sd4krng47588-nodejs-slim-26.7.0",
+              "default": true
+            },
+            {
+              "name": "npm",
+              "path": "/nix/store/8rs2496fbks9blsgq5shjn8kz4r7xqk5-nodejs-slim-26.7.0-npm"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/x0w8i4znvw57q7gkhmh5bqk5m8gb8dbs-nodejs-slim-26.7.0-dev"
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/gp4pchakmwj10mzh9kf98xfrpyk1546d-nodejs-slim-26.7.0-libv8"
+            }
+          ],
+          "store_path": "/nix/store/3x3996i7b5awrcx4mh28sd4krng47588-nodejs-slim-26.7.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/mwy0r47dj3k6jwz9mxsb1j4pzyw4sikb-nodejs-slim-26.7.0",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/xdlrxv5a255yn2413mpy66n27d9a151a-nodejs-slim-26.7.0-dev"
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/7s8zsh8r150ph1wz2sn19ny4vn8m1p30-nodejs-slim-26.7.0-libv8"
+            },
+            {
+              "name": "npm",
+              "path": "/nix/store/90m35npwyzr4mz0sw71ghjgz3i8x9zjq-nodejs-slim-26.7.0-npm"
+            }
+          ],
+          "store_path": "/nix/store/mwy0r47dj3k6jwz9mxsb1j4pzyw4sikb-nodejs-slim-26.7.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/aj2rdvig78h0f9iam23j17iqyyrjlb4i-nodejs-slim-26.7.0",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/9k54wrhjrz4215mx0jaxbyply7q1liv7-nodejs-slim-26.7.0-dev"
+            },
+            {
+              "name": "libv8",
+              "path": "/nix/store/7lnibn6xl74x7lq5gh6pa53zcvy3k95w-nodejs-slim-26.7.0-libv8"
+            },
+            {
+              "name": "npm",
+              "path": "/nix/store/frxjqbq0yi62x54pidj37mpjcx4fwy3q-nodejs-slim-26.7.0-npm"
+            }
+          ],
+          "store_path": "/nix/store/aj2rdvig78h0f9iam23j17iqyyrjlb4i-nodejs-slim-26.7.0"
+        }
+      }
     }
   }
 }

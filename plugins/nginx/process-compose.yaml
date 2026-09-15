@@ -8,6 +8,12 @@ processes:
     availability:
       restart: on_failure
       max_restarts: 5
+    readiness_probe:
+      http_get:
+        host: localhost
+        port: ${NGINX_WEB_PORT}
+        path: /
+      initial_delay_seconds: 1
   nginx-error:
     command: "tail -f $NGINX_PATH_PREFIX/error.log"
     availability:
