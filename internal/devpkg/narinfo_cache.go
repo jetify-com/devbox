@@ -3,6 +3,7 @@ package devpkg
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"sync"
 	"time"
@@ -205,6 +206,15 @@ func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
 
 var narInfoStatusFnCache = sync.Map{}
 
+// narInfoHTTPTimeout bounds each narinfo HEAD request. The binary cache check
+// is only an optimization, so a slow cache shouldn't hold up the command.
+var narInfoHTTPTimeout = 5 * time.Second
+
+// fetchNarInfoStatusFromHTTP reports whether the narinfo for hash exists in the
+// binary cache at uri. Transport failures (timeouts, DNS errors, connection
+// resets) are treated as a cache miss rather than an error: the caller falls
+// back to letting Nix build or substitute the package itself, so a flaky
+// cache.nixos.org only makes the command slower, not fail.
 func fetchNarInfoStatusFromHTTP(
 	ctx context.Context,
 	uri string,
@@ -213,7 +223,7 @@ func fetchNarInfoStatusFromHTTP(
 	key := fmt.Sprintf("%s/%s", uri, hash)
 	fetch, _ := narInfoStatusFnCache.LoadOrStore(key, sync.OnceValues(
 		func() (bool, error) {
-			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			ctx, cancel := context.WithTimeout(ctx, narInfoHTTPTimeout)
 			defer cancel()
 			url := fmt.Sprintf("%s/%s.narinfo", uri, hash)
 			req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
@@ -222,7 +232,8 @@ func fetchNarInfoStatusFromHTTP(
 			}
 			res, err := http.DefaultClient.Do(req)
 			if err != nil {
-				return false, err
+				slog.Debug("binary cache narinfo check failed, assuming not cached", "url", url, "err", err)
+				return false, nil
 			}
 			defer res.Body.Close()
 			return res.StatusCode == http.StatusOK, nil
