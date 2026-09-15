@@ -3,19 +3,12 @@ package devpkg
 import (
 	"context"
 	"fmt"
-	"io"
+	"log/slog"
 	"net/http"
-	"net/url"
-	"strings"
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/debug"
-	"go.jetify.com/devbox/internal/devbox/providers/nixcache"
-	"go.jetify.com/devbox/internal/goutil"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
 	"golang.org/x/sync/errgroup"
@@ -125,11 +118,6 @@ func (p *Package) fetchNarInfoStatusOnce(
 	ctx := context.TODO()
 
 	outputToCache := map[string]string{}
-	caches, err := readCaches(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	outputs, err := p.outputsForOutputName(outputName)
 	if err != nil {
 		return nil, err
@@ -138,54 +126,16 @@ func (p *Package) fetchNarInfoStatusOnce(
 	for _, output := range outputs {
 		pathParts := nix.NewStorePathParts(output.Path)
 		hash := pathParts.Hash
-		for _, cache := range caches {
-			inCache := false
-			if strings.HasPrefix(cache, "s3") {
-				inCache, err = fetchNarInfoStatusFromS3(ctx, cache, hash)
-				if err != nil {
-					return nil, err
-				}
-			} else {
-				inCache, err = fetchNarInfoStatusFromHTTP(ctx, cache, hash)
-				if err != nil {
-					return nil, err
-				}
-			}
-			if inCache {
-				// Found it, no need to check more caches.
-				outputToCache[output.Name] = cache
-				break
-			}
+		inCache, err := fetchNarInfoStatusFromHTTP(ctx, binaryCache, hash)
+		if err != nil {
+			return nil, err
+		}
+		if inCache {
+			outputToCache[output.Name] = binaryCache
 		}
 	}
 
 	return outputToCache, nil
-}
-
-func (p *Package) AreAllOutputsInCache(
-	ctx context.Context, w io.Writer, cacheURI string,
-) (bool, error) {
-	storePaths, err := p.GetStorePaths(ctx, w)
-	if err != nil {
-		return false, err
-	}
-
-	for _, storePath := range storePaths {
-		pathParts := nix.NewStorePathParts(storePath)
-		hash := pathParts.Hash
-		if strings.HasPrefix(cacheURI, "s3") {
-			inCache, err := fetchNarInfoStatusFromS3(ctx, cacheURI, hash)
-			if err != nil || !inCache {
-				return false, err
-			}
-		} else {
-			inCache, err := fetchNarInfoStatusFromHTTP(ctx, cacheURI, hash)
-			if err != nil || !inCache {
-				return false, err
-			}
-		}
-	}
-	return true, nil
 }
 
 func (p *Package) outputsForOutputName(output string) ([]lock.Output, error) {
@@ -256,6 +206,15 @@ func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
 
 var narInfoStatusFnCache = sync.Map{}
 
+// narInfoHTTPTimeout bounds each narinfo HEAD request. The binary cache check
+// is only an optimization, so a slow cache shouldn't hold up the command.
+var narInfoHTTPTimeout = 5 * time.Second
+
+// fetchNarInfoStatusFromHTTP reports whether the narinfo for hash exists in the
+// binary cache at uri. Transport failures (timeouts, DNS errors, connection
+// resets) are treated as a cache miss rather than an error: the caller falls
+// back to letting Nix build or substitute the package itself, so a flaky
+// cache.nixos.org only makes the command slower, not fail.
 func fetchNarInfoStatusFromHTTP(
 	ctx context.Context,
 	uri string,
@@ -264,7 +223,7 @@ func fetchNarInfoStatusFromHTTP(
 	key := fmt.Sprintf("%s/%s", uri, hash)
 	fetch, _ := narInfoStatusFnCache.LoadOrStore(key, sync.OnceValues(
 		func() (bool, error) {
-			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			ctx, cancel := context.WithTimeout(ctx, narInfoHTTPTimeout)
 			defer cancel()
 			url := fmt.Sprintf("%s/%s.narinfo", uri, hash)
 			req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
@@ -273,68 +232,12 @@ func fetchNarInfoStatusFromHTTP(
 			}
 			res, err := http.DefaultClient.Do(req)
 			if err != nil {
-				return false, err
+				slog.Debug("binary cache narinfo check failed, assuming not cached", "url", url, "err", err)
+				return false, nil
 			}
 			defer res.Body.Close()
 			return res.StatusCode == http.StatusOK, nil
 		},
 	))
 	return fetch.(func() (bool, error))()
-}
-
-func fetchNarInfoStatusFromS3(
-	ctx context.Context,
-	uri string,
-	hash string,
-) (bool, error) {
-	key := fmt.Sprintf("%s/%s", uri, hash)
-	fetch, _ := narInfoStatusFnCache.LoadOrStore(key, sync.OnceValues(
-		func() (bool, error) {
-			s3Client, err := nixcache.S3Client(ctx)
-			if err != nil {
-				return false, err
-			}
-
-			bucketURI, err := url.Parse(uri)
-			if err != nil {
-				return false, errors.WithStack(err)
-			}
-
-			_, err = s3Client.GetObject(ctx,
-				&s3.GetObjectInput{
-					Bucket: aws.String(bucketURI.Hostname()),
-					Key:    aws.String(hash + ".narinfo"),
-				},
-				func(o *s3.Options) {
-					if bucketURI.Query().Get("region") != "" {
-						o.Region = bucketURI.Query().Get("region")
-					}
-				},
-			)
-			return err == nil, nil
-		},
-	))
-	return fetch.(func() (bool, error))()
-}
-
-var nixCacheIsConfigured = goutil.OnceValueWithContext(nixcache.IsConfigured)
-
-func readCaches(ctx context.Context) ([]string, error) {
-	cacheURIs := []string{binaryCache}
-	if !nixCacheIsConfigured.Do(ctx) {
-		return cacheURIs, nil
-	}
-
-	otherCaches, err := nixcache.CachedReadCaches(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, c := range otherCaches {
-		cacheURIs = append(cacheURIs, c.GetUri())
-	}
-	return cacheURIs, nil
-}
-
-func ClearNarInfoCache() {
-	narInfoStatusFnCache = sync.Map{}
 }

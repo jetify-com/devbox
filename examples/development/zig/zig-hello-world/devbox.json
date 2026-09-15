@@ -1,6 +1,6 @@
 {
   "packages": {
-    "zig": "latest"
+    "zig": "0.16.0"
   },
   "shell": {
     "scripts": {
