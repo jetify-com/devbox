@@ -6,15 +6,15 @@
         "DEVBOX_DEFAULT_PYPROJECT_DIR": "{{ .DevboxProjectDir }}",
         "POETRY_VIRTUALENVS_IN_PROJECT": "true",
         "POETRY_VIRTUALENVS_CREATE": "true",
-        "POETRY_VIRTUALENVS_PATH": "{{.Virtenv}}/.virtualenvs"
+        "POETRY_VIRTUALENVS_PATH": "{{.Virtenv}}/.virtualenvs",
+        "PATH": "{{ .DevboxProjectDir }}/.venv/bin:$PATH"
     },
     "create_files": {
         "{{ .Virtenv }}/bin/initHook.sh": "poetry/initHook.sh"
     },
     "shell": {
         "init_hook": [
-            "\"{{ .Virtenv }}/bin/initHook.sh\"",
-            "if [ -d \"${DEVBOX_PYPROJECT_DIR:-$DEVBOX_DEFAULT_PYPROJECT_DIR}/.venv\" ]; then export VIRTUAL_ENV=\"${DEVBOX_PYPROJECT_DIR:-$DEVBOX_DEFAULT_PYPROJECT_DIR}/.venv\"; export PATH=\"$VIRTUAL_ENV/bin:$PATH\"; fi"
+            "\"{{ .Virtenv }}/bin/initHook.sh\""
         ]
     }
 }
