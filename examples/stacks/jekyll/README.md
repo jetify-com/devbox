@@ -1,6 +1,6 @@
 # Jekyll Example
 
-[![Built with Devbox](https://www.jetify.com/img/devbox/shield_moon.svg)](https://www.jetify.com/devbox/docs/contributor-quickstart/)
+[![Built with Devbox](https://www.jetify.com/img/devbox/shield_moon.svg)](https://www.jetify.com/docs/devbox/contributor-quickstart/)
 
 
 Inspired by [This Example](https://litchipi.github.io/nix/2023/01/12/build-jekyll-blog-with-nix.html)
@@ -21,4 +21,4 @@ Inspired by [This Example](https://litchipi.github.io/nix/2023/01/12/build-jekyl
 
 ## Related Docs
 
-* [Using Ruby with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/languages/ruby/)
+* [Using Ruby with Devbox](https://www.jetify.com/docs/devbox/devbox_examples/languages/ruby/)

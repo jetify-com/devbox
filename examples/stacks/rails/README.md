@@ -32,4 +32,4 @@ bin/rails server
 
 ## Related Docs
 
-* [Using Ruby with Devbox](https://www.jetify.com/devbox/docs/devbox_examples/languages/ruby/)
+* [Using Ruby with Devbox](https://www.jetify.com/docs/devbox/devbox_examples/languages/ruby/)
