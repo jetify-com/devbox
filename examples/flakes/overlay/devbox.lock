@@ -2,55 +2,56 @@
   "lockfile_version": "1",
   "packages": {
     "fnm@latest": {
-      "last_modified": "2024-02-10T18:15:24Z",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#fnm",
+      "last_modified": "2026-08-27T07:16:00Z",
+      "resolved": "github:NixOS/nixpkgs/c27cdad491a991b11ed731760aa2ef8db0cb0410#fnm",
       "source": "devbox-search",
-      "version": "1.35.1",
+      "version": "1.39.0",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/c72hyfsgrz5r6hxwybyl274lvz7i9y7g-fnm-1.35.1",
+              "path": "/nix/store/7sf9623bmx1fpmcvdfa1kjfwirb3hig6-fnm-1.39.0",
               "default": true
             }
           ],
-          "store_path": "/nix/store/c72hyfsgrz5r6hxwybyl274lvz7i9y7g-fnm-1.35.1"
+          "store_path": "/nix/store/7sf9623bmx1fpmcvdfa1kjfwirb3hig6-fnm-1.39.0"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/bkl5sz9ac6w7z3insbb2gvajgr75i7ni-fnm-1.35.1",
+              "path": "/nix/store/2hrpk1rd9ymgvxdmm9xdya27mzyff3h2-fnm-1.39.0",
               "default": true
             }
           ],
-          "store_path": "/nix/store/bkl5sz9ac6w7z3insbb2gvajgr75i7ni-fnm-1.35.1"
+          "store_path": "/nix/store/2hrpk1rd9ymgvxdmm9xdya27mzyff3h2-fnm-1.39.0"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/3l9khc6ckzgj81kgb8fv4j6ifx9mfz8w-fnm-1.35.1",
+              "path": "/nix/store/m6mcghc8bqzaal27zkqrp0a9mpk98hld-fnm-1.39.0",
               "default": true
             }
           ],
-          "store_path": "/nix/store/3l9khc6ckzgj81kgb8fv4j6ifx9mfz8w-fnm-1.35.1"
+          "store_path": "/nix/store/m6mcghc8bqzaal27zkqrp0a9mpk98hld-fnm-1.39.0"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/3y176slfix5xp9v35d2frp6980bz8z06-fnm-1.35.1",
+              "path": "/nix/store/gfbjqgm2gv4ycbnsyybxjlw4z3fzv4sl-fnm-1.39.0",
               "default": true
             }
           ],
-          "store_path": "/nix/store/3y176slfix5xp9v35d2frp6980bz8z06-fnm-1.35.1"
+          "store_path": "/nix/store/gfbjqgm2gv4ycbnsyybxjlw4z3fzv4sl-fnm-1.39.0"
         }
       }
     },
     "nodejs@16.8": {
       "last_modified": "2021-09-06T20:58:52Z",
+      "plugin_version": "0.0.5",
       "resolved": "github:NixOS/nixpkgs/fc3de6da83863f8f36fdcac1c199c6066a6a0378#nodejs-16_x",
       "source": "devbox-search",
       "version": "16.8.0"
