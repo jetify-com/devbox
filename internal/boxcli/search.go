@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devpkg/pkgtype"
 	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/ux"
 )
@@ -31,6 +32,9 @@ func searchCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			query := args[0]
+			if pkgtype.IsHomebrew(query) {
+				return searchHomebrew(cmd, query)
+			}
 			name, version, isVersioned := searcher.ParseVersionedPackage(query)
 			if !isVersioned {
 				results, err := searcher.Client().Search(cmd.Context(), query)
@@ -63,6 +67,24 @@ func searchCmd() *cobra.Command {
 	)
 
 	return command
+}
+
+func searchHomebrew(cmd *cobra.Command, query string) error {
+	formula := strings.TrimPrefix(query, pkgtype.HomebrewPrefix)
+	results, err := pkgtype.HomebrewClient().Search(cmd.Context(), formula)
+	if err != nil {
+		return err
+	}
+	w := cmd.OutOrStdout()
+	if len(results) == 0 {
+		fmt.Fprintf(w, "No homebrew formulae found for %q\n", formula)
+		return nil
+	}
+	fmt.Fprintf(w, "Found %d homebrew results for %q:\n\n", len(results), formula)
+	for _, name := range results {
+		fmt.Fprintf(w, "* %s%s\n", pkgtype.HomebrewPrefix, name)
+	}
+	return nil
 }
 
 func printSearchResults(
