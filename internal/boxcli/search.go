@@ -38,7 +38,8 @@ func searchCmd() *cobra.Command {
 					return err
 				}
 				return printSearchResults(
-					cmd.OutOrStdout(), query, results, flags.showAll)
+					cmd.OutOrStdout(), query, results, flags.showAll,
+				)
 			}
 			packageVersion, err := searcher.Client().Resolve(name, version)
 			if err != nil {

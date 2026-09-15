@@ -36,16 +36,20 @@ func (flags *serviceUpFlags) register(cmd *cobra.Command) {
 			"compose-file.yaml|yml. Default is directory containing devbox.json",
 	)
 	cmd.Flags().BoolVarP(
-		&flags.background, "background", "b", false, "run service in background")
+		&flags.background, "background", "b", false, "run service in background",
+	)
 	cmd.Flags().StringArrayVar(
-		&flags.processComposeFlags, "pcflags", []string{}, "pass flags directly to process compose")
+		&flags.processComposeFlags, "pcflags", []string{}, "pass flags directly to process compose",
+	)
 	cmd.Flags().IntVarP(
-		&flags.pcport, "pcport", "p", 0, "specify the port for process-compose to use. You can also set the pcport by exporting DEVBOX_PC_PORT_NUM")
+		&flags.pcport, "pcport", "p", 0, "specify the port for process-compose to use. You can also set the pcport by exporting DEVBOX_PC_PORT_NUM",
+	)
 }
 
 func (flags *serviceStopFlags) register(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(
-		&flags.allProjects, "all-projects", false, "stop all running services across all your projects.\nThis flag cannot be used simultaneously with the [services] argument")
+		&flags.allProjects, "all-projects", false, "stop all running services across all your projects.\nThis flag cannot be used simultaneously with the [services] argument",
+	)
 }
 
 func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
@@ -222,7 +226,8 @@ func stopServices(
 		return errors.New("cannot use both services and --all-projects arguments simultaneously")
 	}
 	return box.StopServices(
-		cmd.Context(), servicesFlags.runInCurrentShell, flags.allProjects, services...)
+		cmd.Context(), servicesFlags.runInCurrentShell, flags.allProjects, services...,
+	)
 }
 
 func restartServices(

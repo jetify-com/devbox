@@ -29,7 +29,8 @@ func TestConfigHashIncludesCreateFilesContent(t *testing.T) {
 		}
 	}`
 	require.NoError(t, os.WriteFile(
-		filepath.Join(pluginDir, "plugin.json"), []byte(pluginJSON), 0o644))
+		filepath.Join(pluginDir, "plugin.json"), []byte(pluginJSON), 0o644,
+	))
 	srcFile := filepath.Join(pluginDir, "test.txt")
 	require.NoError(t, os.WriteFile(srcFile, []byte("123"), 0o644))
 
