@@ -16,12 +16,17 @@ import (
 	"github.com/mattn/go-isatty"
 
 	"go.jetify.com/devbox/internal/boxcli/usererr"
-	"go.jetify.com/devbox/internal/cmdutil"
 	"go.jetify.com/devbox/nix"
 )
 
 func BinaryInstalled() bool {
-	return cmdutil.Exists("nix")
+	// Use the same resolver that Devbox uses to run nix commands (searching
+	// $PATH and well-known install locations), rather than a bare $PATH lookup.
+	// Otherwise Devbox can wrongly report nix as missing when it exists at a
+	// known location but isn't on $PATH — e.g. on NixOS, or when a non-POSIX
+	// login shell such as fish hasn't sourced the Nix profile (issue #2787).
+	_, err := nix.Default.LookPath()
+	return err == nil
 }
 
 // nonNixDirEntries are directory entries that can appear inside /nix without
