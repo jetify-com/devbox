@@ -97,7 +97,8 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 	existingPackageNames := lo.Map(
 		d.cfg.Root.TopLevelPackages(), func(p configfile.Package, _ int) string {
 			return p.VersionedName()
-		})
+		},
+	)
 	for _, pkg := range pkgs {
 		// If exact versioned package is already in the config, we can skip the
 		// next loop that only deals with newPackages.
@@ -173,29 +174,35 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
 	for _, pkg := range pkgs {
 		if err := d.cfg.PackageMutator().AddPlatforms(
-			d.stderr, pkg, opts.Platforms); err != nil {
+			d.stderr, pkg, opts.Platforms,
+		); err != nil {
 			return err
 		}
 		if err := d.cfg.PackageMutator().ExcludePlatforms(
-			d.stderr, pkg, opts.ExcludePlatforms); err != nil {
+			d.stderr, pkg, opts.ExcludePlatforms,
+		); err != nil {
 			return err
 		}
 		if err := d.cfg.PackageMutator().SetDisablePlugin(
-			pkg, opts.DisablePlugin); err != nil {
+			pkg, opts.DisablePlugin,
+		); err != nil {
 			return err
 		}
 		if opts.Patch != "" {
 			if err := d.cfg.PackageMutator().SetPatch(
-				pkg, configfile.PatchMode(opts.Patch)); err != nil {
+				pkg, configfile.PatchMode(opts.Patch),
+			); err != nil {
 				return err
 			}
 		}
 		if err := d.cfg.PackageMutator().SetOutputs(
-			d.stderr, pkg, opts.Outputs); err != nil {
+			d.stderr, pkg, opts.Outputs,
+		); err != nil {
 			return err
 		}
 		if err := d.cfg.PackageMutator().SetAllowInsecure(
-			d.stderr, pkg, opts.AllowInsecure); err != nil {
+			d.stderr, pkg, opts.AllowInsecure,
+		); err != nil {
 			return err
 		}
 	}
@@ -214,7 +221,8 @@ func (d *Devbox) printPostAddMessage(
 			ctx,
 			input,
 			d.projectDir,
-			false /*markdown*/); err != nil {
+			false, /*markdown*/
+		); err != nil {
 			return err
 		} else if readme != "" {
 			fmt.Fprintf(d.stderr, "%s\n", readme)

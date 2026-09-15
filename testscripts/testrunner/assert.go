@@ -124,7 +124,7 @@ func assertJSONSuperset(script *testscript.TestScript, neg bool, args []string) 
 // in order.
 func assertPathOrder(script *testscript.TestScript, neg bool, args []string) {
 	path := script.ReadFile("stdout")
-	subpaths := strings.Split(strings.Replace(path, "\n", "", -1), ":")
+	subpaths := strings.Split(strings.ReplaceAll(path, "\n", ""), ":")
 
 	allInOrder := containsInOrder(subpaths, args)
 	if !neg && !allInOrder {

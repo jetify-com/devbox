@@ -780,7 +780,8 @@ func (p *Package) GetStorePaths(ctx context.Context, w io.Writer) ([]string, err
 	}
 	for _, installable := range installables {
 		storePathsForInstallable, err := nix.StorePathsFromInstallable(
-			ctx, installable, p.HasAllowInsecure())
+			ctx, installable, p.HasAllowInsecure(),
+		)
 		if err != nil {
 			return nil, packageInstallErrorHandler(err, p, installable)
 		}

@@ -976,7 +976,8 @@ func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
 	}
 	if len(results) == 0 {
 		return nil, usererr.WithUserMessage(
-			searcher.ErrNotFound, "no package found with name %s", name)
+			searcher.ErrNotFound, "no package found with name %s", name,
+		)
 	}
 	return lo.Keys(results)[0], nil
 }

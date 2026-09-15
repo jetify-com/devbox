@@ -55,21 +55,26 @@ func shellEnvCmd(defaults shellenvFlagDefaults) *cobra.Command {
 	}
 
 	command.Flags().BoolVar(
-		&flags.runInitHook, "init-hook", false, "runs init hook after exporting shell environment")
+		&flags.runInitHook, "init-hook", false, "runs init hook after exporting shell environment",
+	)
 	command.Flags().BoolVar(
-		&flags.install, "install", false, "install packages before exporting shell environment")
+		&flags.install, "install", false, "install packages before exporting shell environment",
+	)
 
 	command.Flags().BoolVar(
-		&flags.pure, "pure", false, "if this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
+		&flags.pure, "pure", false, "if this flag is specified, devbox creates an isolated environment inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.",
+	)
 	command.Flags().BoolVar(
 		&flags.preservePathStack, "preserve-path-stack", false,
 		"preserves existing PATH order if this project's environment is already in PATH. "+
-			"Useful if you want to avoid overshadowing another devbox project that is already active")
+			"Useful if you want to avoid overshadowing another devbox project that is already active",
+	)
 	_ = command.Flags().MarkHidden("preserve-path-stack")
 	command.Flags().BoolVar(
 		&flags.noRefreshAlias, "no-refresh-alias", false,
 		"by default, devbox will add refresh alias to the environment"+
-			"Use this flag to disable this behavior.")
+			"Use this flag to disable this behavior.",
+	)
 	_ = command.Flags().MarkHidden("no-refresh-alias")
 	command.Flags().BoolVar(
 		&flags.omitNixEnv, "omit-nix-env", defaults.omitNixEnv,
