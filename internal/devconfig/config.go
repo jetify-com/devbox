@@ -240,7 +240,8 @@ func (c *Config) loadRecursive(
 
 	for _, includeRef := range c.Root.Include {
 		pluginConfig, err := plugin.LoadConfigFromInclude(
-			includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath))
+			includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath),
+		)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -251,14 +252,16 @@ func (c *Config) loadRecursive(
 			// e.g. 2 different plugins can include the same plugin.
 			// We do not allow a single plugin to include duplicates.
 			return errors.Errorf(
-				"circular or duplicate include detected:\n%s", newCyclePath)
+				"circular or duplicate include detected:\n%s", newCyclePath,
+			)
 		}
 		seen[pluginConfig.Source.Hash()] = true
 
 		includable := createIncludableFromPluginConfig(pluginConfig)
 
 		if err := includable.loadRecursive(
-			lockfile, maps.Clone(seen), newCyclePath); err != nil {
+			lockfile, maps.Clone(seen), newCyclePath,
+		); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -280,7 +283,8 @@ func (c *Config) loadRecursive(
 		}
 		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, builtIn.Source.LockfileKey())
 		if err := includable.loadRecursive(
-			lockfile, maps.Clone(seen), newCyclePath); err != nil {
+			lockfile, maps.Clone(seen), newCyclePath,
+		); err != nil {
 			return errors.WithStack(err)
 		}
 		included = append(included, includable)
