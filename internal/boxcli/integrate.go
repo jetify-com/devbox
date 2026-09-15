@@ -21,9 +21,10 @@ import (
 )
 
 type integrateCmdFlags struct {
-	config    configFlags
-	debugmode bool
-	ideName   string
+	config      configFlags
+	debugmode   bool
+	ideName     string
+	runInitHook bool
 }
 
 func integrateCmd() *cobra.Command {
@@ -53,6 +54,10 @@ func integrateVSCodeCmd() *cobra.Command {
 	}
 	command.Flags().BoolVar(&flags.debugmode, "debugmode", false, "enable debug outputs to a file.")
 	command.Flags().StringVar(&flags.ideName, "ide", "code", "name of the currently open editor to reopen after it's closed.")
+	command.Flags().BoolVar(
+		&flags.runInitHook, "run-init-hook", false,
+		"run the project's init_hook and include the variables it sets in the editor's environment.",
+	)
 	flags.config.register(command)
 
 	return command
@@ -95,13 +100,20 @@ func runIntegrateVSCodeCmd(cmd *cobra.Command, flags integrateCmdFlags) error {
 		dbug.logToFile(err.Error())
 		return err
 	}
-	// Get env variables of a devbox shell, including any variables set by the
-	// project's init hook. The editor is launched directly (not through a
-	// devbox shell), so without this the init hook would never run and the
-	// variables it sets would be missing from the reopened environment. See
-	// issue #2703.
+	// Get env variables of a devbox shell. The editor is launched directly (not
+	// through a devbox shell), so the init hook never runs and the variables it
+	// sets are missing from the reopened environment unless --run-init-hook is
+	// set, in which case we source the init hook and capture its env too. This
+	// is opt-in because init hooks can be slow or have side effects. See issue
+	// #2703.
 	dbug.logToFile("Computing devbox environment")
-	envVars, err := box.EnvVarsWithInitHook(cmd.Context())
+	var envVars []string
+	if flags.runInitHook {
+		dbug.logToFile("Running init hook to capture its environment")
+		envVars, err = box.EnvVarsWithInitHook(cmd.Context())
+	} else {
+		envVars, err = box.EnvVars(cmd.Context())
+	}
 	if err != nil {
 		dbug.logToFile(err.Error())
 		return err
