@@ -4,7 +4,6 @@
 package devpkg
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,7 +20,7 @@ func TestFetchNarInfoStatusFromHTTP(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		inCache, err := fetchNarInfoStatusFromHTTP(context.Background(), srv.URL, "abc")
+		inCache, err := fetchNarInfoStatusFromHTTP(t.Context(), srv.URL, "abc")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -36,7 +35,7 @@ func TestFetchNarInfoStatusFromHTTP(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		inCache, err := fetchNarInfoStatusFromHTTP(context.Background(), srv.URL, "abc")
+		inCache, err := fetchNarInfoStatusFromHTTP(t.Context(), srv.URL, "abc")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -57,7 +56,7 @@ func TestFetchNarInfoStatusFromHTTP(t *testing.T) {
 		narInfoHTTPTimeout = 50 * time.Millisecond
 		defer func() { narInfoHTTPTimeout = orig }()
 
-		inCache, err := fetchNarInfoStatusFromHTTP(context.Background(), srv.URL, "abc")
+		inCache, err := fetchNarInfoStatusFromHTTP(t.Context(), srv.URL, "abc")
 		if err != nil {
 			t.Fatalf("timeout should not be an error, got: %v", err)
 		}
@@ -71,7 +70,7 @@ func TestFetchNarInfoStatusFromHTTP(t *testing.T) {
 		url := srv.URL
 		srv.Close() // connection refused from here on
 
-		inCache, err := fetchNarInfoStatusFromHTTP(context.Background(), url, "abc")
+		inCache, err := fetchNarInfoStatusFromHTTP(t.Context(), url, "abc")
 		if err != nil {
 			t.Fatalf("connection error should not be an error, got: %v", err)
 		}
