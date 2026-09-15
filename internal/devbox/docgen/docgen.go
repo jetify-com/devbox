@@ -57,15 +57,19 @@ func GenerateReadme(
 		return err
 	}
 
+	cfg := devbox.Config()
+	scripts := cfg.Scripts().
+		WithRelativePaths(devbox.ProjectDir()).
+		InOrder(cfg.ScriptOrder())
+
 	return tmpl.Execute(f, map[string]any{
-		"Name":        devbox.Config().Root.Name,
-		"Description": devbox.Config().Root.Description,
-		"Scripts": devbox.Config().Scripts().
-			WithRelativePaths(devbox.ProjectDir()),
-		"EnvVars":  envWithRelativePaths(devbox.Config().Env(), devbox.ProjectDir()),
-		"InitHook": devbox.Config().InitHook(),
-		"Packages": devbox.TopLevelPackages(),
-		"Services": services,
+		"Name":        cfg.Root.Name,
+		"Description": cfg.Root.Description,
+		"Scripts":     scripts,
+		"EnvVars":     envWithRelativePaths(cfg.Env(), devbox.ProjectDir()),
+		"InitHook":    cfg.InitHook(),
+		"Packages":    devbox.TopLevelPackages(),
+		"Services":    services,
 		// TODO add includes
 	})
 }
