@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"cmp"
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"os"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
+	"go.jetify.com/devbox/internal/cachehash"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
@@ -52,6 +54,66 @@ type PluginOnlyData struct {
 	// 1. Built-in plugins are triggered by packages (See plugins.builtInMap)
 	// 2. Plugins can be added via the "include" field in devbox.json or plugin.json
 	Source Includable
+}
+
+// Hash returns a hash of the plugin's config that, for local (path:) plugins,
+// also incorporates the contents of the files referenced by create_files. The
+// embedded ConfigFile.Hash only covers the plugin.json itself, so without this
+// a change to a create_files source file leaves the project's state hash
+// unchanged and the file is never re-created in the virtenv. This matters for
+// local plugins under active development, whose source files can change without
+// any edit to devbox.json or the plugin.json.
+// See https://github.com/jetify-com/devbox/issues/2755
+//
+// Only local plugins are handled: for built-in/git/github plugins the source
+// content is stable for a given plugin version, and reading it here would risk
+// network I/O (HTTP fetch / git clone) on the otherwise-fast "is up to date"
+// path, making `devbox shell` slow or fail offline.
+func (c *Config) Hash() (string, error) {
+	h, err := c.ConfigFile.Hash()
+	if err != nil {
+		return "", err
+	}
+	local, ok := c.Source.(*LocalPlugin)
+	if !ok || len(c.CreateFiles) == 0 {
+		return h, nil
+	}
+
+	buf := bytes.Buffer{}
+	buf.WriteString(h)
+
+	// Iterate deterministically so the hash is stable across runs.
+	filePaths := make([]string, 0, len(c.CreateFiles))
+	for filePath := range c.CreateFiles {
+		filePaths = append(filePaths, filePath)
+	}
+	slices.Sort(filePaths)
+
+	for _, filePath := range filePaths {
+		contentPath := c.CreateFiles[filePath]
+
+		// Fold in a fixed-size hash of the source content rather than the raw
+		// bytes, so the buffer stays small even for large source files. A
+		// missing or unreadable source file should not hard-fail the shell, so
+		// it just contributes an empty content hash.
+		contentHash := ""
+		if contentPath != "" {
+			if content, err := local.FileContent(contentPath); err == nil {
+				contentHash = cachehash.Bytes(content)
+			}
+		}
+
+		// Length-prefix every field (netstring-style) so the concatenation is
+		// unambiguous: no two distinct (filePath, contentPath, content) sets
+		// can produce the same byte stream.
+		fmt.Fprintf(&buf, "%d:%s%d:%s%d:%s",
+			len(filePath), filePath,
+			len(contentPath), contentPath,
+			len(contentHash), contentHash,
+		)
+	}
+
+	return cachehash.Bytes(buf.Bytes()), nil
 }
 
 func (c *Config) ProcessComposeYaml() (string, string) {
