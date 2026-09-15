@@ -141,8 +141,17 @@ func Find(path string) (*Config, error) {
 
 // searchDir looks for a config file in dir. It does not search parent
 // directories.
+//
+// In addition to a top-level devbox.json, searchDir also looks for the config
+// inside a .config subdirectory (.config/devbox.json). This lets users keep the
+// project root tidy by moving devbox's files out of the way, while still being
+// discoverable. A top-level devbox.json always takes precedence over one in
+// .config.
 func searchDir(dir string) (*Config, error) {
-	try := []string{configfile.DefaultName}
+	try := []string{
+		configfile.DefaultName,
+		filepath.Join(".config", configfile.DefaultName),
+	}
 	for _, name := range try {
 		path := filepath.Join(dir, name)
 		slog.Debug("trying config file", "path", path)
