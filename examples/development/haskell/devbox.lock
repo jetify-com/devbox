@@ -243,40 +243,50 @@
       }
     },
     "stack@latest": {
-      "last_modified": "2026-08-27T07:16:00Z",
-      "resolved": "github:NixOS/nixpkgs/c27cdad491a991b11ed731760aa2ef8db0cb0410#stack",
+      "last_modified": "2024-02-10T18:15:24Z",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#stack",
       "source": "devbox-search",
-      "version": "3.9.3",
+      "version": "2.13.1",
       "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/8p6fc3yc7648gqqav24hyigwahlqwlf0-stack-2.13.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/8p6fc3yc7648gqqav24hyigwahlqwlf0-stack-2.13.1"
+        },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/grcqxvw2x5hh8ba79hf7wwkpc7xiz9jf-stack-3.9.3",
+              "path": "/nix/store/wd3g04lc6a00ichm12pd578z195sf396-stack-2.13.1",
               "default": true
             }
           ],
-          "store_path": "/nix/store/grcqxvw2x5hh8ba79hf7wwkpc7xiz9jf-stack-3.9.3"
+          "store_path": "/nix/store/wd3g04lc6a00ichm12pd578z195sf396-stack-2.13.1"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/jxpyc04qhrq9gd7vss5h7l9lvij6cj3y-stack-3.9.3",
+              "path": "/nix/store/96zdgf8912qlqlgavqc00ybx88x0cspa-stack-2.13.1",
               "default": true
             }
           ],
-          "store_path": "/nix/store/jxpyc04qhrq9gd7vss5h7l9lvij6cj3y-stack-3.9.3"
+          "store_path": "/nix/store/96zdgf8912qlqlgavqc00ybx88x0cspa-stack-2.13.1"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/1gjqw38x52z0i5grx5wkmg4bpnnjjswr-stack-3.9.3",
+              "path": "/nix/store/9qvy8xzbdw7aljdfjkhqydxlvllfdsij-stack-2.13.1",
               "default": true
             }
           ],
-          "store_path": "/nix/store/1gjqw38x52z0i5grx5wkmg4bpnnjjswr-stack-3.9.3"
+          "store_path": "/nix/store/9qvy8xzbdw7aljdfjkhqydxlvllfdsij-stack-2.13.1"
         }
       }
     },

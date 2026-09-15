@@ -50,56 +50,102 @@
       }
     },
     "libffi@latest": {
-      "last_modified": "2026-08-27T07:16:00Z",
-      "resolved": "github:NixOS/nixpkgs/c27cdad491a991b11ed731760aa2ef8db0cb0410#libffi",
+      "last_modified": "2024-02-22T01:07:56Z",
+      "resolved": "github:NixOS/nixpkgs/98b00b6947a9214381112bdb6f89c25498db4959#libffi",
       "source": "devbox-search",
-      "version": "3.8.0",
+      "version": "3.4.4",
       "systems": {
-        "aarch64-linux": {
+        "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/kdpzdkpmv20rh2lhha75a3j5y4kjnfsx-libffi-3.8.0",
+              "path": "/nix/store/m0xglhw9hx07ismjsk9r34ffbdf3m1wr-libffi-3.4.4",
               "default": true
             },
             {
               "name": "man",
-              "path": "/nix/store/gva7arvcnlk48j2g20lll37w4xv5r6r1-libffi-3.8.0-man",
+              "path": "/nix/store/s07xz2ddp1631ii7fq71zvrfk4jfysgd-libffi-3.4.4-man",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/w9qh75hms8gmaqb2s4brnmbs7hrinzwg-libffi-3.4.4-info"
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/3cxqis2l84yx5bi1564qhjnzca4iwynr-libffi-3.4.4-dev"
+            }
+          ],
+          "store_path": "/nix/store/m0xglhw9hx07ismjsk9r34ffbdf3m1wr-libffi-3.4.4"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/z9fxh9kmdk6bqsh4l0w51a2dpfd447v9-libffi-3.4.4",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/1n9fa5xy4gc9zgxy6pzcry9n15djn1r1-libffi-3.4.4-man",
               "default": true
             },
             {
               "name": "dev",
-              "path": "/nix/store/v0a4185zx1dis69khjxfwm4lpb73b4af-libffi-3.8.0-dev"
+              "path": "/nix/store/x9vyq2bajwvfwwlca4mqskdxipgjs09b-libffi-3.4.4-dev"
             },
             {
               "name": "info",
-              "path": "/nix/store/3zp98wghr2viv1jhdhafz0c5lbmnccza-libffi-3.8.0-info"
+              "path": "/nix/store/1fpwq51k6h3i9fbbpgld619jx5yhaq64-libffi-3.4.4-info"
             }
           ],
-          "store_path": "/nix/store/kdpzdkpmv20rh2lhha75a3j5y4kjnfsx-libffi-3.8.0"
+          "store_path": "/nix/store/z9fxh9kmdk6bqsh4l0w51a2dpfd447v9-libffi-3.4.4"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/3hxzjdfb88ni8f7h7xbqirsm7massl90-libffi-3.4.4",
+              "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/52vdps0bdgzapms5ha7jy9rzw0932fk3-libffi-3.4.4-man",
+              "default": true
+            },
+            {
+              "name": "dev",
+              "path": "/nix/store/4bq0ch45iqqbnyscps70i7n11715qpzs-libffi-3.4.4-dev"
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/xnaikhpgvv0g9dlr4y0qvnnxgry0kky5-libffi-3.4.4-info"
+            }
+          ],
+          "store_path": "/nix/store/3hxzjdfb88ni8f7h7xbqirsm7massl90-libffi-3.4.4"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/wb232z007b8qynidq89lli8lb2c4q0r4-libffi-3.8.0",
+              "path": "/nix/store/zabxhfpsgkb9c4sb7fy50pn1l1kczzv2-libffi-3.4.4",
               "default": true
             },
             {
               "name": "man",
-              "path": "/nix/store/h8ihaqj7976y6dix5phjzl6csccrjhhm-libffi-3.8.0-man",
+              "path": "/nix/store/z3kfb20x9afjl4wvs20qlzj0jbx5awk5-libffi-3.4.4-man",
               "default": true
             },
             {
               "name": "dev",
-              "path": "/nix/store/ysxsfbvgz35w24g5c74604rhxvmia47v-libffi-3.8.0-dev"
+              "path": "/nix/store/x6rzcx9alvmmvyyd201ssrpkgljna7cr-libffi-3.4.4-dev"
             },
             {
               "name": "info",
-              "path": "/nix/store/2v1dw2rh2h2qmq1xj7xn5ndxc1vvggxz-libffi-3.8.0-info"
+              "path": "/nix/store/lyzfnlw0l042vqw2rgyzqdbgnzxk8vff-libffi-3.4.4-info"
             }
           ],
-          "store_path": "/nix/store/wb232z007b8qynidq89lli8lb2c4q0r4-libffi-3.8.0"
+          "store_path": "/nix/store/zabxhfpsgkb9c4sb7fy50pn1l1kczzv2-libffi-3.4.4"
         }
       }
     },
