@@ -53,6 +53,22 @@ func EnsureNixInstalled(ctx context.Context, writer io.Writer, withDaemonFunc fu
 			)
 			return
 		}
+
+		// Lix 2.95 removed builtins.fetchClosure, which Devbox relies on to
+		// install packages from a binary cache. Detect it early and print a
+		// clear compatibility hint instead of a cryptic
+		// "attribute 'fetchClosure' missing" error later on.
+		if info, infoErr := nix.Default.Info(); infoErr == nil && !info.SupportsFetchClosure() {
+			err = usererr.New(
+				"Devbox is not compatible with your Nix installation. Lix %s "+
+					"removed `builtins.fetchClosure`, which Devbox relies on to "+
+					"install packages. Please switch to Nix "+
+					"(https://nixos.org/download), or downgrade to Lix < %s.\n",
+				nix.Version(),
+				nix.LixVersionWithoutFetchClosure,
+			)
+			return
+		}
 	}()
 
 	if BinaryInstalled() {
