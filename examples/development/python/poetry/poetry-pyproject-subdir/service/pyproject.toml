@@ -3,6 +3,7 @@ name = "poetry-pyproject-subdir-service"
 version = "0.1.0"
 description = ""
 authors = ["Savil Srivastava <676452+savil@users.noreply.github.com>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.8"

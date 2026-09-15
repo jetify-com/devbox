@@ -2,40 +2,50 @@
   "lockfile_version": "1",
   "packages": {
     "dotnet-sdk@latest": {
-      "last_modified": "2026-08-27T07:16:00Z",
-      "resolved": "github:NixOS/nixpkgs/c27cdad491a991b11ed731760aa2ef8db0cb0410#dotnet-sdk",
+      "last_modified": "2024-02-10T18:15:24Z",
+      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#dotnet-sdk",
       "source": "devbox-search",
-      "version": "8.0.424",
+      "version": "6.0.418",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/fraz412y0scy7fs062j8fzwvn3gd7qmz-dotnet-sdk-wrapped-8.0.424",
+              "path": "/nix/store/cihwkz2j3rj798kvjczp0wyy08yqrjk1-dotnet-sdk-6.0.418",
               "default": true
             }
           ],
-          "store_path": "/nix/store/fraz412y0scy7fs062j8fzwvn3gd7qmz-dotnet-sdk-wrapped-8.0.424"
+          "store_path": "/nix/store/cihwkz2j3rj798kvjczp0wyy08yqrjk1-dotnet-sdk-6.0.418"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/747ghx6vaspq6acm3lar7rdnjqapvln4-dotnet-sdk-wrapped-8.0.424",
+              "path": "/nix/store/2k701f6xriajl3hi5az6sz8pw7yjdbl3-dotnet-sdk-6.0.418",
               "default": true
             }
           ],
-          "store_path": "/nix/store/747ghx6vaspq6acm3lar7rdnjqapvln4-dotnet-sdk-wrapped-8.0.424"
+          "store_path": "/nix/store/2k701f6xriajl3hi5az6sz8pw7yjdbl3-dotnet-sdk-6.0.418"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/03xnhsz61h2m83sj4cm3ag4ck5wwy7ji-dotnet-sdk-6.0.418",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/03xnhsz61h2m83sj4cm3ag4ck5wwy7ji-dotnet-sdk-6.0.418"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/syqfzblwc6fzbgx05ixaanicj0qan6in-dotnet-sdk-wrapped-8.0.424",
+              "path": "/nix/store/7523v2ypcvgmli44gsfvrx2mf33syp07-dotnet-sdk-6.0.418",
               "default": true
             }
           ],
-          "store_path": "/nix/store/syqfzblwc6fzbgx05ixaanicj0qan6in-dotnet-sdk-wrapped-8.0.424"
+          "store_path": "/nix/store/7523v2ypcvgmli44gsfvrx2mf33syp07-dotnet-sdk-6.0.418"
         }
       }
     }
