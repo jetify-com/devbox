@@ -73,10 +73,13 @@
       // publish-release builds and publishes, or finishes an existing draft
       // release-changes shows what would ship and the recommended version bump
       // release-status  shows where a release currently stands
-      "draft-release":   "node scripts/release.ts --draft",
-      "publish-release": "node scripts/release.ts --publish",
-      "release-changes": "node scripts/release.ts --changes",
-      "release-status":  "node scripts/release.ts --status",
+      //
+      // Extra arguments are forwarded to the script, so a stopped release can
+      // be picked back up with e.g. `devbox run publish-release --version 0.18.2`.
+      "draft-release":   "node scripts/release.ts --draft \"$@\"",
+      "publish-release": "node scripts/release.ts --publish \"$@\"",
+      "release-changes": "node scripts/release.ts --changes \"$@\"",
+      "release-status":  "node scripts/release.ts --status \"$@\"",
       "tidy": ["go mod tidy", "devbox run update-hash"],
       // docker-testscripts runs the testscripts with Docker to exercise
       // Linux-specific tests. It invokes the test binary directly, so any extra

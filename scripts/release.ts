@@ -77,7 +77,8 @@ const warn = (msg: string) => console.log(`  ${yellow("!")} ${msg}`);
 
 // A halt is an expected stop — the release can't continue, but nothing went
 // wrong (the flake bump PR is waiting on review, say). It reads differently
-// from an error so a normal "come back later" doesn't look like a crash.
+// from an error and exits 0, so a normal "come back later" doesn't look like
+// a crash and `devbox run` doesn't tack its own "exit status 1" error on top.
 class ReleaseError extends Error {
   halted: boolean;
 
@@ -474,10 +475,17 @@ function syncMain(): void {
   );
 }
 
-// cli-release gates the build on the full test suite, so a red main means the
-// tag push produces no artifacts at all. This runs *after* the flake bump so a
-// red main doesn't hide the bump — the bump PR has to merge into main anyway,
+// cli-release runs the full test suite itself and gates the build on it, so
+// this check is purely fail-fast: a *known* red main means the tag push would
+// produce no artifacts, and undoing a tag is manual (delete the tag and the
+// draft, re-tag once the fix lands). It runs *after* the flake bump so a red
+// main doesn't hide the bump — the bump PR has to merge into main anyway,
 // which re-runs cli-tests and makes any result read here stale.
+//
+// Only a finished, failed run stops the release. A run that's still queued or
+// in progress is the normal state right after the bump PR merges, and waiting
+// for it would just double the time spent on the same suite — cli-release is
+// the real judge either way.
 function stepCheckMainCI(skip: boolean): void {
   step(`Check cli-tests on ${MAIN_BRANCH}`);
   if (skip) {
@@ -490,21 +498,22 @@ function stepCheckMainCI(skip: boolean): void {
     "--branch", MAIN_BRANCH, "--limit", "1", "--json", "status,conclusion,url,headSha",
   );
   const latest = runs[0];
-  const retry = `  Re-run once it's green, or pass --skip-cli-tests to release anyway.`;
 
   if (!latest) {
-    fail(`no cli-tests run found for ${MAIN_BRANCH} — cli-release builds off that suite.\n${retry}`);
+    warn(`no cli-tests run found for ${MAIN_BRANCH} — cli-release will run the suite itself`);
+    return;
   }
   if (latest.status !== "completed") {
-    fail(
-      `cli-tests on ${MAIN_BRANCH} is still ${latest.status} (${latest.headSha.slice(0, 8)}).\n` +
-      `    ${latest.url}\n${retry}`,
-    );
+    warn(`cli-tests on ${MAIN_BRANCH} is still ${latest.status} (${latest.headSha.slice(0, 8)})`);
+    info(`cli-release runs the same suite and will fail the build if it's red, so not waiting.`);
+    info(latest.url);
+    return;
   }
   if (latest.conclusion !== "success") {
     fail(
       `latest cli-tests on ${MAIN_BRANCH} is '${latest.conclusion}' — cli-release will refuse to build.\n` +
-      `    ${latest.url}\n${retry}`,
+      `    ${latest.url}\n` +
+      `  Fix ${MAIN_BRANCH} and re-run, or pass --skip-cli-tests to release anyway.`,
     );
   }
   ok(`latest cli-tests on ${MAIN_BRANCH} is green (${latest.headSha.slice(0, 8)})`);
@@ -545,6 +554,13 @@ async function stepChooseVersion(preset?: string): Promise<string> {
 
 const flakeBumpBranch = (version: string) => `bump-flake-${version}`;
 
+// The exact command to pick a release back up once something outside this
+// script (a PR review, say) has happened. Passing --version skips the version
+// prompt and, in publish mode, the "which draft?" menu, so the re-run goes
+// straight to where it stopped.
+const resumeCommand = (mode: Mode, version: string) =>
+  `devbox run ${mode}-release --version ${version}`;
+
 // Deliberately not tolerant of a failed lookup: "gh errored" and "there is no
 // open PR" have to stay distinct, because the second one leads to a
 // force-push over the bump branch.
@@ -556,7 +572,7 @@ function openBumpPR(version: string): { url: string } | null {
   return prs[0] ?? null;
 }
 
-async function stepFlakeBump(version: string, autoYes: boolean): Promise<void> {
+async function stepFlakeBump(version: string, mode: Mode, autoYes: boolean): Promise<void> {
   step("Sync flake.nix");
   const current = flakeLastTag();
   if (current === version) {
@@ -578,7 +594,8 @@ async function stepFlakeBump(version: string, autoYes: boolean): Promise<void> {
     halt(
       `the flake bump PR for ${version} is already open and unmerged:\n` +
       `    ${existingPR.url}\n` +
-      `  Get it approved and merged, then re-run this command.`,
+      `  Get it approved and merged, then continue with:\n` +
+      `    ${bold(resumeCommand(mode, version))}`,
     );
   }
 
@@ -606,21 +623,22 @@ async function stepFlakeBump(version: string, autoYes: boolean): Promise<void> {
 
   if (!autoYes && !(await confirm(`Open a PR to bump the flake version to ${version}?`))) {
     fail(
-      `flake.nix is now updated locally but not merged. Open a PR, merge it, then re-run:\n` +
+      `flake.nix is now updated locally but not merged. Open a PR, merge it, then continue:\n` +
       `    git switch -c ${flakeBumpBranch(version)}\n` +
       `    git commit -am 'chore(release): bump flake lastTag to ${version}'\n` +
-      `    gh pr create --base ${MAIN_BRANCH} --fill`,
+      `    gh pr create --base ${MAIN_BRANCH} --fill\n` +
+      `    ${resumeCommand(mode, version)}`,
     );
   }
 
-  openFlakeBumpPR(version, current);
+  openFlakeBumpPR(version, current, mode);
 }
 
 // Commits the working-tree bump onto its own branch, pushes it and opens the
 // PR, then puts you back where you started with a clean tree. The release
 // itself can't continue — the bump has to be reviewed and merged first — so
 // this always ends the run.
-function openFlakeBumpPR(version: string, previous: string): never {
+function openFlakeBumpPR(version: string, previous: string, mode: Mode): never {
   const branch = flakeBumpBranch(version);
   const startBranch = git("rev-parse", "--abbrev-ref", "HEAD");
   const title = `chore(release): bump flake lastTag to ${version}`;
@@ -663,8 +681,9 @@ function openFlakeBumpPR(version: string, previous: string): never {
   halt(
     `the ${version} release needs that flake bump on ${MAIN_BRANCH} first.\n` +
     `    ${url}\n` +
-    `  Get it approved and merged, then re-run this command — it will pick up the\n` +
-    `  new ${MAIN_BRANCH} and carry on from here.`,
+    `  Get it approved and merged, then continue with:\n` +
+    `    ${bold(resumeCommand(mode, version))}\n` +
+    `  It will pick up the new ${MAIN_BRANCH} and carry on from here.`,
   );
 }
 
@@ -944,7 +963,7 @@ async function fullFlow(opts: Options): Promise<void> {
 
   stepPreflight({ requireCleanMain: true });
   const version = await stepChooseVersion(opts.version);
-  await stepFlakeBump(version, opts.autoYes);
+  await stepFlakeBump(version, opts.mode, opts.autoYes);
   stepCheckMainCI(opts.skipCliTests);
   const title = await stepTitle(version, opts.title);
   const notes = await stepNotes(version, opts.notesFile);
@@ -1023,9 +1042,9 @@ ${bold("Flags")}   (each one skips the prompt it answers)
   --title <string>     Release title
   --notes-file <path>  Release notes, instead of opening \$EDITOR
   --yes                Skip confirmations (for scripted runs)
-  --skip-cli-tests     Don't require the latest cli-tests run on ${MAIN_BRANCH} to be
-                       green. cli-release still runs the suite and will fail
-                       the build if it isn't.
+  --skip-cli-tests     Release even if the latest cli-tests run on ${MAIN_BRANCH} is
+                       red. cli-release still runs the suite and will fail
+                       the build if it isn't green.
 `);
 }
 
@@ -1129,5 +1148,5 @@ main()
     const halted = err instanceof ReleaseError && err.halted;
     const label = halted ? yellow("stopped:") : red("error:");
     console.error(`\n${label} ${err instanceof Error ? err.message : String(err)}\n`);
-    process.exit(1);
+    process.exit(halted ? 0 : 1);
   });

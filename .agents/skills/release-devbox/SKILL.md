@@ -137,19 +137,24 @@ Swap `--draft` for `--publish` to go live. Notes on driving it as an agent:
   cause and re-run the same command — it picks up where it left off rather than
   duplicating work.
 - **`--skip-cli-tests` exists but is a loaded gun.** It only skips the *check*
-  that the latest `cli-tests` run on `main` is green; `cli-release` still runs
-  the whole suite and fails the build if it isn't. Use it when the check is
-  wrong (a run still in progress you've already inspected, a flake you've
-  confirmed), not to push past a genuinely red `main`.
+  that the latest `cli-tests` run on `main` isn't red; `cli-release` still runs
+  the whole suite and fails the build if it isn't green. A run that's merely
+  queued or in progress (the normal state right after the flake bump merges)
+  doesn't block — only a finished, failed run does. Use the flag when that
+  check is wrong (a flake you've confirmed), not to push past a genuinely red
+  `main`.
 
 If `flake.nix` needs bumping, the script offers to do the whole thing: it
 rewrites `lastTag`, refreshes `vendor-hash` and `flake.lock`, commits to
 `bump-flake-<version>`, pushes, opens the PR, and puts you back on `main` with a
-clean tree. Then it stops — that bump has to be reviewed and merged before the
-tag is pushed, otherwise the tagged commit ships the wrong version string. Get
-it merged and re-run the same command; preflight pulls the new `main` and
-carries on. A re-run while the PR is still open stops immediately with its URL
-rather than opening a second one.
+clean tree. Then it stops (exit 0 — this is a planned pause, not a failure)
+and prints the exact command to continue with, e.g.
+`devbox run publish-release --version 0.18.2`. That bump has to be reviewed and
+merged before the tag is pushed, otherwise the tagged commit ships the wrong
+version string. Get it merged and run the printed command; `--version` skips
+the version prompt and preflight pulls the new `main` and carries on. A re-run
+while the PR is still open stops immediately with its URL rather than opening
+a second one.
 
 Preflight is picky about the checkout on purpose, since the tag lands on
 whatever `HEAD` is. A `main` that's merely behind `origin/main` and clean
