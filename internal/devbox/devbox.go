@@ -1058,8 +1058,9 @@ var ignoreCurrentEnvVar = map[string]bool{
 // ignoreDevEnvVar contains environment variables that Devbox should remove from
 // the slice of [Devbox.PrintDevEnv] variables before sourcing them.
 //
-// This list comes directly from the "nix develop" source:
+// Most of this list comes directly from the "nix develop" source:
 // https://github.com/NixOS/nix/blob/f08ad5bdbac02167f7d9f5e7f9bab57cf1c5f8c4/src/nix/develop.cc#L257-L275
+// Entries not in that list are called out below.
 var ignoreDevEnvVar = map[string]bool{
 	"BASHOPTS":           true,
 	"HOME":               true,
@@ -1070,13 +1071,22 @@ var ignoreDevEnvVar = map[string]bool{
 	"PPID":               true,
 	"SHELL":              true,
 	"SHELLOPTS":          true,
-	"TEMP":               true,
-	"TEMPDIR":            true,
-	"TERM":               true,
-	"TMP":                true,
-	"TMPDIR":             true,
-	"TZ":                 true,
-	"UID":                true,
+
+	// SOURCE_DATE_EPOCH is set by the nixpkgs stdenv to a fixed timestamp
+	// (315532800 = 1980-01-01) for reproducible builds. Leaking it into the
+	// interactive shell makes timestamp-respecting tools (docker build, tar,
+	// gzip) stamp output with 1980 -- e.g. Docker images shown as created "45
+	// years ago". Ignore it like HOME/TMPDIR; users can still set it explicitly
+	// via devbox.json's env. See https://github.com/jetify-com/devbox/issues/2597.
+	"SOURCE_DATE_EPOCH": true,
+
+	"TEMP":    true,
+	"TEMPDIR": true,
+	"TERM":    true,
+	"TMP":     true,
+	"TMPDIR":  true,
+	"TZ":      true,
+	"UID":     true,
 }
 
 func (d *Devbox) ProjectDirHash() string {
