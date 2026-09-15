@@ -2,7 +2,7 @@
   "name": "devbox",
   "displayName": "devbox by Jetify",
   "description": "devbox integration for VSCode",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
@@ -130,6 +130,11 @@
           "type": "boolean",
           "default": false,
           "description": "Enables debug mode for this extension which creates an extension.log in .devbox/ directory. Currently only works for 'Devbox: Reopen in Devbox shell environment' command."
+        },
+        "devbox.runInitHookOnReopen": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run the project's init_hook when using 'Devbox: Reopen in Devbox shell environment' and include any environment variables it sets in the reopened editor. Off by default since init hooks can be slow or have side effects. Requires a devbox CLI version that supports `devbox integrate vscode --run-init-hook`."
         }
       }
     }
