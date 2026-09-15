@@ -407,13 +407,13 @@ func (c *Config) Hash() (string, error) {
 	return cachehash.Bytes(data), nil
 }
 
-func (c *Config) IsEnvsecEnabled() bool {
+func (c *Config) IsJetifyCloudEnvFrom() bool {
 	for _, i := range c.included {
-		if i.IsEnvsecEnabled() {
+		if i.IsJetifyCloudEnvFrom() {
 			return true
 		}
 	}
-	return c.Root.IsEnvsecEnabled()
+	return c.Root.IsJetifyCloudEnvFrom()
 }
 
 func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {

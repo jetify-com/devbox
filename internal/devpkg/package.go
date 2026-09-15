@@ -602,11 +602,13 @@ func (p *Package) InputAddressedPaths() ([]string, error) {
 }
 
 func (p *Package) InputAddressedPathForOutput(output string) (string, error) {
-	if inCache, err := p.IsInBinaryCache(); err != nil {
+	// Check that this specific output is in the binary cache, rather than
+	// requiring every one of the package's default outputs to be cached.
+	if inCache, err := p.IsOutputInBinaryCache(output); err != nil {
 		return "", err
 	} else if !inCache {
 		return "",
-			errors.Errorf("Package %q cannot be fetched from binary cache store", p.Raw)
+			errors.Errorf("Package %q output %q cannot be fetched from binary cache store", p.Raw, output)
 	}
 
 	entry, err := p.lockfile.Resolve(p.LockfileKey())

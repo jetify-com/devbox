@@ -8,11 +8,13 @@ import (
 	"github.com/hashicorp/go-envparse"
 )
 
-var JetifyCloudEnvFromValue = "jetify-cloud"
-
-func (c *ConfigFile) IsEnvsecEnabled() bool {
-	// envsec for legacy. jetpack-cloud for legacy
-	return c.EnvFrom == "envsec" || c.EnvFrom == "jetpack-cloud" || c.EnvFrom == JetifyCloudEnvFromValue
+// IsJetifyCloudEnvFrom reports whether env_from points at Jetify Cloud
+// secrets. That feature has been removed, but configs in the wild still set it,
+// so we recognize the value in order to ignore it with a warning rather than
+// fail on it.
+func (c *ConfigFile) IsJetifyCloudEnvFrom() bool {
+	// envsec and jetpack-cloud are legacy spellings of jetify-cloud.
+	return c.EnvFrom == "envsec" || c.EnvFrom == "jetpack-cloud" || c.EnvFrom == "jetify-cloud"
 }
 
 func (c *ConfigFile) IsdotEnvEnabled() bool {
@@ -33,7 +35,10 @@ func (c *ConfigFile) ParseEnvsFromDotEnv() (map[string]string, error) {
 	}
 	file, err := os.Open(envFileAbsPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %s", envFileAbsPath)
+		// Wrap the underlying error (which is os.ErrNotExist for a missing
+		// file) so callers can distinguish a missing env_from file from a
+		// genuine parse error via errors.Is(err, os.ErrNotExist).
+		return nil, fmt.Errorf("failed to open file: %s: %w", envFileAbsPath, err)
 	}
 	defer file.Close()
 
