@@ -202,6 +202,13 @@ const (
 	MinVersion = Version2_18
 )
 
+// LixVersionWithoutFetchClosure is the first Lix version that removed
+// builtins.fetchClosure, which Devbox relies on to install packages from a
+// binary cache. Devbox is not compatible with Lix at or above this version.
+//
+// See https://lix.systems/blog/2026-03-25-lix-2.95-release/.
+const LixVersionWithoutFetchClosure = "2.95.0"
+
 // versionRegexp matches the first line of "nix --version" output.
 //
 // The semantic component is sourced from <https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string>.
@@ -211,7 +218,7 @@ const (
 // followed directly by a prerelease, e.g. "2.33pre20251107_479b6b73" (see
 // https://github.com/jetify-com/devbox/issues/2766). normalizeVersion inserts
 // the missing ".0" patch so the result is comparable as a semver.
-var versionRegexp = regexp.MustCompile(`^(.+) \(.+\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)(?:\.(?P<patch>0|[1-9]\d*))?(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
+var versionRegexp = regexp.MustCompile(`^(.+) \((.+)\) ((?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)(?:\.(?P<patch>0|[1-9]\d*))?(?:(?:-|pre)(?P<prerelease>(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[_a-zA-Z-][_0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$`)
 
 // preReleaseRegexp matches Nix prerelease version strings, which are not valid
 // semvers.
@@ -222,6 +229,11 @@ type Info struct {
 	// Name identifies the Nix implementation. It is usually "nix" but may
 	// also be a fork like "lix".
 	Name string
+
+	// Implementation is the parenthetical descriptor from the first line of
+	// "nix --version" output. It is "Nix" for upstream Nix and something
+	// like "Lix, like Nix" for the Lix fork.
+	Implementation string
 
 	// Version is the semantic Nix version string.
 	Version string
@@ -282,10 +294,11 @@ func parseInfo(data []byte) (Info, error) {
 
 	lines := strings.Split(string(data), "\n")
 	matches := versionRegexp.FindStringSubmatch(lines[0])
-	if len(matches) < 3 {
+	if len(matches) < 4 {
 		return info, redact.Errorf("parse nix version: %s", redact.Safe(lines[0]))
 	}
 	info.Name = matches[1]
+	info.Implementation = matches[2]
 	info.Version = normalizeVersion(matches)
 	for _, line := range lines {
 		name, value, found := strings.Cut(line, ": ")
@@ -321,7 +334,7 @@ func parseInfo(data []byte) (Info, error) {
 // component is required for the version to be comparable as a semver, both
 // directly and via AtLeast's prerelease coercion.
 func normalizeVersion(matches []string) string {
-	version := matches[2]
+	version := matches[3]
 	if matches[versionRegexp.SubexpIndex("patch")] != "" {
 		return version
 	}
@@ -350,6 +363,29 @@ func (i Info) AtLeast(version string) bool {
 	// valid version (2.23.0-pre.20240526+7de033d6) so we can compare it.
 	prerelease := preReleaseRegexp.ReplaceAllString(i.Version, "-pre.$date+$commit")
 	return semver.Compare("v"+prerelease, version) >= 0
+}
+
+// IsLix reports whether the Nix installation is the Lix fork, which identifies
+// itself as "Lix, like Nix" in the parenthetical of its "nix --version" output.
+func (i Info) IsLix() bool {
+	return strings.Contains(strings.ToLower(i.Implementation), "lix")
+}
+
+// SupportsFetchClosure reports whether the Nix installation provides
+// builtins.fetchClosure, which Devbox relies on to install packages from a
+// binary cache. The Lix fork removed fetchClosure in version 2.95, so Devbox is
+// not compatible with it (see LixVersionWithoutFetchClosure). When the version
+// cannot be determined, this returns true to avoid blocking on a false
+// positive.
+func (i Info) SupportsFetchClosure() bool {
+	if !i.IsLix() {
+		return true
+	}
+	// Compare against the lowest possible prerelease of the removal version
+	// (e.g. "2.95.0-0") so that Lix 2.95 prereleases, which have also dropped
+	// fetchClosure, are treated as unsupported. A plain "2.95.0" boundary would
+	// let them through, since semver sorts a prerelease below its release.
+	return !i.AtLeast(LixVersionWithoutFetchClosure + "-0")
 }
 
 // sourceProfileMutex guards against multiple goroutines attempting to source
