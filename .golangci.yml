@@ -1,12 +1,10 @@
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
     - dupl
     - errcheck
     - errorlint
-    - gofmt
-    - goimports
-    - gosimple
     - govet
     - importas
     - ineffassign
@@ -15,8 +13,6 @@ linters:
     - reassign
     - revive
     - staticcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - unused
@@ -24,69 +20,97 @@ linters:
     - usetesting
     - varnamelen
     # - wrapcheck If we're going to use github.com/pkg/errors we should probably turn this on?
-    # We'd like to have the following linter enabled, but it's broken for Go
-    # 1.19 as of golangci-lint v1.48.0. Re-enable it when this issue is
-    # fixed: https://github.com/golangci/golangci-lint/issues/2649
-    # - structcheck
-
-linters-settings:
-  errorlint:
-    errorf: false
-  revive:
-    rules: # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md
-      - name: atomic
-      - name: bare-return
-      - name: bool-literal-in-expr
-      - name: cognitive-complexity
-        exclude:
-          - "**_test.go"
-        arguments:
-          - 32 # TODO: gradually reduce it
-      - name: datarace
-      - name: duplicated-imports
-      - name: early-return
-      - name: error-return
-      - name: error-strings
-      - name: if-return
-      - name: indent-error-flow
-      - name: range-val-address
-      - name: receiver-naming
-      - name: time-naming
-      - name: var-naming
-      - name: unreachable-code
-  varnamelen:
-    max-distance: 10
-    ignore-decls:
-      - a []any
-      - c echo.Context
-      - const C
-      - e error
-      - e watch.Event
-      - f *foo.Bar
-      - f fmt.State
-      - i int
-      - id string
-      - m map[string]any
-      - m map[string]int
-      - n int
-      - ns string
-      - ok bool
-      - r *http.Request
-      - r io.Reader
-      - r *os.File
-      - re *regexp.Regexp
-      - sh *Shell
-      - sh *shell
-      - sh *shell.Shell
-      - sh shell
-      - T any
-      - t testing.T
-      - w http.ResponseWriter
-      - w io.Writer
-      - w *os.File
-  wrapcheck:
-    ignorePackageGlobs:
-      - go.jetify.com/devbox/*
-  misspell:
-    ignore-words:
-      - substituters
+  settings:
+    errorlint:
+      errorf: false
+    govet:
+      disable:
+        # inline reports "cannot inline: type parameter inference is not yet
+        # supported" for ordinary generic stdlib calls (slices.Insert,
+        # maps.Equal). That's a limitation of the analyzer, not our code.
+        - inline
+    misspell:
+      ignore-rules:
+        - substituters
+    staticcheck:
+      checks:
+        - all
+        # QF1008 wants embedded-field selectors dropped (flags.envFlag.register
+        # -> flags.register). We keep them explicit for readability.
+        - -QF1008
+    revive:
+      rules:
+        - name: atomic
+        - name: bare-return
+        - name: bool-literal-in-expr
+        - name: cognitive-complexity
+          arguments:
+            - 32
+          exclude:
+            - '**_test.go'
+        - name: datarace
+        - name: duplicated-imports
+        - name: early-return
+        - name: error-return
+        - name: error-strings
+        - name: if-return
+        - name: indent-error-flow
+        - name: range-val-address
+        - name: receiver-naming
+        - name: time-naming
+        - name: var-naming
+        - name: unreachable-code
+    varnamelen:
+      max-distance: 10
+      ignore-decls:
+        - a []any
+        - c echo.Context
+        - const C
+        - e error
+        - e watch.Event
+        - f *foo.Bar
+        - f fmt.State
+        - i int
+        - id string
+        - m map[string]any
+        - m map[string]int
+        - n int
+        - ns string
+        - ok bool
+        - r *http.Request
+        - r io.Reader
+        - r *os.File
+        - re *regexp.Regexp
+        - sh *Shell
+        - sh *shell
+        - sh *shell.Shell
+        - sh shell
+        - T any
+        - t testing.T
+        - w http.ResponseWriter
+        - w io.Writer
+        - w *os.File
+    wrapcheck:
+      ignore-package-globs:
+        - go.jetify.com/devbox/*
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
