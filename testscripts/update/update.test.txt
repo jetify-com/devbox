@@ -4,6 +4,11 @@ exec devbox install
 
 exec devbox update
 
+# `devbox update --no-install` must not run the post-update "nix flake update"
+# step. Regression test for #2585.
+exec devbox update --no-install
+! stderr 'nix flake update'
+
 -- devbox.json --
 {
   "packages": [

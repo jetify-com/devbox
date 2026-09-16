@@ -84,7 +84,8 @@ func (opts CreateDockerfileOptions) validate() error {
 		)
 	}
 	return usererr.New(
-		"invalid Dockerfile type. Only 'dev' and 'prod' are supported")
+		"invalid Dockerfile type. Only 'dev' and 'prod' are supported",
+	)
 }
 
 // CreateDockerfile creates a Dockerfile in path.

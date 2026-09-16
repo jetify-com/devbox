@@ -1,0 +1,41 @@
+# Jetify Cloud secrets were removed. Configs that still set env_from to
+# jetify-cloud (or its legacy spellings) should warn and keep working instead of
+# failing.
+
+exec devbox run test
+stderr 'Jetify Cloud secrets are no longer supported'
+stdout 'BAR'
+
+# An env_from value that is neither a .env file nor a legacy cloud value is
+# still an error.
+cp devbox.json.unknown devbox.json
+! exec devbox run test
+stderr 'unknown env_from value'
+
+-- devbox.json --
+{
+  "packages": [],
+  "env": {
+    "FOO": "BAR"
+  },
+  "shell": {
+    "scripts": {
+      "test": "echo $FOO"
+    }
+  },
+  "env_from": "jetify-cloud"
+}
+
+-- devbox.json.unknown --
+{
+  "packages": [],
+  "env": {
+    "FOO": "BAR"
+  },
+  "shell": {
+    "scripts": {
+      "test": "echo $FOO"
+    }
+  },
+  "env_from": "nonsense"
+}
