@@ -59,3 +59,10 @@ func IsInsecureAllowed() bool {
 	allowed, _ := strconv.ParseBool(os.Getenv("NIXPKGS_ALLOW_INSECURE"))
 	return allowed
 }
+
+// IsUnfreeAllowed reports whether the user has opted into unfree packages by
+// setting the NIXPKGS_ALLOW_UNFREE environment variable to a truthy value.
+func IsUnfreeAllowed() bool {
+	allowed, _ := strconv.ParseBool(os.Getenv("NIXPKGS_ALLOW_UNFREE"))
+	return allowed
+}
