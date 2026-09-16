@@ -5,6 +5,9 @@ concurrency: vscode-ext-release
 
 on: workflow_dispatch
 
+permissions:
+  contents: read
+
 jobs:
   build-publish:
     runs-on: ubuntu-latest

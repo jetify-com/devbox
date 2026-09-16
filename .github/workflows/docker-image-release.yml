@@ -17,6 +17,9 @@ on:
         default: true
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
   docker-image-build-push:
     runs-on: ubuntu-latest
