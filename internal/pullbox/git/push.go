@@ -53,7 +53,8 @@ func createCommit(dir string) error {
 		return errors.WithStack(err)
 	}
 	cmd, buf := cmdutil.CommandTTYWithBuffer(
-		"git", "commit", "-m", "devbox commit")
+		"git", "commit", "-m", "devbox commit",
+	)
 	cmd.Dir = dir
 	err := cmd.Run()
 	if strings.Contains(buf.String(), nothingToCommitErrorText) {

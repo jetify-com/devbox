@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"text/tabwriter"
 
+	"al.essio.dev/pkg/shellescape"
+	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/services"
@@ -100,6 +103,33 @@ func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error
 		return d.runDevboxServicesScript(ctx, []string{"ls", "--run-in-current-shell"})
 	}
 
+	// If the process manager is running, list the services it is actually
+	// running. Those may include services started from a custom
+	// --process-compose-file that are not part of the project's statically
+	// defined service set, so we must not gate this on d.Services() being
+	// non-empty (see jetify-com/devbox#2611). ListServices queries the running
+	// process-compose server directly, independent of any compose file.
+	if services.ProcessManagerIsRunning(d.projectDir) {
+		pcSvcs, err := services.ListServices(ctx, d.projectDir, d.stderr)
+		if err != nil {
+			// Surface the failure so the command exits non-zero (e.g. if we
+			// cannot reach the running process-compose server), rather than
+			// hiding it and exiting successfully.
+			return errors.WithStack(err)
+		}
+		tw := tabwriter.NewWriter(d.stderr, 3, 2, 8, ' ', tabwriter.TabIndent)
+		fmt.Fprintln(d.stderr, "Services running in process-compose:")
+		fmt.Fprintln(tw, "PID\tNAME\tNAMESPACE\tSTATUS\tAGE\tHEALTH\tRESTARTS\tEXIT CODE")
+		for _, s := range pcSvcs {
+			fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\t%s\t%d\t%d\n", s.PID, s.Name, s.Namespace, s.Status, s.Age, s.Health, s.Restarts, s.ExitCode)
+		}
+		tw.Flush()
+		return nil
+	}
+
+	// The process manager is not running, so fall back to listing the
+	// project's statically defined services (from devbox.json plugins and
+	// process-compose.yaml).
 	svcSet, err := d.Services()
 	if err != nil {
 		return err
@@ -110,25 +140,10 @@ func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error
 		return nil
 	}
 
-	if !services.ProcessManagerIsRunning(d.projectDir) {
-		fmt.Fprintln(d.stderr, "No services currently running. Run `devbox services up` to start them:")
-		fmt.Fprintln(d.stderr, "")
-		for _, s := range svcSet {
-			fmt.Fprintf(d.stderr, "  %s\n", s.Name)
-		}
-		return nil
-	}
-	tw := tabwriter.NewWriter(d.stderr, 3, 2, 8, ' ', tabwriter.TabIndent)
-	pcSvcs, err := services.ListServices(ctx, d.projectDir, d.stderr)
-	if err != nil {
-		fmt.Fprintln(d.stderr, "Error listing services: ", err)
-	} else {
-		fmt.Fprintln(d.stderr, "Services running in process-compose:")
-		fmt.Fprintln(tw, "PID\tNAME\tNAMESPACE\tSTATUS\tAGE\tHEALTH\tRESTARTS\tEXIT CODE")
-		for _, s := range pcSvcs {
-			fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\t%s\t%d\t%d\n", s.PID, s.Name, s.Namespace, s.Status, s.Age, s.Health, s.Restarts, s.ExitCode)
-		}
-		tw.Flush()
+	fmt.Fprintln(d.stderr, "No services currently running. Run `devbox services up` to start them:")
+	fmt.Fprintln(d.stderr, "")
+	for _, s := range svcSet {
+		fmt.Fprintf(d.stderr, "  %s\n", s.Name)
 	}
 	return nil
 }
@@ -271,7 +286,24 @@ func (d *Devbox) StartProcessManager(
 // defaults for the `devbox services` scenario.
 func (d *Devbox) runDevboxServicesScript(ctx context.Context, cmdArgs []string) error {
 	cmdArgs = append([]string{"services"}, cmdArgs...)
-	return d.RunScript(ctx, devopt.EnvOptions{}, "devbox", cmdArgs)
+	return d.RunScript(ctx, devopt.EnvOptions{}, devboxBinaryForSelfInvocation(), cmdArgs)
+}
+
+// devboxBinaryForSelfInvocation returns a shell-quoted reference to the
+// currently running devbox binary. `devbox services ...` re-invokes devbox
+// inside the computed environment, and using the actual executable path (rather
+// than a hardcoded "devbox") ensures this works even when the binary has been
+// installed or renamed to something other than "devbox". If the executable path
+// can't be determined, it falls back to "devbox", relying on a PATH lookup as
+// before. See https://github.com/jetify-com/devbox/issues/1321.
+func devboxBinaryForSelfInvocation() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return "devbox"
+	}
+	// Shell-quote the path so it survives being eval'd by the generated run
+	// script (e.g. when the path contains spaces or other special characters).
+	return shellescape.Quote(exe)
 }
 
 func (d *Devbox) ShowProcessComposePort(ctx context.Context, writer io.Writer) error {

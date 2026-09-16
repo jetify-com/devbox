@@ -4,7 +4,7 @@ Plugins make it easier to get started with packages that require additional setu
 
 ## Getting Started
 
-Before writing a plugin, we recommend reading the [User Documentation](https://www.jetify.com/devbox/docs/guides/plugins/) on plugins, as well as inspecting and testing a few of the plugins in this directory. Note that the plugins in this directory are compiled into the Devbox binary, but your plugin can be sourced from a local directory or from within your project.
+Before writing a plugin, we recommend reading the [User Documentation](https://www.jetify.com/docs/devbox/guides/plugins/) on plugins, as well as inspecting and testing a few of the plugins in this directory. Note that the plugins in this directory are compiled into the Devbox binary, but your plugin can be sourced from a local directory or from within your project.
 
 If you're looking for plugin ideas, check out our [Issues page](https://github.com/jetify-com/devbox/issues?q=is%3Aissue+is%3Aopen+label%3A%22plugin+request%22) for any user requests.
 
@@ -63,7 +63,8 @@ flowchart TD
 
 Devbox's Plugin System provides a few special placeholders that should be used when specifying paths for env variables and helper files:
 
-* `{{ .DevboxDirRoot }}` – points to the root folder of their project, where the user's `devbox.json` is stored.
+* `{{ .DevboxProjectDir }}` – points to the root folder of the user's project, where their `devbox.json` is stored.
+* `{{ .DevboxDirRoot }}` – points to `<projectDir>/devbox.d`, the shared parent directory of every plugin's `DevboxDir`. (Despite its name, this is *not* the project root — use `{{ .DevboxProjectDir }}` for that.)
 * `{{ .DevboxDir }}` – points to `<projectDir>/devbox.d/<plugin.name>`. This directory is public and added to source control by default. This directory is not modified or recreated by Devbox after the initial package installation. You should use this location for files that a user will want to modify and check-in to source control alongside their project (e.g., `.conf` files or other configs).
 * `{{ .Virtenv }}` – points to `<projectDir>/.devbox/virtenv/<plugin_name>` whenever the plugin activates. This directory is hidden and added to `.gitignore` by default You should use this location for files or variables that a user should not check-in or edit directly. Files in this directory should be considered managed by Devbox, and may be recreated or modified after the initial installation.
 

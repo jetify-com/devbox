@@ -140,8 +140,7 @@ func Find(path string) (*Config, error) {
 // searchDir looks for a config file in dir. It does not search parent
 // directories.
 func searchDir(dir string) (*Config, error) {
-	try := []string{configfile.DefaultName}
-	for _, name := range try {
+	for _, name := range configfile.ValidNames {
 		path := filepath.Join(dir, name)
 		slog.Debug("trying config file", "path", path)
 
@@ -154,7 +153,7 @@ func searchDir(dir string) (*Config, error) {
 		if errors.Is(err, os.ErrNotExist) {
 			continue
 		}
-		// Ignore directories named devbox.json.
+		// Ignore directories that happen to share a config filename.
 		if errors.Is(err, errIsDirectory) {
 			continue
 		}
@@ -238,7 +237,8 @@ func (c *Config) loadRecursive(
 
 	for _, includeRef := range c.Root.Include {
 		pluginConfig, err := plugin.LoadConfigFromInclude(
-			includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath))
+			includeRef, lockfile, filepath.Dir(c.Root.AbsRootPath),
+		)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -249,14 +249,16 @@ func (c *Config) loadRecursive(
 			// e.g. 2 different plugins can include the same plugin.
 			// We do not allow a single plugin to include duplicates.
 			return errors.Errorf(
-				"circular or duplicate include detected:\n%s", newCyclePath)
+				"circular or duplicate include detected:\n%s", newCyclePath,
+			)
 		}
 		seen[pluginConfig.Source.Hash()] = true
 
 		includable := createIncludableFromPluginConfig(pluginConfig)
 
 		if err := includable.loadRecursive(
-			lockfile, maps.Clone(seen), newCyclePath); err != nil {
+			lockfile, maps.Clone(seen), newCyclePath,
+		); err != nil {
 			return errors.WithStack(err)
 		}
 
@@ -278,7 +280,8 @@ func (c *Config) loadRecursive(
 		}
 		newCyclePath := fmt.Sprintf("%s -> %s", cyclePath, builtIn.Source.LockfileKey())
 		if err := includable.loadRecursive(
-			lockfile, maps.Clone(seen), newCyclePath); err != nil {
+			lockfile, maps.Clone(seen), newCyclePath,
+		); err != nil {
 			return errors.WithStack(err)
 		}
 		included = append(included, includable)
@@ -388,6 +391,19 @@ func (c *Config) Scripts() configfile.Scripts {
 	return scripts
 }
 
+// ScriptOrder returns script names in the order they are defined, with scripts
+// from included plugins first (matching Scripts' merge precedence) followed by
+// the root config's scripts. Duplicate names are de-duplicated by the consumer
+// (Scripts.InOrder).
+func (c *Config) ScriptOrder() []string {
+	var order []string
+	for _, i := range c.included {
+		order = append(order, i.ScriptOrder()...)
+	}
+	order = append(order, c.Root.ScriptOrder()...)
+	return order
+}
+
 func (c *Config) Hash() (string, error) {
 	data := []byte{}
 	for _, i := range c.included {
@@ -405,13 +421,13 @@ func (c *Config) Hash() (string, error) {
 	return cachehash.Bytes(data), nil
 }
 
-func (c *Config) IsEnvsecEnabled() bool {
+func (c *Config) IsJetifyCloudEnvFrom() bool {
 	for _, i := range c.included {
-		if i.IsEnvsecEnabled() {
+		if i.IsJetifyCloudEnvFrom() {
 			return true
 		}
 	}
-	return c.Root.IsEnvsecEnabled()
+	return c.Root.IsJetifyCloudEnvFrom()
 }
 
 func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {

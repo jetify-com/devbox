@@ -4,6 +4,8 @@ package configfile
 import (
 	"encoding/json"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -778,6 +780,55 @@ func TestNixpkgsValidation(t *testing.T) {
 				assert.Error(err)
 			} else {
 				assert.NoError(err)
+			}
+		})
+	}
+}
+
+func TestFileName(t *testing.T) {
+	testCases := map[string]struct {
+		absRootPath string
+		want        string
+	}{
+		"empty_falls_back_to_default": {"", DefaultName},
+		"json":                        {"/home/user/project/devbox.json", DefaultName},
+		"jsonc":                       {"/home/user/project/devbox.jsonc", AltName},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			c := &ConfigFile{AbsRootPath: testCase.absRootPath}
+			if got := c.FileName(); got != testCase.want {
+				t.Errorf("FileName() = %q, want %q", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestSaveToPreservesFileName(t *testing.T) {
+	testCases := map[string]struct {
+		absRootPath string
+		wantName    string
+	}{
+		"json":                 {"/anywhere/devbox.json", DefaultName},
+		"jsonc":                {"/anywhere/devbox.jsonc", AltName},
+		"no_path_uses_default": {"", DefaultName},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			in, err := LoadBytes([]byte(`{"packages": []}`))
+			if err != nil {
+				t.Fatalf("LoadBytes error: %v", err)
+			}
+			in.AbsRootPath = testCase.absRootPath
+
+			dir := t.TempDir()
+			if err := in.SaveTo(dir); err != nil {
+				t.Fatalf("SaveTo(%q) error: %v", dir, err)
+			}
+			if _, err := os.Stat(filepath.Join(dir, testCase.wantName)); err != nil {
+				t.Errorf("expected %q to be written: %v", testCase.wantName, err)
 			}
 		})
 	}

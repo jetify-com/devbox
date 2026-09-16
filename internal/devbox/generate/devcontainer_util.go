@@ -23,6 +23,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
 )
 
 //go:embed tmpl/*
@@ -34,6 +35,10 @@ type Options struct {
 	IsDevcontainer bool
 	Pkgs           []string
 	LocalFlakeDirs []string
+	// ConfigFileName is the basename of the project's config file
+	// (devbox.json or devbox.jsonc) so generated Dockerfiles copy the right
+	// one. Defaults to devbox.json when empty.
+	ConfigFileName string
 }
 
 type devcontainerObject struct {
@@ -84,7 +89,8 @@ func (opts CreateDockerfileOptions) validate() error {
 		)
 	}
 	return usererr.New(
-		"invalid Dockerfile type. Only 'dev' and 'prod' are supported")
+		"invalid Dockerfile type. Only 'dev' and 'prod' are supported",
+	)
 }
 
 // CreateDockerfile creates a Dockerfile in path.
@@ -111,6 +117,7 @@ func (g *Options) CreateDockerfile(
 		"IsDevcontainer": g.IsDevcontainer,
 		"RootUser":       g.RootUser,
 		"LocalFlakeDirs": g.LocalFlakeDirs,
+		"ConfigFileName": cmp.Or(g.ConfigFileName, configfile.DefaultName),
 
 		// The following are only used for prod Dockerfile
 		"DevboxRunInstall": lo.Ternary(opts.HasInstall, "devbox run install", "echo 'No install script found, skipping'"),

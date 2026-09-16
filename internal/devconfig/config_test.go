@@ -1,6 +1,7 @@
 package devconfig
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -281,6 +282,86 @@ func TestFindError(t *testing.T) {
 	})
 }
 
+func TestJSONCConfig(t *testing.T) {
+	const jsonc = "{\n  // devbox lets you comment your config\n  \"packages\": []\n}\n"
+
+	t.Run("OpenDiscoversJSONC", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, configfile.AltName)
+		if err := os.WriteFile(path, []byte(jsonc), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := Open(dir)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", dir, err)
+		}
+		if cfg.Root.AbsRootPath != path {
+			t.Errorf("cfg.Root.AbsRootPath = %q, want %q", cfg.Root.AbsRootPath, path)
+		}
+	})
+
+	t.Run("FindDiscoversJSONCInParent", func(t *testing.T) {
+		root, child, _ := mkNestedDirs(t)
+		path := filepath.Join(root, configfile.AltName)
+		if err := os.WriteFile(path, []byte(jsonc), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := Find(child)
+		if err != nil {
+			t.Fatalf("Find(%q) error: %v", child, err)
+		}
+		if cfg.Root.AbsRootPath != path {
+			t.Errorf("cfg.Root.AbsRootPath = %q, want %q", cfg.Root.AbsRootPath, path)
+		}
+	})
+
+	t.Run("DefaultNameWinsWhenBothExist", func(t *testing.T) {
+		dir := t.TempDir()
+		jsonPath := filepath.Join(dir, configfile.DefaultName)
+		if err := os.WriteFile(jsonPath, []byte(`{"packages": []}`), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, configfile.AltName), []byte(jsonc), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := Open(dir)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", dir, err)
+		}
+		if cfg.Root.AbsRootPath != jsonPath {
+			t.Errorf("cfg.Root.AbsRootPath = %q, want %q", cfg.Root.AbsRootPath, jsonPath)
+		}
+	})
+
+	t.Run("SaveWritesBackToJSONC", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, configfile.AltName)
+		if err := os.WriteFile(path, []byte(jsonc), 0o644); err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := Open(dir)
+		if err != nil {
+			t.Fatalf("Open(%q) error: %v", dir, err)
+		}
+		if err := cfg.Root.SaveTo(dir); err != nil {
+			t.Fatalf("SaveTo(%q) error: %v", dir, err)
+		}
+
+		// Saving must write back to devbox.jsonc, not create a devbox.json.
+		if _, err := os.Stat(filepath.Join(dir, configfile.DefaultName)); !errors.Is(err, fs.ErrNotExist) {
+			t.Errorf("SaveTo created a %s; want it to update %s in place",
+				configfile.DefaultName, configfile.AltName)
+		}
+		if _, err := os.Stat(path); err != nil {
+			t.Errorf("os.Stat(%q) after save: %v", path, err)
+		}
+	})
+}
+
 // mkNestedDirs sets up a nested directory structure for Find and Open tests.
 func mkNestedDirs(t *testing.T) (root, child, nested string) {
 	t.Helper()
@@ -430,6 +511,34 @@ func TestDefault(t *testing.T) {
 	}
 }
 
+// TestPackagesDoesNotDedupDistinctGitFlakes is a regression test for issue
+// #2704. Two git flake references that point at the same repository but
+// different subdirectories (via the "dir" query parameter) are distinct
+// inputs and must both be preserved by Config.Packages(). Previously they
+// were deduplicated because the "@" in the "git@host" portion of the URL was
+// mistaken for a version delimiter, giving both packages the same parsed name.
+func TestPackagesDoesNotDedupDistinctGitFlakes(t *testing.T) {
+	pkgA := "git+ssh://git@gitlab.com/org/repo.git?dir=betteralign&ref=master&rev=17d2bedca4884176e0d08078aa42311053e531c2"
+	pkgB := "git+ssh://git@gitlab.com/org/repo.git?dir=recovergoroutine&ref=master&rev=593d44945851d912f0c2158c46cc76da445adc43"
+
+	jsonConfig := fmt.Sprintf(`{"packages":[%q,%q]}`, pkgA, pkgB)
+	cfg, err := loadBytes([]byte(jsonConfig))
+	if err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+
+	packages := cfg.Packages(false /*includeRemovedTriggerPackages*/)
+	got := make([]string, len(packages))
+	for i, p := range packages {
+		got[i] = p.VersionedName()
+	}
+
+	want := []string{pkgA, pkgB}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Config.Packages() dropped a distinct git flake input (-want +got):\n%s", diff)
+	}
+}
+
 func TestOSExpandIfPossible(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -565,7 +674,25 @@ type testLockProject struct {
 	dir string
 }
 
-func (p *testLockProject) ConfigHash() (string, error)                              { return "", nil }
+func (p *testLockProject) ConfigHash() (string, error) { return "", nil }
+
 func (p *testLockProject) Stdenv() flake.Ref                                        { return flake.Ref{} }
 func (p *testLockProject) AllPackageNamesIncludingRemovedTriggerPackages() []string { return nil }
 func (p *testLockProject) ProjectDir() string                                       { return p.dir }
+
+func TestInitRefusesWhenJSONCExists(t *testing.T) {
+	dir := t.TempDir()
+	jsoncPath := filepath.Join(dir, configfile.AltName)
+	if err := os.WriteFile(jsoncPath, []byte("{\n  // comment\n  \"packages\": []\n}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := Init(dir)
+	if !errors.Is(err, fs.ErrExist) {
+		t.Fatalf("Init() with existing %s: got err %v, want fs.ErrExist", configfile.AltName, err)
+	}
+	// Init must not have created a devbox.json that would shadow the jsonc.
+	if _, err := os.Stat(filepath.Join(dir, configfile.DefaultName)); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("Init() created %s next to an existing %s", configfile.DefaultName, configfile.AltName)
+	}
+}

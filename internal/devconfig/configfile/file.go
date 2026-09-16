@@ -21,7 +21,18 @@ import (
 
 const (
 	DefaultName = "devbox.json"
+	// AltName is an alternate config filename that devbox also recognizes.
+	// devbox.json already permits comments (it is parsed as JSONC), but
+	// editors and GitHub diffs flag comments in a .json file as errors. Naming
+	// the file devbox.jsonc lets those tools highlight it correctly without any
+	// extra configuration. See https://github.com/jetify-com/devbox/issues/2602
+	AltName = "devbox.jsonc"
 )
+
+// ValidNames are the config filenames devbox recognizes, in the order they are
+// searched for within a directory. devbox.json is listed first so it wins when
+// a directory happens to contain both files.
+var ValidNames = []string{DefaultName, AltName}
 
 // ConfigFile defines a devbox environment as JSON.
 type ConfigFile struct {
@@ -39,7 +50,7 @@ type ConfigFile struct {
 	// Env allows specifying env variables
 	Env map[string]string `json:"env,omitempty"`
 
-	// Only allows "envsec" for now
+	// EnvFrom is the path to a .env file to load env variables from.
 	EnvFrom string `json:"env_from,omitempty"`
 
 	// InitHookField contains commands that will run at shell startup. It is the
@@ -164,9 +175,21 @@ func (c *ConfigFile) MigrateShell() {
 	}
 }
 
-// SaveTo writes the config to a file.
-func (c *ConfigFile) SaveTo(path string) error {
-	return os.WriteFile(filepath.Join(path, DefaultName), c.Bytes(), 0o644)
+// FileName returns the base name of the config file (e.g. "devbox.json" or
+// "devbox.jsonc"). It preserves whatever name the config was loaded from so
+// that saving writes back to the same file. It falls back to [DefaultName] when
+// the config has no on-disk path (for example, a config loaded from a URL).
+func (c *ConfigFile) FileName() string {
+	if c.AbsRootPath != "" {
+		return filepath.Base(c.AbsRootPath)
+	}
+	return DefaultName
+}
+
+// SaveTo writes the config into the directory dir, using the config's original
+// filename (see [ConfigFile.FileName]).
+func (c *ConfigFile) SaveTo(dir string) error {
+	return os.WriteFile(filepath.Join(dir, c.FileName()), c.Bytes(), 0o644)
 }
 
 // TODO: Can we remove SaveTo and just use Save()?
@@ -229,17 +252,19 @@ var whitespace = regexp.MustCompile(`\s`)
 
 func validateScripts(cfg *ConfigFile) error {
 	scripts := cfg.Scripts()
-	for k := range scripts {
-		if strings.TrimSpace(k) == "" {
+	for name := range scripts {
+		if strings.TrimSpace(name) == "" {
 			return errors.New("cannot have script with empty name in devbox.json")
 		}
-		if whitespace.MatchString(k) {
+		if whitespace.MatchString(name) {
 			return errors.Errorf(
-				"cannot have script name with whitespace in devbox.json: %s", k)
+				"cannot have script name with whitespace in devbox.json: %s", name,
+			)
 		}
-		if strings.TrimSpace(scripts[k].String()) == "" {
+		if strings.TrimSpace(scripts[name].String()) == "" {
 			return errors.Errorf(
-				"cannot have an empty script body in devbox.json: %s", k)
+				"cannot have an empty script body in devbox.json: %s", name,
+			)
 		}
 	}
 	return nil
@@ -252,11 +277,13 @@ func validateAliases(cfg *ConfigFile) error {
 		}
 		if whitespace.MatchString(name) {
 			return errors.Errorf(
-				"cannot have alias name with whitespace in devbox.json: %s", name)
+				"cannot have alias name with whitespace in devbox.json: %s", name,
+			)
 		}
 		if strings.TrimSpace(command) == "" {
 			return errors.Errorf(
-				"cannot have an empty alias command in devbox.json: %s", name)
+				"cannot have an empty alias command in devbox.json: %s", name,
+			)
 		}
 	}
 	return nil

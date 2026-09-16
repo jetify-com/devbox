@@ -2,50 +2,86 @@
   "lockfile_version": "1",
   "packages": {
     "wget@latest": {
-      "last_modified": "2024-02-10T18:15:24Z",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#wget",
+      "last_modified": "2026-08-27T07:16:00Z",
+      "resolved": "github:NixOS/nixpkgs/c27cdad491a991b11ed731760aa2ef8db0cb0410#wget",
       "source": "devbox-search",
-      "version": "1.21.4",
+      "version": "1.25.0",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/2a5ivwam36h58bl20k7brrqfgs1s9z4x-wget-1.21.4",
+              "path": "/nix/store/xcbhv4n8ni48lqakzbzbgaqqyas0cr88-wget-1.25.0",
               "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/dpfj27p562smrh3qdyvs0kwfskf5cjjh-wget-1.25.0-man",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/s4cyfv5ql9fyqwkv5awi99mdivvnc1kq-wget-1.25.0-info"
             }
           ],
-          "store_path": "/nix/store/2a5ivwam36h58bl20k7brrqfgs1s9z4x-wget-1.21.4"
+          "store_path": "/nix/store/xcbhv4n8ni48lqakzbzbgaqqyas0cr88-wget-1.25.0"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/ikfhkykyqkrkqb25hak28gwfbxqqq443-wget-1.21.4",
+              "path": "/nix/store/yb6ff7g8kfbs23dq482x1wwhy0y5k51j-wget-1.25.0",
               "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/jd7m21prl6imwyn6rm8qv2cp8npxwnic-wget-1.25.0-man",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/ngj7zzz88gxr5x3sgn4zgbv9pj5144hj-wget-1.25.0-info"
             }
           ],
-          "store_path": "/nix/store/ikfhkykyqkrkqb25hak28gwfbxqqq443-wget-1.21.4"
+          "store_path": "/nix/store/yb6ff7g8kfbs23dq482x1wwhy0y5k51j-wget-1.25.0"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/rdj4az74sanibqwv49hx79z85xavwas2-wget-1.21.4",
+              "path": "/nix/store/sqd79qyvxfsyr4f6d9b5c9vl1g5s6h4l-wget-1.25.0",
               "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/s8m94za3jg8094h85nbpzngf9hn3gqsn-wget-1.25.0-man",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/w8ikfqx2ng50p52ragqgppri8ssc8yk6-wget-1.25.0-info"
             }
           ],
-          "store_path": "/nix/store/rdj4az74sanibqwv49hx79z85xavwas2-wget-1.21.4"
+          "store_path": "/nix/store/sqd79qyvxfsyr4f6d9b5c9vl1g5s6h4l-wget-1.25.0"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/s87k7diwngzv7yl8qb587i2g74ig1y2b-wget-1.21.4",
+              "path": "/nix/store/r52hj4qxkk77bh94hkzyh6460dk04369-wget-1.25.0",
               "default": true
+            },
+            {
+              "name": "man",
+              "path": "/nix/store/0d7swvksg29d0ais9g1y4750jvvr9l5l-wget-1.25.0-man",
+              "default": true
+            },
+            {
+              "name": "info",
+              "path": "/nix/store/hgz4d5mv0qbdm22d3ph178rnzqrpmh42-wget-1.25.0-info"
             }
           ],
-          "store_path": "/nix/store/s87k7diwngzv7yl8qb587i2g74ig1y2b-wget-1.21.4"
+          "store_path": "/nix/store/r52hj4qxkk77bh94hkzyh6460dk04369-wget-1.25.0"
         }
       }
     }

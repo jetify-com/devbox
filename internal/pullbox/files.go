@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -63,7 +64,7 @@ func profileIsNotEmpty(path string) (bool, error) {
 		return false, errors.WithStack(err)
 	}
 	for _, entry := range entries {
-		if entry.Name() != configfile.DefaultName ||
+		if !slices.Contains(configfile.ValidNames, entry.Name()) ||
 			isModifiedConfig(filepath.Join(path, entry.Name())) {
 			return true, nil
 		}
@@ -72,7 +73,7 @@ func profileIsNotEmpty(path string) (bool, error) {
 }
 
 func isModifiedConfig(path string) bool {
-	if filepath.Base(path) == configfile.DefaultName {
+	if slices.Contains(configfile.ValidNames, filepath.Base(path)) {
 		return !devconfig.IsDefault(path)
 	}
 	return false

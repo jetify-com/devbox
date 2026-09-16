@@ -22,7 +22,7 @@ export async function devboxReopen() {
       Please open VSCode from inside devbox shell in WSL using the CLI.', seeDocs
     );
     if (result === seeDocs) {
-      env.openExternal(Uri.parse('https://www.jetify.com/devbox/docs/ide_configuration/vscode/#windows-setup'));
+      env.openExternal(Uri.parse('https://www.jetify.com/docs/devbox/ide-configuration/vscode/#windows-setup'));
       return;
     }
   }
@@ -58,7 +58,13 @@ export async function devboxReopen() {
           const debugModeFlag = workspace.getConfiguration("devbox").get("enableDebugMode");
           // name of the currently open editor
           const ideName = appNameBinaryMap[env.appName.toLocaleLowerCase()] || 'code';
-          let child = spawn(devbox, ['integrate', 'vscode', '--debugmode='+debugModeFlag, '--ide='+ideName], {
+          const args = ['integrate', 'vscode', '--debugmode='+debugModeFlag, '--ide='+ideName];
+          // Only pass --run-init-hook when enabled so older CLIs that don't
+          // know the flag keep working with the default settings.
+          if (workspace.getConfiguration("devbox").get("runInitHookOnReopen")) {
+            args.push('--run-init-hook');
+          }
+          let child = spawn(devbox, args, {
             cwd: workingDir.path,
             stdio: [0, 1, 2, 'ipc']
           });

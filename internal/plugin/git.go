@@ -170,7 +170,8 @@ func isBranchName(ref string) bool {
 	// Full commit hashes are 40 hex characters
 	if len(ref) == 40 {
 		for _, c := range ref {
-			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+			isHex := (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
+			if !isHex {
 				return true
 			}
 		}

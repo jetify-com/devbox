@@ -13,7 +13,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"go.jetify.com/devbox/internal/boxcli/featureflag"
 	"go.jetify.com/devbox/internal/boxcli/midcobra"
 	"go.jetify.com/devbox/internal/cmdutil"
 	"go.jetify.com/devbox/internal/debug"
@@ -55,13 +54,8 @@ func RootCmd() *cobra.Command {
 
 	// Stable commands
 	command.AddCommand(addCmd())
-	if featureflag.Auth.Enabled() {
-		command.AddCommand(authCmd())
-	}
-	command.AddCommand(cacheCmd())
 	command.AddCommand(configCmd())
 	command.AddCommand(createCmd())
-	command.AddCommand(secretsCmd())
 	command.AddCommand(generateCmd())
 	command.AddCommand(globalCmd())
 	command.AddCommand(infoCmd())
@@ -97,7 +91,8 @@ func RootCmd() *cobra.Command {
 	})
 
 	command.PersistentFlags().BoolVarP(
-		&flags.quiet, "quiet", "q", false, "suppresses logs")
+		&flags.quiet, "quiet", "q", false, "suppresses logs",
+	)
 	debugMiddleware.AttachToFlag(command.PersistentFlags(), "debug")
 	traceMiddleware.AttachToFlag(command.PersistentFlags(), "trace")
 

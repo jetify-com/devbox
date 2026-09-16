@@ -36,7 +36,7 @@ func initCmd() *cobra.Command {
 				path, _ = os.Getwd()
 			}
 			if errors.Is(err, os.ErrExist) {
-				ux.Fwarningf(cmd.ErrOrStderr(), "devbox.json already exists in %q.", path)
+				ux.Fwarningf(cmd.ErrOrStderr(), "A devbox config already exists in %q.", path)
 				return nil
 			}
 			if err != nil {
