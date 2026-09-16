@@ -679,3 +679,20 @@ func (p *testLockProject) ConfigHash() (string, error) { return "", nil }
 func (p *testLockProject) Stdenv() flake.Ref                                        { return flake.Ref{} }
 func (p *testLockProject) AllPackageNamesIncludingRemovedTriggerPackages() []string { return nil }
 func (p *testLockProject) ProjectDir() string                                       { return p.dir }
+
+func TestInitRefusesWhenJSONCExists(t *testing.T) {
+	dir := t.TempDir()
+	jsoncPath := filepath.Join(dir, configfile.AltName)
+	if err := os.WriteFile(jsoncPath, []byte("{\n  // comment\n  \"packages\": []\n}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := Init(dir)
+	if !errors.Is(err, fs.ErrExist) {
+		t.Fatalf("Init() with existing %s: got err %v, want fs.ErrExist", configfile.AltName, err)
+	}
+	// Init must not have created a devbox.json that would shadow the jsonc.
+	if _, err := os.Stat(filepath.Join(dir, configfile.DefaultName)); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("Init() created %s next to an existing %s", configfile.DefaultName, configfile.AltName)
+	}
+}

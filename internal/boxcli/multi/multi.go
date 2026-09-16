@@ -3,6 +3,7 @@ package multi
 import (
 	"io/fs"
 	"path/filepath"
+	"slices"
 
 	"go.jetify.com/devbox/internal/debug"
 	"go.jetify.com/devbox/internal/devbox"
@@ -21,7 +22,7 @@ func Open(opts *devopt.Opts) ([]*devbox.Devbox, error) {
 				return err
 			}
 
-			if !dirEntry.IsDir() && filepath.Base(path) == configfile.DefaultName {
+			if !dirEntry.IsDir() && slices.Contains(configfile.ValidNames, filepath.Base(path)) {
 				optsCopy := *opts
 				optsCopy.Dir = path
 				box, err := devbox.Open(&optsCopy)

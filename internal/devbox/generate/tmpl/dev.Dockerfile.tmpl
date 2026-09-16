@@ -8,10 +8,10 @@ WORKDIR /code
 USER root:root
 RUN mkdir -p /code && chown ${DEVBOX_USER}:${DEVBOX_USER} /code
 USER ${DEVBOX_USER}:${DEVBOX_USER}
-COPY --chown=${DEVBOX_USER}:${DEVBOX_USER} devbox.json devbox.json
+COPY --chown=${DEVBOX_USER}:${DEVBOX_USER} {{.ConfigFileName}} {{.ConfigFileName}}
 COPY --chown=${DEVBOX_USER}:${DEVBOX_USER} devbox.lock devbox.lock
 {{- else}}
-COPY devbox.json devbox.json
+COPY {{.ConfigFileName}} {{.ConfigFileName}}
 COPY devbox.lock devbox.lock
 {{- end}}
 
