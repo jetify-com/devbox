@@ -4,6 +4,7 @@
 package devconfig
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -11,6 +12,16 @@ import (
 )
 
 func Init(dir string) (*Config, error) {
+	// A project may already be configured under an alternate filename
+	// (devbox.jsonc). Creating devbox.json next to it would silently take
+	// precedence, so treat any recognized config name as "already exists".
+	for _, name := range configfile.ValidNames {
+		path := filepath.Join(dir, name)
+		if _, err := os.Stat(path); err == nil {
+			return nil, &fs.PathError{Op: "open", Path: path, Err: fs.ErrExist}
+		}
+	}
+
 	file, err := os.OpenFile(
 		filepath.Join(dir, configfile.DefaultName),
 		os.O_RDWR|os.O_CREATE|os.O_EXCL,

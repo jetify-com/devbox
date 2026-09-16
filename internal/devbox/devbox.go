@@ -502,6 +502,7 @@ func (d *Devbox) GenerateDevcontainer(ctx context.Context, generateOpts devopt.G
 		IsDevcontainer: true,
 		Pkgs:           d.AllPackageNamesIncludingRemovedTriggerPackages(),
 		LocalFlakeDirs: d.getLocalFlakesDirs(),
+		ConfigFileName: d.cfg.Root.FileName(),
 	}
 
 	// generate dockerfile
@@ -541,6 +542,7 @@ func (d *Devbox) GenerateDockerfile(ctx context.Context, generateOpts devopt.Gen
 		IsDevcontainer: false,
 		Pkgs:           d.AllPackageNamesIncludingRemovedTriggerPackages(),
 		LocalFlakeDirs: d.getLocalFlakesDirs(),
+		ConfigFileName: d.cfg.Root.FileName(),
 	}
 
 	scripts := d.cfg.Scripts()
