@@ -278,6 +278,13 @@ func TestInfoSupportsFetchClosure(t *testing.T) {
 			want: false,
 		},
 		{
+			// A 2.95 prerelease has also dropped fetchClosure and must be
+			// treated as unsupported, even though semver sorts it below 2.95.0.
+			name: "lix 2.95 prerelease",
+			info: Info{Implementation: "Lix, like Nix", Version: "2.95.0-beta.1"},
+			want: false,
+		},
+		{
 			name: "lix after 2.95",
 			info: Info{Implementation: "Lix, like Nix", Version: "2.95.2"},
 			want: false,

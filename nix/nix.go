@@ -378,10 +378,14 @@ func (i Info) IsLix() bool {
 // cannot be determined, this returns true to avoid blocking on a false
 // positive.
 func (i Info) SupportsFetchClosure() bool {
-	if i.IsLix() {
-		return !i.AtLeast(LixVersionWithoutFetchClosure)
+	if !i.IsLix() {
+		return true
 	}
-	return true
+	// Compare against the lowest possible prerelease of the removal version
+	// (e.g. "2.95.0-0") so that Lix 2.95 prereleases, which have also dropped
+	// fetchClosure, are treated as unsupported. A plain "2.95.0" boundary would
+	// let them through, since semver sorts a prerelease below its release.
+	return !i.AtLeast(LixVersionWithoutFetchClosure + "-0")
 }
 
 // sourceProfileMutex guards against multiple goroutines attempting to source

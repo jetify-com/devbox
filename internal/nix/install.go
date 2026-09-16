@@ -88,11 +88,11 @@ func EnsureNixInstalled(ctx context.Context, writer io.Writer, withDaemonFunc fu
 		// "attribute 'fetchClosure' missing" error later on.
 		if info, infoErr := nix.Default.Info(); infoErr == nil && !info.SupportsFetchClosure() {
 			err = usererr.New(
-				"Devbox is not compatible with your Nix installation. Lix %s "+
-					"removed `builtins.fetchClosure`, which Devbox relies on to "+
-					"install packages. Please switch to Nix "+
-					"(https://nixos.org/download), or downgrade to Lix < %s.\n",
-				nix.Version(),
+				"Devbox is not compatible with your Nix installation (Lix %s). "+
+					"Lix removed `builtins.fetchClosure` in version %s, which "+
+					"Devbox relies on to install packages. Please switch to Nix "+
+					"(https://nixos.org/download), or downgrade to Lix < %[2]s.\n",
+				info.Version,
 				nix.LixVersionWithoutFetchClosure,
 			)
 			return
