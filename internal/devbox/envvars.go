@@ -89,11 +89,17 @@ func exportify(w io.Writer, vars map[string]string) string {
 			strb.WriteString("export ")
 			strb.WriteString(key)
 			strb.WriteString(`="`)
+			// Escape the characters that are special inside double quotes:
+			// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
+			//
+			// A newline is NOT special inside double quotes and must not be
+			// escaped. Writing a backslash before a newline produces a line
+			// continuation, which the shell removes entirely, joining adjacent
+			// lines together (e.g. a multi-line PROMPT_COMMAND would be silently
+			// mangled). Leaving the newline unescaped preserves it literally.
 			for _, r := range vars[key] {
 				switch r {
-				// Special characters inside double quotes:
-				// https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_02_03
-				case '$', '`', '"', '\\', '\n':
+				case '$', '`', '"', '\\':
 					strb.WriteRune('\\')
 				}
 				strb.WriteRune(r)
@@ -162,6 +168,22 @@ func exportifyNushell(w io.Writer, vars map[string]string) string {
 	}
 	warnInvalidEnvNames(w, invalidNames)
 	return strings.TrimSpace(strb.String())
+}
+
+// onlyModifiedEnvVars returns the subset of env whose values are new or differ
+// from the ambient environment. Variables whose value already matches the
+// ambient environment are omitted: re-exporting them is redundant, and at worst
+// it breaks `eval "$(devbox shellenv)"` when the user's shell marks some of
+// those variables read-only (e.g. PROFILEREAD on openSUSE, which produces
+// "read-only variable: PROFILEREAD"). See issue #2826.
+func onlyModifiedEnvVars(env, ambient map[string]string) map[string]string {
+	modified := make(map[string]string, len(env))
+	for key, val := range env {
+		if ambientVal, ok := ambient[key]; !ok || ambientVal != val {
+			modified[key] = val
+		}
+	}
+	return modified
 }
 
 // addEnvIfNotPreviouslySetByDevbox adds the key-value pairs from new to existing,

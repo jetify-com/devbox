@@ -378,6 +378,16 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 		return "", err
 	}
 
+	// For `devbox shellenv`, only emit the variables that Devbox actually adds
+	// or changes relative to the current shell. Re-exporting unrelated variables
+	// (e.g. HOSTNAME, LANG) is redundant, and can fail when the user's shell
+	// marks some of them read-only (e.g. PROFILEREAD on openSUSE). See #2826.
+	// In pure mode we keep the full environment, since the goal there is a
+	// complete, self-contained environment rather than a diff.
+	if opts.OnlyModifiedEnv && !opts.EnvOptions.Pure {
+		envs = onlyModifiedEnvVars(envs, envir.PairsToMap(os.Environ()))
+	}
+
 	// Use the appropriate export format based on shell type
 	var envStr string
 	if opts.ShellFormat == devopt.ShellFormatNushell {
@@ -819,6 +829,18 @@ func (d *Devbox) computeEnv(
 
 	slog.Debug("computed environment PATH", "path", env["PATH"])
 
+	// Expose the Devbox profile's share directory through XDG_DATA_DIRS so that
+	// data files installed by packages are discoverable inside the Devbox
+	// environment. Most notably this includes shell completions (which Nix
+	// packages install under share/bash-completion/completions), but also man
+	// pages, icons, and other XDG data. Tools such as bash-completion look these
+	// up via XDG_DATA_DIRS, so without the profile's share directory the
+	// completions shipped by packages like kubectl are never loaded. This is
+	// done even in --pure mode so completions keep working there too.
+	// See https://github.com/jetify-com/devbox/issues/2776
+	profileShareDir := filepath.Join(d.projectDir, nix.ProfilePath, "share")
+	env["XDG_DATA_DIRS"] = envpath.JoinPathLists(profileShareDir, env["XDG_DATA_DIRS"])
+
 	if !envOpts.Pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
 		env["XDG_DATA_DIRS"] = envpath.JoinPathLists(env["XDG_DATA_DIRS"], os.Getenv("XDG_DATA_DIRS"))
@@ -954,7 +976,8 @@ func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
 	}
 	if len(results) == 0 {
 		return nil, usererr.WithUserMessage(
-			searcher.ErrNotFound, "no package found with name %s", name)
+			searcher.ErrNotFound, "no package found with name %s", name,
+		)
 	}
 	return lo.Keys(results)[0], nil
 }
@@ -1009,7 +1032,17 @@ func (d *Devbox) configEnvs(
 	} else if d.cfg.Root.IsdotEnvEnabled() {
 		// if env_from points to a .env file, parse and add it
 		parsedEnvs, err := d.cfg.Root.ParseEnvsFromDotEnv()
-		if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			// A missing env_from file should not stop Devbox from enabling the
+			// environment. The referenced file is often untracked and may be
+			// created by a command in init_hook (e.g. `cp -n .env.example
+			// .env`). Warn and continue instead of erroring out. See #2504.
+			ux.Fwarningf(
+				d.stderr,
+				"Ignoring env_from directive: file %q does not exist.\n",
+				d.cfg.Root.EnvFrom,
+			)
+		} else if err != nil {
 			// it's fine to include the error ParseEnvsFromDotEnv here because
 			// the error message is relevant to the user
 			return nil, usererr.New(
@@ -1058,8 +1091,9 @@ var ignoreCurrentEnvVar = map[string]bool{
 // ignoreDevEnvVar contains environment variables that Devbox should remove from
 // the slice of [Devbox.PrintDevEnv] variables before sourcing them.
 //
-// This list comes directly from the "nix develop" source:
+// Most of this list comes directly from the "nix develop" source:
 // https://github.com/NixOS/nix/blob/f08ad5bdbac02167f7d9f5e7f9bab57cf1c5f8c4/src/nix/develop.cc#L257-L275
+// Entries not in that list are called out below.
 var ignoreDevEnvVar = map[string]bool{
 	"BASHOPTS":           true,
 	"HOME":               true,
@@ -1070,13 +1104,22 @@ var ignoreDevEnvVar = map[string]bool{
 	"PPID":               true,
 	"SHELL":              true,
 	"SHELLOPTS":          true,
-	"TEMP":               true,
-	"TEMPDIR":            true,
-	"TERM":               true,
-	"TMP":                true,
-	"TMPDIR":             true,
-	"TZ":                 true,
-	"UID":                true,
+
+	// SOURCE_DATE_EPOCH is set by the nixpkgs stdenv to a fixed timestamp
+	// (315532800 = 1980-01-01) for reproducible builds. Leaking it into the
+	// interactive shell makes timestamp-respecting tools (docker build, tar,
+	// gzip) stamp output with 1980 -- e.g. Docker images shown as created "45
+	// years ago". Ignore it like HOME/TMPDIR; users can still set it explicitly
+	// via devbox.json's env. See https://github.com/jetify-com/devbox/issues/2597.
+	"SOURCE_DATE_EPOCH": true,
+
+	"TEMP":    true,
+	"TEMPDIR": true,
+	"TERM":    true,
+	"TMP":     true,
+	"TMPDIR":  true,
+	"TZ":      true,
+	"UID":     true,
 }
 
 func (d *Devbox) ProjectDirHash() string {

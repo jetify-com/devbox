@@ -46,6 +46,10 @@ No need to take any action for this feature. When writing a devbox.json, if this
 
 ---
 
+### Run init_hook on Reopen
+
+By default, `"Devbox: Reopen in Devbox Shell environment"` does not run your project's `init_hook`, so any environment variables it exports won't be present in the reopened window. Enable `devbox.runInitHookOnReopen` in extension settings to run the `init_hook` and include the variables it sets. Requires a devbox CLI version that supports `devbox integrate vscode --run-init-hook`.
+
 ### Debug Mode
 
 Enabling debug mode in extension settings will create a sequence of logs in the file: `.devbox/extension.log`. This feature only tracks the logs for `"Devbox: Reopen in Devbox Shell environment"`.

@@ -1,8 +1,21 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "github:F1bonacc1/process-compose/v0.43.1": {},
-    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#cowsay": {},
-    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello": {}
+    "github:F1bonacc1/process-compose/v1.122.0": {
+      "last_modified": "2026-08-17T22:53:14Z",
+      "resolved": "github:F1bonacc1/process-compose/673850dd20683ef14b33890444ca3416d02c751c?lastModified=1787007194&narHash=sha256-zEhXgpQdg7WRJJPvhtK9zi4U6NJCDGKWjINlZ9m6I2A%3D"
+    },
+    "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62": {
+      "last_modified": "1970-01-01T00:00:00Z",
+      "resolved": "github:NixOS/nixpkgs/f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
+    },
+    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#cowsay": {
+      "last_modified": "1970-01-01T00:00:00Z",
+      "resolved": "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#cowsay"
+    },
+    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello": {
+      "last_modified": "1970-01-01T00:00:00Z",
+      "resolved": "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello"
+    }
   }
 }

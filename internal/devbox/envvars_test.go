@@ -9,6 +9,44 @@ import (
 	"testing"
 )
 
+func TestExportify(t *testing.T) {
+	tests := []struct {
+		name string
+		vars map[string]string
+		want string
+	}{
+		{
+			name: "simple value",
+			vars: map[string]string{"FOO": "bar"},
+			want: `export FOO="bar";`,
+		},
+		{
+			name: "escapes shell-special characters",
+			vars: map[string]string{"FOO": "a$b`c\"d\\e"},
+			want: `export FOO="a\$b\` + "`" + `c\"d\\e";`,
+		},
+		{
+			// Regression test for #2814: a multi-line value (e.g. a
+			// PROMPT_COMMAND set by bash-preexec) must keep its newlines
+			// literal. Escaping a newline with a backslash produces a line
+			// continuation that the shell removes, concatenating the lines and
+			// corrupting the value.
+			name: "preserves embedded newlines without escaping",
+			vars: map[string]string{"PROMPT_COMMAND": "__bp_precmd_invoke_cmd\ndbus-send >/dev/null 2>&1\n__bp_interactive_mode"},
+			want: "export PROMPT_COMMAND=\"__bp_precmd_invoke_cmd\ndbus-send >/dev/null 2>&1\n__bp_interactive_mode\";",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := exportify(io.Discard, tt.vars)
+			if got != tt.want {
+				t.Errorf("exportify() =\n%q\nwant\n%q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestIsValidEnvName(t *testing.T) {
 	valid := []string{"FOO", "_foo", "foo_BAR_123", "a", "_"}
 	for _, name := range valid {
@@ -43,6 +81,46 @@ func TestExportifySkipsInvalidNames(t *testing.T) {
 	for _, bad := range []string{"//", "//ccache", "bad.name", "1leading"} {
 		if strings.Contains(got, bad) {
 			t.Errorf("expected invalid name %q to be skipped, got:\n%s", bad, got)
+		}
+	}
+}
+
+// TestOnlyModifiedEnvVars ensures that variables identical to the ambient
+// environment are dropped while new or changed variables are kept. This is what
+// keeps `devbox shellenv` from re-exporting unrelated, possibly read-only
+// variables (see issue #2826).
+func TestOnlyModifiedEnvVars(t *testing.T) {
+	ambient := map[string]string{
+		"HOSTNAME":    "myhost",
+		"LANG":        "en_US.UTF-8",
+		"PROFILEREAD": "true",
+		"PATH":        "/usr/bin:/bin",
+	}
+	env := map[string]string{
+		"HOSTNAME":            "myhost",               // unchanged -> dropped
+		"LANG":                "en_US.UTF-8",          // unchanged -> dropped
+		"PROFILEREAD":         "true",                 // unchanged (read-only) -> dropped
+		"PATH":                "/devbox/bin:/usr/bin", // changed -> kept
+		"DEVBOX_PROJECT_ROOT": "/home/user/proj",      // new -> kept
+	}
+
+	got := onlyModifiedEnvVars(env, ambient)
+
+	want := map[string]string{
+		"PATH":                "/devbox/bin:/usr/bin",
+		"DEVBOX_PROJECT_ROOT": "/home/user/proj",
+	}
+	if len(got) != len(want) {
+		t.Fatalf("onlyModifiedEnvVars returned %d vars, want %d: %v", len(got), len(want), got)
+	}
+	for k, v := range want {
+		if got[k] != v {
+			t.Errorf("onlyModifiedEnvVars[%q] = %q, want %q", k, got[k], v)
+		}
+	}
+	for _, dropped := range []string{"HOSTNAME", "LANG", "PROFILEREAD"} {
+		if _, ok := got[dropped]; ok {
+			t.Errorf("expected unchanged var %q to be dropped, got:\n%v", dropped, got)
 		}
 	}
 }

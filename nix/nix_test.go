@@ -2,6 +2,7 @@
 package nix
 
 import (
+	"path/filepath"
 	"slices"
 	"testing"
 )
@@ -118,6 +119,11 @@ func TestParseVersionInfoShort(t *testing.T) {
 		{"nix (Nix) 2.23.0pre20240526_7de033d6", "nix", "2.23.0pre20240526_7de033d6"},
 		{"command (Nix) name (Nix) 2.21.2", "command (Nix) name", "2.21.2"},
 		{"nix (Lix, like Nix) 2.90.0-beta.1", "nix", "2.90.0-beta.1"},
+		// Nix builds that omit the patch component get it inserted so the
+		// version stays comparable as a semver. See
+		// https://github.com/jetify-com/devbox/issues/2766.
+		{"nix (Nix) 2.33pre20251107_479b6b73", "nix", "2.33.0pre20251107_479b6b73"},
+		{"nix (Nix) 2.33", "nix", "2.33.0"},
 	}
 
 	for _, tt := range cases {
@@ -190,6 +196,20 @@ func TestVersionInfoAtLeast(t *testing.T) {
 	}
 	if !info.AtLeast("2.23.0-pre.1") {
 		t.Errorf("got %s < %s", info.Version, "2.23.0-pre.1")
+	}
+
+	// https://github.com/jetify-com/devbox/issues/2766: a prerelease that
+	// omits the patch component is normalized to "2.33.0pre..." by parseInfo,
+	// which AtLeast must then treat as newer than the minimum version.
+	info.Version = "2.33.0pre20251107_479b6b73"
+	if !info.AtLeast(Version2_12) {
+		t.Errorf("got %s < %s", info.Version, Version2_12)
+	}
+	if !info.AtLeast(MinVersion) {
+		t.Errorf("got %s < %s", info.Version, MinVersion)
+	}
+	if info.AtLeast("2.34.0") {
+		t.Errorf("got %s >= %s", info.Version, "2.34.0")
 	}
 
 	t.Run("ArgEmptyPanic", func(t *testing.T) {
@@ -275,5 +295,27 @@ func TestInfoSupportsFetchClosure(t *testing.T) {
 				t.Errorf("SupportsFetchClosure() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestNixBinaryFallbackPaths(t *testing.T) {
+	paths := nixBinaryFallbackPaths()
+	if len(paths) == 0 {
+		t.Fatal("expected at least one fallback path")
+	}
+	// Every fallback must point at the nix binary itself, not a directory that
+	// contains it. resolvePath rejects directories, so a bare bin dir here
+	// would silently never match (regression guard for issue #2787).
+	for _, p := range paths {
+		if filepath.Base(p) != "nix" {
+			t.Errorf("fallback path %q must end in the nix binary, got base %q", p, filepath.Base(p))
+		}
+		if !filepath.IsAbs(p) {
+			t.Errorf("fallback path %q must be absolute", p)
+		}
+	}
+	// The NixOS system-profile location must be covered.
+	if !slices.Contains(paths, "/run/current-system/sw/bin/nix") {
+		t.Errorf("expected NixOS system-profile nix path in fallbacks, got %v", paths)
 	}
 }

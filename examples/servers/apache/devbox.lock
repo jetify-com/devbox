@@ -3,7 +3,7 @@
   "packages": {
     "apacheHttpd@2.4.58": {
       "last_modified": "2024-04-03T07:31:48Z",
-      "plugin_version": "0.0.2",
+      "plugin_version": "0.0.3",
       "resolved": "github:NixOS/nixpkgs/d03a4482228d4d6dbd2d4b425b6dfcd49ebe765f#apacheHttpd",
       "source": "devbox-search",
       "version": "2.4.58",

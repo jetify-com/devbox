@@ -98,6 +98,7 @@ func TestNewStack(t *testing.T) {
 						t.Errorf("env[%s] should be %s but is %s", k, v, env[k])
 					}
 				}
-			})
+			},
+		)
 	}
 }

@@ -28,9 +28,19 @@ devbox run <script>
 {{- if .Scripts }}
 ## Scripts
 Scripts are custom commands that can be run using this project's environment. This project has the following scripts:
-{{ range $name, $_ := .Scripts }}
-* [{{ $name }}](#devbox-run-{{ $name }})
+{{ range .Scripts }}
+* [{{ .Name }}](#devbox-run-{{ .Name }})
 {{- end }}
+{{ end }}
+
+{{- if .Services }}
+## Services
+Services are long-running processes (such as databases or web servers) provided by this project's packages and plugins. This project has the following services:
+{{ range $name, $_ := .Services }}
+* {{ $name }}
+{{- end }}
+
+Start all services with `devbox services up`, and stop them with `devbox services stop`. You can also target an individual service by name, for example `devbox services up <service>`. Run `devbox services ls` to list the services and their status.
 {{ end }}
 
 {{- if .EnvVars }}
@@ -61,13 +71,13 @@ on `devbox shell` and on `devbox run`.
 
 {{- if .Scripts }}
 ## Script Details
-{{ range $name, $commands := .Scripts }}
-### devbox run {{ $name }}
+{{ range .Scripts }}
+### devbox run {{ .Name }}
 {{- if .Comments }}
 {{ .Comments }}
 {{-  end }}
 ```sh
-{{ $commands }}
+{{ .Commands }}
 ```
 &ensp;
 {{ end }}

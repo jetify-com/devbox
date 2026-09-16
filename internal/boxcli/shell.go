@@ -47,9 +47,11 @@ func shellCmd(defaults shellFlagDefaults) *cobra.Command {
 	}
 
 	command.Flags().BoolVar(
-		&flags.printEnv, "print-env", false, "print script to setup shell environment")
+		&flags.printEnv, "print-env", false, "print script to setup shell environment",
+	)
 	command.Flags().BoolVar(
-		&flags.pure, "pure", false, "if this flag is specified, devbox creates an isolated shell inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.")
+		&flags.pure, "pure", false, "if this flag is specified, devbox creates an isolated shell inheriting almost no variables from the current environment. A few variables, in particular HOME, USER and DISPLAY, are retained.",
+	)
 	command.Flags().BoolVar(
 		&flags.omitNixEnv, "omit-nix-env", defaults.omitNixEnv,
 		"shell environment will omit the env-vars from print-dev-env",

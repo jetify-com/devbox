@@ -395,6 +395,34 @@ func (c *configAST) appendStringSliceField(name, fieldName string, fieldValues [
 	c.root.Format()
 }
 
+// objectKeysInOrder walks the AST to the object at the given path and returns
+// its member names in the order they appear in the file. It returns nil if the
+// path doesn't resolve to an object (for example, when the field is missing).
+func (c *configAST) objectKeysInOrder(path ...string) []string {
+	elem := c.root
+	for _, key := range path {
+		obj, ok := elem.Value.(*hujson.Object)
+		if !ok {
+			return nil
+		}
+		i := c.memberIndex(obj, key)
+		if i == -1 {
+			return nil
+		}
+		elem = obj.Members[i].Value
+	}
+
+	obj, ok := elem.Value.(*hujson.Object)
+	if !ok {
+		return nil
+	}
+	names := make([]string, 0, len(obj.Members))
+	for i := range obj.Members {
+		names = append(names, obj.Members[i].Name.Value.(hujson.Literal).String())
+	}
+	return names
+}
+
 func (c *configAST) beforeComment(path ...any) []byte {
 	elem := c.root
 	for _, pathItem := range path {

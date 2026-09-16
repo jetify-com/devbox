@@ -10,70 +10,55 @@
       "source": "nixpkg"
     },
     "vim@latest": {
-      "last_modified": "2024-02-10T18:15:24Z",
-      "resolved": "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#vim",
+      "last_modified": "2026-08-27T07:16:00Z",
+      "resolved": "github:NixOS/nixpkgs/c27cdad491a991b11ed731760aa2ef8db0cb0410#vim",
       "source": "devbox-search",
-      "version": "9.1.0004",
+      "version": "9.2.0782",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/y3vw3apw0m6imbcx1gznx7sk3mq70rmb-vim-9.1.0004",
+              "path": "/nix/store/rfxzm3f5bvmklmixndrd8l8ldcbklq9f-vim-9.2.0782",
               "default": true
             },
             {
               "name": "xxd",
-              "path": "/nix/store/060fknqjv1r0xgn4jdqwcvwnvbhqd0q6-vim-9.1.0004-xxd",
+              "path": "/nix/store/wl8qg4hjjkhnvvlrrc57mlriibk16b1x-vim-9.2.0782-xxd",
               "default": true
             }
           ],
-          "store_path": "/nix/store/y3vw3apw0m6imbcx1gznx7sk3mq70rmb-vim-9.1.0004"
+          "store_path": "/nix/store/rfxzm3f5bvmklmixndrd8l8ldcbklq9f-vim-9.2.0782"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/cfi77h8sy9sz9x3ry419b58yxv887csw-vim-9.1.0004",
+              "path": "/nix/store/z3g1dc5ldspc5ychmxcv7cnprfqza8p6-vim-9.2.0782",
               "default": true
             },
             {
               "name": "xxd",
-              "path": "/nix/store/9jfb25qxxfw3f3xqdn78zk9qfl8v5gpq-vim-9.1.0004-xxd",
+              "path": "/nix/store/89fnxqb797sy5plwix903gd79936p11k-vim-9.2.0782-xxd",
               "default": true
             }
           ],
-          "store_path": "/nix/store/cfi77h8sy9sz9x3ry419b58yxv887csw-vim-9.1.0004"
-        },
-        "x86_64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/ids4w90k9g87r942yrbqrfvqni2916fq-vim-9.1.0004",
-              "default": true
-            },
-            {
-              "name": "xxd",
-              "path": "/nix/store/dk9zj3v5hi0hwbl4gkc4aa2538zhf1j1-vim-9.1.0004-xxd",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/ids4w90k9g87r942yrbqrfvqni2916fq-vim-9.1.0004"
+          "store_path": "/nix/store/z3g1dc5ldspc5ychmxcv7cnprfqza8p6-vim-9.2.0782"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/4229601k0hwih452nf5qvzn9cgj50vab-vim-9.1.0004",
+              "path": "/nix/store/rw9gjjkfmgmcmpbi61nprm5nv68dh33g-vim-9.2.0782",
               "default": true
             },
             {
               "name": "xxd",
-              "path": "/nix/store/bw5bx2lkwpkvxy5bxzzrzjb607v6ja8p-vim-9.1.0004-xxd",
+              "path": "/nix/store/rzyk2adsiqfs705anlcirk0f2vnrffqp-vim-9.2.0782-xxd",
               "default": true
             }
           ],
-          "store_path": "/nix/store/4229601k0hwih452nf5qvzn9cgj50vab-vim-9.1.0004"
+          "store_path": "/nix/store/rw9gjjkfmgmcmpbi61nprm5nv68dh33g-vim-9.2.0782"
         }
       }
     }
