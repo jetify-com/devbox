@@ -39,7 +39,7 @@ type ConfigFile struct {
 	// Env allows specifying env variables
 	Env map[string]string `json:"env,omitempty"`
 
-	// Only allows "envsec" for now
+	// EnvFrom is the path to a .env file to load env variables from.
 	EnvFrom string `json:"env_from,omitempty"`
 
 	// Shell configures the devbox shell environment.
@@ -179,17 +179,19 @@ var whitespace = regexp.MustCompile(`\s`)
 
 func validateScripts(cfg *ConfigFile) error {
 	scripts := cfg.Scripts()
-	for k := range scripts {
-		if strings.TrimSpace(k) == "" {
+	for name := range scripts {
+		if strings.TrimSpace(name) == "" {
 			return errors.New("cannot have script with empty name in devbox.json")
 		}
-		if whitespace.MatchString(k) {
+		if whitespace.MatchString(name) {
 			return errors.Errorf(
-				"cannot have script name with whitespace in devbox.json: %s", k)
+				"cannot have script name with whitespace in devbox.json: %s", name,
+			)
 		}
-		if strings.TrimSpace(scripts[k].String()) == "" {
+		if strings.TrimSpace(scripts[name].String()) == "" {
 			return errors.Errorf(
-				"cannot have an empty script body in devbox.json: %s", k)
+				"cannot have an empty script body in devbox.json: %s", name,
+			)
 		}
 	}
 	return nil
@@ -202,11 +204,13 @@ func validateAliases(cfg *ConfigFile) error {
 		}
 		if whitespace.MatchString(name) {
 			return errors.Errorf(
-				"cannot have alias name with whitespace in devbox.json: %s", name)
+				"cannot have alias name with whitespace in devbox.json: %s", name,
+			)
 		}
 		if strings.TrimSpace(command) == "" {
 			return errors.Errorf(
-				"cannot have an empty alias command in devbox.json: %s", name)
+				"cannot have an empty alias command in devbox.json: %s", name,
+			)
 		}
 	}
 	return nil

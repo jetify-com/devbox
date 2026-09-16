@@ -56,25 +56,32 @@ func addCmd() *cobra.Command {
 	flags.config.register(command)
 	command.Flags().StringSliceVar(
 		&flags.allowInsecure, "allow-insecure", []string{},
-		"allow adding packages marked as insecure.")
+		"allow adding packages marked as insecure.",
+	)
 	command.Flags().BoolVar(
 		&flags.disablePlugin, "disable-plugin", false,
-		"disable plugin (if any) for this package.")
+		"disable plugin (if any) for this package.",
+	)
 	command.Flags().StringSliceVarP(
 		&flags.platforms, "platform", "p", []string{},
-		"add packages to run on only this platform.")
+		"add packages to run on only this platform.",
+	)
 	command.Flags().StringSliceVarP(
 		&flags.excludePlatforms, "exclude-platform", "e", []string{},
-		"exclude packages from a specific platform.")
+		"exclude packages from a specific platform.",
+	)
 	command.Flags().BoolVar(
 		&flags.patchGlibc, "patch-glibc", false,
-		"patch any ELF binaries to use the latest glibc version in nixpkgs")
+		"patch any ELF binaries to use the latest glibc version in nixpkgs",
+	)
 	command.Flags().StringVar(
 		&flags.patch, "patch", "auto",
-		"allow Devbox to patch the package to fix known issues (auto, always, never)")
+		"allow Devbox to patch the package to fix known issues (auto, always, never)",
+	)
 	command.Flags().StringSliceVarP(
 		&flags.outputs, "outputs", "o", []string{},
-		"specify the outputs to select for the nix package")
+		"specify the outputs to select for the nix package",
+	)
 
 	_ = command.Flags().MarkDeprecated("patch-glibc", `use --patch=always instead`)
 	command.MarkFlagsMutuallyExclusive("patch", "patch-glibc")

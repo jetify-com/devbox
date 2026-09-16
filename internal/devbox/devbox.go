@@ -32,7 +32,6 @@ import (
 	"go.jetify.com/devbox/internal/devbox/envpath"
 	"go.jetify.com/devbox/internal/devbox/generate"
 	"go.jetify.com/devbox/internal/devconfig"
-	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/devpkg/pkgtype"
 	"go.jetify.com/devbox/internal/envir"
@@ -377,6 +376,16 @@ func (d *Devbox) EnvExports(ctx context.Context, opts devopt.EnvExportsOpts) (st
 	envs, err = d.ensureStateIsUpToDateAndComputeEnv(ctx, opts.EnvOptions)
 	if err != nil {
 		return "", err
+	}
+
+	// For `devbox shellenv`, only emit the variables that Devbox actually adds
+	// or changes relative to the current shell. Re-exporting unrelated variables
+	// (e.g. HOSTNAME, LANG) is redundant, and can fail when the user's shell
+	// marks some of them read-only (e.g. PROFILEREAD on openSUSE). See #2826.
+	// In pure mode we keep the full environment, since the goal there is a
+	// complete, self-contained environment rather than a diff.
+	if opts.OnlyModifiedEnv && !opts.EnvOptions.Pure {
+		envs = onlyModifiedEnvVars(envs, envir.PairsToMap(os.Environ()))
 	}
 
 	// Use the appropriate export format based on shell type
@@ -758,7 +767,7 @@ func (d *Devbox) computeEnv(
 	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/" + nix.ProfilePath
 
 	// Include env variables in devbox.json
-	configEnv, err := d.configEnvs(ctx, env)
+	configEnv, err := d.configEnvs(env)
 	if err != nil {
 		return nil, err
 	}
@@ -819,6 +828,18 @@ func (d *Devbox) computeEnv(
 	slog.Debug("new path stack is", "path_stack", pathStack)
 
 	slog.Debug("computed environment PATH", "path", env["PATH"])
+
+	// Expose the Devbox profile's share directory through XDG_DATA_DIRS so that
+	// data files installed by packages are discoverable inside the Devbox
+	// environment. Most notably this includes shell completions (which Nix
+	// packages install under share/bash-completion/completions), but also man
+	// pages, icons, and other XDG data. Tools such as bash-completion look these
+	// up via XDG_DATA_DIRS, so without the profile's share directory the
+	// completions shipped by packages like kubectl are never loaded. This is
+	// done even in --pure mode so completions keep working there too.
+	// See https://github.com/jetify-com/devbox/issues/2776
+	profileShareDir := filepath.Join(d.projectDir, nix.ProfilePath, "share")
+	env["XDG_DATA_DIRS"] = envpath.JoinPathLists(profileShareDir, env["XDG_DATA_DIRS"])
 
 	if !envOpts.Pure {
 		// preserve the original XDG_DATA_DIRS by prepending to it
@@ -955,7 +976,8 @@ func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
 	}
 	if len(results) == 0 {
 		return nil, usererr.WithUserMessage(
-			searcher.ErrNotFound, "no package found with name %s", name)
+			searcher.ErrNotFound, "no package found with name %s", name,
+		)
 	}
 	return lo.Keys(results)[0], nil
 }
@@ -996,40 +1018,31 @@ func (d *Devbox) checkOldEnvrc() error {
 // allow env variables from outside the shell to be referenced so
 // no leaked variables are caused by this function.
 func (d *Devbox) configEnvs(
-	ctx context.Context,
 	existingEnv map[string]string,
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 	env := map[string]string{}
-	if d.cfg.IsEnvsecEnabled() {
-		secrets, err := d.Secrets(ctx)
-		// TODO: replace this with error.Is check once envsec exports it.
-		if err != nil && !strings.Contains(err.Error(), "project not initialized") {
-			return nil, err
-		} else if err != nil {
-			ux.Fwarningf(
-				d.stderr,
-				"Ignoring env_from directive. jetify cloud secrets is not "+
-					"initialized. Run `devbox secrets init` to initialize it.\n",
-			)
-		} else {
-			cloudSecrets, err := secrets.List(ctx)
-			if err != nil {
-				ux.Fwarningf(
-					os.Stderr,
-					"Error reading secrets from jetify cloud: %s\n\n",
-					err,
-				)
-			} else {
-				for _, secret := range cloudSecrets {
-					env[secret.Name] = secret.Value
-				}
-			}
-		}
+	if d.cfg.IsJetifyCloudEnvFrom() {
+		ux.Fwarningf(
+			d.stderr,
+			"Ignoring env_from = %q. Jetify Cloud secrets are no longer "+
+				"supported by Devbox.\n",
+			d.cfg.Root.EnvFrom,
+		)
 	} else if d.cfg.Root.IsdotEnvEnabled() {
 		// if env_from points to a .env file, parse and add it
 		parsedEnvs, err := d.cfg.Root.ParseEnvsFromDotEnv()
-		if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			// A missing env_from file should not stop Devbox from enabling the
+			// environment. The referenced file is often untracked and may be
+			// created by a command in init_hook (e.g. `cp -n .env.example
+			// .env`). Warn and continue instead of erroring out. See #2504.
+			ux.Fwarningf(
+				d.stderr,
+				"Ignoring env_from directive: file %q does not exist.\n",
+				d.cfg.Root.EnvFrom,
+			)
+		} else if err != nil {
 			// it's fine to include the error ParseEnvsFromDotEnv here because
 			// the error message is relevant to the user
 			return nil, usererr.New(
@@ -1043,9 +1056,8 @@ func (d *Devbox) configEnvs(
 		}
 	} else if d.cfg.Root.EnvFrom != "" {
 		return nil, usererr.New(
-			"unknown env_from value: %s. Supported values are: \"%q\" or a path to a file ending in \".env\"",
+			"unknown env_from value: %s. It must be a path to a file ending in \".env\"",
 			d.cfg.Root.EnvFrom,
-			configfile.JetifyCloudEnvFromValue,
 		)
 	}
 	for k, v := range d.cfg.Env() {
@@ -1079,8 +1091,9 @@ var ignoreCurrentEnvVar = map[string]bool{
 // ignoreDevEnvVar contains environment variables that Devbox should remove from
 // the slice of [Devbox.PrintDevEnv] variables before sourcing them.
 //
-// This list comes directly from the "nix develop" source:
+// Most of this list comes directly from the "nix develop" source:
 // https://github.com/NixOS/nix/blob/f08ad5bdbac02167f7d9f5e7f9bab57cf1c5f8c4/src/nix/develop.cc#L257-L275
+// Entries not in that list are called out below.
 var ignoreDevEnvVar = map[string]bool{
 	"BASHOPTS":           true,
 	"HOME":               true,
@@ -1091,13 +1104,22 @@ var ignoreDevEnvVar = map[string]bool{
 	"PPID":               true,
 	"SHELL":              true,
 	"SHELLOPTS":          true,
-	"TEMP":               true,
-	"TEMPDIR":            true,
-	"TERM":               true,
-	"TMP":                true,
-	"TMPDIR":             true,
-	"TZ":                 true,
-	"UID":                true,
+
+	// SOURCE_DATE_EPOCH is set by the nixpkgs stdenv to a fixed timestamp
+	// (315532800 = 1980-01-01) for reproducible builds. Leaking it into the
+	// interactive shell makes timestamp-respecting tools (docker build, tar,
+	// gzip) stamp output with 1980 -- e.g. Docker images shown as created "45
+	// years ago". Ignore it like HOME/TMPDIR; users can still set it explicitly
+	// via devbox.json's env. See https://github.com/jetify-com/devbox/issues/2597.
+	"SOURCE_DATE_EPOCH": true,
+
+	"TEMP":    true,
+	"TEMPDIR": true,
+	"TERM":    true,
+	"TMP":     true,
+	"TMPDIR":  true,
+	"TZ":      true,
+	"UID":     true,
 }
 
 func (d *Devbox) ProjectDirHash() string {

@@ -16,18 +16,46 @@ import (
 	"github.com/mattn/go-isatty"
 
 	"go.jetify.com/devbox/internal/boxcli/usererr"
-	"go.jetify.com/devbox/internal/cmdutil"
-	"go.jetify.com/devbox/internal/fileutil"
 	"go.jetify.com/devbox/nix"
 )
 
 func BinaryInstalled() bool {
-	return cmdutil.Exists("nix")
+	// Use the same resolver that Devbox uses to run nix commands (searching
+	// $PATH and well-known install locations), rather than a bare $PATH lookup.
+	// Otherwise Devbox can wrongly report nix as missing when it exists at a
+	// known location but isn't on $PATH — e.g. on NixOS, or when a non-POSIX
+	// login shell such as fish hasn't sourced the Nix profile (issue #2787).
+	_, err := nix.Default.LookPath()
+	return err == nil
 }
 
-func dirExistsAndIsNotEmpty(dir string) bool {
-	empty, err := fileutil.IsDirEmpty(dir)
-	return err == nil && !empty
+// nonNixDirEntries are directory entries that can appear inside /nix without
+// indicating an existing Nix installation. Container and VM users commonly
+// mount an otherwise-empty volume at /nix, and many filesystems (for example
+// ext4) create a lost+found directory at the root of such a mount. A /nix that
+// contains only these entries should still be treated as a fresh install
+// target rather than a broken installation.
+var nonNixDirEntries = map[string]bool{
+	"lost+found": true,
+	".DS_Store":  true,
+}
+
+// nixDirIsInstalled reports whether dir looks like it already contains a Nix
+// installation. It returns false when dir is missing, empty, or contains only
+// filesystem cruft (see nonNixDirEntries) so that Devbox installs Nix into a
+// freshly mounted /nix volume instead of reporting a broken installation.
+// See https://github.com/jetify-com/devbox/issues/2601.
+func nixDirIsInstalled(dir string) bool {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return false
+	}
+	for _, entry := range entries {
+		if !nonNixDirEntries[entry.Name()] {
+			return true
+		}
+	}
+	return false
 }
 
 var ensured = false
@@ -58,7 +86,7 @@ func EnsureNixInstalled(ctx context.Context, writer io.Writer, withDaemonFunc fu
 	if BinaryInstalled() {
 		return nil
 	}
-	if dirExistsAndIsNotEmpty("/nix") {
+	if nixDirIsInstalled("/nix") {
 		if _, err = SourceProfile(); err != nil {
 			return err
 		} else if BinaryInstalled() {

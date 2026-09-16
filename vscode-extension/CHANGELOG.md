@@ -4,6 +4,10 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.9]
+
+- Added `devbox.runInitHookOnReopen` setting (off by default) to run the project's `init_hook` and include its environment variables when reopening in the Devbox environment.
+
 ## [0.1.8]
 
 - Added support "Reopen in Devbox" feature for Windows with WSL

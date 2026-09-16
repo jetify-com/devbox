@@ -90,9 +90,11 @@ func devcontainerCmd() *cobra.Command {
 		},
 	}
 	command.Flags().BoolVarP(
-		&flags.force, "force", "f", false, "force overwrite on existing files")
+		&flags.force, "force", "f", false, "force overwrite on existing files",
+	)
 	command.Flags().BoolVar(
-		&flags.rootUser, "root-user", false, "Use root as default user inside the container")
+		&flags.rootUser, "root-user", false, "Use root as default user inside the container",
+	)
 	return command
 }
 
@@ -122,12 +124,15 @@ func dockerfileCmd() *cobra.Command {
 	}
 	command.Flags().StringVar(
 		&flags.forType, "for", "dev",
-		"Generate Dockerfile for a specific type of container (dev, prod)")
+		"Generate Dockerfile for a specific type of container (dev, prod)",
+	)
 	command.Flag("for").Hidden = true
 	command.Flags().BoolVarP(
-		&flags.force, "force", "f", false, "force overwrite existing files")
+		&flags.force, "force", "f", false, "force overwrite existing files",
+	)
 	command.Flags().BoolVar(
-		&flags.rootUser, "root-user", false, "Use root as default user inside the container")
+		&flags.rootUser, "root-user", false, "Use root as default user inside the container",
+	)
 	flags.config.register(command)
 	return command
 }
@@ -146,10 +151,12 @@ func direnvCmd() *cobra.Command {
 	}
 	flags.envFlag.register(command)
 	command.Flags().BoolVarP(
-		&flags.force, "force", "f", false, "force overwrite existing files")
+		&flags.force, "force", "f", false, "force overwrite existing files",
+	)
 	command.Flags().BoolVarP(
 		&flags.printEnvrcContent, "print-envrc", "p", false,
-		"output contents of devbox configuration to use in .envrc")
+		"output contents of devbox configuration to use in .envrc",
+	)
 	// this command marks a flag as hidden. Error handling for it is not necessary.
 	_ = command.Flags().MarkHidden("print-envrc")
 
@@ -162,7 +169,8 @@ func direnvCmd() *cobra.Command {
 		&flags.envrcDir, "envrc-dir", "",
 		"path to directory where the .envrc file should be generated.\n"+
 			"If not specified, the .envrc file will be generated in the same directory as\n"+
-			"the devbox.json.")
+			"the devbox.json.",
+	)
 
 	flags.config.register(command)
 	return command
@@ -196,9 +204,11 @@ func genReadmeCmd() *cobra.Command {
 	}
 	flags.config.register(command)
 	command.Flags().BoolVar(
-		&flags.saveTemplate, "save-template", false, "Save default template for the README file")
+		&flags.saveTemplate, "save-template", false, "Save default template for the README file",
+	)
 	command.Flags().StringVarP(
-		&flags.template, "template", "t", "", "Path to a custom template for the README file")
+		&flags.template, "template", "t", "", "Path to a custom template for the README file",
+	)
 
 	return command
 }
@@ -215,7 +225,8 @@ func genAliasCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if flags.prefix != "" && flags.noPrefix {
 				return usererr.New(
-					"Cannot use both --prefix and --no-prefix flags together")
+					"Cannot use both --prefix and --no-prefix flags together",
+				)
 			}
 			box, err := devbox.Open(&devopt.Opts{
 				Dir:    flags.config.path,
@@ -229,7 +240,8 @@ func genAliasCmd() *cobra.Command {
 			if prefix == "" && !flags.noPrefix {
 				return usererr.New(
 					"To generate aliases, you must specify a prefix, set a name " +
-						"in devbox.json, or use the --no-prefix flag.")
+						"in devbox.json, or use the --no-prefix flag.",
+				)
 			}
 			prefix = re.ReplaceAllString(prefix, "-")
 			for _, script := range box.ListScripts() {
@@ -247,10 +259,12 @@ func genAliasCmd() *cobra.Command {
 	}
 	flags.config.register(command)
 	command.Flags().StringVarP(
-		&flags.prefix, "prefix", "p", "", "Prefix for the generated aliases")
+		&flags.prefix, "prefix", "p", "", "Prefix for the generated aliases",
+	)
 	command.Flags().BoolVar(
 		&flags.noPrefix, "no-prefix", false,
-		"Do not use a prefix for the generated aliases")
+		"Do not use a prefix for the generated aliases",
+	)
 
 	return command
 }
@@ -284,12 +298,14 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	if flags.printEnvrcContent && flags.envrcDir != "" {
 		return usererr.New(
 			"Cannot use --print-envrc with --envrc-dir. " +
-				"Use --envrc-dir to specify the directory where the .envrc file should be generated.")
+				"Use --envrc-dir to specify the directory where the .envrc file should be generated.",
+		)
 	}
 
 	if flags.printEnvrcContent {
 		return devbox.PrintEnvrcContent(
-			cmd.OutOrStdout(), devopt.EnvFlags(flags.envFlag), flags.config.path)
+			cmd.OutOrStdout(), devopt.EnvFlags(flags.envFlag), flags.config.path,
+		)
 	}
 
 	box, err := devbox.Open(&devopt.Opts{

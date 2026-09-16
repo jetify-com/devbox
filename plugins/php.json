@@ -11,11 +11,13 @@
     "PHPFPM_ERROR_LOG_FILE": "{{ .Virtenv }}/php-fpm.log",
     "PHPFPM_PID_FILE": "{{ .Virtenv }}/php-fpm.pid",
     "PHPFPM_PORT": "8082",
-    "PHPRC": "{{ .DevboxDir }}"
+    "PHPRC": "{{ .DevboxDir }}",
+    "PHPFPM_SESSIONDIR": "{{ .Virtenv }}/sessions"
   },
   "create_files": {
     "{{ .DevboxDir }}/php-fpm.conf": "php/php-fpm.conf",
     "{{ .DevboxDir }}/php.ini": "php/php.ini",
+    "{{ .Virtenv }}/sessions": "",
     "{{ .Virtenv }}/process-compose.yaml": "php/process-compose.yaml",
     "{{ .Virtenv }}/flake/flake.nix": "php/flake.nix"
   }
