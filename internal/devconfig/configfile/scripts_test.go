@@ -111,3 +111,74 @@ func TestScriptsInOrderCarriesCommands(t *testing.T) {
 	require.NotNil(t, ordered[0].Commands)
 	assert.Equal(t, "echo hello\necho world", ordered[0].Commands.String())
 }
+
+func TestScriptOrderTopLevelScripts(t *testing.T) {
+	config := []byte(`{
+		"scripts": {
+			"step-one": "echo one",
+			"step-two": "echo two",
+			"step-three": "echo three"
+		}
+	}`)
+
+	cfg, err := LoadBytes(config)
+	require.NoError(t, err)
+
+	assert.Equal(t,
+		[]string{"step-one", "step-two", "step-three"},
+		cfg.ScriptOrder(),
+	)
+	assert.Equal(t,
+		[]string{"step-one", "step-two", "step-three"},
+		scriptNames(cfg.Scripts().InOrder(cfg.ScriptOrder())),
+	)
+}
+
+func TestScriptOrderMergesLegacyAndTopLevelScripts(t *testing.T) {
+	// Legacy shell.scripts come first, then top-level scripts. A script
+	// defined in both places takes the top-level position, matching the
+	// precedence in Scripts().
+	config := []byte(`{
+		"shell": {
+			"scripts": {
+				"legacy-a": "echo a",
+				"shared": "echo legacy",
+				"legacy-b": "echo b"
+			}
+		},
+		"scripts": {
+			"modern-a": "echo a",
+			"shared": "echo modern",
+			"modern-b": "echo b"
+		}
+	}`)
+
+	cfg, err := LoadBytes(config)
+	require.NoError(t, err)
+
+	ordered := cfg.Scripts().InOrder(cfg.ScriptOrder())
+	assert.Equal(t,
+		[]string{"legacy-a", "legacy-b", "modern-a", "shared", "modern-b"},
+		scriptNames(ordered),
+	)
+	assert.Equal(t, []string{"echo modern"}, ordered[3].Commands.Cmds)
+}
+
+func TestScriptOrderAfterMigrateShell(t *testing.T) {
+	config := []byte(`{
+		"shell": {
+			"scripts": {
+				"zeta": "echo z",
+				"alpha": "echo a"
+			}
+		}
+	}`)
+
+	cfg, err := LoadBytes(config)
+	require.NoError(t, err)
+	cfg.MigrateShell()
+
+	assert.Equal(t, []string{"zeta", "alpha"}, cfg.ScriptOrder())
+	assert.Equal(t, []string{"zeta", "alpha"},
+		scriptNames(cfg.Scripts().InOrder(cfg.ScriptOrder())))
+}
