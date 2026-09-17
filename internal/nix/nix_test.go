@@ -1,6 +1,7 @@
 package nix
 
 import (
+	"os/exec"
 	"testing"
 )
 
@@ -66,5 +67,24 @@ func TestParseInsecurePackagesFromExitError(t *testing.T) {
 	}
 	if packages[0] != "python-2.7.18.7" {
 		t.Errorf("Expected package 'python-2.7.18.7', got %s", packages[0])
+	}
+}
+
+func TestIsExitErrorInsecurePackageMissingPackageName(t *testing.T) {
+	// Simulate an exit error whose stderr contains "is marked as insecure"
+	// but lacks the expected "Package <name>" prefix. This defends against
+	// a panic when the regex match is empty in CI/build environments.
+	cmd := exec.Command("sh", "-c", `echo "error: something is marked as insecure, refusing to evaluate." >&2; exit 1`)
+	err := cmd.Run()
+	if err == nil {
+		t.Fatal("expected a command error")
+	}
+
+	insecure, errOut := IsExitErrorInsecurePackage(err, "", "")
+	if insecure {
+		t.Error("expected insecure=false when package name is missing")
+	}
+	if errOut != nil {
+		t.Errorf("expected nil error, got %v", errOut)
 	}
 }
