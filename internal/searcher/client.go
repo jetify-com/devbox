@@ -18,7 +18,7 @@ import (
 	"go.jetify.com/devbox/internal/redact"
 )
 
-const searchAPIEndpoint = "https://search.devbox.sh"
+const searchAPIEndpoint = "https://www.nixsearch.com"
 
 var ErrNotFound = errors.New("Not found")
 

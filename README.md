@@ -185,6 +185,8 @@ Devbox is an opensource project, so contributions are always welcome. Please rea
 
 [Devbox development readme](devbox.md)
 
+[Package Search API](SEARCH_API.md)
+
 ## Related Work
 
 Thanks to [Nix](https://nixos.org/) for providing isolated shells.
