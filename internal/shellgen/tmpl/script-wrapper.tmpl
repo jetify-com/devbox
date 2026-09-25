@@ -3,8 +3,10 @@
     hooks once, even if the init hook calls devbox run again. This will also
     protect against using devbox service in the init hook.
 
-    Scripts always use sh to run, so POSIX is OK. We don't (yet) support fish
-    scripts. (though users can run a fish script within their script)
+    Scripts run with bash when it's available (falling back to POSIX sh), so
+    that they behave the same as init hooks do inside `devbox shell`. We don't
+    (yet) support fish scripts. (though users can run a fish script within their
+    script)
 */ -}}
 
 if [ -z "${{ .SkipInitHookHash }}" ]; then

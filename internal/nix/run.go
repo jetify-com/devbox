@@ -24,9 +24,7 @@ func RunScript(projectDir, cmdWithArgs string, env map[string]string) error {
 		envPairs = append(envPairs, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	// Try to find sh in the PATH, if not, default to a well known absolute path.
-	shPath := cmdutil.GetPathOrDefault("sh", "/bin/sh")
-	cmd := exec.Command(shPath, "-c", cmdWithArgs)
+	cmd := exec.Command(scriptRunnerPath(), "-c", cmdWithArgs)
 	cmd.Env = envPairs
 	cmd.Dir = projectDir
 	cmd.Stdin = os.Stdin
@@ -36,4 +34,29 @@ func RunScript(projectDir, cmdWithArgs string, env map[string]string) error {
 	slog.Debug("executing script", "cmd", cmd.Args)
 	// Report error as exec error when executing scripts.
 	return usererr.NewExecError(cmd.Run())
+}
+
+// scriptRunnerPath returns the shell used to execute Devbox scripts and init
+// hooks. It prefers bash so that scripts run with `devbox run` behave the same
+// as they do inside `devbox shell`, which sources the init hooks from the
+// user's interactive shell (usually bash). Init hooks commonly rely on bash
+// features such as the `source` builtin, which POSIX sh implementations like
+// dash don't provide. We fall back to `sh` (and finally a well-known absolute
+// path) when bash isn't available.
+// See https://github.com/jetify-com/devbox/issues/2607
+func scriptRunnerPath() string {
+	// Prefer bash on PATH.
+	if bashPath := cmdutil.GetPathOrDefault("bash", ""); bashPath != "" {
+		return bashPath
+	}
+	// bash may be installed at a well-known location even when it isn't on
+	// PATH (e.g. a restricted environment where PATH doesn't include /bin or
+	// /usr/bin). Check those before giving up on bash.
+	for _, p := range []string{"/bin/bash", "/usr/bin/bash", "/usr/local/bin/bash"} {
+		if fi, err := os.Stat(p); err == nil && !fi.IsDir() {
+			return p
+		}
+	}
+	// Fall back to POSIX sh.
+	return cmdutil.GetPathOrDefault("sh", "/bin/sh")
 }
