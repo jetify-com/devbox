@@ -95,8 +95,36 @@
                 }
             }
         },
+        "init_hook": {
+            "description": "List of shell commands/scripts to run right after devbox shell starts.",
+            "type": [
+                "array",
+                "string"
+            ],
+            "items": {
+                "type": "string"
+            }
+        },
+        "scripts": {
+            "description": "List of command/script definitions to run with `devbox run <script_name>`.",
+            "type": "object",
+            "patternProperties": {
+                ".*": {
+                    "description": "Alias name for the script.",
+                    "type": [
+                        "array",
+                        "string"
+                    ],
+                    "items": {
+                        "type": "string",
+                        "description": "The script's shell commands."
+                    }
+                }
+            }
+        },
         "shell": {
-            "description": "Definitions of scripts and actions to take when in devbox shell.",
+            "deprecated": true,
+            "description": "Deprecated: use the top-level init_hook and scripts fields instead. Run `devbox config fmt` to migrate.",
             "type": "object",
             "properties": {
                 "init_hook": {

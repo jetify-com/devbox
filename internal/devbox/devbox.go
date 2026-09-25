@@ -73,7 +73,10 @@ type Devbox struct {
 	packagesBeingUpdated []*devpkg.Package
 }
 
-var legacyPackagesWarningHasBeenShown = false
+var (
+	legacyPackagesWarningHasBeenShown  = false
+	deprecatedShellWarningHasBeenShown = false
+)
 
 func InitConfig(dir string) error {
 	_, err := devconfig.Init(dir)
@@ -123,6 +126,22 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		pluginManager:            plugin.NewManager(),
 		stderr:                   opts.Stderr,
 		customProcessComposeFile: opts.CustomProcessComposeFile,
+	}
+
+	if !opts.IgnoreWarnings &&
+		!deprecatedShellWarningHasBeenShown &&
+		cfg.Root.UsesDeprecatedShellField() {
+		deprecatedShellWarningHasBeenShown = true
+		stderr := box.stderr
+		if stderr == nil {
+			stderr = os.Stderr
+		}
+		ux.Fwarning(
+			stderr,
+			`The "shell" field in devbox.json is deprecated and will be removed in `+
+				"an upcoming version. Move init_hook and scripts to the top level, "+
+				"or run `devbox config fmt` to migrate automatically.\n",
+		)
 	}
 
 	lock, err := lock.GetFile(box)
