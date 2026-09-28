@@ -114,8 +114,10 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	if opts.Stderr != nil {
 		stderr = opts.Stderr
 	}
-	if err := vercheck.CheckProjectVersion(stderr, cfg.Root.AbsRootPath, cfg.Root.DevboxVersion); err != nil {
-		return nil, err
+	if !opts.SkipVersionCheck {
+		if err := vercheck.CheckProjectVersion(stderr, cfg.Root.AbsRootPath, cfg.Root.DevboxVersion); err != nil {
+			return nil, err
+		}
 	}
 
 	environment, err := validateEnvironment(opts.Environment)

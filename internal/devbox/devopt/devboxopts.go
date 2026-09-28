@@ -15,6 +15,11 @@ type Opts struct {
 	IgnoreWarnings           bool
 	CustomProcessComposeFile string
 	Stderr                   io.Writer
+
+	// SkipVersionCheck skips enforcing devbox_version. Set it when opening a
+	// project incidentally (e.g. for telemetry or shell completion) rather
+	// than to run the user's command.
+	SkipVersionCheck bool
 }
 
 type ProcessComposeOpts struct {

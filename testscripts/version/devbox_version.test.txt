@@ -15,12 +15,23 @@ stderr 'you are running 0.0.0-dev'
 exists README.md
 rm README.md
 
+# Commands that don't use the project don't check its devbox_version.
+exec devbox version
+! stderr 'requires devbox'
+
 # The error policy fails the command.
 cp error.json devbox.json
 ! exec devbox generate readme
 stderr 'This project requires devbox 0.1.0'
 stderr 'DEVBOX_USE_VERSION=0.1.0'
 ! exists README.md
+
+# Listing scripts reports the error instead of ignoring it.
+! exec devbox run --list
+stderr 'This project requires devbox 0.1.0'
+
+exec devbox version
+! stderr 'requires devbox'
 
 # DEVBOX_VERSION_POLICY overrides the policy in devbox.json.
 env DEVBOX_VERSION_POLICY=off
