@@ -25,12 +25,16 @@ const (
 	VersionPolicyWarn VersionPolicy = "warn"
 	// VersionPolicyError fails the command.
 	VersionPolicyError VersionPolicy = "error"
+	// VersionPolicyAuto re-runs the command with the required devbox version
+	// using the devbox launcher. It requires an exact version.
+	VersionPolicyAuto VersionPolicy = "auto"
 )
 
 // ConfigVersionPolicies are the values allowed for devbox_version.on_mismatch.
 var ConfigVersionPolicies = []VersionPolicy{
 	VersionPolicyWarn,
 	VersionPolicyError,
+	VersionPolicyAuto,
 }
 
 // DevboxVersion is the devbox_version field of devbox.json. It is either a
@@ -40,7 +44,7 @@ var ConfigVersionPolicies = []VersionPolicy{
 //
 // or an object with an explicit policy:
 //
-//	"devbox_version": {"version": "0.18.4", "on_mismatch": "error"}
+//	"devbox_version": {"version": "0.18.4", "on_mismatch": "auto"}
 type DevboxVersion struct {
 	// Version is a semver constraint (e.g. "0.18.4", "^0.18.0",
 	// ">=0.17.0 <0.19.0") that the running devbox version must satisfy.
@@ -115,9 +119,17 @@ func validateDevboxVersion(cfg *ConfigFile) error {
 	}
 	if required.OnMismatch != "" && !slices.Contains(ConfigVersionPolicies, required.OnMismatch) {
 		return usererr.New(
-			"Invalid devbox_version.on_mismatch %q in devbox.json. Valid values are %q and %q.",
-			required.OnMismatch, VersionPolicyWarn, VersionPolicyError,
+			"Invalid devbox_version.on_mismatch %q in devbox.json. Valid values are %q, %q, and %q.",
+			required.OnMismatch, VersionPolicyWarn, VersionPolicyError, VersionPolicyAuto,
 		)
+	}
+	if required.OnMismatch == VersionPolicyAuto {
+		if _, ok := required.ExactVersion(); !ok {
+			return usererr.New(
+				"devbox_version.on_mismatch %q requires an exact version like \"0.18.4\", but devbox.json has %q.",
+				VersionPolicyAuto, required.Version,
+			)
+		}
 	}
 	return nil
 }
@@ -130,7 +142,7 @@ func ParseVersionPolicy(s string) (VersionPolicy, error) {
 		return p, nil
 	}
 	return "", errors.Errorf(
-		"invalid policy %q: valid values are %q, %q, and %q",
-		s, VersionPolicyOff, VersionPolicyWarn, VersionPolicyError,
+		"invalid policy %q: valid values are %q, %q, %q, and %q",
+		s, VersionPolicyOff, VersionPolicyWarn, VersionPolicyError, VersionPolicyAuto,
 	)
 }

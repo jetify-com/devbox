@@ -1,0 +1,52 @@
+# Verify that the "auto" devbox_version policy re-runs the command through the
+# devbox launcher with DEVBOX_USE_VERSION set to the required version.
+#
+# Development builds skip the check, so DEVBOX_PROD forces a production build.
+# Its version is still 0.0.0-dev, which doesn't match 0.1.0. A fake launcher
+# script stands in for the real one and prints what it was asked to run.
+
+env DEVBOX_PROD=1
+chmod 755 launcher.sh
+cp auto.json devbox.json
+
+# With a launcher, devbox re-runs the same command with the required version.
+env LAUNCHER_PATH=$WORK/launcher.sh
+exec devbox generate readme
+stdout 'launcher DEVBOX_USE_VERSION=0.1.0 args=generate readme'
+! exists README.md
+
+# Without a launcher, devbox can't switch and fails.
+env LAUNCHER_PATH=
+! exec devbox generate readme
+stderr 'This project requires devbox 0.1.0'
+stderr 'wasn''t started by the devbox launcher'
+
+# A DEVBOX_USE_VERSION set by the user wins over the auto policy.
+env LAUNCHER_PATH=$WORK/launcher.sh
+env DEVBOX_USE_VERSION=0.0.0-dev
+exec devbox generate readme
+stderr 'Not switching versions automatically because DEVBOX_USE_VERSION=0.0.0-dev is set'
+! stdout 'launcher'
+exists README.md
+env DEVBOX_USE_VERSION=
+
+# on_mismatch "auto" requires an exact version.
+cp range.json devbox.json
+! exec devbox generate readme
+stderr 'requires an exact version'
+
+-- launcher.sh --
+#!/bin/sh
+echo "launcher DEVBOX_USE_VERSION=$DEVBOX_USE_VERSION args=$*"
+
+-- auto.json --
+{
+  "devbox_version": {"version": "0.1.0", "on_mismatch": "auto"},
+  "packages": []
+}
+
+-- range.json --
+{
+  "devbox_version": {"version": "^0.1.0", "on_mismatch": "auto"},
+  "packages": []
+}
