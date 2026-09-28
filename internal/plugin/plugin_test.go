@@ -152,13 +152,13 @@ func TestUpdateLockfileVersion(t *testing.T) {
 		{name: "keeps existing version", locked: "0.0.1", overwrite: false, want: "0.0.1"},
 		{name: "overwrites existing version", locked: "0.0.1", overwrite: true, want: "0.0.2"},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			lockfile, err := lock.GetFile(lockProjectForTest{dir: t.TempDir()})
 			require.NoError(t, err)
 			lockfile.Packages["nodejs@22"] = &lock.Package{
 				Resolved:      "github:NixOS/nixpkgs/abc#nodejs_22",
-				PluginVersion: tt.locked,
+				PluginVersion: test.locked,
 			}
 
 			cfg := &Config{
@@ -168,8 +168,8 @@ func TestUpdateLockfileVersion(t *testing.T) {
 				},
 			}
 			m := NewManager(WithLockfile(lockfile))
-			require.NoError(t, m.UpdateLockfileVersion(cfg, tt.overwrite))
-			assert.Equal(t, tt.want, lockfile.Packages["nodejs@22"].PluginVersion)
+			require.NoError(t, m.UpdateLockfileVersion(cfg, test.overwrite))
+			assert.Equal(t, test.want, lockfile.Packages["nodejs@22"].PluginVersion)
 		})
 	}
 }
