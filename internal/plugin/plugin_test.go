@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/nix/flake"
 )
 
@@ -125,4 +126,50 @@ func TestBuildConfigTemplatePlaceholders(t *testing.T) {
 		renderedByContent["d"],
 		"Virtenv should be <projectDir>/.devbox/virtenv/<plugin.name>",
 	)
+}
+
+// lockProjectForTest is a minimal lock.File project rooted at dir.
+type lockProjectForTest struct{ dir string }
+
+func (p lockProjectForTest) ConfigHash() (string, error) { return "", nil }
+func (p lockProjectForTest) Stdenv() flake.Ref           { return flake.Ref{} }
+func (p lockProjectForTest) ProjectDir() string          { return p.dir }
+func (p lockProjectForTest) AllPackageNamesIncludingRemovedTriggerPackages() []string {
+	return nil
+}
+
+// TestUpdateLockfileVersion verifies that an existing plugin_version is only
+// overwritten when requested, so that running a different Devbox version (which
+// embeds different built-in plugin versions) doesn't rewrite devbox.lock.
+func TestUpdateLockfileVersion(t *testing.T) {
+	tests := []struct {
+		name      string
+		locked    string
+		overwrite bool
+		want      string
+	}{
+		{name: "fills missing version", locked: "", overwrite: false, want: "0.0.2"},
+		{name: "keeps existing version", locked: "0.0.1", overwrite: false, want: "0.0.1"},
+		{name: "overwrites existing version", locked: "0.0.1", overwrite: true, want: "0.0.2"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			lockfile, err := lock.GetFile(lockProjectForTest{dir: t.TempDir()})
+			require.NoError(t, err)
+			lockfile.Packages["nodejs@22"] = &lock.Package{
+				Resolved:      "github:NixOS/nixpkgs/abc#nodejs_22",
+				PluginVersion: test.locked,
+			}
+
+			cfg := &Config{
+				PluginOnlyData: PluginOnlyData{
+					Source:  fakeIncludable{name: "nodejs@22"},
+					Version: "0.0.2",
+				},
+			}
+			m := NewManager(WithLockfile(lockfile))
+			require.NoError(t, m.UpdateLockfileVersion(cfg, test.overwrite))
+			assert.Equal(t, test.want, lockfile.Packages["nodejs@22"].PluginVersion)
+		})
+	}
 }
