@@ -358,12 +358,12 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		)
 	}
 
-	return d.updateLockfile(recomputeState)
+	return d.updateLockfile(mode, recomputeState)
 }
 
 // updateLockfile will ensure devbox.lock is up to date with the current state of the project.update
 // If recomputeState is true, then we will also update the state.json file.
-func (d *Devbox) updateLockfile(recomputeState bool) error {
+func (d *Devbox) updateLockfile(mode installMode, recomputeState bool) error {
 	// Ensure we clean out packages that are no longer needed.
 	d.lockfile.Tidy()
 
@@ -374,9 +374,11 @@ func (d *Devbox) updateLockfile(recomputeState bool) error {
 		}
 	}
 
-	// Update plugin versions in lockfile.
+	// Update plugin versions in lockfile. In ensure mode (shell, run, install)
+	// only fill in missing versions; changing an existing version is left to
+	// commands that are expected to modify the lockfile (add, rm, update).
 	for _, pluginConfig := range d.Config().IncludedPluginConfigs() {
-		if err := d.PluginManager().UpdateLockfileVersion(pluginConfig); err != nil {
+		if err := d.PluginManager().UpdateLockfileVersion(pluginConfig, mode != ensure); err != nil {
 			return err
 		}
 	}

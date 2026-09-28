@@ -170,12 +170,19 @@ func (m *Manager) CreateFilesForConfig(cfg *Config) error {
 	return nil
 }
 
-func (m *Manager) UpdateLockfileVersion(cfg *Config) error {
+// UpdateLockfileVersion records the plugin's version in the lockfile. An
+// existing version is only replaced when overwrite is true, so that commands
+// which aren't meant to modify devbox.lock (shell, run, install) don't rewrite
+// it just because the running Devbox embeds a newer or older built-in plugin.
+func (m *Manager) UpdateLockfileVersion(cfg *Config, overwrite bool) error {
 	pkg := cfg.Source
 	locked := m.lockfile.Packages[pkg.LockfileKey()]
 	// plugins that are not triggered by packages don't have a lockfile entry
 	// this may change if we decide to store all plugins in the lockfile
 	if locked == nil {
+		return nil
+	}
+	if locked.PluginVersion != "" && !overwrite {
 		return nil
 	}
 	locked.PluginVersion = cfg.Version
