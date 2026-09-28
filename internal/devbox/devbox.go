@@ -45,6 +45,7 @@ import (
 	"go.jetify.com/devbox/internal/shellgen"
 	"go.jetify.com/devbox/internal/telemetry"
 	"go.jetify.com/devbox/internal/ux"
+	"go.jetify.com/devbox/internal/vercheck"
 	"go.jetify.com/devbox/nix/flake"
 )
 
@@ -107,6 +108,16 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	}
 	if err != nil {
 		return nil, usererr.WithUserMessage(err, "Error loading devbox.json.")
+	}
+
+	var stderr io.Writer = os.Stderr
+	if opts.Stderr != nil {
+		stderr = opts.Stderr
+	}
+	if !opts.SkipVersionCheck {
+		if err := vercheck.CheckProjectVersion(stderr, cfg.Root.AbsRootPath, cfg.Root.DevboxVersion); err != nil {
+			return nil, err
+		}
 	}
 
 	environment, err := validateEnvironment(opts.Environment)

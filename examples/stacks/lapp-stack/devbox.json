@@ -22,7 +22,7 @@
         "mkdir -p /tmp/devbox/lapp", 
         "initdb",
         "devbox services up -b",
-        "echo 'sleep 5 second for the postgres server to initialize.' && sleep 5",
+        "echo 'Waiting for the postgres server to accept connections...' && for i in $(seq 1 30); do pg_isready -q && break; sleep 1; done && pg_isready",
         "cat .devbox/compose.log",
         "dropdb --if-exists devbox_lapp",
         "createdb devbox_lapp",
