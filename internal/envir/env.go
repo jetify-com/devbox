@@ -18,7 +18,12 @@ const (
 	DevboxSearchHost     = "DEVBOX_SEARCH_HOST"
 	DevboxShellEnabled   = "DEVBOX_SHELL_ENABLED"
 	DevboxShellStartTime = "DEVBOX_SHELL_START_TIME"
-	DevboxVM             = "DEVBOX_VM"
+	// DevboxUseVersion tells the launcher which devbox version to run.
+	DevboxUseVersion = "DEVBOX_USE_VERSION"
+	// DevboxVersionPolicy overrides the devbox_version.on_mismatch policy in
+	// devbox.json. Valid values are "off", "warn", and "error".
+	DevboxVersionPolicy = "DEVBOX_VERSION_POLICY"
+	DevboxVM            = "DEVBOX_VM"
 
 	LauncherVersion = "LAUNCHER_VERSION"
 	LauncherPath    = "LAUNCHER_PATH"

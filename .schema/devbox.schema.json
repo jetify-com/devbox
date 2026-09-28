@@ -17,6 +17,31 @@
             "description": "A description of the Devbox development environment.",
             "type": "string"
         },
+        "devbox_version": {
+            "description": "The devbox version (or semver constraint) this project requires, such as \"0.18.4\" or \"^0.18.0\". By default, running a different version prints a warning.",
+            "oneOf": [
+                {
+                    "type": "string",
+                    "description": "A devbox version or semver constraint. A mismatch prints a warning."
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "version": {
+                            "type": "string",
+                            "description": "A devbox version or semver constraint, such as \"0.18.4\" or \"^0.18.0\"."
+                        },
+                        "on_mismatch": {
+                            "type": "string",
+                            "description": "What to do when the running devbox version doesn't satisfy the constraint. \"warn\" prints a warning (default) and \"error\" fails the command.",
+                            "enum": ["warn", "error"]
+                        }
+                    },
+                    "required": ["version"],
+                    "additionalProperties": false
+                }
+            ]
+        },
         "packages": {
             "description": "Collection of packages to install",
             "oneOf": [

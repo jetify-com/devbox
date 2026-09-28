@@ -1,0 +1,64 @@
+# Verify that devbox enforces the devbox_version field in devbox.json.
+#
+# Development builds skip the check, so DEVBOX_PROD forces a production build.
+# Its version is still 0.0.0-dev, which doesn't satisfy >=0.1.0.
+# `devbox generate readme` is used because it loads the project config without
+# needing Nix.
+
+env DEVBOX_PROD=1
+
+# The default policy warns and continues.
+cp warn.json devbox.json
+exec devbox generate readme
+stderr 'Warning: This project requires devbox >=0.1.0'
+stderr 'you are running 0.0.0-dev'
+exists README.md
+rm README.md
+
+# The error policy fails the command.
+cp error.json devbox.json
+! exec devbox generate readme
+stderr 'This project requires devbox 0.1.0'
+stderr 'DEVBOX_USE_VERSION=0.1.0'
+! exists README.md
+
+# DEVBOX_VERSION_POLICY overrides the policy in devbox.json.
+env DEVBOX_VERSION_POLICY=off
+exec devbox generate readme
+! stderr 'requires devbox'
+exists README.md
+env DEVBOX_VERSION_POLICY=
+
+# A satisfied constraint is silent.
+cp satisfied.json devbox.json
+exec devbox generate readme
+! stderr 'requires devbox'
+
+# An invalid constraint is a config error.
+cp invalid.json devbox.json
+! exec devbox generate readme
+stderr 'Invalid devbox_version "latest"'
+
+-- warn.json --
+{
+  "devbox_version": ">=0.1.0",
+  "packages": []
+}
+
+-- error.json --
+{
+  "devbox_version": {"version": "0.1.0", "on_mismatch": "error"},
+  "packages": []
+}
+
+-- satisfied.json --
+{
+  "devbox_version": {"version": "0.0.0-dev", "on_mismatch": "error"},
+  "packages": []
+}
+
+-- invalid.json --
+{
+  "devbox_version": "latest",
+  "packages": []
+}

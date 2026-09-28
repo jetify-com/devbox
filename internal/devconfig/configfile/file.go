@@ -43,6 +43,10 @@ type ConfigFile struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 
+	// DevboxVersion constrains which devbox versions can be used with this
+	// project and what happens when the running version doesn't match.
+	DevboxVersion *DevboxVersion `json:"devbox_version,omitempty"`
+
 	// PackagesMutator is the slice of Nix packages that devbox makes available in
 	// its environment. Deliberately do not omitempty.
 	PackagesMutator PackagesMutator `json:"packages"`
@@ -188,6 +192,7 @@ func validateConfig(cfg *ConfigFile) error {
 		ValidateNixpkg,
 		validateScripts,
 		validateAliases,
+		validateDevboxVersion,
 	}
 
 	for _, fn := range fns {

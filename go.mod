@@ -5,6 +5,7 @@ go 1.26.1
 require (
 	al.essio.dev/pkg/shellescape v1.6.0
 	github.com/AlecAivazis/survey/v2 v2.3.7
+	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/bmatcuk/doublestar/v4 v4.9.1
 	github.com/briandowns/spinner v1.23.2
 	github.com/denisbrodbeck/machineid v1.0.1
@@ -57,7 +58,6 @@ require (
 	github.com/ClickHouse/clickhouse-go-linter v1.2.1 // indirect
 	github.com/Djarvur/go-err113 v0.1.1 // indirect
 	github.com/InVisionApp/go-logger v1.0.1 // indirect
-	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/MirrexOne/unqueryvet v1.5.4 // indirect
 	github.com/OpenPeeDeeP/depguard/v2 v2.2.1 // indirect
 	github.com/STARRY-S/zip v0.2.3 // indirect
