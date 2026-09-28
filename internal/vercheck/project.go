@@ -57,7 +57,7 @@ func CheckProjectVersion(w io.Writer, configPath string, required *configfile.De
 		return nil
 	}
 
-	msg := mismatchMessage(configPath, required)
+	msg := mismatchMessage(configPath, required, constraint)
 	if policy == configfile.VersionPolicyError {
 		return usererr.New("%s", msg)
 	}
@@ -68,7 +68,7 @@ func CheckProjectVersion(w io.Writer, configPath string, required *configfile.De
 	return os.Setenv(warnedEnvName, configPath)
 }
 
-func mismatchMessage(configPath string, required *configfile.DevboxVersion) string {
+func mismatchMessage(configPath string, required *configfile.DevboxVersion, constraint *semver.Constraints) string {
 	var msg strings.Builder
 	fmt.Fprintf(
 		&msg,
@@ -77,13 +77,24 @@ func mismatchMessage(configPath string, required *configfile.DevboxVersion) stri
 	)
 	if exact, ok := required.ExactVersion(); ok {
 		fmt.Fprintf(&msg, "Set %s=%s to run the required version.", envir.DevboxUseVersion, exact)
-	} else {
+	} else if latestSatisfies(constraint) {
 		fmt.Fprintf(
 			&msg,
 			"Run `devbox version update`, or set %s to a version that satisfies %q.",
 			envir.DevboxUseVersion, required.Version,
 		)
+	} else {
+		fmt.Fprintf(&msg, "Set %s to a version that satisfies %q.", envir.DevboxUseVersion, required.Version)
 	}
 	fmt.Fprintf(&msg, " To skip this check, set %s=off.", envir.DevboxVersionPolicy)
 	return msg.String()
+}
+
+// latestSatisfies reports whether the latest devbox release satisfies
+// constraint, meaning `devbox version update` would fix a mismatch. It's false
+// when the latest version is unknown or when the constraint excludes it (for
+// example, an upper bound that the running version is already past).
+func latestSatisfies(constraint *semver.Constraints) bool {
+	latest, err := semver.NewVersion(latestVersion())
+	return err == nil && constraint.Check(latest)
 }

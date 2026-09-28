@@ -28,6 +28,7 @@ func setupProjectVersionTest(t *testing.T, version string) {
 	isDevBuild = false
 
 	t.Setenv(envir.DevboxVersionPolicy, "")
+	t.Setenv(envir.DevboxLatestVersion, "")
 	t.Setenv(warnedEnvName, "")
 	t.Cleanup(func() { os.Unsetenv(warnedEnvName) })
 }
@@ -71,6 +72,7 @@ func TestCheckProjectVersionSkipsDevBuild(t *testing.T) {
 
 func TestCheckProjectVersionWarn(t *testing.T) {
 	setupProjectVersionTest(t, "0.17.2")
+	t.Setenv(envir.DevboxLatestVersion, "0.18.4")
 	required := &configfile.DevboxVersion{Version: "^0.18.0"}
 
 	buf := new(bytes.Buffer)
@@ -87,6 +89,34 @@ func TestCheckProjectVersionWarn(t *testing.T) {
 	// A different project still warns.
 	require.NoError(t, CheckProjectVersion(buf, "/other/devbox.json", required))
 	assert.Contains(t, buf.String(), "requires devbox ^0.18.0")
+}
+
+func TestCheckProjectVersionUpdateSuggestion(t *testing.T) {
+	required := &configfile.DevboxVersion{Version: ">=0.17.0 <0.19.0", OnMismatch: configfile.VersionPolicyError}
+
+	t.Run("latest_satisfies", func(t *testing.T) {
+		setupProjectVersionTest(t, "0.16.0")
+		t.Setenv(envir.DevboxLatestVersion, "0.18.4")
+		err := CheckProjectVersion(new(bytes.Buffer), testConfigPath, required)
+		assert.ErrorContains(t, err, "devbox version update")
+	})
+
+	// Updating can't go backwards, so don't suggest it when the running
+	// version is already past the constraint's upper bound.
+	t.Run("too_new", func(t *testing.T) {
+		setupProjectVersionTest(t, "0.20.0")
+		t.Setenv(envir.DevboxLatestVersion, "0.20.0")
+		err := CheckProjectVersion(new(bytes.Buffer), testConfigPath, required)
+		require.ErrorContains(t, err, "DEVBOX_USE_VERSION")
+		assert.NotContains(t, err.Error(), "devbox version update")
+	})
+
+	t.Run("latest_unknown", func(t *testing.T) {
+		setupProjectVersionTest(t, "0.16.0")
+		err := CheckProjectVersion(new(bytes.Buffer), testConfigPath, required)
+		require.ErrorContains(t, err, "DEVBOX_USE_VERSION")
+		assert.NotContains(t, err.Error(), "devbox version update")
+	})
 }
 
 func TestCheckProjectVersionError(t *testing.T) {
