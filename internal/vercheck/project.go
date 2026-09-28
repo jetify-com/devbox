@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"syscall"
 
 	"github.com/Masterminds/semver/v3"
 
@@ -23,9 +24,19 @@ import (
 // print the same warning again.
 const warnedEnvName = "__DEVBOX_VERSION_MISMATCH_WARNED"
 
+// autoVersionEnvName records the version that the "auto" policy switched to.
+// It distinguishes a DEVBOX_USE_VERSION set by the auto policy from one the
+// user set, and stops re-exec loops if the launcher doesn't switch versions.
+const autoVersionEnvName = "__DEVBOX_AUTO_VERSION"
+
+// execFunc replaces the current process. We use this variable so that we can
+// mock it in tests.
+var execFunc = syscall.Exec
+
 // CheckProjectVersion enforces the devbox_version field of the devbox.json at
 // configPath against the running devbox version. Depending on the policy, a
-// mismatch prints a warning or returns an error. The DEVBOX_VERSION_POLICY
+// mismatch prints a warning, returns an error, or re-runs the current command
+// with the required version (which doesn't return). The DEVBOX_VERSION_POLICY
 // environment variable overrides the policy in devbox.json.
 func CheckProjectVersion(w io.Writer, configPath string, required *configfile.DevboxVersion) error {
 	if required == nil || isDevBuild {
@@ -58,14 +69,91 @@ func CheckProjectVersion(w io.Writer, configPath string, required *configfile.De
 	}
 
 	msg := mismatchMessage(configPath, required, constraint)
-	if policy == configfile.VersionPolicyError {
+	switch policy {
+	case configfile.VersionPolicyError:
 		return usererr.New("%s", msg)
+	case configfile.VersionPolicyAuto:
+		return switchVersion(w, configPath, required, msg)
+	default:
+		return warnOnce(w, configPath, msg)
 	}
+}
+
+// switchVersion re-runs the current command with the exact version required
+// by devbox_version. It uses the devbox launcher, which downloads the version
+// if needed and runs the version named by DEVBOX_USE_VERSION.
+func switchVersion(w io.Writer, configPath string, required *configfile.DevboxVersion, msg string) error {
+	target, ok := required.ExactVersion()
+	if !ok {
+		// Only possible with DEVBOX_VERSION_POLICY=auto, since devbox.json
+		// validation rejects on_mismatch "auto" with a range.
+		return usererr.New(
+			"%s\nDevbox can't switch versions automatically because devbox_version is %q, not an exact version like \"0.18.4\".",
+			msg, required.Version,
+		)
+	}
+
+	// Respect a version the user chose explicitly.
+	autoVersion := os.Getenv(autoVersionEnvName)
+	if useVersion := os.Getenv(envir.DevboxUseVersion); useVersion != "" && useVersion != autoVersion {
+		return warnOnce(w, configPath, fmt.Sprintf(
+			"%s\nNot switching versions automatically because %s=%s is set.",
+			msg, envir.DevboxUseVersion, useVersion,
+		))
+	}
+
+	if autoVersion == target {
+		return usererr.New(
+			"%s\nDevbox tried to switch to version %s automatically, but the launcher ran version %s instead.",
+			msg, target, currentDevboxVersion,
+		)
+	}
+
+	launcher := os.Getenv(envir.LauncherPath)
+	if launcher == "" {
+		return usererr.New(
+			"%s\nDevbox can't switch versions automatically because it wasn't started by the devbox launcher. "+
+				"Install devbox with `curl -fsSL https://get.jetify.com/devbox | bash` to enable automatic switching.",
+			msg,
+		)
+	}
+
+	slog.Debug("switching devbox version for devbox_version", "from", currentDevboxVersion, "to", target, "launcher", launcher)
+	env := withEnv(os.Environ(), map[string]string{
+		envir.DevboxUseVersion: target,
+		autoVersionEnvName:     target,
+	})
+	args := append([]string{launcher}, os.Args[1:]...)
+	if err := execFunc(launcher, args, env); err != nil {
+		return usererr.WithUserMessage(err, "Failed to switch to devbox version %s using the launcher at %s.", target, launcher)
+	}
+	return nil
+}
+
+// warnOnce prints msg as a warning unless it was already printed for the
+// project at configPath by this process or a parent devbox process.
+func warnOnce(w io.Writer, configPath, msg string) error {
 	if os.Getenv(warnedEnvName) == configPath {
 		return nil
 	}
 	ux.Fwarningf(w, "%s\n", msg)
 	return os.Setenv(warnedEnvName, configPath)
+}
+
+// withEnv returns environ with the variables in vars set, replacing any
+// existing values.
+func withEnv(environ []string, vars map[string]string) []string {
+	result := make([]string, 0, len(environ)+len(vars))
+	for _, kv := range environ {
+		name, _, _ := strings.Cut(kv, "=")
+		if _, ok := vars[name]; !ok {
+			result = append(result, kv)
+		}
+	}
+	for name, value := range vars {
+		result = append(result, name+"="+value)
+	}
+	return result
 }
 
 func mismatchMessage(configPath string, required *configfile.DevboxVersion, constraint *semver.Constraints) string {

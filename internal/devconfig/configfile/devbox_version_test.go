@@ -57,6 +57,8 @@ func TestDevboxVersionValidation(t *testing.T) {
 		`"0.18.x"`,
 		`"0.17.2 || ^0.18.0"`,
 		`{"version": "0.18.4", "on_mismatch": "warn"}`,
+		`{"version": "0.18.4", "on_mismatch": "auto"}`,
+		`{"version": "v0.18.4", "on_mismatch": "auto"}`,
 	}
 	for _, v := range valid {
 		t.Run(v, func(t *testing.T) {
@@ -73,6 +75,9 @@ func TestDevboxVersionValidation(t *testing.T) {
 		`{"on_mismatch": "error"}`,
 		`{"version": "0.18.4", "on_mismatch": "explode"}`,
 		`{"version": "0.18.4", "on_mismatch": "off"}`,
+		`{"version": "^0.18.0", "on_mismatch": "auto"}`,
+		`{"version": "0.18.x", "on_mismatch": "auto"}`,
+		`{"version": "0.18", "on_mismatch": "auto"}`,
 	}
 	for _, v := range invalid {
 		t.Run(v, func(t *testing.T) {
@@ -106,7 +111,7 @@ func TestDevboxVersionExactVersion(t *testing.T) {
 }
 
 func TestParseVersionPolicy(t *testing.T) {
-	for _, s := range []string{"off", "warn", "error", " WARN "} {
+	for _, s := range []string{"off", "warn", "error", "auto", " WARN "} {
 		_, err := ParseVersionPolicy(s)
 		assert.NoError(t, err, s)
 	}

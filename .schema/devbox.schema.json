@@ -33,8 +33,8 @@
                         },
                         "on_mismatch": {
                             "type": "string",
-                            "description": "What to do when the running devbox version doesn't satisfy the constraint. \"warn\" prints a warning (default) and \"error\" fails the command.",
-                            "enum": ["warn", "error"]
+                            "description": "What to do when the running devbox version doesn't satisfy the constraint. \"warn\" prints a warning (default), \"error\" fails the command, and \"auto\" re-runs the command with the required version (requires an exact version).",
+                            "enum": ["warn", "error", "auto"]
                         }
                     },
                     "required": ["version"],
