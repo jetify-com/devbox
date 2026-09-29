@@ -106,7 +106,8 @@ func WriteScriptFile(devbox devboxer, name, body string) (err error) {
 	defer script.Close() // best effort: close file
 
 	if featureflag.ScriptExitOnError.Enabled() {
-		// NOTE: Devbox scripts run using `sh` for consistency.
+		// NOTE: Devbox scripts run using bash when available (see
+		// nix.scriptRunnerPath), falling back to POSIX sh; `set -e` works in both.
 		body = fmt.Sprintf("set -e\n\n%s", body)
 	}
 	_, err = script.WriteString(body)
