@@ -1,6 +1,9 @@
 package configfile
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -10,6 +13,12 @@ import (
 
 // TestJsonifyConfigPackages tests the jsonMarshal and jsonUnmarshal of the Config.Packages field
 func TestJsonifyConfigPackages(t *testing.T) {
+	fileVersionContent := "1.20\n"
+	tmpFileVersion := filepath.Join(t.TempDir(), "version")
+	if err := os.WriteFile(tmpFileVersion, []byte(fileVersionContent), 0o644); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+
 	testCases := []struct {
 		name       string
 		jsonConfig string
@@ -46,7 +55,16 @@ func TestJsonifyConfigPackages(t *testing.T) {
 				},
 			},
 		},
-
+		{
+			name:       "map-with-file-value",
+			jsonConfig: fmt.Sprintf(`{"packages":{"python":"latest","go":"%s"}}`, tmpFileVersion),
+			expected: PackagesMutator{
+				collection: []Package{
+					NewVersionOnlyPackage("python", "latest"),
+					NewVersionOnlyPackage("go", "1.20"),
+				},
+			},
+		},
 		{
 			name:       "map-with-struct-value",
 			jsonConfig: `{"packages":{"python":{"version":"latest"}}}`,
@@ -231,6 +249,110 @@ func diffPackages(t *testing.T, got, want PackagesMutator) string {
 	t.Helper()
 
 	return cmp.Diff(want, got, cmpopts.IgnoreUnexported(PackagesMutator{}, Package{}))
+}
+
+func TestVersionFromFile(t *testing.T) {
+	testCases := []struct {
+		name            string
+		fileContent     string
+		expectedVersion string
+	}{
+		{
+			name:            "semver",
+			fileContent:     "1.2.3",
+			expectedVersion: "1.2.3",
+		},
+		{
+			name:            "semver-with-newline",
+			fileContent:     "1.2.3\n",
+			expectedVersion: "1.2.3",
+		},
+		{
+			name:            "semver-with-whitespace",
+			fileContent:     "  1.2.3  \n",
+			expectedVersion: "1.2.3",
+		},
+		{
+			name:            "v-prefix",
+			fileContent:     "v1.2.3\n",
+			expectedVersion: "1.2.3",
+		},
+		{
+			name:            "semver-pre-release",
+			fileContent:     "1.0.0-alpha\n",
+			expectedVersion: "1.0.0-alpha",
+		},
+		{
+			name:            "semver-pre-release-dotted",
+			fileContent:     "1.0.0-alpha.1\n",
+			expectedVersion: "1.0.0-alpha.1",
+		},
+		{
+			name:            "semver-pre-release-numeric",
+			fileContent:     "1.0.0-0.3.7\n",
+			expectedVersion: "1.0.0-0.3.7",
+		},
+		{
+			name:            "semver-build-metadata",
+			fileContent:     "1.0.0+build.123\n",
+			expectedVersion: "1.0.0+build.123",
+		},
+		{
+			name:            "semver-pre-release-and-build",
+			fileContent:     "1.0.0-beta.1+build.456\n",
+			expectedVersion: "1.0.0-beta.1+build.456",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run("string-value-"+testCase.name, func(t *testing.T) {
+			tmpFile := filepath.Join(t.TempDir(), "version")
+			if err := os.WriteFile(tmpFile, []byte(testCase.fileContent), 0o644); err != nil {
+				t.Fatalf("failed to write temp file: %v", err)
+			}
+
+			version := resolveVersionFromFile(tmpFile)
+
+			if version != testCase.expectedVersion {
+				t.Errorf("version: expected %q, got %q", testCase.expectedVersion, version)
+			}
+		})
+	}
+}
+
+func TestInvalidVersionFromFile(t *testing.T) {
+	t.Run("no-file", func(t *testing.T) {
+		tmpFile := "nonexistent"
+		version := resolveVersionFromFile(tmpFile)
+
+		if tmpFile != version {
+			t.Errorf("version: expected %q, got %q", tmpFile, version)
+		}
+	})
+
+	t.Run("no-version-in-file", func(t *testing.T) {
+		fileContent := "hello world\n"
+		tmpFile := filepath.Join(t.TempDir(), "version")
+		if err := os.WriteFile(tmpFile, []byte(fileContent), 0o644); err != nil {
+			t.Fatalf("failed to write temp file: %v", err)
+		}
+
+		version := resolveVersionFromFile(tmpFile)
+
+		if tmpFile != version {
+			t.Errorf("version: expected %q, got %q", tmpFile, version)
+		}
+	})
+
+	t.Run("directory-not-treated-as-file", func(t *testing.T) {
+		dir := t.TempDir()
+
+		version := resolveVersionFromFile(dir)
+
+		if dir != version {
+			t.Errorf("version: expected %q, got %q", dir, version)
+		}
+	})
 }
 
 func TestParseVersionedName(t *testing.T) {
