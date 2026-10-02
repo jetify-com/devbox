@@ -120,6 +120,68 @@ func TestComputeDevboxPathWhenRemoving(t *testing.T) {
 	assert.NotEqual(t, path, path2, "path should not be the same")
 }
 
+// testNixVars is a nix.Nixer mock whose PrintDevEnv returns a configurable set
+// of exported variables. Used to exercise how computeEnv layers the Nix
+// dev-env on top of the ambient environment.
+type testNixVars struct {
+	vars map[string]string
+}
+
+func (n *testNixVars) PrintDevEnv(ctx context.Context, args *nix.PrintDevEnvArgs) (*nix.PrintDevEnvOut, error) {
+	variables := map[string]nix.Variable{}
+	for k, v := range n.vars {
+		variables[k] = nix.Variable{Type: "exported", Value: v}
+	}
+	return &nix.PrintDevEnvOut{Variables: variables}, nil
+}
+
+func TestPreserveUserSSLCertFiles(t *testing.T) {
+	const userBundle = "/Library/Application Support/Netskope/STAgent/data/nscacert_combined.pem"
+	const nixBundle = "/nix/store/abc-nss-cacert-3.108/etc/ssl/certs/ca-bundle.crt"
+
+	t.Run("restores user value when set", func(t *testing.T) {
+		env := map[string]string{"NIX_SSL_CERT_FILE": nixBundle, "SSL_CERT_FILE": nixBundle}
+		userEnv := map[string]string{"NIX_SSL_CERT_FILE": userBundle, "SSL_CERT_FILE": userBundle}
+		preserveUserSSLCertFiles(env, userEnv)
+		assert.Equal(t, userBundle, env["NIX_SSL_CERT_FILE"])
+		assert.Equal(t, userBundle, env["SSL_CERT_FILE"])
+	})
+
+	t.Run("keeps nix value when user did not set one", func(t *testing.T) {
+		env := map[string]string{"NIX_SSL_CERT_FILE": nixBundle}
+		preserveUserSSLCertFiles(env, map[string]string{})
+		assert.Equal(t, nixBundle, env["NIX_SSL_CERT_FILE"])
+	})
+
+	t.Run("ignores empty user value", func(t *testing.T) {
+		env := map[string]string{"NIX_SSL_CERT_FILE": nixBundle}
+		preserveUserSSLCertFiles(env, map[string]string{"NIX_SSL_CERT_FILE": ""})
+		assert.Equal(t, nixBundle, env["NIX_SSL_CERT_FILE"])
+	})
+}
+
+// TestComputeEnvPreservesUserSSLCertFile is a regression test for
+// jetify-com/devbox#2604: adding a package that pulls in nss-cacert (e.g.
+// httpie) must not clobber a NIX_SSL_CERT_FILE the user set in their own
+// environment (e.g. a corporate MITM CA bundle).
+func TestComputeEnvPreservesUserSSLCertFile(t *testing.T) {
+	const userBundle = "/Library/Application Support/Netskope/STAgent/data/nscacert_combined.pem"
+	const nixBundle = "/nix/store/abc-nss-cacert-3.108/etc/ssl/certs/ca-bundle.crt"
+
+	d := devboxForTesting(t)
+	d.nix = &testNixVars{vars: map[string]string{
+		"PATH":              "/tmp/my/path",
+		"NIX_SSL_CERT_FILE": nixBundle,
+	}}
+
+	t.Setenv("NIX_SSL_CERT_FILE", userBundle)
+
+	env, err := d.computeEnv(t.Context(), false /*use cache*/, devopt.EnvOptions{})
+	require.NoError(t, err, "computeEnv should not fail")
+	assert.Equal(t, userBundle, env["NIX_SSL_CERT_FILE"],
+		"the user's NIX_SSL_CERT_FILE should win over the nix dev-env value")
+}
+
 func devboxForTesting(t *testing.T) *Devbox {
 	path := t.TempDir()
 	_, err := devconfig.Init(path)
