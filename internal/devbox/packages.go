@@ -133,6 +133,14 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			// about not building on the current system, since user's can continue
 			// via --exclude-platform flag.
 			packageNameForConfig = pkg.Versioned()
+		} else if errors.Is(err, nix.ErrPackageNotFound) &&
+			!strings.Contains(pkg.CanonicalName(), ".") {
+			// Search indexes all top-level nixpkgs packages, so falling back to
+			// nixpkgs (which requires a slow download) won't find it either.
+			// Nested attribute paths (e.g. stdenv.cc.cc.lib, openssl.dev,
+			// python3Packages.requests) are not all indexed, so those still fall
+			// back below.
+			return packageNotFoundError(pkg)
 		} else if !versionedPkg.IsDevboxPackage {
 			// This means it didn't validate and we don't want to fallback to legacy
 			// Just propagate the error.
@@ -146,7 +154,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			if err != nil {
 				// This means it looked like a devbox package or attribute path, but we
 				// could not find it in search or in the legacy nixpkgs path.
-				return usererr.New("Package %s not found", pkg.Raw)
+				return packageNotFoundError(pkg)
 			}
 		}
 
@@ -169,6 +177,13 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 	}
 
 	return d.printPostAddMessage(ctx, pkgs, unchangedPackageNames, opts)
+}
+
+func packageNotFoundError(pkg *devpkg.Package) error {
+	return usererr.New(
+		"Package %q not found. To search for packages, use `devbox search %s`",
+		pkg.Raw, pkg.CanonicalName(),
+	)
 }
 
 func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
