@@ -134,10 +134,11 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			// via --exclude-platform flag.
 			packageNameForConfig = pkg.Versioned()
 		} else if errors.Is(err, nix.ErrPackageNotFound) &&
+			versionedPkg.IsDevboxPackage &&
 			!strings.Contains(pkg.CanonicalName(), ".") {
-			// Search indexes all top-level nixpkgs packages, so falling back to
-			// nixpkgs (which requires a slow download) won't find it either.
-			// Nested attribute paths (e.g. stdenv.cc.cc.lib, openssl.dev,
+			// Heuristic: search indexes top-level nixpkgs packages, so falling
+			// back to nixpkgs (which requires a slow download) won't find it
+			// either. Nested attribute paths (e.g. stdenv.cc.cc.lib, openssl.dev,
 			// python3Packages.requests) are not all indexed, so those still fall
 			// back below.
 			return packageNotFoundError(pkg)
