@@ -27,13 +27,13 @@ This installs the "php" and "hello" outputs from the flake at `my-php-flake`. Th
 
 ## Remote flakes
 
-Use `github:<org>/<repo>/<ref>#<output>` as the package name to install from a Github repo.
+Use `github:<org>/<repo>/<ref>#<output>` as the package name to install from a Github repo. If the flake lives in a subdirectory of the repo, add `?dir=<path>` before the `#<output>`.
 
 ```json
 {
   "packages": [
-    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#hello",
-    "github:F1bonacc1/process-compose"
+    "github:nixos/nixpkgs/5233fd2ba76a3accb5aaa999c00509a11fd0793c#cowsay",
+    "github:jetify-com/devbox/1d9ea45e1e51826df32ef0db7035c4c00ae2c184?dir=examples/flakes/php/my-php-flake#hello"
   ],
   "shell": {
     "init_hook": null
@@ -44,4 +44,4 @@ Use `github:<org>/<repo>/<ref>#<output>` as the package name to install from a G
 }
 ```
 
-This installs the `hello` package from the 5233fd... commit of Nixpkgs, and the `default` output from the `F1bonacc1/process-compose` repo.
+This installs the `cowsay` package from the 5233fd... commit of Nixpkgs, and the `hello` output of the flake in the `examples/flakes/php/my-php-flake` directory of the `jetify-com/devbox` repo.
