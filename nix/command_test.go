@@ -184,3 +184,21 @@ func TestTailWriter(t *testing.T) {
 		t.Error("tail doesn't end with the last write")
 	}
 }
+
+func TestTailWriterSmallWrites(t *testing.T) {
+	tail := &tailWriter{}
+	line := []byte("copying path '/nix/store/xxx' from 'https://cache.nixos.org'\n")
+	for range 1000 {
+		_, _ = tail.Write(line)
+	}
+	_, _ = tail.Write([]byte(truncatedTarErr))
+	if got, want := len(tail.buf), 8<<10; got != want {
+		t.Errorf("got len %d, want %d", got, want)
+	}
+	if got, limit := cap(tail.buf), 16<<10; got > limit {
+		t.Errorf("got cap %d, want <= %d", got, limit)
+	}
+	if !bytes.HasSuffix(tail.buf, []byte(truncatedTarErr)) {
+		t.Error("tail doesn't end with the last write")
+	}
+}

@@ -48,6 +48,10 @@ type Cmd struct {
 	// MaxAttempts is the maximum number of times to run the command when
 	// it fails with a transient network error, such as a truncated
 	// download. Values less than 2 disable retries. See [Nix.MaxAttempts].
+	//
+	// Stdout may receive output from failed attempts before a retry. In
+	// practice the retried errors happen while fetching, before Nix writes
+	// any output.
 	MaxAttempts int
 
 	execCmd *exec.Cmd
@@ -77,25 +81,26 @@ func (n *Nix) Command(args ...any) *Cmd {
 
 func (c *Cmd) CombinedOutput(ctx context.Context) ([]byte, error) {
 	defer c.logRunFunc(ctx)()
-	return c.run(ctx, (*exec.Cmd).CombinedOutput)
+	return c.run(ctx, true, (*exec.Cmd).CombinedOutput)
 }
 
 func (c *Cmd) Output(ctx context.Context) ([]byte, error) {
 	defer c.logRunFunc(ctx)()
-	return c.run(ctx, (*exec.Cmd).Output)
+	return c.run(ctx, false, (*exec.Cmd).Output)
 }
 
 func (c *Cmd) Run(ctx context.Context) error {
 	defer c.logRunFunc(ctx)()
-	_, err := c.run(ctx, func(cmd *exec.Cmd) ([]byte, error) {
+	_, err := c.run(ctx, false, func(cmd *exec.Cmd) ([]byte, error) {
 		return nil, cmd.Run()
 	})
 	return err
 }
 
 // run calls runFunc with a new [exec.Cmd] for each attempt, retrying up to
-// c.MaxAttempts times when Nix fails with a transient network error.
-func (c *Cmd) run(ctx context.Context, runFunc func(*exec.Cmd) ([]byte, error)) ([]byte, error) {
+// c.MaxAttempts times when Nix fails with a transient network error. combined
+// indicates that runFunc returns stderr interleaved with stdout.
+func (c *Cmd) run(ctx context.Context, combined bool, runFunc func(*exec.Cmd) ([]byte, error)) ([]byte, error) {
 	for attempt := 1; ; attempt++ {
 		c.execCmd = nil
 		execCmd := c.initExecCommand(ctx)
@@ -118,15 +123,19 @@ func (c *Cmd) run(ctx context.Context, runFunc func(*exec.Cmd) ([]byte, error)) 
 			return out, c.err
 		}
 
-		// Nix's stderr is in the exit error for Output, in out for
-		// CombinedOutput, or in stderrTail for a caller-provided
-		// stderr.
-		stderr := out
+		// Nix's stderr is in stderrTail for a caller-provided stderr,
+		// in the exit error for Output, or in out for CombinedOutput.
+		// Never check stdout alone, which might contain one of the
+		// error strings.
+		var stderr []byte
 		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) && len(exitErr.Stderr) != 0 {
-			stderr = exitErr.Stderr
-		} else if stderrTail != nil {
+		switch {
+		case stderrTail != nil:
 			stderr = stderrTail.buf
+		case errors.As(err, &exitErr) && len(exitErr.Stderr) != 0:
+			stderr = exitErr.Stderr
+		case combined:
+			stderr = out
 		}
 		if !isTransientError(stderr) {
 			return out, c.err
@@ -157,7 +166,9 @@ func (c *Cmd) run(ctx context.Context, runFunc func(*exec.Cmd) ([]byte, error)) 
 var retryDelay = 2 * time.Second
 
 // canRetry reports if c can safely be run more than once. Stdin that isn't a
-// file might have been consumed by the previous attempt.
+// file might have been consumed by the previous attempt. File stdin (usually
+// os.Stdin) isn't replayable either, but the transient errors that trigger a
+// retry happen while fetching, before Nix reads any input.
 func (c *Cmd) canRetry() bool {
 	if c.MaxAttempts < 2 {
 		return false
@@ -208,13 +219,19 @@ type tailWriter struct {
 	buf []byte
 }
 
-func (t *tailWriter) Write(p []byte) (int, error) {
+func (t *tailWriter) Write(data []byte) (int, error) {
 	const maxLen = 8 << 10
-	t.buf = append(t.buf, p...)
-	if len(t.buf) > maxLen {
-		t.buf = t.buf[len(t.buf)-maxLen:]
+	n := len(data)
+	if len(data) > maxLen {
+		data = data[len(data)-maxLen:]
 	}
-	return len(p), nil
+	// Shift out old bytes in place so the buffer never grows beyond
+	// maxLen.
+	if drop := len(t.buf) + len(data) - maxLen; drop > 0 {
+		t.buf = t.buf[:copy(t.buf, t.buf[drop:])]
+	}
+	t.buf = append(t.buf, data...)
+	return n, nil
 }
 
 func (c *Cmd) LogValue() slog.Value {
