@@ -68,8 +68,11 @@ func (f *File) FetchResolvedPackage(pkg string, refresh bool) (*Package, error) 
 	}
 
 	packageVersion, err := searcher.Client().Resolve(name, version)
-	if err != nil {
+	if errors.Is(err, searcher.ErrNotFound) {
 		return nil, errors.Wrapf(nix.ErrPackageNotFound, "%s@%s", name, version)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	sysInfos, err := buildLockSystemInfos(packageVersion)
