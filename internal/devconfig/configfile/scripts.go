@@ -30,11 +30,21 @@ type ScriptWithName struct {
 // devbox.json file. Names that can't be determined from the source file (for
 // example, when the config wasn't parsed from a file) are omitted; callers
 // should treat a missing name as "order unknown".
+//
+// Legacy shell.scripts names come first, followed by top-level scripts names,
+// mirroring the merge order in Scripts(). A name that appears in both places
+// is listed twice; InOrder uses the last occurrence, so the top-level
+// definition (which also wins in Scripts()) determines its position.
 func (c *ConfigFile) ScriptOrder() []string {
 	if c == nil || c.ast == nil {
 		return nil
 	}
-	return c.ast.objectKeysInOrder("shell", "scripts")
+	legacy := c.ast.objectKeysInOrder("shell", "scripts")
+	modern := c.ast.objectKeysInOrder("scripts")
+	if legacy == nil && modern == nil {
+		return nil
+	}
+	return append(legacy, modern...)
 }
 
 // InOrder returns the scripts as a slice ordered by the given names. Any
@@ -87,14 +97,30 @@ func (s Scripts) InOrder(order []string) []ScriptWithName {
 }
 
 func (c *ConfigFile) Scripts() Scripts {
-	if c == nil || c.Shell == nil {
+	if c == nil {
 		return nil
 	}
 	result := make(Scripts)
-	for name, commands := range c.Shell.Scripts {
+
+	// Read legacy shell.scripts first so that top-level scripts with the same
+	// name take precedence.
+	if c.Shell != nil {
+		for name, commands := range c.Shell.Scripts {
+			comments := ""
+			if c.ast != nil {
+				comments = string(c.ast.beforeComment("shell", "scripts", name))
+			}
+			result[name] = &script{
+				Commands: *commands,
+				Comments: comments,
+			}
+		}
+	}
+
+	for name, commands := range c.ScriptsField {
 		comments := ""
 		if c.ast != nil {
-			comments = string(c.ast.beforeComment("shell", "scripts", name))
+			comments = string(c.ast.beforeComment("scripts", name))
 		}
 		result[name] = &script{
 			Commands: *commands,
@@ -102,6 +128,9 @@ func (c *ConfigFile) Scripts() Scripts {
 		}
 	}
 
+	if len(result) == 0 {
+		return nil
+	}
 	return result
 }
 
