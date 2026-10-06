@@ -70,6 +70,10 @@ type Nix struct {
 	// Logger logs information at [slog.LevelDebug] about Nix command
 	// starts and exits. If nil, it defaults to [slog.Default].
 	Logger *slog.Logger
+
+	// MaxAttempts is the default [Cmd.MaxAttempts] for commands created
+	// with [Nix.Command]. The zero value disables retries.
+	MaxAttempts int
 }
 
 // resolvePath resolves the path to the Nix executable. It returns n.Path if it
