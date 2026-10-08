@@ -15,7 +15,10 @@ import (
 )
 
 // binaryCache is the store from which to fetch this package's binaries.
-// It is used as FromStore in builtins.fetchClosure.
+// It is used as the substituter when builtins.appendContext triggers
+// store->ensurePath() during flake evaluation. Devbox pre-builds each package
+// before generating the flake so the path is normally already in the local
+// store; if it isn't (e.g. after GC), Nix will fetch it from this cache.
 const binaryCache = "https://cache.nixos.org"
 
 // useDefaultOutputs is a special value for the outputName parameter of

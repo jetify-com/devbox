@@ -40,17 +40,19 @@
             {{- range $_, $pkg := .Packages }}
             {{- range $_, $output := $pkg.GetOutputsWithCache }}
             {{ if $output.CacheURI -}}
-            (builtins.trace "downloading {{ $pkg.Versioned }}" (builtins.fetchClosure {
-              {{/*
-                HACK HACK HACK! fetchClosure only supports http(s) caches and not
-                s3 caches. Until we implement that, we put a fake store here.
-                Since we pre-build everything, fetchClosure will not actually
-                fetch anything and just use the local version. This may break
-                if user somehow removes the local store path.
+            (builtins.trace "downloading {{ $pkg.Versioned }}" (builtins.appendContext "{{ $pkg.InputAddressedPathForOutput $output.Name }}" {
+              {{- /*
+                appendContext attaches a store-path context to the string so
+                that Nix calls store->ensurePath() during eval, substituting
+                the path from configured substituters (cache.nixos.org) if it
+                isn't already present locally. Devbox pre-builds each package
+                before generating this flake, so the path should usually be
+                in the local store at this point; if it isn't (e.g. after a
+                GC), Nix will fetch it automatically. This replaces the prior
+                builtins.fetchClosure hack, which required the experimental
+                "fetch-closure" feature and broke on Lix >= 2.95.
               */}}
-              fromStore = "https://cache.nixos.org";
-              fromPath = "{{ $pkg.InputAddressedPathForOutput $output.Name }}";
-              inputAddressed = true;
+              "{{ $pkg.InputAddressedPathForOutput $output.Name }}" = { path = true; };
             }))
             {{- end }}
             {{- end }}

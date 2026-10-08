@@ -5,7 +5,7 @@ import "os"
 func init() {
 	Default.ExtraArgs = Args{
 		"--extra-experimental-features", "ca-derivations",
-		"--option", "experimental-features", "nix-command flakes fetch-closure",
+		"--option", "experimental-features", "nix-command flakes",
 	}
 
 	// Retry commands that fail because of a flaky network, such as a

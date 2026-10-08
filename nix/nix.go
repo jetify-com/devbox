@@ -206,12 +206,11 @@ const (
 	MinVersion = Version2_18
 )
 
-// LixVersionWithoutFetchClosure is the first Lix version that removed
-// builtins.fetchClosure, which Devbox relies on to install packages from a
-// binary cache. Devbox is not compatible with Lix at or above this version.
-//
-// See https://lix.systems/blog/2026-03-25-lix-2.95-release/.
-const LixVersionWithoutFetchClosure = "2.95.0"
+// IsLix reports whether the Nix installation is the Lix fork, which identifies
+// itself as "Lix, like Nix" in the parenthetical of its "nix --version" output.
+func (i Info) IsLix() bool {
+	return strings.Contains(strings.ToLower(i.Implementation), "lix")
+}
 
 // versionRegexp matches the first line of "nix --version" output.
 //
@@ -367,29 +366,6 @@ func (i Info) AtLeast(version string) bool {
 	// valid version (2.23.0-pre.20240526+7de033d6) so we can compare it.
 	prerelease := preReleaseRegexp.ReplaceAllString(i.Version, "-pre.$date+$commit")
 	return semver.Compare("v"+prerelease, version) >= 0
-}
-
-// IsLix reports whether the Nix installation is the Lix fork, which identifies
-// itself as "Lix, like Nix" in the parenthetical of its "nix --version" output.
-func (i Info) IsLix() bool {
-	return strings.Contains(strings.ToLower(i.Implementation), "lix")
-}
-
-// SupportsFetchClosure reports whether the Nix installation provides
-// builtins.fetchClosure, which Devbox relies on to install packages from a
-// binary cache. The Lix fork removed fetchClosure in version 2.95, so Devbox is
-// not compatible with it (see LixVersionWithoutFetchClosure). When the version
-// cannot be determined, this returns true to avoid blocking on a false
-// positive.
-func (i Info) SupportsFetchClosure() bool {
-	if !i.IsLix() {
-		return true
-	}
-	// Compare against the lowest possible prerelease of the removal version
-	// (e.g. "2.95.0-0") so that Lix 2.95 prereleases, which have also dropped
-	// fetchClosure, are treated as unsupported. A plain "2.95.0" boundary would
-	// let them through, since semver sorts a prerelease below its release.
-	return !i.AtLeast(LixVersionWithoutFetchClosure + "-0")
 }
 
 // sourceProfileMutex guards against multiple goroutines attempting to source
