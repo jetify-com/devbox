@@ -117,7 +117,7 @@ func FlakeNixpkgs(commit string) string {
 }
 
 func ExperimentalFlags() []string {
-	options := []string{"nix-command", "flakes", "fetch-closure"}
+	options := []string{"nix-command", "flakes"}
 	return []string{
 		"--extra-experimental-features", "ca-derivations",
 		"--option", "experimental-features", strings.Join(options, " "),

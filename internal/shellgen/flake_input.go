@@ -57,7 +57,9 @@ func (f *flakeInput) BuildInputsForSymlinkJoin() ([]*SymlinkJoin, error) {
 		}
 
 		// Skip packages that are already in the binary cache. These will be directly
-		// included in the buildInputs using `builtins.fetchClosure` of their store paths.
+		// included in the buildInputs using `builtins.appendContext` of their store
+		// paths, which causes Nix to substitute them from the binary cache during
+		// eval if they aren't present locally.
 		inCache, err := pkg.IsInBinaryCache()
 		if err != nil {
 			return nil, err

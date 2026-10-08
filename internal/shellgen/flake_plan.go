@@ -171,12 +171,6 @@ func (g *glibcPatchFlake) addOutput(pkg *devpkg.Package) error {
 	if g.Outputs.Packages == nil {
 		g.Outputs.Packages = map[string]map[string]string{nix.System(): {}}
 	}
-	if cached, err := pkg.IsInBinaryCache(); err == nil && cached {
-		if expr, err := g.fetchClosureExpr(pkg); err == nil {
-			g.Outputs.Packages[nix.System()][relAttrPath] = expr
-			return nil
-		}
-	}
 
 	inputAttrPath, err := g.inputRelativeAttrPath(pkg)
 	if err != nil {
@@ -238,22 +232,6 @@ func (g *glibcPatchFlake) inputRelativeAttrPath(pkg *devpkg.Package) (string, er
 	}
 	atrrPath := strings.Join([]string{"pkgs", pkg.FlakeInputName(), nix.System(), relAttrPath}, ".")
 	return atrrPath, nil
-}
-
-// TODO: this only handles the first store path, but we should handle all of them
-func (g *glibcPatchFlake) fetchClosureExpr(pkg *devpkg.Package) (string, error) {
-	storePaths, err := pkg.InputAddressedPaths()
-	if err != nil {
-		return "", err
-	}
-	if len(storePaths) == 0 {
-		return "", fmt.Errorf("no store path for package %s", pkg.Raw)
-	}
-	return fmt.Sprintf(`builtins.fetchClosure {
-  fromStore = "%s";
-  fromPath = "%s";
-  inputAddressed = true;
-}`, "devpkg.BinaryCache", storePaths[0]), nil
 }
 
 // copySystemCUDALib searches for the system's libcuda.so shared library and
