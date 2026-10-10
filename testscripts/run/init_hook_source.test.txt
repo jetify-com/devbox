@@ -1,0 +1,28 @@
+# An init hook that uses the bash `source` builtin should work with
+# `devbox run`, just like it does inside `devbox shell`. Previously this
+# failed with "source: not found" on systems where /bin/sh is a POSIX shell
+# such as dash, because scripts were run with sh instead of bash.
+# Regression test for https://github.com/jetify-com/devbox/issues/2607
+
+# A script that relies on state set up by a sourced init hook should run.
+exec devbox run print_sourced
+stdout 'sourced-value'
+
+# Running the `source` builtin directly should also work.
+exec devbox run source_directly
+stdout 'ran source ok'
+
+-- devbox.json --
+{
+  "packages": [],
+  "shell": {
+    "init_hook": "source ./configure.sh",
+    "scripts": {
+      "print_sourced": "echo $SOURCED_VAR",
+      "source_directly": "source ./configure.sh && echo \"ran source ok\""
+    }
+  }
+}
+
+-- configure.sh --
+export SOURCED_VAR=sourced-value
