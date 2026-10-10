@@ -12,7 +12,7 @@ is_devbox_venv() {
 
 create_venv() {
     python -m venv "$VENV_DIR" --clear
-    echo "*\n.*" >> "$VENV_DIR/.gitignore"
+    echo -e "*\n.*" >> "$VENV_DIR/.gitignore"
 }
 
 # Check that Python version supports venv
