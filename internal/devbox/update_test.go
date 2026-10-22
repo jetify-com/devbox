@@ -384,3 +384,35 @@ func TestDescribeFlakeUpdateFormats(t *testing.T) {
 	newNoDate := &lock.Package{Resolved: "github:numtide/flake-utils/" + newRev + "#pkg"}
 	require.Equal(t, "abc1234 -> f456789", describeFlakeUpdate(oldNoDate, newNoDate))
 }
+
+func TestUpdateRecordsChangedDefinitionHash(t *testing.T) {
+	devbox := devboxForTesting(t)
+
+	raw := "pkg:./hello.pkg.json@1"
+	devPkg := devpkg.PackageFromStringWithDefaults(raw, nil)
+	existing := &lock.Package{
+		Resolved:       "pkg:./hello.pkg.json@1.2.0",
+		Version:        "1.2.0",
+		Source:         "pkg-def",
+		DefinitionHash: "old",
+		Systems: map[string]*lock.SystemInfo{
+			"x86_64-linux": {URL: "file://vendor/hello-1.2.0.sh", Sha256: "abc"},
+		},
+	}
+	resolved := &lock.Package{
+		Resolved:       "pkg:./hello.pkg.json@1.2.0",
+		Version:        "1.2.0",
+		Source:         "pkg-def",
+		DefinitionHash: "new",
+		Systems: map[string]*lock.SystemInfo{
+			"x86_64-linux": {URL: "file://vendor/hello-1.2.0.sh", Sha256: "abc"},
+		},
+	}
+	lockfile := &lock.File{
+		Packages: map[string]*lock.Package{raw: existing},
+	}
+
+	err := devbox.mergeResolvedPackageToLockfile(devPkg, resolved, lockfile)
+	require.NoError(t, err, "update failed")
+	require.Equal(t, "new", lockfile.Packages[raw].DefinitionHash)
+}

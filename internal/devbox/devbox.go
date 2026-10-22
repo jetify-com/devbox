@@ -835,6 +835,12 @@ func (d *Devbox) computeEnv(
 	}
 	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, runXPaths)
 
+	pkgDefPaths, err := d.pkgDefBinPaths(ctx, false /*recordDigest*/)
+	if err != nil {
+		return nil, err
+	}
+	devboxEnvPath = envpath.JoinPathLists(append([]string{devboxEnvPath}, pkgDefPaths...)...)
+
 	pathStack := envpath.Stack(env, originalEnv)
 	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, envOpts.PreservePathStack)
 	env["PATH"] = pathStack.Path(env)

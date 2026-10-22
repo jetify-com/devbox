@@ -133,7 +133,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			// about not building on the current system, since user's can continue
 			// via --exclude-platform flag.
 			packageNameForConfig = pkg.Versioned()
-		} else if !versionedPkg.IsDevboxPackage {
+		} else if !versionedPkg.IsDevboxPackage || versionedPkg.IsPkgDef() {
 			// This means it didn't validate and we don't want to fallback to legacy
 			// Just propagate the error.
 			return err
@@ -482,7 +482,10 @@ func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
 		return err
 	}
 
-	return d.InstallRunXPackages(ctx)
+	if err := d.InstallRunXPackages(ctx); err != nil {
+		return err
+	}
+	return d.installPkgDefPackages(ctx)
 }
 
 func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
@@ -667,7 +670,7 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 func (d *Devbox) FixMissingStorePaths(ctx context.Context) error {
 	packages := d.InstallablePackages()
 	for _, pkg := range packages {
-		if !pkg.IsDevboxPackage || pkg.IsRunX() {
+		if !pkg.IsDevboxPackage || !pkg.IsNix() {
 			continue
 		}
 		existingStorePaths, err := pkg.GetResolvedStorePaths()

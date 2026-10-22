@@ -1,0 +1,97 @@
+# Package definitions: install a package from a vendor-style artifact, switch
+# versions, and remove it. The "vendor" is a set of local files served through
+# relative file:// URLs, which resolve against the definition's directory.
+
+env DEVBOX_FEATURE_PKG_DEFS=1
+
+# Add with a version prefix. It resolves to the newest matching version.
+exec devbox add pkg:./hello.pkg.json@1
+devboxjson.packages.contains devbox.json 'pkg:./hello.pkg.json@1'
+devboxlock.packages.contains devbox.lock 'pkg:./hello.pkg.json@1'
+grep '"version": "1.2.0"' devbox.lock
+grep '"source": "pkg-def"' devbox.lock
+grep '"definition_hash": "' devbox.lock
+grep '"sha256": "066b305a08797c899572e0ad5ade421e2959d48d7858d6294f6ae81d03650590"' devbox.lock
+
+# The binary is on PATH and the definition's env and init hook apply.
+exec devbox run -- hello
+stdout 'hello 1.2.0'
+exec devbox run -- sh -c 'echo "HELLO_HOME=$HELLO_HOME"; cat "$HELLO_HOME/bin/hello" | head -1'
+stdout 'HELLO_HOME=.*/devbox/pkgs/hello/1.2.0/'
+stdout '#!/bin/sh'
+exec devbox run -- sh -c 'echo "HELLO_VERSION=$HELLO_VERSION"'
+stdout 'HELLO_VERSION=1.2.0'
+exec devbox run -- sh -c 'cat "$HELLO_INIT_FILE"'
+stdout 'init hook ran for 1.2.0'
+stdout 'virtenv/pkgdef-hello/init.txt'
+
+# create_files content is templated with the definition's variables.
+exec devbox run -- sh -c 'cat .devbox/virtenv/pkgdef-hello/where.txt'
+stdout 'install dir: .*/devbox/pkgs/hello/1.2.0/'
+stdout 'version: 1.2.0'
+
+# The lockfile keeps relative file URLs relative, so it is portable.
+grep '"url": "file://vendor/hello-1.2.0.sh"' devbox.lock
+
+# Switching the version in devbox.json switches what is on PATH.
+exec devbox add pkg:./hello.pkg.json@2
+! devboxjson.packages.contains devbox.json 'pkg:./hello.pkg.json@1'
+devboxjson.packages.contains devbox.json 'pkg:./hello.pkg.json@2'
+grep '"version": "2.0.0"' devbox.lock
+exec devbox run -- hello
+stdout 'hello 2.0.0'
+
+# A version that does not exist is a clear error.
+! exec devbox add pkg:./hello.pkg.json@9
+stderr 'not found'
+
+# Removing restores a plain project.
+exec devbox rm pkg:./hello.pkg.json@2
+! devboxjson.packages.contains devbox.json 'pkg:./hello.pkg.json@2'
+! devboxlock.packages.contains devbox.lock 'pkg:./hello.pkg.json@2'
+
+-- devbox.json --
+{
+  "packages": []
+}
+
+-- hello.pkg.json --
+// A tiny package definition used by the testscript.
+{
+  "schema": 1,
+  "name": "hello",
+  "description": "Says hello",
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+  "versions": {"type": "static", "versions": ["1.2.0", "2.0.0", "2.1.0-rc1"]},
+  "install": {
+    "type": "binary",
+    "url": "file://vendor/hello-{{.Version}}.sh",
+    "checksum": {"type": "sha256_url", "url": "file://vendor/SHA256SUMS"}
+  },
+  "binaries": ["hello"],
+  "env": {
+    "HELLO_HOME": "{{ .InstallDir }}",
+    "HELLO_VERSION": "{{ .Version }}",
+    "HELLO_INIT_FILE": "{{ .Virtenv }}/init.txt"
+  },
+  "shell": {
+    "init_hook": ["echo \"init hook ran for {{ .Version }} ($HELLO_INIT_FILE)\" > \"$HELLO_INIT_FILE\""]
+  },
+  "create_files": {
+    "{{ .Virtenv }}/where.txt": "where.txt.tmpl"
+  }
+}
+
+-- where.txt.tmpl --
+install dir: {{ .InstallDir }}
+version: {{ .Version }}
+
+-- vendor/hello-1.2.0.sh --
+#!/bin/sh
+echo hello 1.2.0
+-- vendor/hello-2.0.0.sh --
+#!/bin/sh
+echo hello 2.0.0
+-- vendor/SHA256SUMS --
+066b305a08797c899572e0ad5ade421e2959d48d7858d6294f6ae81d03650590  hello-1.2.0.sh
+7c208c07608e0a2d2351a92a27924ddbc3b1c3d9d923638e1999e2d08d68ff11  hello-2.0.0.sh
