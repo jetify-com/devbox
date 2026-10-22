@@ -25,6 +25,7 @@ import (
 	"go.jetify.com/devbox/internal/devpkg/pkgtype"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/pkgdef"
 	"go.jetify.com/devbox/internal/ux"
 	"go.jetify.com/devbox/nix/flake"
 	"go.jetify.com/devbox/plugins"
@@ -170,6 +171,11 @@ func resolve(pkg *Package) error {
 	resolved, err := pkg.lockfile.Resolve(pkg.LockfileKey())
 	if err != nil {
 		return err
+	}
+	// Package definitions resolve to "pkg:<ref>@<version>", which is not a
+	// flake installable. Locking them is all that's needed here.
+	if pkg.IsPkgDef() {
+		return nil
 	}
 	parsed, err := flake.ParseInstallable(resolved.Resolved)
 	if err != nil {
@@ -464,6 +470,14 @@ func (p *Package) Hash() string {
 		// user always gets newest flake.
 		sum, _ = cachehash.File(filepath.Join(p.installable.Ref.Path, "flake.nix"))
 	}
+	if ref, ok := p.pkgDefRef(); ok {
+		// For local package definitions, hash the file so that editing it
+		// changes the project state and re-runs the install step (which
+		// redoes the install if the recipe changed).
+		if path := ref.LocalPath(p.lockfile.ProjectDir()); path != "" {
+			sum, _ = cachehash.File(path)
+		}
+	}
 
 	if sum == "" {
 		sum = cachehash.Bytes([]byte(cmp.Or(p.installable.String(), p.Raw)))
@@ -501,8 +515,21 @@ func (p *Package) CanonicalName() string {
 	if !p.IsDevboxPackage {
 		return ""
 	}
+	if ref, ok := p.pkgDefRef(); ok {
+		return pkgdef.Ref{Source: ref.Source}.String()
+	}
 	name, _, _ := strings.Cut(p.Raw, "@")
 	return name
+}
+
+// pkgDefRef parses the package string as a package definition reference.
+// Definition sources may contain "@", so these split at the last one.
+func (p *Package) pkgDefRef() (pkgdef.Ref, bool) {
+	if !p.IsPkgDef() {
+		return pkgdef.Ref{}, false
+	}
+	ref, err := pkgdef.ParseRef(p.Raw)
+	return ref, err == nil
 }
 
 func (p *Package) Versioned() string {
@@ -537,6 +564,9 @@ func EnsureNixpkgsPrefetched(ctx context.Context, w io.Writer, pkgs []*Package) 
 // ensureNixpkgsPrefetched should be called via the public EnsureNixpkgsPrefetched.
 // See function comment there.
 func (p *Package) ensureNixpkgsPrefetched(w io.Writer) error {
+	if !p.IsNix() {
+		return nil
+	}
 	inCache, err := p.IsInBinaryCache()
 	if err != nil {
 		return err
@@ -560,11 +590,17 @@ func (p *Package) version() string {
 	if !p.IsDevboxPackage {
 		return ""
 	}
+	if ref, ok := p.pkgDefRef(); ok {
+		return ref.Version
+	}
 	_, version, _ := strings.Cut(p.Raw, "@")
 	return version
 }
 
 func (p *Package) isVersioned() bool {
+	if ref, ok := p.pkgDefRef(); ok {
+		return ref.Version != ""
+	}
 	return p.IsDevboxPackage && strings.Contains(p.Raw, "@")
 }
 
@@ -659,6 +695,18 @@ func (p *Package) IsRunX() bool {
 	return pkgtype.IsRunX(p.Raw)
 }
 
+// IsPkgDef reports whether the package is installed from a package
+// definition ("pkg:<ref>@<version>", see specs/package-definitions.md).
+func (p *Package) IsPkgDef() bool {
+	return pkgtype.IsPkgDef(p.Raw)
+}
+
+// Locked returns the package's lockfile entry, or nil if it has not been
+// resolved yet.
+func (p *Package) Locked() *lock.Package {
+	return p.lockfile.Get(p.LockfileKey())
+}
+
 func (p *Package) IsNix() bool {
 	return IsNix(p, 0)
 }
@@ -682,11 +730,15 @@ func (p *Package) LockfileKey() string {
 }
 
 func IsNix(p *Package, _ int) bool {
-	return !p.IsRunX()
+	return !p.IsRunX() && !p.IsPkgDef()
 }
 
 func IsRunX(p *Package, _ int) bool {
 	return p.IsRunX()
+}
+
+func IsPkgDef(p *Package, _ int) bool {
+	return p.IsPkgDef()
 }
 
 func (p *Package) DocsURL() string {
@@ -703,7 +755,7 @@ func (p *Package) DocsURL() string {
 // GetOutputNames returns the names of the nix package outputs. Outputs can be
 // specified in devbox.json package fields or as part of the flake reference.
 func (p *Package) GetOutputNames() ([]string, error) {
-	if p.IsRunX() {
+	if !p.IsNix() {
 		return []string{}, nil
 	}
 

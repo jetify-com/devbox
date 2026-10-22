@@ -39,12 +39,19 @@ type marker struct {
 	System  string `json:"system"`
 	URL     string `json:"url,omitempty"`
 	Sha256  string `json:"sha256,omitempty"`
+
+	// InstallHash is Definition.InstallFingerprint at install time. When
+	// the definition's install recipe changes, the install is redone.
+	InstallHash string `json:"install_hash,omitempty"`
 }
 
 // Installed describes a completed install.
 type Installed struct {
 	// Dir is the install root.
 	Dir string
+
+	// URL is the artifact the install came from.
+	URL string
 
 	// Sha256 is the digest of the artifact that was installed. When the
 	// lockfile had no digest (checksum type "none"), callers should record
@@ -56,12 +63,15 @@ type Installed struct {
 }
 
 // Install makes version of def available on system and returns where it
-// landed. It is idempotent: a completed install is returned as is without
-// any network access. Concurrent installs of the same package (from other
-// processes too) are serialized with a file lock.
+// landed. It is idempotent: a completed install from the same recipe is
+// returned as is without any network access; an install made from a
+// definition whose install recipe has since changed is redone. Concurrent
+// installs of the same package (from other processes too) are serialized
+// with a file lock.
 //
 // artifact.URL may be empty, in which case the URL is rendered from the
-// definition. When artifact.Sha256 is set the download must match it.
+// definition. Relative file:// URLs are resolved against the definition's
+// directory. When artifact.Sha256 is set the download must match it.
 func (c *Client) Install(ctx context.Context, def *Definition, version, system string, artifact Artifact) (*Installed, error) {
 	if !def.SupportsSystem(system) {
 		return nil, fmt.Errorf("%s@%s: %w (%s; supported: %s)",
@@ -69,8 +79,10 @@ func (c *Client) Install(ctx context.Context, def *Definition, version, system s
 	}
 	dir := c.InstallDir(def.Name, version, system)
 
+	fingerprint := def.InstallFingerprint(system)
+
 	// Fast path: no lock needed to read a finished install.
-	if m, ok := readMarker(dir); ok {
+	if m, ok := readMarker(dir); ok && m.InstallHash == fingerprint {
 		return c.installedFromMarker(def, version, dir, m, artifact)
 	}
 
@@ -81,10 +93,10 @@ func (c *Client) Install(ctx context.Context, def *Definition, version, system s
 	defer unlock()
 
 	// Another process may have finished while we waited for the lock.
-	if m, ok := readMarker(dir); ok {
+	if m, ok := readMarker(dir); ok && m.InstallHash == fingerprint {
 		return c.installedFromMarker(def, version, dir, m, artifact)
 	}
-	return c.install(ctx, def, version, system, dir, artifact)
+	return c.install(ctx, def, version, system, dir, fingerprint, artifact)
 }
 
 func (c *Client) installedFromMarker(def *Definition, version, dir string, m marker, artifact Artifact) (*Installed, error) {
@@ -92,10 +104,10 @@ func (c *Client) installedFromMarker(def *Definition, version, dir string, m mar
 		return nil, fmt.Errorf("%s@%s: %w: %s was installed from an artifact with sha256 %s but the lockfile expects %s; remove the directory to reinstall",
 			def.Name, version, ErrChecksumMismatch, dir, m.Sha256, artifact.Sha256)
 	}
-	return c.installed(def, dir, m.Sha256), nil
+	return c.installed(def, dir, m.URL, m.Sha256), nil
 }
 
-func (c *Client) install(ctx context.Context, def *Definition, version, system, dir string, artifact Artifact) (*Installed, error) {
+func (c *Client) install(ctx context.Context, def *Definition, version, system, dir, fingerprint string, artifact Artifact) (*Installed, error) {
 	install := def.InstallFor(system)
 	vars, err := def.TemplateVars(system, version)
 	if err != nil {
@@ -119,19 +131,20 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 		}
 	}
 	vars = vars.withURL(artifact.URL)
+	fetchURL := def.ResolveURL(artifact.URL)
 
 	// Download next to the install dir so that a rename into place stays on
 	// one filesystem.
 	downloadDir := filepath.Join(c.CacheDir, ".downloads", def.Name, version, system)
 	archivePath := filepath.Join(downloadDir, vars.Filename)
-	sha, err := c.download(ctx, artifact.URL, archivePath)
+	sha, err := c.download(ctx, fetchURL, archivePath)
 	if err != nil {
 		return nil, fmt.Errorf("%s@%s: %w", def.Name, version, err)
 	}
 	if artifact.Sha256 != "" && !strings.EqualFold(sha, artifact.Sha256) {
 		_ = os.Remove(archivePath)
 		return nil, fmt.Errorf("%s@%s: %w: %s has sha256 %s, lockfile expects %s",
-			def.Name, version, ErrChecksumMismatch, artifact.URL, sha, artifact.Sha256)
+			def.Name, version, ErrChecksumMismatch, fetchURL, sha, artifact.Sha256)
 	}
 
 	// Unpack into a staging directory and rename it into place so that a
@@ -178,25 +191,26 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 		return nil, fmt.Errorf("%s@%s: %w", def.Name, version, err)
 	}
 
-	m := marker{Name: def.Name, Version: version, System: system, URL: artifact.URL, Sha256: sha}
+	m := marker{Name: def.Name, Version: version, System: system, URL: artifact.URL, Sha256: sha, InstallHash: fingerprint}
 	if err := writeMarker(dir, m); err != nil {
 		return nil, err
 	}
-	return c.installed(def, dir, sha), nil
+	return c.installed(def, dir, artifact.URL, sha), nil
 }
 
-// IsInstalled reports whether version of def is fully installed on system.
+// IsInstalled reports whether version of def is fully installed on system
+// from the definition's current install recipe.
 func (c *Client) IsInstalled(def *Definition, version, system string) bool {
-	_, ok := readMarker(c.InstallDir(def.Name, version, system))
-	return ok
+	m, ok := readMarker(c.InstallDir(def.Name, version, system))
+	return ok && m.InstallHash == def.InstallFingerprint(system)
 }
 
-func (c *Client) installed(def *Definition, dir, sha string) *Installed {
+func (c *Client) installed(def *Definition, dir, url, sha string) *Installed {
 	bins := make([]string, 0, len(def.BinDirs()))
 	for _, b := range def.BinDirs() {
 		bins = append(bins, filepath.Join(dir, b))
 	}
-	return &Installed{Dir: dir, Sha256: sha, BinDirs: bins}
+	return &Installed{Dir: dir, URL: url, Sha256: sha, BinDirs: bins}
 }
 
 // lockDir takes an exclusive advisory lock on <dir>.lock so that only one
