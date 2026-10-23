@@ -29,6 +29,16 @@ func TestConfigIsUserTrusted(t *testing.T) {
 			t.Error("got trusted = false, want true")
 		}
 	})
+	t.Run("Wildcard", func(t *testing.T) {
+		cfg := Config{TrustedUsers: ConfigField[[]string]{Value: []string{"*"}}}
+		trusted, err := cfg.IsUserTrusted(t.Context(), curUser.Username)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !trusted {
+			t.Error("got trusted = false, want true")
+		}
+	})
 	t.Run("UserGroupInList", func(t *testing.T) {
 		g, err := user.LookupGroupId(curUser.Gid)
 		if err != nil {
