@@ -159,7 +159,7 @@ func newPackage(raw string, isInstallable func() bool, locker lock.Locker) *Pack
 		return resolve(pkg)
 	})
 	pkg.setInstallable(parsed, locker.ProjectDir())
-	pkg.outputs = outputs{selectedNames: strings.Split(parsed.Outputs, ",")}
+	pkg.outputs = outputs{selectedNames: lo.Compact(strings.Split(parsed.Outputs, ","))}
 	pkg.Patch = pkgNeedsPatch(pkg.CanonicalName(), configfile.PatchAuto)
 	return pkg
 }

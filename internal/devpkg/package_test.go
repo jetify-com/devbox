@@ -6,10 +6,12 @@ package devpkg
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/samber/lo"
+	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/nix/flake"
@@ -207,6 +209,28 @@ func TestCanonicalName(t *testing.T) {
 			got := pkg.CanonicalName()
 			if got != tt.expectedName {
 				t.Errorf("Expected canonical name %q, but got %q", tt.expectedName, got)
+			}
+		})
+	}
+}
+
+func TestFlakeOutputNames(t *testing.T) {
+	tests := []struct {
+		pkg     string
+		opts    []string
+		outputs []string
+	}{
+		{"github:NixOS/nixpkgs/12345#curl", nil, []string{}},
+		{"github:NixOS/nixpkgs/12345#curl", []string{"dev", "out"}, []string{"dev", "out"}},
+		{"github:NixOS/nixpkgs/12345#curl^bin,dev", nil, []string{"bin", "dev"}},
+		{"github:NixOS/nixpkgs/12345#curl^bin", []string{"dev"}, []string{"bin", "dev"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.pkg, func(t *testing.T) {
+			pkg := PackageFromStringWithOptions(tt.pkg, &lockfile{}, devopt.AddOpts{Outputs: tt.opts})
+			got := pkg.outputs.selectedNames
+			if !slices.Equal(got, tt.outputs) {
+				t.Errorf("got outputs %q, want %q", got, tt.outputs)
 			}
 		})
 	}
