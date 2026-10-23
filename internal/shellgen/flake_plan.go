@@ -261,6 +261,14 @@ func (g *glibcPatchFlake) fetchClosureExpr(pkg *devpkg.Package) (string, error) 
 func (g *glibcPatchFlake) copySystemCUDALib(flakeDir string) error {
 	slog.Debug("found CUDA package in devbox environment, attempting to find system driver libraries")
 
+	// Remove any libraries copied by a previous run. Otherwise a driver
+	// upgrade leaves the old library behind and the symlinks to the new
+	// one fail to be created because they already exist.
+	libDir := filepath.Join(flakeDir, "lib")
+	if err := os.RemoveAll(libDir); err != nil {
+		return err
+	}
+
 	searchPath := slices.Concat(
 		patchpkg.EnvLDLibrarySearchPath,
 		patchpkg.EnvLibrarySearchPath,
@@ -286,7 +294,6 @@ func (g *glibcPatchFlake) copySystemCUDALib(flakeDir string) error {
 			continue
 		}
 
-		libDir := filepath.Join(flakeDir, "lib")
 		if err := lib.CopyAndLink(libDir); err == nil {
 			slog.Debug("copied system CUDA library to flake directory", "dst", libDir)
 		} else {

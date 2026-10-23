@@ -1,6 +1,10 @@
 package shellgen
 
 import (
+	"errors"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"go.jetify.com/devbox/internal/devbox/devopt"
@@ -52,5 +56,24 @@ func TestNewGlibcPatchFlake(t *testing.T) {
 
 	if len(patchFlake.Outputs.Packages) != 1 {
 		t.Errorf("expected 1 package in Outputs, got %d", len(patchFlake.Outputs.Packages))
+	}
+}
+
+func TestCopySystemCUDALibRemovesStaleLibs(t *testing.T) {
+	flakeDir := t.TempDir()
+	libDir := filepath.Join(flakeDir, "lib")
+	if err := os.Mkdir(libDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	stale := filepath.Join(libDir, "libcuda.so.0.0.0-stale")
+	if err := os.WriteFile(stale, []byte("stale"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// The result depends on whether the system has a CUDA driver, but
+	// either way the stale library should be gone.
+	_ = (&glibcPatchFlake{}).copySystemCUDALib(flakeDir)
+	if _, err := os.Lstat(stale); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("got stale library error %v, want %v", err, fs.ErrNotExist)
 	}
 }
