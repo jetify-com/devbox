@@ -219,6 +219,13 @@ func TestShellPath(t *testing.T) {
 			},
 			expected: "^/usr/local/bin/bash$",
 		},
+		{
+			name: "path is cleaned",
+			env: map[string]string{
+				envir.Shell: "/usr/local//bin/../bin/bash",
+			},
+			expected: "^/usr/local/bin/bash$",
+		},
 	}
 
 	for _, test := range tests {

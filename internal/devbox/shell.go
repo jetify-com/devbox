@@ -91,7 +91,7 @@ func (d *Devbox) newShell(envOpts devopt.EnvOptions, opts ...ShellOption) (*Devb
 // shellPath returns the path to a shell binary, or error if none found.
 func (d *Devbox) shellPath(envOpts devopt.EnvOptions) (path string, err error) {
 	defer func() {
-		if err != nil {
+		if err == nil {
 			path = filepath.Clean(path)
 		}
 	}()
