@@ -274,6 +274,7 @@ func (g *glibcPatchFlake) copySystemCUDALib(flakeDir string) error {
 		stat, err := lib.Stat()
 		if err != nil {
 			logger.Error("skipping system CUDA library because of stat error", "err", err)
+			continue
 		}
 		const mib = 1 << 20
 		if stat.Size() < 1*mib {
