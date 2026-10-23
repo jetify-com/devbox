@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 )
 
@@ -114,6 +115,35 @@ func TestFindCUDANoPatcher(t *testing.T) {
 	d := &DerivationBuilder{src: newPackageFS(src)}
 	if err := d.findCUDA(t.Context(), newPackageFS(t.TempDir())); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// TestFindCUDASkipsSymlinks checks that findCUDA only adds the real library
+// file as a dependency and not the symlinks pointing to it.
+func TestFindCUDASkipsSymlinks(t *testing.T) {
+	src := t.TempDir()
+	if err := os.Mkdir(filepath.Join(src, "lib"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "lib", "libcuda.so.550.0"), []byte("lib"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink("libcuda.so.550.0", filepath.Join(src, "lib", "libcuda.so.1")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink("libcuda.so.1", filepath.Join(src, "lib", "libcuda.so")); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("patchDependencies", "")
+
+	out := t.TempDir()
+	d := &DerivationBuilder{src: newPackageFS(src), glibcPatcher: &libPatcher{}}
+	if err := d.findCUDA(t.Context(), newPackageFS(out)); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{filepath.Join(out, "lib", "libcuda.so.550.0")}
+	if !slices.Equal(d.glibcPatcher.needed, want) {
+		t.Errorf("got needed = %q, want %q", d.glibcPatcher.needed, want)
 	}
 }
 

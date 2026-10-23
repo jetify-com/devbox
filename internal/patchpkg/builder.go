@@ -373,6 +373,11 @@ func (d *DerivationBuilder) findCUDA(ctx context.Context, out *packageFS) error 
 		}
 	}
 	for _, lib := range glob {
+		// Skip the soname and linker name symlinks so that the library
+		// is only copied and added as a dependency once.
+		if stat, err := fs.Lstat(d.src.FS, lib); err != nil || isSymlink(stat.Mode()) {
+			continue
+		}
 		slog.DebugContext(ctx, "found system CUDA library in flake", "path", lib)
 
 		err := d.copyFile(ctx, d.src, out, lib)
