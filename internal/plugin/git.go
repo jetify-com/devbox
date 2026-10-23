@@ -100,10 +100,13 @@ func (p *gitPlugin) cloneAndRead(subpath string) ([]byte, error) {
 	baseURL := p.getBaseURL()
 
 	cloneArgs := []string{"clone"}
-	if p.ref.Ref != "" {
-		cloneArgs = append(cloneArgs, "--depth", "1", "--branch", p.ref.Ref)
-	} else if p.ref.Rev == "" {
+	// A shallow clone only has the branch tip, so when a specific rev is
+	// requested we do a full clone and check it out below.
+	if p.ref.Rev == "" {
 		cloneArgs = append(cloneArgs, "--depth", "1")
+		if p.ref.Ref != "" {
+			cloneArgs = append(cloneArgs, "--branch", p.ref.Ref)
+		}
 	}
 	cloneArgs = append(cloneArgs, baseURL, tempDir)
 	cloneCmd := exec.Command("git", cloneArgs...)

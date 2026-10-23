@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"go.jetify.com/devbox/nix/flake"
@@ -548,5 +549,61 @@ func TestGitPluginFileContentCacheInvalidTTL(t *testing.T) {
 	_, err := plugin.FileContent("plugin.json")
 	if err == nil {
 		t.Fatal("expected error for invalid TTL, got nil")
+	}
+}
+
+// TestGitPluginCloneRefAndOldRev verifies that a plugin with both a ref and a
+// rev that is not the tip of that ref can be fetched.
+func TestGitPluginCloneRefAndOldRev(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("skipping: git not found in PATH")
+	}
+
+	repoDir := t.TempDir()
+	runGit := func(args ...string) string {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = repoDir
+		cmd.Env = append(os.Environ(),
+			"GIT_AUTHOR_NAME=test",
+			"GIT_AUTHOR_EMAIL=test@test.com",
+			"GIT_COMMITTER_NAME=test",
+			"GIT_COMMITTER_EMAIL=test@test.com",
+		)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v failed: %v\n%s", args, err, out)
+		}
+		return strings.TrimSpace(string(out))
+	}
+	commit := func(content string) string {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(repoDir, "plugin.json"), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		runGit("add", "plugin.json")
+		runGit("commit", "-m", content)
+		return runGit("rev-parse", "HEAD")
+	}
+
+	runGit("init")
+	runGit("checkout", "-b", "main")
+	oldRev := commit(`{"name": "old"}`)
+	commit(`{"name": "new"}`)
+
+	plugin := &gitPlugin{
+		ref: &flake.Ref{
+			Type: flake.TypeGit,
+			URL:  "file://" + repoDir,
+			Ref:  "main",
+			Rev:  oldRev,
+		},
+	}
+	content, err := plugin.cloneAndRead("plugin.json")
+	if err != nil {
+		t.Fatalf("cloneAndRead failed: %v", err)
+	}
+	if string(content) != `{"name": "old"}` {
+		t.Fatalf("unexpected content: %s", content)
 	}
 }
