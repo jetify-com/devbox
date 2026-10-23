@@ -42,10 +42,11 @@ func (f *File) FetchResolvedPackage(pkg string, refresh bool) (*Package, error) 
 		if err != nil {
 			return nil, err
 		}
-		return &Package{
-			Resolved:     installable.String(),
-			LastModified: time.Unix(installable.Ref.LastModified, 0).UTC().Format(time.RFC3339),
-		}, nil
+		locked := &Package{Resolved: installable.String()}
+		if installable.Ref.LastModified != 0 {
+			locked.LastModified = time.Unix(installable.Ref.LastModified, 0).UTC().Format(time.RFC3339)
+		}
+		return locked, nil
 	}
 
 	name, version, _ := searcher.ParseVersionedPackage(pkg)
