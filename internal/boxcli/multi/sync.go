@@ -38,7 +38,7 @@ func SyncLockfiles(pkgs []string) error {
 		for key, latestPkg := range latestPackages {
 			if pkg, exists := lockFile.Packages[key]; exists {
 				name, _, found := searcher.ParseVersionedPackage(key)
-				if len(pkgMap) > 0 && (!pkgMap[key] && (found && !pkgMap[name])) {
+				if len(pkgMap) > 0 && !pkgMap[key] && (!found || !pkgMap[name]) {
 					continue
 				}
 				if pkg.LastModified != latestPkg.LastModified {
