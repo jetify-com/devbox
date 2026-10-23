@@ -27,7 +27,7 @@
         # Run `devbox run update-hash` to update the vendor-hash
         vendorHash = if builtins.pathExists ./vendor-hash then builtins.readFile ./vendor-hash else "";
 
-        buildGoModule = pkgs.buildGo126Module;
+        buildGoModule = pkgs.buildGo127Module;
 
       in
       {
