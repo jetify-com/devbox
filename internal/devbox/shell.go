@@ -245,7 +245,7 @@ func (s *DevboxShell) Run() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	slog.Debug("Executing shell %s with args: %v", s.binPath, cmd.Args)
+	slog.Debug("executing shell", "shell", s.binPath, "args", cmd.Args)
 	err = cmd.Run()
 
 	// If the error is an ExitError, this means the shell started up fine but there was
@@ -422,7 +422,7 @@ func (s *DevboxShell) setupShellStartupFiles(shellSettingsDir string) {
 				continue
 			}
 			if err != nil {
-				slog.Debug("os.Stat error for %s is %v", userFile, err)
+				slog.Debug("os.Stat error", "file", userFile, "err", err)
 			}
 
 			fileNew := filepath.Join(shellSettingsDir, filename)
