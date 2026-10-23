@@ -365,6 +365,7 @@ func GetProcessManagerPort(projectDir string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer configFile.Close()
 
 	config := readGlobalProcessComposeJSON(configFile)
 
