@@ -1,5 +1,5 @@
 {
-  "packages": ["go@1.24.5"],
+  "packages": ["go@1.27.3"],
   "env": {
     "GOPATH": "$HOME/go/",
     "PATH":   "$PATH:$HOME/go/bin"
