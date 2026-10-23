@@ -63,7 +63,9 @@ func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error)
 			continue
 		}
 		existingLockPackage := lockfile.Packages[pkg.Raw]
-		if lockPackage.Version == existingLockPackage.Version {
+		// Packages that aren't locked yet will be locked to the latest version
+		// on the next install, so they aren't outdated.
+		if existingLockPackage == nil || lockPackage.Version == existingLockPackage.Version {
 			continue
 		}
 
