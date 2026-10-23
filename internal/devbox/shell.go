@@ -265,15 +265,17 @@ func (s *DevboxShell) Run() error {
 func (s *DevboxShell) shellRCOverrides(shellrc string) (extraEnv map[string]string, extraArgs []string) {
 	// Shells have different ways of overriding the shellrc, so we need to
 	// look at the name to know which env vars or args to set when launching the shell.
+	// Args and env values are passed directly to exec, so they must not be
+	// shell-quoted. Only fish's -C value is parsed as a shell command.
 	switch s.name {
 	case shBash:
-		extraArgs = []string{"--rcfile", shellescape.Quote(shellrc)}
+		extraArgs = []string{"--rcfile", shellrc}
 	case shZsh:
-		extraEnv = map[string]string{"ZDOTDIR": shellescape.Quote(filepath.Dir(shellrc))}
+		extraEnv = map[string]string{"ZDOTDIR": filepath.Dir(shellrc)}
 	case shKsh, shPosix:
-		extraEnv = map[string]string{"ENV": shellescape.Quote(shellrc)}
+		extraEnv = map[string]string{"ENV": shellrc}
 	case shFish:
-		extraArgs = []string{"-C", ". " + shellrc}
+		extraArgs = []string{"-C", ". " + shellescape.Quote(shellrc)}
 	}
 	return extraEnv, extraArgs
 }

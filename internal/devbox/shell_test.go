@@ -253,6 +253,33 @@ func TestShellPath(t *testing.T) {
 	}
 }
 
+func TestShellRCOverridesPathWithSpace(t *testing.T) {
+	shellrc := "/tmp/my dir/devbox123/.bashrc"
+	tests := []struct {
+		name     name
+		wantEnv  map[string]string
+		wantArgs []string
+	}{
+		{name: shBash, wantArgs: []string{"--rcfile", shellrc}},
+		{name: shZsh, wantEnv: map[string]string{"ZDOTDIR": "/tmp/my dir/devbox123"}},
+		{name: shKsh, wantEnv: map[string]string{"ENV": shellrc}},
+		{name: shPosix, wantEnv: map[string]string{"ENV": shellrc}},
+		{name: shFish, wantArgs: []string{"-C", ". '" + shellrc + "'"}},
+	}
+	for _, tt := range tests {
+		t.Run(string(tt.name), func(t *testing.T) {
+			s := &DevboxShell{name: tt.name}
+			gotEnv, gotArgs := s.shellRCOverrides(shellrc)
+			if diff := cmp.Diff(tt.wantEnv, gotEnv); diff != "" {
+				t.Errorf("extraEnv mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.wantArgs, gotArgs); diff != "" {
+				t.Errorf("extraArgs mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestInitShellBinaryFields(t *testing.T) {
 	tests := []struct {
 		name               string
