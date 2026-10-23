@@ -145,10 +145,18 @@ func (f *File) UpdateStdenv() error {
 	if err := nix.ClearFlakeCache(f.devboxProject.Stdenv()); err != nil {
 		return err
 	}
-	if err := f.Remove(f.devboxProject.Stdenv().String()); err != nil {
+	// Remove the old entry in memory only so that a failed resolve doesn't
+	// leave the lockfile without a stdenv.
+	stdenv := f.devboxProject.Stdenv().String()
+	old, hasOld := f.Packages[stdenv]
+	delete(f.Packages, stdenv)
+	if err := f.Add(stdenv); err != nil {
+		if hasOld {
+			f.Packages[stdenv] = old
+		}
 		return err
 	}
-	return f.Add(f.devboxProject.Stdenv().String())
+	return nil
 }
 
 // TODO: We should improve a few issues with this function:
