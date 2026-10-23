@@ -692,6 +692,47 @@ func TestSetOutputsMigrateArray(t *testing.T) {
 	}
 }
 
+func TestSetPatchAutoRemovesPatchGlibc(t *testing.T) {
+	in, want := parseConfigTxtarTest(t, `
+-- in --
+{
+  "packages": {
+    "python": {
+      "version":     "latest",
+      "patch_glibc": true
+    }
+  }
+}
+-- want --
+{
+  "packages": {
+    "python": {
+      "version": "latest"
+    }
+  }
+}`)
+
+	err := in.PackagesMutator.SetPatch("python@latest", PatchAuto)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
+	}
+
+	reloaded, err := LoadBytes(in.Bytes())
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkg, ok := reloaded.GetPackage("python@latest")
+	if !ok {
+		t.Fatal("package python@latest not found")
+	}
+	if pkg.Patch != PatchAuto {
+		t.Errorf("reloaded patch = %q, want %q", pkg.Patch, PatchAuto)
+	}
+}
+
 func TestSetAllowInsecure(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
