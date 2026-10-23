@@ -193,22 +193,33 @@ func runProcessManagerInForeground(cmd *exec.Cmd, config *globalProcessComposeCo
 	// We're waiting now, so we can unlock the file
 	config.File.Close()
 
-	err = cmd.Wait()
-	if err != nil {
-		if err.Error() == "exit status 1" {
-			fmt.Fprintf(w, "Process-compose was terminated remotely, %s\n", err.Error())
+	waitErr := cmd.Wait()
+	// Remove our entry regardless of how process-compose exited, so a stale
+	// PID isn't left behind in the global config.
+	cleanupErr := removeGlobalInstance(projectDir, cmd.Process.Pid)
+	if waitErr != nil {
+		if waitErr.Error() == "exit status 1" {
+			fmt.Fprintf(w, "Process-compose was terminated remotely, %s\n", waitErr.Error())
 			return nil
 		}
-		return err
+		return waitErr
 	}
+	return cleanupErr
+}
 
+// removeGlobalInstance removes projectDir's entry from the global config if it
+// still refers to the process with the given pid.
+func removeGlobalInstance(projectDir string, pid int) error {
 	configFile, err := openGlobalConfigFile()
 	if err != nil {
 		return err
 	}
+	defer configFile.Close()
 
-	config = readGlobalProcessComposeJSON(configFile)
-
+	config := readGlobalProcessComposeJSON(configFile)
+	if config.Instances[projectDir].Pid != pid {
+		return nil
+	}
 	delete(config.Instances, projectDir)
 	return writeGlobalProcessComposeJSON(config, configFile)
 }

@@ -4,6 +4,8 @@
 package services
 
 import (
+	"io"
+	"os/exec"
 	"testing"
 
 	"go.jetify.com/devbox/internal/envir"
@@ -35,5 +37,36 @@ func TestGetProcessManagerPortReleasesLock(t *testing.T) {
 		if port != 1234 {
 			t.Errorf("GetProcessManagerPort() = %d, want 1234", port)
 		}
+	}
+}
+
+// TestRunProcessManagerInForegroundRemovesInstanceOnError verifies that the
+// project's entry is removed from the global config even when process-compose
+// exits with an error.
+func TestRunProcessManagerInForegroundRemovesInstanceOnError(t *testing.T) {
+	for _, exitCode := range []string{"0", "1", "2"} {
+		t.Run("exit"+exitCode, func(t *testing.T) {
+			t.Setenv(envir.XDGDataHome, t.TempDir())
+			projectDir := t.TempDir()
+
+			configFile, err := openGlobalConfigFile()
+			if err != nil {
+				t.Fatal(err)
+			}
+			config := readGlobalProcessComposeJSON(configFile)
+			config.File = configFile
+
+			cmd := exec.Command("sh", "-c", "exit "+exitCode)
+			_ = runProcessManagerInForeground(cmd, config, 1234, projectDir, io.Discard)
+
+			configFile, err = openGlobalConfigFile()
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer configFile.Close()
+			if _, ok := readGlobalProcessComposeJSON(configFile).Instances[projectDir]; ok {
+				t.Errorf("instance for %s was not removed from global config", projectDir)
+			}
+		})
 	}
 }
