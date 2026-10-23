@@ -196,7 +196,8 @@ func getRelativePathToConfig(sourceDir, configDir string) (string, error) {
 
 	// We don't want the path if the config dir is a parent of the envrc dir. This way
 	// the config will be found when it recursively searches for it through the parent tree.
-	if strings.HasPrefix(absSourceDir, absConfigDir) {
+	if rel, err := filepath.Rel(absConfigDir, absSourceDir); err == nil &&
+		rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 		return "", nil
 	}
 

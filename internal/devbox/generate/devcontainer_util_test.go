@@ -83,3 +83,25 @@ func TestCreateDockerfileDevCopiesConfigFileName(t *testing.T) {
 		}
 	}
 }
+
+func TestGetRelativePathToConfig(t *testing.T) {
+	tests := []struct {
+		sourceDir, configDir, want string
+	}{
+		{"/proj/app", "/proj/app", ""},
+		{"/proj/app/sub", "/proj/app", ""},
+		{"/proj/app-web", "/proj/app", "../app"},
+		{"/proj", "/proj/app", "app"},
+		{"/other", "/proj/app", "../proj/app"},
+	}
+	for _, tt := range tests {
+		got, err := getRelativePathToConfig(tt.sourceDir, tt.configDir)
+		if err != nil {
+			t.Errorf("getRelativePathToConfig(%q, %q) error: %v", tt.sourceDir, tt.configDir, err)
+			continue
+		}
+		if got != tt.want {
+			t.Errorf("getRelativePathToConfig(%q, %q) = %q, want %q", tt.sourceDir, tt.configDir, got, tt.want)
+		}
+	}
+}
