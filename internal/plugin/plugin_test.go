@@ -173,3 +173,14 @@ func TestUpdateLockfileVersion(t *testing.T) {
 		})
 	}
 }
+
+// TestLoadConfigFromIncludeUnknownBuiltin verifies that including a built-in
+// plugin that doesn't exist returns an error instead of a nil config.
+func TestLoadConfigFromIncludeUnknownBuiltin(t *testing.T) {
+	lockfile, err := lock.GetFile(lockProjectForTest{dir: t.TempDir()})
+	require.NoError(t, err)
+
+	cfg, err := LoadConfigFromInclude("plugin:not-a-real-plugin", lockfile, t.TempDir())
+	require.Error(t, err)
+	assert.Nil(t, cfg)
+}
