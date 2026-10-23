@@ -196,6 +196,8 @@ func TestCanonicalName(t *testing.T) {
 		{"go", "go"},
 		{"go@latest", "go"},
 		{"go@1.21", "go"},
+		{"nodePackages.@vue/cli@5.0", "nodePackages.@vue/cli"},
+		{"emacsPackages.@", "emacsPackages.@"},
 		{"runx:golangci/golangci-lint@latest", "runx:golangci/golangci-lint"},
 		{"runx:golangci/golangci-lint@v0.0.2", "runx:golangci/golangci-lint"},
 		{"runx:golangci/golangci-lint", "runx:golangci/golangci-lint"},
@@ -209,6 +211,29 @@ func TestCanonicalName(t *testing.T) {
 			got := pkg.CanonicalName()
 			if got != tt.expectedName {
 				t.Errorf("Expected canonical name %q, but got %q", tt.expectedName, got)
+			}
+		})
+	}
+}
+
+func TestVersioned(t *testing.T) {
+	tests := []struct {
+		pkgName   string
+		version   string
+		versioned string
+	}{
+		{"go", "", "go@latest"},
+		{"go@1.21", "1.21", "go@1.21"},
+		{"nodePackages.@vue/cli@5.0", "5.0", "nodePackages.@vue/cli@5.0"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.pkgName, func(t *testing.T) {
+			pkg := PackageFromStringWithDefaults(tt.pkgName, &lockfile{})
+			if got := pkg.version(); got != tt.version {
+				t.Errorf("version() = %q, want %q", got, tt.version)
+			}
+			if got := pkg.Versioned(); got != tt.versioned {
+				t.Errorf("Versioned() = %q, want %q", got, tt.versioned)
 			}
 		})
 	}

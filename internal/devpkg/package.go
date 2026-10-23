@@ -25,6 +25,7 @@ import (
 	"go.jetify.com/devbox/internal/devpkg/pkgtype"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/ux"
 	"go.jetify.com/devbox/nix/flake"
 	"go.jetify.com/devbox/plugins"
@@ -501,8 +502,10 @@ func (p *Package) CanonicalName() string {
 	if !p.IsDevboxPackage {
 		return ""
 	}
-	name, _, _ := strings.Cut(p.Raw, "@")
-	return name
+	if name, _, ok := searcher.ParseVersionedPackage(p.Raw); ok {
+		return name
+	}
+	return p.Raw
 }
 
 func (p *Package) Versioned() string {
@@ -560,12 +563,13 @@ func (p *Package) version() string {
 	if !p.IsDevboxPackage {
 		return ""
 	}
-	_, version, _ := strings.Cut(p.Raw, "@")
+	_, version, _ := searcher.ParseVersionedPackage(p.Raw)
 	return version
 }
 
 func (p *Package) isVersioned() bool {
-	return p.IsDevboxPackage && strings.Contains(p.Raw, "@")
+	_, _, versioned := searcher.ParseVersionedPackage(p.Raw)
+	return p.IsDevboxPackage && versioned
 }
 
 func (p *Package) HashFromNixPkgsURL() string {
