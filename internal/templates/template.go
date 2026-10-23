@@ -20,12 +20,14 @@ import (
 	"go.jetify.com/devbox/internal/build"
 )
 
+const devboxRepo = "https://github.com/jetify-com/devbox"
+
 func InitFromName(w io.Writer, template, target string) error {
 	templatePath, ok := templates[template]
 	if !ok {
 		return usererr.New("unknown template name or format %q", template)
 	}
-	return InitFromRepo(w, "https://github.com/jetify-com/devbox", templatePath, target)
+	return InitFromRepo(w, devboxRepo, templatePath, target)
 }
 
 func InitFromRepo(w io.Writer, repo, subdir, target string) error {
@@ -41,14 +43,16 @@ func InitFromRepo(w io.Writer, repo, subdir, target string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	cmd := exec.Command(
-		"git", "clone", parsedRepoURL,
-		// Clone and checkout a specific ref
-		"-b", lo.Ternary(build.IsDev, "main", build.Version),
-		// Create shallow clone with depth of 1
-		"--depth", "1",
-		tmp,
-	)
+	defer os.RemoveAll(tmp)
+
+	args := []string{"clone", parsedRepoURL}
+	// Built-in templates are checked out at the ref matching this devbox version.
+	if parsedRepoURL == devboxRepo {
+		args = append(args, "-b", lo.Ternary(build.IsDev, "main", build.Version))
+	}
+	// Create shallow clone with depth of 1
+	args = append(args, "--depth", "1", tmp)
+	cmd := exec.Command("git", args...)
 	fmt.Fprintf(w, "%s\n", cmd)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
