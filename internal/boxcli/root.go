@@ -20,8 +20,6 @@ import (
 	"go.jetify.com/devbox/internal/vercheck"
 )
 
-type cobraFunc func(cmd *cobra.Command, args []string) error
-
 var (
 	debugMiddleware = &midcobra.DebugMiddleware{}
 	traceMiddleware = &midcobra.TraceMiddleware{}
@@ -32,13 +30,15 @@ type rootCmdFlags struct {
 }
 
 func RootCmd() *cobra.Command {
+	// Run the persistent hooks of every ancestor command instead of only the
+	// closest one, so subcommands that declare their own PersistentPreRunE
+	// don't skip the root's.
+	cobra.EnableTraverseRunHooks = true
+
 	flags := rootCmdFlags{}
 	command := &cobra.Command{
 		Use:   "devbox",
 		Short: "Instant, easy, predictable development environments",
-		// Warning, PersistentPreRunE is not called if a subcommand also declares
-		// it. TODO: Figure out a better way to implement this so that subcommands
-		// can't accidentally override it.
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if flags.quiet {
 				cmd.SetErr(io.Discard)
