@@ -42,5 +42,9 @@ func Init(dir string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	newConfig.Root.AbsRootPath, err = filepath.Abs(file.Name())
+	if err != nil {
+		return nil, err
+	}
 	return newConfig, nil
 }

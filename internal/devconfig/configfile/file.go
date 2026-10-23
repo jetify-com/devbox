@@ -146,9 +146,14 @@ func (c *ConfigFile) SaveTo(dir string) error {
 	return os.WriteFile(filepath.Join(dir, c.FileName()), c.Bytes(), 0o644)
 }
 
+// Save writes the config back to the file at AbsRootPath.
+//
 // TODO: Can we remove SaveTo and just use Save()?
 func (c *ConfigFile) Save() error {
-	return c.SaveTo(c.AbsRootPath)
+	if c.AbsRootPath == "" {
+		return errors.New("cannot save config: no file path")
+	}
+	return c.SaveTo(filepath.Dir(c.AbsRootPath))
 }
 
 // Get returns the package with the given versionedName

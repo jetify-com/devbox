@@ -208,6 +208,7 @@ func (pkgs *PackagesMutator) SetOutputs(writer io.Writer, versionedName string, 
 	if len(toAdd) > 0 {
 		pkg := &pkgs.collection[i]
 		pkgs.ast.appendOutputs(pkg.Name, "outputs", toAdd)
+		pkg.Outputs = append(pkg.Outputs, toAdd...)
 		ux.Finfof(writer, "Added outputs %s to package %s\n", strings.Join(toAdd, ", "), versionedName)
 	}
 	return nil
