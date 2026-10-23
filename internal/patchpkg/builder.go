@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"cmp"
 	"context"
+	"debug/elf"
 	_ "embed"
 	"fmt"
 	"io"
@@ -17,6 +18,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -198,7 +200,7 @@ func (d *DerivationBuilder) copyFile(ctx context.Context, pkg, out *packageFS, p
 	defer srcFile.Close()
 
 	src := bufio.NewReader(srcFile)
-	if d.needsGlibcPatch(src, path) {
+	if d.needsGlibcPatch(src, path) && hasInterpreter(srcFile) {
 		srcPath, err := pkg.OSPath(path)
 		if err != nil {
 			return err
@@ -275,6 +277,23 @@ func (d *DerivationBuilder) needsGlibcPatch(file *bufio.Reader, filePath string)
 		return false
 	}
 	return magic[0] == 0x7F && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F'
+}
+
+// hasInterpreter reports if f is a dynamically linked ELF binary with a
+// program interpreter (PT_INTERP). Statically linked binaries don't have one
+// and can't be patched to use a different glibc.
+func hasInterpreter(f fs.File) bool {
+	r, ok := f.(io.ReaderAt)
+	if !ok {
+		return false
+	}
+	elfFile, err := elf.NewFile(r)
+	if err != nil {
+		return false
+	}
+	return slices.ContainsFunc(elfFile.Progs, func(prog *elf.Prog) bool {
+		return prog.Type == elf.PT_INTERP
+	})
 }
 
 func (d *DerivationBuilder) findRemovedRefs(ctx context.Context, pkg *packageFS) ([]fileSlice, error) {
