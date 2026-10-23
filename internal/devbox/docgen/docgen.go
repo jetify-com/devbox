@@ -2,6 +2,7 @@ package docgen
 
 import (
 	_ "embed"
+	"errors"
 	"maps"
 	"os"
 	"strings"
@@ -52,7 +53,7 @@ func GenerateReadme(
 		return err
 	}
 
-	f, err := os.Create(outputPath)
+	readme, err := os.Create(outputPath)
 	if err != nil {
 		return err
 	}
@@ -62,7 +63,7 @@ func GenerateReadme(
 		WithRelativePaths(devbox.ProjectDir()).
 		InOrder(cfg.ScriptOrder())
 
-	return tmpl.Execute(f, map[string]any{
+	err = tmpl.Execute(readme, map[string]any{
 		"Name":        cfg.Root.Name,
 		"Description": cfg.Root.Description,
 		"Scripts":     scripts,
@@ -72,6 +73,7 @@ func GenerateReadme(
 		"Services":    services,
 		// TODO add includes
 	})
+	return errors.Join(err, readme.Close())
 }
 
 // envWithRelativePaths returns a copy of env where occurrences of the absolute
