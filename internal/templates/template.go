@@ -60,14 +60,27 @@ func InitFromRepo(w io.Writer, repo, subdir, target string) error {
 		return errors.WithStack(err)
 	}
 
-	cmd = exec.Command(
-		"sh", "-c",
-		fmt.Sprintf("cp -r %s %s", filepath.Join(tmp, subdir, "*"), target),
-	)
-	fmt.Fprintf(w, "%s\n", cmd)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	return errors.WithStack(cmd.Run())
+	return copyDirContents(filepath.Join(tmp, subdir), target)
+}
+
+// copyDirContents copies everything in src (including dotfiles, but excluding
+// .git) into dst.
+func copyDirContents(src, dst string) error {
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	for _, entry := range entries {
+		if entry.Name() == ".git" {
+			continue
+		}
+		cmd := exec.Command("cp", "-R", filepath.Join(src, entry.Name()), dst)
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }
 
 func List(w io.Writer, showAll bool) {
