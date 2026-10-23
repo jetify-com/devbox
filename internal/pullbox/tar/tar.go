@@ -61,7 +61,7 @@ func Compress(dir string) (string, error) {
 
 	cmd.Dir = dir
 
-	if err = cmd.Start(); err != nil {
+	if err = cmd.Run(); err != nil {
 		return "", errors.WithStack(err)
 	}
 
