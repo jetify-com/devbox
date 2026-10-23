@@ -7,16 +7,16 @@ Ruby can be automatically configured by Devbox via the built-in Ruby Plugin. Thi
 
 ## Adding Ruby to your shell
 
-Run `devbox add ruby@3.1 bundler`, or add the following to your `devbox.json`
+Run `devbox add ruby@3.4 bundler`, or add the following to your `devbox.json`
 
 ```json
     "packages": [
-        "ruby@3.1",
+        "ruby@3.4",
         "bundler@latest"
     ]
 ```
 
-This will install Ruby 3.1 to your shell. You can find other installable versions of Ruby by running `devbox search ruby`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/ruby)
+This will install Ruby 3.4 to your shell. You can find other installable versions of Ruby by running `devbox search ruby`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/ruby)
 
 ## Ruby Plugin Support
 
