@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/samber/lo"
-	segment "github.com/segmentio/analytics-go"
+	segment "github.com/segmentio/analytics-go/v3"
 	"go.jetify.com/devbox/nix"
 
 	"go.jetify.com/devbox/internal/build"
