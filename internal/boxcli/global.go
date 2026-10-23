@@ -56,14 +56,15 @@ func ensureGlobalConfig() (string, error) {
 		return globalConfigPath, nil
 	}
 
-	globalConfigPath, err := devbox.GlobalDataPath()
+	path, err := devbox.GlobalDataPath()
 	if err != nil {
 		return "", err
 	}
-	err = devbox.EnsureConfig(globalConfigPath)
+	err = devbox.EnsureConfig(path)
 	if err != nil {
 		return "", err
 	}
+	globalConfigPath = path
 	return globalConfigPath, nil
 }
 
