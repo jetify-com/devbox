@@ -22,7 +22,7 @@ patch_store_path() {
 	declare -r perm=$(stat -c "%a" "$path")
 
 	# sed creates a temporary sibling file for in-place edits, so we need to
-	# ensure that the file's directory is writeable.
+	# ensure that the file's directory is writable.
 	declare -r dir="$(dirname "$path")"
 	declare -r dperm=$(stat -c "%a" "$dir")
 
