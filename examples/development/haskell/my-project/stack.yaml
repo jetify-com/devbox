@@ -18,7 +18,7 @@
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
 resolver:
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/4.yaml
+  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/24/64.yaml
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -48,8 +48,10 @@ packages:
 # Extra package databases containing global packages
 # extra-package-dbs: []
 
-# Control whether we use the GHC we find on the path
-# system-ghc: true
+# Control whether we use the GHC we find on the path.
+# Devbox provides GHC (ghc@latest), so use it instead of downloading another
+# copy. Keep the resolver's compiler in sync with the ghc version in devbox.lock.
+system-ghc: true
 #
 # Require a specific version of stack, using version ranges
 # require-stack-version: -any # Default
