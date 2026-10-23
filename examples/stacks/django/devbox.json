@@ -1,6 +1,6 @@
 {
   "packages": {
-    "python": "latest",
+    "python": "3.14",
     "openssl": {
       "version": "latest",
       "outputs": ["out", "dev"]

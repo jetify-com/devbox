@@ -1,13 +1,16 @@
 from pathlib import Path
 
-import torch
+import gdown
 import gradio as gr
+import numpy as np
+import torch
+from PIL import Image
 from torch import nn
-import gdown 
 
 url = 'https://drive.google.com/uc?id=1dsk2JNZLRDjC-0J4wIQX_FcVurPaXaAZ'
 output = 'pytorch_model.bin'
-gdown.download(url, output, quiet=False)
+if not Path(output).exists():
+    gdown.download(url, output, quiet=False)
 
 LABELS = Path('class_names.txt').read_text().splitlines()
 
@@ -26,16 +29,30 @@ model = nn.Sequential(
     nn.ReLU(),
     nn.Linear(256, len(LABELS)),
 )
-state_dict = torch.load('pytorch_model.bin', map_location='cpu')
+state_dict = torch.load(output, map_location='cpu')
 model.load_state_dict(state_dict, strict=False)
 model.eval()
 
-def predict(input):
-    im = input
-    if im is None:
+
+def to_model_input(sketch):
+    # The Sketchpad returns an RGBA canvas with dark strokes. The model was
+    # trained on 28x28 grayscale drawings with light strokes on a dark
+    # background, so convert the strokes to "ink" intensity and downscale.
+    rgba = Image.fromarray(sketch["composite"]).convert("RGBA")
+    gray = np.asarray(rgba.convert("L"), dtype=np.float32)
+    alpha = np.asarray(rgba.getchannel("A"), dtype=np.float32) / 255.
+    ink = Image.fromarray(((255. - gray) * alpha).astype(np.uint8))
+    x = np.asarray(ink.resize((28, 28), Image.BOX), dtype=np.float32)
+    if x.max() > 0:
+        x = x / x.max()
+    return torch.tensor(x).unsqueeze(0).unsqueeze(0)
+
+
+def predict(sketch):
+    if sketch is None or sketch.get("composite") is None:
         return None
-        
-    x = torch.tensor(im, dtype=torch.float32).unsqueeze(0).unsqueeze(0) / 255.
+
+    x = to_model_input(sketch)
 
     with torch.no_grad():
         out = model(x)
@@ -47,5 +64,12 @@ def predict(input):
     return {LABELS[i]: v.item() for i, v in zip(indices, values)}
 
 
-interface = gr.Interface(predict, inputs=gr.templates.Sketchpad(label="Draw Here"), outputs=gr.Label(label="Guess"), theme="default", css=".footer{display:none !important}", live=True)
-interface.launch(enable_queue=False)
+interface = gr.Interface(
+    predict,
+    inputs=gr.Sketchpad(label="Draw Here"),
+    outputs=gr.Label(label="Guess"),
+    live=True,
+)
+
+if __name__ == "__main__":
+    interface.launch(footer_links=[])
