@@ -59,6 +59,18 @@ func TestNewGlibcPatchFlake(t *testing.T) {
 	}
 }
 
+func TestFetchClosureStorePathExpr(t *testing.T) {
+	got := fetchClosureStorePathExpr("/nix/store/0123456789abcdfghijklmnpqrsvwxyz-python3-3.12.0")
+	want := `builtins.fetchClosure {
+  fromStore = "https://cache.nixos.org";
+  fromPath = "/nix/store/0123456789abcdfghijklmnpqrsvwxyz-python3-3.12.0";
+  inputAddressed = true;
+}`
+	if got != want {
+		t.Errorf("got expression:\n%s\n\nwant:\n%s", got, want)
+	}
+}
+
 func TestCopySystemCUDALibRemovesStaleLibs(t *testing.T) {
 	flakeDir := t.TempDir()
 	libDir := filepath.Join(flakeDir, "lib")

@@ -249,11 +249,18 @@ func (g *glibcPatchFlake) fetchClosureExpr(pkg *devpkg.Package) (string, error) 
 	if len(storePaths) == 0 {
 		return "", fmt.Errorf("no store path for package %s", pkg.Raw)
 	}
+	return fetchClosureStorePathExpr(storePaths[0]), nil
+}
+
+// fetchClosureStorePathExpr returns a builtins.fetchClosure expression that
+// fetches storePath from the default binary cache. It uses the same store as
+// the fetchClosure calls in flake.nix.tmpl.
+func fetchClosureStorePathExpr(storePath string) string {
 	return fmt.Sprintf(`builtins.fetchClosure {
   fromStore = "%s";
   fromPath = "%s";
   inputAddressed = true;
-}`, "devpkg.BinaryCache", storePaths[0]), nil
+}`, "https://cache.nixos.org", storePath)
 }
 
 // copySystemCUDALib searches for the system's libcuda.so shared library and
