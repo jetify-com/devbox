@@ -624,6 +624,44 @@ func TestSetOutputs(t *testing.T) {
 	}
 }
 
+func TestSetOutputsTwice(t *testing.T) {
+	in, want := parseConfigTxtarTest(t, `
+-- in --
+{
+  "packages": {
+    "hello": {
+      "version": "latest"
+    }
+  }
+}
+-- want --
+{
+  "packages": {
+    "hello": {
+      "version": "latest",
+      "outputs": ["dev"]
+    }
+  }
+}`)
+
+	for range 2 {
+		err := in.PackagesMutator.SetOutputs(io.Discard, "hello@latest", []string{"dev"})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	pkg, ok := in.GetPackage("hello@latest")
+	if !ok {
+		t.Fatal("package hello@latest not found")
+	}
+	if diff := cmp.Diff([]string{"dev"}, pkg.Outputs); diff != "" {
+		t.Errorf("wrong in-memory outputs (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
+	}
+}
+
 func TestSetOutputsMigrateArray(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
