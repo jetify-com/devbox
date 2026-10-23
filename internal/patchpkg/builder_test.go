@@ -99,6 +99,24 @@ func TestCopyFileStaticBinary(t *testing.T) {
 	}
 }
 
+// TestFindCUDANoPatcher checks that findCUDA doesn't panic when the builder
+// wasn't given a glibc or gcc to patch with.
+func TestFindCUDANoPatcher(t *testing.T) {
+	src := t.TempDir()
+	if err := os.Mkdir(filepath.Join(src, "lib"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "lib", "libcuda.so.550.0"), []byte("lib"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("patchDependencies", "")
+
+	d := &DerivationBuilder{src: newPackageFS(src)}
+	if err := d.findCUDA(t.Context(), newPackageFS(t.TempDir())); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // TestFindRemovedRefsPartial checks that findRemovedRefs still returns the
 // references it can restore when some of them can't be restored.
 func TestFindRemovedRefsPartial(t *testing.T) {

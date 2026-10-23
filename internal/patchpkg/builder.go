@@ -350,6 +350,10 @@ func (d *DerivationBuilder) findRemovedRefs(ctx context.Context, pkg *packageFS)
 }
 
 func (d *DerivationBuilder) findCUDA(ctx context.Context, out *packageFS) error {
+	if d.glibcPatcher == nil {
+		slog.DebugContext(ctx, "not looking for CUDA libraries because there's no glibc or gcc to patch with")
+		return nil
+	}
 	if d.src == nil {
 		return fmt.Errorf("patch flake didn't set $src to the path to its source tree")
 	}
