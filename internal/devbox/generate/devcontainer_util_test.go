@@ -84,6 +84,40 @@ func TestCreateDockerfileDevCopiesConfigFileName(t *testing.T) {
 	}
 }
 
+func TestDevcontainerLanguageExtensions(t *testing.T) {
+	tests := []struct {
+		pkg  string
+		want string
+	}{
+		{"python3", "ms-python.python"},
+		{"python311", "ms-python.python"},
+		{"python@3.12", "ms-python.python"},
+		{"python@latest", "ms-python.python"},
+		{"python3@3.11", "ms-python.python"},
+		{"python@2.7", ""},
+		{"go", "golang.go"},
+		{"go@latest", "golang.go"},
+		{"go_1_21", "golang.go"},
+		{"go_1_21@1.21.0", "golang.go"},
+		{"gopls@latest", ""},
+		{"nodejs@20", ""},
+	}
+	for _, test := range tests {
+		g := &Options{Pkgs: []string{test.pkg}}
+		exts := g.getDevcontainerContent().Customizations.Vscode.Extensions
+		extra := exts[1:] // first extension is always jetpack-io.devbox
+		if test.want == "" {
+			if len(extra) != 0 {
+				t.Errorf("pkg %q: got extensions %v, want none", test.pkg, extra)
+			}
+			continue
+		}
+		if len(extra) != 1 || extra[0] != test.want {
+			t.Errorf("pkg %q: got extensions %v, want [%s]", test.pkg, extra, test.want)
+		}
+	}
+}
+
 func TestGetRelativePathToConfig(t *testing.T) {
 	tests := []struct {
 		sourceDir, configDir, want string

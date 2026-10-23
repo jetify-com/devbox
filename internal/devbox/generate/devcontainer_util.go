@@ -24,6 +24,7 @@ import (
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
+	"go.jetify.com/devbox/internal/searcher"
 )
 
 //go:embed tmpl/*
@@ -244,7 +245,12 @@ func (g *Options) getDevcontainerContent() *devcontainerObject {
 		return nil
 	}
 	for _, pkg := range g.Pkgs {
-		if py3pattern.MatchString(pkg) {
+		// Strip the version from versioned names like python@3.12 or go@latest.
+		version := ""
+		if name, v, ok := searcher.ParseVersionedPackage(pkg); ok {
+			pkg, version = name, v
+		}
+		if py3pattern.MatchString(pkg) || (pkg == "python" && !strings.HasPrefix(version, "2")) {
 			// Setup python3 interpreter path to devbox in the container
 			devcontainerContent.Customizations.Vscode.Settings = map[string]any{
 				"python.defaultInterpreterPath": "/code/.devbox/nix/profile/default/bin/python3",
