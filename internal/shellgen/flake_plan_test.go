@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"go.jetify.com/devbox/internal/devbox/devopt"
@@ -29,6 +30,9 @@ func (l *lockMock) ProjectDir() string {
 }
 
 func (l *lockMock) Resolve(key string) (*lock.Package, error) {
+	if strings.HasPrefix(key, "runx:") {
+		return &lock.Package{Resolved: key}, nil
+	}
 	return &lock.Package{
 		Resolved: "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#python312",
 	}, nil
@@ -56,6 +60,27 @@ func TestNewGlibcPatchFlake(t *testing.T) {
 
 	if len(patchFlake.Outputs.Packages) != 1 {
 		t.Errorf("expected 1 package in Outputs, got %d", len(patchFlake.Outputs.Packages))
+	}
+}
+
+func TestNewGlibcPatchFlakeSkipsNonNix(t *testing.T) {
+	stdenv := flake.Ref{
+		Type: flake.TypeGitHub,
+		URL:  "https://github.com/NixOS/nixpkgs",
+		Ref:  "nixpkgs-unstable",
+	}
+	packages := devpkg.PackagesFromStringsWithOptions(
+		[]string{"python@latest", "runx:golangci/golangci-lint@latest"},
+		&lockMock{},
+		devopt.AddOpts{Patch: string(configfile.PatchAlways)},
+	)
+
+	patchFlake, err := newGlibcPatchFlake(stdenv, packages)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(patchFlake.Inputs) != 1 {
+		t.Errorf("expected 1 flake input, got %v", patchFlake.Inputs)
 	}
 }
 

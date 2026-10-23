@@ -119,6 +119,11 @@ func newGlibcPatchFlake(nixpkgs flake.Ref, packages []*devpkg.Package) (glibcPat
 	}
 
 	for _, pkg := range packages {
+		// Non-nix packages (e.g. runx) don't belong in the flake.
+		if !pkg.IsNix() {
+			continue
+		}
+
 		// Check to see if this is a CUDA package. If so, we need to add
 		// it to the flake dependencies so that we can patch other
 		// packages to reference it (like Python).
