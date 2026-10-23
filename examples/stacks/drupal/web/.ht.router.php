@@ -44,7 +44,7 @@ if (str_contains($path, '.php')) {
   // fallback to index.php.
   do {
     $path = dirname($path);
-    if (preg_match('/\.php$/', $path) && is_file(__DIR__ . $path)) {
+    if (str_ends_with($path, '.php') && is_file(__DIR__ . $path)) {
       // Discovered that the path contains an existing PHP file. Use that as the
       // script to include.
       $script = ltrim($path, '/');

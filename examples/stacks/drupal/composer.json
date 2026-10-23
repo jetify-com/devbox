@@ -1,6 +1,6 @@
 {
     "name": "drupal/recommended-project",
-    "description": "Project template for Drupal 9 projects with a relocated document root",
+    "description": "Project template for Drupal projects with a relocated document root",
     "type": "project",
     "license": "GPL-2.0-or-later",
     "homepage": "https://www.drupal.org/project/drupal",
@@ -15,11 +15,12 @@
         }
     ],
     "require": {
-        "composer/installers": "^1.9",
-        "drupal/core-composer-scaffold": "^10.3.14",
-        "drupal/core-project-message": "^10.3.14",
-        "drupal/core-recommended": "^10.3.14",
-        "drush/drush": "^12.4"
+        "composer/installers": "^2.3",
+        "drupal/core-composer-scaffold": "^11.4",
+        "drupal/core-project-message": "^11.4",
+        "drupal/core-recipe-unpack": "^11.4",
+        "drupal/core-recommended": "^11.4",
+        "drush/drush": "^13.8"
     },
     "conflict": {
         "drupal/drupal": "*"
@@ -30,8 +31,13 @@
         "allow-plugins": {
             "composer/installers": true,
             "drupal/core-composer-scaffold": true,
+            "drupal/core-recipe-unpack": true,
             "drupal/core-project-message": true,
-            "dealerdirect/phpcodesniffer-composer-installer": true
+            "phpstan/extension-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "php-http/discovery": true,
+            "php-tuf/composer-integration": true,
+            "symfony/runtime": true
         },
         "sort-packages": true
     },
