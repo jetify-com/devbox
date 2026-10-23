@@ -8,6 +8,7 @@ import (
 	"context"
 	"debug/elf"
 	_ "embed"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -156,10 +157,8 @@ func (d *DerivationBuilder) build(ctx context.Context, pkg, out *packageFS) erro
 func (d *DerivationBuilder) restoreMissingRefs(ctx context.Context, pkg *packageFS) error {
 	// Find store path references to build inputs that were removed
 	// from Python.
+	// Restore any refs that were found even if some couldn't be resolved.
 	refs, err := d.findRemovedRefs(ctx, pkg)
-	if err != nil {
-		return err
-	}
 
 	// Group the references we want to restore by file path.
 	d.bytePatches = make(map[string][]fileSlice, len(refs))
@@ -181,7 +180,7 @@ func (d *DerivationBuilder) restoreMissingRefs(ctx context.Context, pkg *package
 			d.glibcPatcher.prependRPATH(newPackageFS(storePath))
 		}
 	}
-	return nil
+	return err
 }
 
 func (d *DerivationBuilder) copyDir(out *packageFS, path string) error {
@@ -296,24 +295,30 @@ func hasInterpreter(f fs.File) bool {
 	})
 }
 
+// findRemovedRefs returns the removed store path references that it was able
+// to restore. References that can't be restored are omitted and reported in
+// the returned error.
 func (d *DerivationBuilder) findRemovedRefs(ctx context.Context, pkg *packageFS) ([]fileSlice, error) {
 	var refs []fileSlice
 	matches, err := fs.Glob(pkg, "lib/python*/_sysconfigdata_*.py")
 	if err != nil {
 		return nil, err
 	}
+	var errs []error
 	for _, name := range matches {
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
 		matches, err := searchFile(pkg, name, reRemovedRefs)
 		if err != nil {
-			return nil, err
+			errs = append(errs, err)
+			continue
 		}
 		refs = append(refs, matches...)
 	}
 
 	pkgNameToHash := make(map[string]string, len(refs))
+	restored := refs[:0]
 	for _, ref := range refs {
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
@@ -322,6 +327,7 @@ func (d *DerivationBuilder) findRemovedRefs(ctx context.Context, pkg *packageFS)
 		name := string(ref.data[33:])
 		if hash, ok := pkgNameToHash[name]; ok {
 			copy(ref.data, hash)
+			restored = append(restored, ref)
 			continue
 		}
 
@@ -331,14 +337,16 @@ func (d *DerivationBuilder) findRemovedRefs(ctx context.Context, pkg *packageFS)
 		}
 		match := searchEnv(re)
 		if match == "" {
-			return nil, fmt.Errorf("can't find hash to restore store path reference %q in %q: regexp %q returned 0 matches", ref.data, ref.path, re)
+			errs = append(errs, fmt.Errorf("can't find hash to restore store path reference %q in %q: regexp %q returned 0 matches", ref.data, ref.path, re))
+			continue
 		}
 		hash := match[:32]
 		pkgNameToHash[name] = hash
 		copy(ref.data, hash)
+		restored = append(restored, ref)
 		slog.DebugContext(ctx, "restored store ref", "ref", ref)
 	}
-	return refs, nil
+	return restored, errors.Join(errs...)
 }
 
 func (d *DerivationBuilder) findCUDA(ctx context.Context, out *packageFS) error {

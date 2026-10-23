@@ -98,3 +98,37 @@ func TestCopyFileStaticBinary(t *testing.T) {
 		t.Error("copied static binary doesn't match the original")
 	}
 }
+
+// TestFindRemovedRefsPartial checks that findRemovedRefs still returns the
+// references it can restore when some of them can't be restored.
+func TestFindRemovedRefsPartial(t *testing.T) {
+	const (
+		removedHash = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+		goodHash    = "0123456789abcdfghijklmnpqrsvwxyz"
+	)
+	t.Setenv("PATCHPKG_TEST_DEP", "/nix/store/"+goodHash+"-found-1.0")
+
+	dir := t.TempDir()
+	sysconfig := filepath.Join(dir, "lib", "python3.12", "_sysconfigdata_test.py")
+	if err := os.MkdirAll(filepath.Dir(sysconfig), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	data := `'A': '/nix/store/` + removedHash + `-missing-1.0/lib',
+'B': '/nix/store/` + removedHash + `-found-1.0/lib',
+`
+	if err := os.WriteFile(sysconfig, []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	d := &DerivationBuilder{}
+	refs, err := d.findRemovedRefs(t.Context(), newPackageFS(dir))
+	if err == nil {
+		t.Error("got nil error for unresolvable reference")
+	}
+	if len(refs) != 1 {
+		t.Fatalf("got %d restored refs, want 1: %v", len(refs), refs)
+	}
+	if got, want := string(refs[0].data), goodHash+"-found-1.0"; got != want {
+		t.Errorf("got restored ref %q, want %q", got, want)
+	}
+}
