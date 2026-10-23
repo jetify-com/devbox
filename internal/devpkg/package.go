@@ -233,6 +233,11 @@ func (p *Package) FlakeInputName() string {
 			} else if p.installable.Ref.Ref != "" {
 				result += "-" + p.installable.Ref.Ref
 			}
+			// Disambiguate flakes in different subdirectories or hosts of
+			// the same repo.
+			if p.installable.Ref.Dir != "" || p.installable.Ref.Host != "" {
+				result += "-" + cachehash.Bytes6([]byte(p.installable.Ref.String()))
+			}
 		}
 	default:
 		result = p.installable.Ref.String() + "-" + p.Hash()

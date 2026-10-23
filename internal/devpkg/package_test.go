@@ -99,6 +99,23 @@ func TestInput(t *testing.T) {
 	}
 }
 
+func TestFlakeInputNameUnique(t *testing.T) {
+	pkgs := []string{
+		"github:owner/repo/abc123#x",
+		"github:owner/repo/abc123?dir=a#x",
+		"github:owner/repo/abc123?dir=b#y",
+		"github:owner/repo/abc123?host=git.example.com#x",
+	}
+	seen := map[string]string{}
+	for _, pkg := range pkgs {
+		name := testInputFromString(pkg, "/tmp/my-project").FlakeInputName()
+		if other, ok := seen[name]; ok {
+			t.Errorf("FlakeInputName() = %q for both %q and %q", name, other, pkg)
+		}
+		seen[name] = pkg
+	}
+}
+
 type testInput struct {
 	*Package
 }
