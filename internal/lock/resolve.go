@@ -221,9 +221,9 @@ func lockFlake(ctx context.Context, ref flake.Ref, refresh bool) (flake.Ref, err
 	// file is a bit more lenient and only requires a revision so that we
 	// don't need to download the nixpkgs source for cached packages. If the
 	// search index is ever able to return the NAR hash then we can remove
-	// this check. Skip this shortcut when refresh is requested — the caller
-	// is asking us to re-query upstream for a newer rev.
-	if !refresh && ref.Type == flake.TypeGitHub && (ref.Rev != "") {
+	// this check. A pinned rev can't change, so this also applies when
+	// refresh is requested.
+	if ref.Type == flake.TypeGitHub && ref.Rev != "" {
 		return ref, nil
 	}
 

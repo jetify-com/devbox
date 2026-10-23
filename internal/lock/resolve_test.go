@@ -7,7 +7,7 @@ import "testing"
 
 func TestFetchResolvedPackagePinnedGitHubFlake(t *testing.T) {
 	const pkg = "github:owner/repo/1111111111111111111111111111111111111111#hello"
-	for _, refresh := range []bool{false} {
+	for _, refresh := range []bool{false, true} {
 		got, err := (&File{}).FetchResolvedPackage(pkg, refresh)
 		if err != nil {
 			t.Fatalf("refresh=%v: got error: %v", refresh, err)
