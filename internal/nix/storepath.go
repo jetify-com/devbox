@@ -26,13 +26,20 @@ func NewStorePathParts(path string) StorePathParts {
 
 	hash, name := path[:32], path[33:]
 	dashIndex := 0
-	for i, r := range name {
-		if dashIndex != 0 && !unicode.IsLetter(r) {
-			version, output, _ := strings.Cut(name[i:], "-")
+	for i, char := range name {
+		if dashIndex != 0 && !unicode.IsLetter(char) {
+			// Versions may contain dashes (2.39-52, 0-unstable-2024-01-01),
+			// so only treat the last component as the output if it starts
+			// with a letter.
+			version, output := name[i:], ""
+			if j := strings.LastIndex(version, "-"); j != -1 && j+1 < len(version) &&
+				unicode.IsLetter(rune(version[j+1])) {
+				version, output = version[:j], version[j+1:]
+			}
 			return StorePathParts{Hash: hash, Name: name[:dashIndex], Version: version, Output: output}
 		}
 		dashIndex = 0
-		if r == '-' {
+		if char == '-' {
 			dashIndex = i
 		}
 	}
