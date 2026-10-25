@@ -47,7 +47,7 @@ direnv `cd` about 5–10× faster when nothing has changed.
 
 ## Tier 1: fixed cost on every command
 
-### 1. Cache the nix version info on disk
+### 1. Cache the nix version info on disk (done in #3020)
 
 **Win:** ~90ms on every command. Could take `shellenv` from ~100ms to ~10–20ms.
 **Effort:** ~80–120 LOC.
