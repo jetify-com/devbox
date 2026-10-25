@@ -1197,13 +1197,10 @@ func (d *Devbox) Lockfile() *lock.File {
 
 func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 	runxBinPath := filepath.Join(d.projectDir, ".devbox", "virtenv", "runx", "bin")
-	if err := os.RemoveAll(runxBinPath); err != nil {
-		return "", err
-	}
-	if err := os.MkdirAll(runxBinPath, 0o755); err != nil {
-		return "", err
-	}
 
+	// Map of symlink name -> target for every runx binary. If two packages
+	// provide a binary with the same name, the first one wins.
+	links := map[string]string{}
 	for _, pkg := range d.InstallablePackages() {
 		if !pkg.IsRunX() {
 			continue
@@ -1223,15 +1220,61 @@ func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 				return "", err
 			}
 			for _, file := range files {
-				src := filepath.Join(path, file.Name())
-				dst := filepath.Join(runxBinPath, file.Name())
-				if err := os.Symlink(src, dst); err != nil && !errors.Is(err, os.ErrExist) {
-					return "", err
+				if _, ok := links[file.Name()]; !ok {
+					links[file.Name()] = filepath.Join(path, file.Name())
 				}
 			}
 		}
 	}
+	if err := syncSymlinks(runxBinPath, links); err != nil {
+		return "", err
+	}
 	return runxBinPath, nil
+}
+
+// syncSymlinks makes dir contain exactly the symlinks in links (name ->
+// target). It reconciles the directory in place instead of recreating it so
+// that concurrent devbox processes (and running shells that have dir in their
+// PATH) never observe it missing or half-populated.
+func syncSymlinks(dir string, links map[string]string) error {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		name := entry.Name()
+		want, ok := links[name]
+		if ok && isSymlinkTo(filepath.Join(dir, name), want) {
+			continue
+		}
+		err := os.RemoveAll(filepath.Join(dir, name))
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	}
+
+	for name, target := range links {
+		dst := filepath.Join(dir, name)
+		err := os.Symlink(target, dst)
+		if err == nil {
+			continue
+		}
+		// Another process may have created the link first.
+		if errors.Is(err, os.ErrExist) && isSymlinkTo(dst, target) {
+			continue
+		}
+		return err
+	}
+	return nil
+}
+
+func isSymlinkTo(path, target string) bool {
+	got, err := os.Readlink(path)
+	return err == nil && got == target
 }
 
 func validateEnvironment(environment string) (string, error) {
