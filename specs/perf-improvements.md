@@ -67,7 +67,7 @@ Fix:
   `ExcludedPlatforms` is set, so `nix.System()` is never called in the common
   case. ~3–5 LOC.
 
-### 2. Telemetry re-opens the whole project after every command
+### 2. Telemetry re-opens the whole project after every command (done in #3021)
 
 **Win:** one extra `devbox.Open` per command (re-parses devbox.json and
 devbox.lock, reloads plugins, which can hit the network).
@@ -85,7 +85,7 @@ Fix:
   so it is always nil and `--config` is ignored. Look it up on the resolved
   subcommand instead. ~2–5 LOC.
 
-### 3. Cache the macOS machine ID
+### 3. Cache the macOS machine ID (done in #3021)
 
 **Win:** ~20ms per command on macOS.
 **Effort:** ~30–50 LOC.
@@ -94,7 +94,7 @@ Fix:
 `ioreg` every time. Fix: compute it once and store it in the XDG state dir;
 read the file on subsequent runs.
 
-### 4. Throttle the `devbox upload-telemetry` child process
+### 4. Throttle the `devbox upload-telemetry` child process (done in #3021)
 
 **Win:** removes a second devbox process + HTTPS calls on every command (every
 direnv `cd`).
