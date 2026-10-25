@@ -2,12 +2,12 @@
 
 [![Built with Devbox](https://www.jetify.com/img/devbox/shield_galaxy.svg)](https://github.com/jetify-com/devbox/blob/main/CONTRIBUTING.md)
 
-Example devbox for testing and developing Temporal workflows using Temporalite and the Python Temporal SDK.
+Example devbox for testing and developing Temporal workflows using the Temporal CLI's development server and the Python Temporal SDK.
 
 For more details, check out:
 
 * [Temporal.io](https://temporal.io/)
-* [Temporalite](https://github.com/temporalio/temporalite)
+* [Temporal CLI](https://github.com/temporalio/cli)
 * [Temporal Python SDK](https://github.com/temporalio/sdk-python)
 * [Temporal Python Samples](https://github.com/temporalio/samples-python)
 
@@ -17,7 +17,7 @@ For more details, check out:
 devbox run start-temporal
 ```
 
-This will start the temporalite server for testing.
+This will start an in-memory Temporal development server (`temporal server start-dev`) for testing.
 
 * You can view the WebUI at `localhost:8233`
 * By default, Temporal will listen for activities/requests on port `7233`
@@ -35,8 +35,7 @@ This will activate a virtual environment and install the Temporal Python SDK.
 From inside your `devbox shell`
 
 ```bash
-cd temporal_example/hello
-python run hello_activity.py
+python hello/hello_activity.py
 ```
 
-This should start the workflow using temporalite.
+This should run the workflow against the development server and print `Result: Hello, World!`.

@@ -6,9 +6,9 @@ authors = ["John Lago <750845+Lagoja@users.noreply.github.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-emoji = "^2.1.0"
+emoji = "^2.16.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^9.0.3"
 
 [build-system]
