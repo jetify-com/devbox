@@ -24,7 +24,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	segment "github.com/segmentio/analytics-go"
+	segment "github.com/segmentio/analytics-go/v3"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/nix"
 

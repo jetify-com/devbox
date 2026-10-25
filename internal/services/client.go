@@ -99,7 +99,7 @@ func ListServices(ctx context.Context, projectDir string, w io.Writer) ([]Proces
 			results = append(results, Process{
 				PID:       process.Pid,
 				Name:      process.Name,
-				Namespace: process.Namespace,
+				Namespace: process.Namespace.String(),
 				Status:    process.Status,
 				Age:       process.Age.Round(time.Second),
 				Health:    process.Health,
