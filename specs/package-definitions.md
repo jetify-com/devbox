@@ -9,7 +9,7 @@ lands.
 Let a Devbox project install a tool from the upstream vendor's own binary
 distribution (go.dev, nodejs.org, GitHub releases, ...) instead of nixpkgs,
 driven by a small declarative *package definition* file. Go is the first
-package (see [`pkgs/go/go.pkg.json`](../pkgs/go/go.pkg.json)). Later, the
+package (see [`pkgs/go/go.pkg.jsonc`](../pkgs/go/go.pkg.jsonc)). Later, the
 search service returns these definitions so that `devbox add go@1.22`
 transparently picks the vendor build.
 
@@ -27,12 +27,14 @@ Prior art this design borrows from:
 
 ## Referencing a definition
 
-A definition is a JSON file (hujson, comments and trailing commas allowed)
-named `<name>.pkg.json`. A project references it with the `pkg:` scheme:
+A definition is a JSON file named `<name>.pkg.json` or `<name>.pkg.jsonc`.
+Both extensions are parsed as hujson (comments and trailing commas allowed);
+prefer `.jsonc` when the file has comments so editors highlight it correctly.
+A project references it with the `pkg:` scheme:
 
 ```sh
-devbox add pkg:./go.pkg.json@1.22
-devbox add pkg:https://raw.githubusercontent.com/jetify-com/devbox/main/pkgs/go/go.pkg.json@1.22
+devbox add pkg:./go.pkg.jsonc@1.22
+devbox add pkg:https://raw.githubusercontent.com/jetify-com/devbox/main/pkgs/go/go.pkg.jsonc@1.22
 ```
 
 The string is `pkg:<ref>@<version>`. The version is split at the last `@`,
@@ -41,11 +43,11 @@ paths keep working. `<ref>` is one of:
 
 | Form | Example | Notes |
 |---|---|---|
-| relative path | `./go.pkg.json`, `../defs/go.pkg.json` | Relative to the directory of `devbox.json`. |
-| absolute path | `/opt/defs/go.pkg.json` | |
-| `https://` URL | `https://example.com/go.pkg.json` | Content is cached by hash; the lockfile pins the hash. |
-| `file://` URL | `file:///tmp/go.pkg.json` | Mainly for tests. |
-| `github:` | `github:jetify-com/devbox/pkgs/go/go.pkg.json` | Planned. Sugar for the raw.githubusercontent.com URL. |
+| relative path | `./go.pkg.jsonc`, `../defs/go.pkg.jsonc` | Relative to the directory of `devbox.json`. |
+| absolute path | `/opt/defs/go.pkg.jsonc` | |
+| `https://` URL | `https://example.com/go.pkg.jsonc` | Content is cached by hash; the lockfile pins the hash. |
+| `file://` URL | `file:///tmp/go.pkg.jsonc` | Mainly for tests. |
+| `github:` | `github:jetify-com/devbox/pkgs/go/go.pkg.jsonc` | Planned. Sugar for the raw.githubusercontent.com URL. |
 
 If no `@version` is given, `devbox add` appends `@latest`.
 
@@ -250,10 +252,10 @@ for every install strategy.
 ## Lockfile
 
 ```jsonc
-"pkg:./go.pkg.json@1.22": {
+"pkg:./go.pkg.jsonc@1.22": {
   "source": "pkg-def",
   "version": "1.22.3",
-  "resolved": "pkg:./go.pkg.json@1.22.3",
+  "resolved": "pkg:./go.pkg.jsonc@1.22.3",
   "definition_hash": "sha256-...",
   "systems": {
     "aarch64-darwin": { "url": "https://go.dev/dl/go1.22.3.darwin-arm64.tar.gz", "sha256": "..." },
@@ -292,14 +294,15 @@ run shell through `hooks.post_install` and `shell.init_hook`. Mitigations:
 ### PR 1: spec and Go example (this document)
 
 - `specs/package-definitions.md`
-- `pkgs/go/go.pkg.json`
+- `pkgs/go/go.pkg.jsonc`
 
 ### PR 2: `internal/pkgdef`
 
 A leaf package with no dependency on `devpkg`, `lock` or `plugin`.
 
 - `Parse` and `Validate` for the format above (hujson input).
-- `ParseRef` for `pkg:<ref>@<version>`.
+- `ParseRef` for `pkg:<ref>@<version>`, accepting `.pkg.json` and
+  `.pkg.jsonc` refs.
 - `Load` for path, `https://` and `file://` refs, with a content-addressed
   cache for remote definitions.
 - `ResolveVersion` for `static`, `http_json` and `github_releases`.
@@ -345,8 +348,8 @@ Behind the `DEVBOX_FEATURE_PKG_DEFS` flag (on in dev builds).
 - No binary cache: if a vendor deletes an artifact, a locked project breaks
   until Jetify mirrors artifacts. The lockfile `url` field makes that a
   service-side change.
-- `devbox add pkg:./go.pkg.json` does not replace an existing nixpkgs `go@x`
-  entry today because canonical names differ (`pkg:./go.pkg.json` vs `go`).
+- `devbox add pkg:./go.pkg.jsonc` does not replace an existing nixpkgs `go@x`
+  entry today because canonical names differ (`pkg:./go.pkg.jsonc` vs `go`).
   Decide whether it should once search returns definitions.
 - `devbox global` shares `computeEnv` and should work unchanged; verify.
 - Windows and `devbox generate` images are out of scope for the first cut.
