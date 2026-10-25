@@ -281,9 +281,11 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 	lock.SetIgnoreShellMismatch(true)
 
 	var env map[string]string
-	if d.IsEnvEnabled() {
-		// Skip ensureStateIsUpToDate if we are already in a shell of this devbox-project
+	if d.IsEnvEnabled() && !envOpts.Pure {
+		// Skip ensureStateIsUpToDate if we are already in a shell of this
+		// devbox-project. A --pure run still needs a freshly computed env.
 		env = envir.PairsToMap(os.Environ())
+		maps.Copy(env, d.env)
 
 		// We set this to ensure that init-hooks do NOT re-run. They would have
 		// run when initializing the Devbox Environment in the current shell.

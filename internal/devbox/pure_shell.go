@@ -24,8 +24,13 @@ func createDevboxSymlink(d *Devbox) error {
 	if err := os.MkdirAll(binPath, 0o755); err != nil {
 		return errors.WithStack(err)
 	}
-	// Create a symlink between devbox and .devbox/bin
-	err = os.Symlink(devboxPath, filepath.Join(binPath, "devbox"))
+	// Create a symlink between devbox and .devbox/bin, replacing any stale
+	// symlink that points to a different devbox (e.g. after an upgrade).
+	link := filepath.Join(binPath, "devbox")
+	if target, err := os.Readlink(link); err == nil && target != devboxPath {
+		_ = os.Remove(link)
+	}
+	err = os.Symlink(devboxPath, link)
 	if err != nil && !errors.Is(err, fs.ErrExist) {
 		return errors.Wrap(err, "failed to create devbox symlink. Devbox command won't be available inside the shell")
 	}
