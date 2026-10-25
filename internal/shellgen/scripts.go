@@ -79,7 +79,7 @@ func WriteScriptsToFiles(devbox devboxer) error {
 		if _, ok := written[scriptName]; !ok && !entry.IsDir() {
 			err := os.Remove(ScriptPath(devbox.ProjectDir(), scriptName))
 			if err != nil {
-				slog.Debug("failed to clean up script file %s, error = %s", entry.Name(), err) // no need to fail run
+				slog.Debug("failed to clean up script file", "file", entry.Name(), "err", err) // no need to fail run
 			}
 		}
 	}
