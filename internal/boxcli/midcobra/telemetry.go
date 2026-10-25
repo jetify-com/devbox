@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/pflag"
 	"go.jetify.com/devbox/internal/boxcli/featureflag"
 	"go.jetify.com/devbox/internal/devbox"
-	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/envir"
 	"go.jetify.com/devbox/internal/telemetry"
 )
@@ -40,6 +39,10 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	defer trace.StartRegion(cmd.Context(), "telemetryPostRun").End()
 	defer telemetry.Stop()
 
+	if !telemetry.Enabled() {
+		return
+	}
+
 	meta := telemetry.Metadata{
 		FeatureFlags: featureflag.All(),
 		CloudRegion:  os.Getenv(envir.DevboxRegion),
@@ -54,7 +57,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	meta.Command = subcmd.CommandPath()
 	meta.CommandFlags = flags
 
-	meta.Packages, meta.NixpkgsHash = getPackagesAndCommitHash(subcmd)
+	meta.Packages, meta.NixpkgsHash = getPackagesAndCommitHash()
 	meta.InShell = envir.IsDevboxShellEnabled()
 	meta.InBrowser = envir.IsInBrowser()
 	meta.InCloud = envir.IsDevboxCloud()
@@ -81,28 +84,15 @@ func getSubcommand(cmd *cobra.Command, args []string) (subcmd *cobra.Command, fl
 	return subcmd, flags, err
 }
 
-func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
-	configFlag := c.Flag("config")
-	// for shell, run, and add command, path can be set via --config
-	// if --config is not set, default to current directory which is ""
-	// the only exception is the init command, for the path can be set with args
-	// since after running init there will be no packages set in devbox.json
-	// we can safely ignore this case.
-	var path string
-	if configFlag != nil {
-		path = configFlag.Value.String()
-	}
-
-	box, err := devbox.Open(&devopt.Opts{
-		Dir:              path,
-		Stderr:           os.Stderr,
-		IgnoreWarnings:   true,
-		SkipVersionCheck: true,
-	})
-	if err != nil {
+// getPackagesAndCommitHash returns the packages and nixpkgs commit of the
+// project that the command opened. It reuses the already-opened project instead
+// of opening it again, which would re-parse the config and reload plugins.
+// Commands that don't open a project report no packages.
+func getPackagesAndCommitHash() ([]string, string) {
+	box := devbox.LastOpened()
+	if box == nil {
 		return []string{}, ""
 	}
-
 	return box.AllPackageNamesIncludingRemovedTriggerPackages(),
 		box.Lockfile().Stdenv().Rev
 }
