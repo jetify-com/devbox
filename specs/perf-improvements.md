@@ -105,7 +105,7 @@ every successful command. Fix: record the last upload time in the state dir and
 only spawn the uploader when it was more than N minutes ago, or when the
 buffered event count exceeds a threshold.
 
-### 5. Make `generate direnv --print-envrc` cheap
+### 5. Make `generate direnv --print-envrc` cheap (done in #3022)
 
 **Win:** every direnv reload.
 **Effort:** ~15–30 LOC.
