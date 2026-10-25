@@ -45,3 +45,14 @@ func TestGetPackagesAndCommitHash(t *testing.T) {
 		t.Errorf("Expected commitHash %s, got %s", box.Lockfile().Stdenv().Rev, commitHash)
 	}
 }
+
+func TestSkipTelemetry(t *testing.T) {
+	cmd := &cobra.Command{Use: "test"}
+	if telemetrySkipped(cmd) {
+		t.Error("telemetry skipped before calling SkipTelemetry")
+	}
+	SkipTelemetry(cmd)
+	if !telemetrySkipped(cmd) {
+		t.Error("telemetry not skipped after calling SkipTelemetry")
+	}
+}

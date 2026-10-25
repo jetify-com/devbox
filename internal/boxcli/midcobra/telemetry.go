@@ -32,6 +32,23 @@ type telemetryMiddleware struct{}
 // telemetryMiddleware implements interface Middleware (compile-time check)
 var _ Middleware = (*telemetryMiddleware)(nil)
 
+// skipTelemetryAnnotation is set on a command by SkipTelemetry.
+const skipTelemetryAnnotation = "devbox.skip-telemetry"
+
+// SkipTelemetry stops the telemetry middleware from recording the current run
+// of cmd. Use it for commands that run so often in the background (e.g. on
+// every direnv reload) that recording them isn't useful.
+func SkipTelemetry(cmd *cobra.Command) {
+	if cmd.Annotations == nil {
+		cmd.Annotations = map[string]string{}
+	}
+	cmd.Annotations[skipTelemetryAnnotation] = "true"
+}
+
+func telemetrySkipped(cmd *cobra.Command) bool {
+	return cmd.Annotations[skipTelemetryAnnotation] != ""
+}
+
 func (m *telemetryMiddleware) preRun(cmd *cobra.Command, args []string) {
 	telemetry.Start()
 }
@@ -49,6 +66,9 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	subcmd, flags, err := getSubcommand(cmd, args)
 	if err != nil {
 		// Ignore invalid commands/flags.
+		return
+	}
+	if telemetrySkipped(subcmd) {
 		return
 	}
 	meta.Command = subcmd.CommandPath()
