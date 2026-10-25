@@ -6,6 +6,8 @@ package vercheck
 import (
 	"bytes"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -34,6 +36,22 @@ func setupProjectVersionTest(t *testing.T, version string) {
 	t.Setenv(envir.DevboxLatestVersion, "")
 	t.Setenv(warnedEnvName, "")
 	t.Cleanup(func() { os.Unsetenv(warnedEnvName) })
+
+	// Isolate tests from versions the launcher installed on this machine.
+	t.Setenv("HOME", t.TempDir())
+}
+
+// installBinary creates an executable at the path where the launcher installs
+// version and returns the path.
+func installBinary(t *testing.T, version string, perm os.FileMode) string {
+	t.Helper()
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+	dir := filepath.Join(home, ".cache", "devbox", "bin", version+"_"+runtime.GOOS+"_"+runtime.GOARCH)
+	require.NoError(t, os.MkdirAll(dir, 0o755))
+	bin := filepath.Join(dir, "devbox")
+	require.NoError(t, os.WriteFile(bin, []byte("#!/bin/sh\n"), perm))
+	return bin
 }
 
 func TestCheckProjectVersionSatisfied(t *testing.T) {
@@ -220,6 +238,33 @@ func TestCheckProjectVersionAuto(t *testing.T) {
 		assert.Empty(t, buf.String())
 	})
 
+	t.Run("runs_installed_binary_directly", func(t *testing.T) {
+		setupProjectVersionTest(t, "0.17.2")
+		t.Setenv(envir.LauncherPath, "/usr/local/bin/devbox")
+		bin := installBinary(t, "0.18.4", 0o755)
+		exec := &mockExec{}
+		exec.install(t)
+
+		require.NoError(t, CheckProjectVersion(new(bytes.Buffer), testConfigPath, required))
+		require.True(t, exec.called)
+		assert.Equal(t, bin, exec.argv0)
+		assert.Equal(t, append([]string{bin}, os.Args[1:]...), exec.argv)
+		assert.Equal(t, []string{"0.18.4"}, exec.env(envir.DevboxUseVersion))
+		assert.Equal(t, []string{"0.18.4"}, exec.env(autoVersionEnvName))
+	})
+
+	t.Run("uses_launcher_if_binary_not_executable", func(t *testing.T) {
+		setupProjectVersionTest(t, "0.17.2")
+		t.Setenv(envir.LauncherPath, "/usr/local/bin/devbox")
+		installBinary(t, "0.18.4", 0o644)
+		exec := &mockExec{}
+		exec.install(t)
+
+		require.NoError(t, CheckProjectVersion(new(bytes.Buffer), testConfigPath, required))
+		require.True(t, exec.called)
+		assert.Equal(t, "/usr/local/bin/devbox", exec.argv0)
+	})
+
 	t.Run("switches_again_for_a_different_project", func(t *testing.T) {
 		// Inside a shell that auto switched to 0.17.2 for another project.
 		setupProjectVersionTest(t, "0.17.2")
@@ -292,4 +337,75 @@ func TestCheckProjectVersionAuto(t *testing.T) {
 		require.NoError(t, CheckProjectVersion(new(bytes.Buffer), testConfigPath, required))
 		assert.False(t, exec.called)
 	})
+}
+
+func TestSwitchProjectVersion(t *testing.T) {
+	auto := &configfile.DevboxVersion{Version: "0.18.4", OnMismatch: configfile.VersionPolicyAuto}
+
+	t.Run("switches", func(t *testing.T) {
+		setupProjectVersionTest(t, "0.17.2")
+		t.Setenv(envir.LauncherPath, "/usr/local/bin/devbox")
+		bin := installBinary(t, "0.18.4", 0o755)
+		exec := &mockExec{}
+		exec.install(t)
+
+		SwitchProjectVersion(testConfigPath, auto)
+		require.True(t, exec.called)
+		assert.Equal(t, bin, exec.argv0)
+		assert.Equal(t, []string{"0.18.4"}, exec.env(envir.DevboxUseVersion))
+	})
+
+	t.Run("env_override_to_auto", func(t *testing.T) {
+		setupProjectVersionTest(t, "0.17.2")
+		t.Setenv(envir.DevboxVersionPolicy, "auto")
+		t.Setenv(envir.LauncherPath, "/usr/local/bin/devbox")
+		exec := &mockExec{}
+		exec.install(t)
+
+		SwitchProjectVersion(testConfigPath, &configfile.DevboxVersion{Version: "0.18.4"})
+		assert.True(t, exec.called)
+	})
+
+	// In these cases, SwitchProjectVersion does nothing and leaves any
+	// warning or error to CheckProjectVersion.
+	noSwitch := []struct {
+		name     string
+		version  string
+		env      map[string]string
+		required *configfile.DevboxVersion
+	}{
+		{name: "satisfied", version: "0.18.4", required: auto},
+		{name: "no_constraint", version: "0.17.2"},
+		{name: "warn", version: "0.17.2", required: &configfile.DevboxVersion{Version: "0.18.4"}},
+		{
+			name:     "error",
+			version:  "0.17.2",
+			required: &configfile.DevboxVersion{Version: "0.18.4", OnMismatch: configfile.VersionPolicyError},
+		},
+		{name: "env_override_off", version: "0.17.2", env: map[string]string{envir.DevboxVersionPolicy: "off"}, required: auto},
+		{name: "env_override_invalid", version: "0.17.2", env: map[string]string{envir.DevboxVersionPolicy: "explode"}, required: auto},
+		{name: "user_set_version", version: "0.17.2", env: map[string]string{envir.DevboxUseVersion: "0.17.2"}, required: auto},
+		{
+			name:     "already_switched",
+			version:  "0.17.2",
+			env:      map[string]string{envir.DevboxUseVersion: "0.18.4", autoVersionEnvName: "0.18.4"},
+			required: auto,
+		},
+		{name: "no_launcher", version: "0.17.2", env: map[string]string{envir.LauncherPath: ""}, required: auto},
+	}
+	for _, tc := range noSwitch {
+		t.Run(tc.name, func(t *testing.T) {
+			setupProjectVersionTest(t, tc.version)
+			t.Setenv(envir.LauncherPath, "/usr/local/bin/devbox")
+			for k, v := range tc.env {
+				t.Setenv(k, v)
+			}
+			exec := &mockExec{}
+			exec.install(t)
+
+			SwitchProjectVersion(testConfigPath, tc.required)
+			assert.False(t, exec.called)
+			assert.Empty(t, os.Getenv(warnedEnvName), "CheckProjectVersion should still warn")
+		})
+	}
 }

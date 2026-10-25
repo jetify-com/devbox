@@ -102,6 +102,9 @@ func Execute(ctx context.Context, args []string) int {
 	defer debug.Recover()
 	rootCmd := RootCmd()
 	exe := midcobra.New(rootCmd)
+	// Runs first because it might re-run the command with another devbox
+	// version, which makes the work done by any earlier middleware wasted.
+	exe.AddMiddleware(midcobra.ProjectVersion())
 	exe.AddMiddleware(traceMiddleware)
 	exe.AddMiddleware(midcobra.Telemetry())
 	exe.AddMiddleware(debugMiddleware)
