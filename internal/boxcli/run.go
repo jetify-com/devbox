@@ -246,15 +246,16 @@ func wrapArgsForRun(rootCmd *cobra.Command, args []string) []string {
 	// are 2 or fewer arguments, we also don't need to do anything because there
 	// are no flags after a non-run non-flag arg.
 	// IMPROVEMENT: technically users can pass a flag before the subcommand "run"
-	if len(args) <= 2 || args[0] != "run" || slices.Contains(args, "--") {
+	runIdx := 0
+	if len(args) > 0 && args[0] == "global" {
+		runIdx = 1
+	}
+	if len(args) <= runIdx+2 || args[runIdx] != "run" {
 		return args
 	}
 
-	cmd, found := lo.Find(
-		rootCmd.Commands(),
-		func(item *cobra.Command) bool { return item.Name() == "run" },
-	)
-	if !found {
+	cmd, _, err := rootCmd.Find(args[:runIdx+1])
+	if err != nil || cmd.Name() != "run" {
 		return args
 	}
 	_ = cmd.InheritedFlags() // bug in cobra requires this to be called to ensure flags contains inherited flags.
@@ -266,10 +267,18 @@ func wrapArgsForRun(rootCmd *cobra.Command, args []string) []string {
 	// Note that defaulted does not mean initial value, it only means flags
 	// that don't require a value.
 	// For example, --bool-flag has NoOptDefVal set to "true".
-	i := 1
+	i := runIdx + 1
 	for i < len(args) {
 		arg := args[i]
+		if arg == "--" {
+			// The user already separated run's flags from the command.
+			return args
+		}
 		if !strings.HasPrefix(arg, "-") {
+			if i+1 < len(args) && args[i+1] == "--" {
+				// e.g. run script -- args, which cobra already handles.
+				return args
+			}
 			// We found and argument that is not part of the flags, so we can stop
 			// This inserts a "--" before the first non-flag argument
 			// Turning

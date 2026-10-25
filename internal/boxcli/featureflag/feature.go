@@ -55,7 +55,7 @@ func (f *feature) Enabled() bool {
 			status = "disabled"
 		}
 		if !logMap[f.name] {
-			slog.Debug("Feature %q %s via environment variable.", f.name, status)
+			slog.Debug("feature flag set via environment variable", "feature", f.name, "status", status)
 			logMap[f.name] = true
 		}
 		return on

@@ -75,6 +75,7 @@ func debugCmd() *cobra.Command {
 			return runGenerateCmd(cmd, flags)
 		},
 	}
+	flags.config.register(command)
 	return command
 }
 
@@ -95,6 +96,7 @@ func devcontainerCmd() *cobra.Command {
 	command.Flags().BoolVar(
 		&flags.rootUser, "root-user", false, "Use root as default user inside the container",
 	)
+	flags.config.register(command)
 	return command
 }
 

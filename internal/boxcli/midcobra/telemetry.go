@@ -54,7 +54,7 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 	meta.Command = subcmd.CommandPath()
 	meta.CommandFlags = flags
 
-	meta.Packages, meta.NixpkgsHash = getPackagesAndCommitHash(cmd)
+	meta.Packages, meta.NixpkgsHash = getPackagesAndCommitHash(subcmd)
 	meta.InShell = envir.IsDevboxShellEnabled()
 	meta.InBrowser = envir.IsInBrowser()
 	meta.InCloud = envir.IsDevboxCloud()
