@@ -116,7 +116,7 @@ inherits `PersistentPreRunE: ensureNixInstalled` from `generateCmd`
 `PersistentPreRunE` on the direnv subcommand (or check the flag) to skip the
 nix check, and skip telemetry for it.
 
-### 6. Make devbox its own launcher (done)
+### 6. Make devbox its own launcher (done in #3024)
 
 **Win:** about 70ms on every command through `/usr/local/bin/devbox`. With
 `devbox version`, the bash launcher took 78ms. The native launcher takes 8ms
