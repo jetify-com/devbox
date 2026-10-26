@@ -8,8 +8,6 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"syscall"
 
@@ -18,6 +16,7 @@ import (
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/launcher"
 	"go.jetify.com/devbox/internal/ux"
 )
 
@@ -161,8 +160,8 @@ func switchVersion(w io.Writer, configPath string, required *configfile.DevboxVe
 		)
 	}
 
-	launcher := os.Getenv(envir.LauncherPath)
-	if launcher == "" {
+	launcherPath := os.Getenv(envir.LauncherPath)
+	if launcherPath == "" {
 		return usererr.New(
 			"%s\nDevbox can't switch versions automatically because it wasn't started by the devbox launcher. "+
 				"Install devbox with `curl -fsSL https://get.jetify.com/devbox | bash` to enable automatic switching.",
@@ -173,9 +172,9 @@ func switchVersion(w io.Writer, configPath string, required *configfile.DevboxVe
 	// Running the downloaded binary directly skips the launcher's startup
 	// cost. It still gets the launcher's environment variables because this
 	// process inherited them.
-	bin := installedBinary(target)
+	bin := launcher.InstalledBinary(target)
 	if bin == "" {
-		bin = launcher
+		bin = launcherPath
 	}
 	slog.Debug("switching devbox version for devbox_version", "from", currentDevboxVersion, "to", target, "bin", bin)
 	env := withEnv(os.Environ(), map[string]string{
@@ -187,25 +186,6 @@ func switchVersion(w io.Writer, configPath string, required *configfile.DevboxVe
 		return usererr.WithUserMessage(err, "Failed to switch to devbox version %s using %s.", target, bin)
 	}
 	return nil
-}
-
-// installedBinary returns the path to the devbox binary for version if the
-// launcher already downloaded it, or an empty string otherwise.
-//
-// Note: keep this in sync with INSTALL_DIR and install_flow in launch.sh,
-// which use $HOME/.cache even when XDG_CACHE_HOME is set.
-func installedBinary(version string) string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-	platform := runtime.GOOS + "_" + runtime.GOARCH
-	bin := filepath.Join(home, ".cache", "devbox", "bin", version+"_"+platform, "devbox")
-	fi, err := os.Stat(bin)
-	if err != nil || !fi.Mode().IsRegular() || fi.Mode().Perm()&0o111 == 0 {
-		return ""
-	}
-	return bin
 }
 
 // warnOnce prints msg as a warning unless it was already printed for the
