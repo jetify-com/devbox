@@ -18,6 +18,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -75,6 +76,16 @@ type Devbox struct {
 }
 
 var legacyPackagesWarningHasBeenShown = false
+
+// lastOpened is the project most recently returned by Open. Telemetry reads it
+// after a command runs so that it doesn't have to open the project again.
+var lastOpened atomic.Pointer[Devbox]
+
+// LastOpened returns the project most recently returned by Open, or nil if
+// this process hasn't opened one.
+func LastOpened() *Devbox {
+	return lastOpened.Load()
+}
 
 func InitConfig(dir string) error {
 	_, err := devconfig.Init(dir)
@@ -185,6 +196,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		)
 	}
 
+	lastOpened.Store(box)
 	return box, nil
 }
 
