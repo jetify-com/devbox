@@ -310,6 +310,11 @@ func NewVersionOnlyPackage(name, version string) Package {
 // If the package has a list of excluded platforms, it is enabled on all platforms
 // except those.
 func (p *Package) IsEnabledOnPlatform() bool {
+	// Avoid looking up the Nix system, which can run nix, in the common
+	// case where the package doesn't restrict its platforms.
+	if len(p.Platforms) == 0 && len(p.ExcludedPlatforms) == 0 {
+		return true
+	}
 	platform := nix.System()
 	if len(p.Platforms) > 0 {
 		for _, plt := range p.Platforms {
