@@ -42,3 +42,14 @@ func TestExecuteParsesPersistentFlagsAfterUnknownFlags(t *testing.T) {
 		t.Error("Execute() with an unknown root flag = 0, want non-zero")
 	}
 }
+
+func TestSkipTelemetry(t *testing.T) {
+	cmd := &cobra.Command{Use: "test"}
+	if telemetrySkipped(cmd) {
+		t.Error("telemetry skipped before calling SkipTelemetry")
+	}
+	SkipTelemetry(cmd)
+	if !telemetrySkipped(cmd) {
+		t.Error("telemetry not skipped after calling SkipTelemetry")
+	}
+}

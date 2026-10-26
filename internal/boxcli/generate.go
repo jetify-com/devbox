@@ -12,6 +12,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
+	"go.jetify.com/devbox/internal/boxcli/midcobra"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devbox"
 	"go.jetify.com/devbox/internal/devbox/devopt"
@@ -48,11 +49,18 @@ func generateCmd() *cobra.Command {
 	flags := &generateCmdFlags{}
 
 	command := &cobra.Command{
-		Use:               "generate",
-		Aliases:           []string{"gen"},
-		Short:             "Generate supporting files for your project",
-		Args:              cobra.MaximumNArgs(0),
-		PersistentPreRunE: ensureNixInstalled,
+		Use:     "generate",
+		Aliases: []string{"gen"},
+		Short:   "Generate supporting files for your project",
+		Args:    cobra.MaximumNArgs(0),
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// direnv runs `generate direnv --print-envrc` on every reload. It
+			// only prints a fixed template, so it doesn't need nix.
+			if isPrintEnvrc(cmd) {
+				return nil
+			}
+			return ensureNixInstalled(cmd, args)
+		},
 	}
 	command.AddCommand(genAliasCmd())
 	command.AddCommand(devcontainerCmd())
@@ -294,6 +302,12 @@ func runGenerateCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	return nil
 }
 
+// isPrintEnvrc reports whether cmd is `generate direnv --print-envrc`.
+func isPrintEnvrc(cmd *cobra.Command) bool {
+	printEnvrc, err := cmd.Flags().GetBool("print-envrc")
+	return err == nil && printEnvrc
+}
+
 func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	// --print-envrc is used within the .envrc file and therefore doesn't make sense to also
 	// use it with --envrc-dir, which specifies a directory where the .envrc file should be generated.
@@ -305,6 +319,8 @@ func runGenerateDirenvCmd(cmd *cobra.Command, flags *generateCmdFlags) error {
 	}
 
 	if flags.printEnvrcContent {
+		// direnv runs this on every reload, so don't record it.
+		midcobra.SkipTelemetry(cmd)
 		return devbox.PrintEnvrcContent(
 			cmd.OutOrStdout(), devopt.EnvFlags(flags.envFlag), flags.config.path,
 		)
