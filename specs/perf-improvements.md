@@ -127,7 +127,7 @@ also does a blocking `curl` with no timeout. Fix: use bash built-ins and
 parameter expansion, collapse to a single `exec`, and refresh the version
 check in the background (with a timeout).
 
-### 7. Switch versions early for `devbox_version: "auto"`
+### 7. Switch versions early for `devbox_version: "auto"` (done in #3023)
 
 **Win:** avoids paying for two full startups on every invocation.
 **Effort:** ~100–150 LOC.
