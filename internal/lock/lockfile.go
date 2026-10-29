@@ -223,19 +223,32 @@ func (f *File) Tidy() {
 // local hashes match, which generally indicates all packages are correctly
 // installed and print-dev-env has been computed and cached.
 func (f *File) IsUpToDateAndInstalled(isFish bool) (bool, error) {
+	status, err := f.StateStatus(isFish)
+	return status == StateUpToDate, err
+}
+
+// StateStatus is like IsUpToDateAndInstalled, but also reports whether only
+// non-Nix inputs (env, init_hook, scripts, etc.) changed, in which case the
+// Nix environment doesn't need to be recomputed.
+func (f *File) StateStatus(isFish bool) (StateStatus, error) {
 	if dirty, err := f.isDirty(); err != nil {
-		return false, err
+		return StateStale, err
 	} else if dirty {
-		return false, nil
+		return StateStale, nil
 	}
 	configHash, err := f.devboxProject.ConfigHash()
 	if err != nil {
-		return false, err
+		return StateStale, err
 	}
-	return isStateUpToDate(UpdateStateHashFileArgs{
-		ProjectDir: f.devboxProject.ProjectDir(),
-		ConfigHash: configHash,
-		IsFish:     isFish,
+	nixConfigHash, err := f.devboxProject.NixConfigHash()
+	if err != nil {
+		return StateStale, err
+	}
+	return stateStatus(UpdateStateHashFileArgs{
+		ProjectDir:    f.devboxProject.ProjectDir(),
+		ConfigHash:    configHash,
+		NixConfigHash: nixConfigHash,
+		IsFish:        isFish,
 	})
 }
 

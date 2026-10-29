@@ -131,9 +131,10 @@ func TestBuildConfigTemplatePlaceholders(t *testing.T) {
 // lockProjectForTest is a minimal lock.File project rooted at dir.
 type lockProjectForTest struct{ dir string }
 
-func (p lockProjectForTest) ConfigHash() (string, error) { return "", nil }
-func (p lockProjectForTest) Stdenv() flake.Ref           { return flake.Ref{} }
-func (p lockProjectForTest) ProjectDir() string          { return p.dir }
+func (p lockProjectForTest) ConfigHash() (string, error)    { return "", nil }
+func (p lockProjectForTest) NixConfigHash() (string, error) { return "", nil }
+func (p lockProjectForTest) Stdenv() flake.Ref              { return flake.Ref{} }
+func (p lockProjectForTest) ProjectDir() string             { return p.dir }
 func (p lockProjectForTest) AllPackageNamesIncludingRemovedTriggerPackages() []string {
 	return nil
 }

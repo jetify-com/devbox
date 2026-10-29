@@ -1,0 +1,57 @@
+# Editing env, init_hook or scripts in devbox.json takes effect without
+# recomputing the Nix environment. Editing packages still recomputes it.
+
+exec devbox run say
+stdout 'hook=old var=old script=old'
+stderr 'Ensuring packages are installed'
+
+# Edit env, the init hook and the script.
+cp devbox.new.json devbox.json
+exec devbox run say
+stdout 'hook=new var=new script=new'
+! stderr 'Ensuring packages are installed'
+! stderr 'Computed the Devbox environment'
+
+exec devbox shellenv --init-hook
+stdout 'MY_VAR="new"'
+
+# Up to date: nothing to do.
+exec devbox run say
+stdout 'hook=new var=new script=new'
+! stderr 'Ensuring packages are installed'
+
+# Editing packages recomputes the Nix environment.
+cp devbox.packages.json devbox.json
+exec devbox run say
+stdout 'hook=new var=new script=new'
+stderr 'Ensuring packages are installed'
+
+-- devbox.json --
+{
+  "packages": [],
+  "env": {"MY_VAR": "old"},
+  "shell": {
+    "init_hook": ["export HOOK=old"],
+    "scripts": {"say": "echo hook=$HOOK var=$MY_VAR script=old"}
+  }
+}
+
+-- devbox.new.json --
+{
+  "packages": [],
+  "env": {"MY_VAR": "new"},
+  "shell": {
+    "init_hook": ["export HOOK=new"],
+    "scripts": {"say": "echo hook=$HOOK var=$MY_VAR script=new"}
+  }
+}
+
+-- devbox.packages.json --
+{
+  "packages": ["hello@latest"],
+  "env": {"MY_VAR": "new"},
+  "shell": {
+    "init_hook": ["export HOOK=new"],
+    "scripts": {"say": "echo hook=$HOOK var=$MY_VAR script=new"}
+  }
+}

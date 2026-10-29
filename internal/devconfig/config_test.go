@@ -713,7 +713,8 @@ type testLockProject struct {
 	dir string
 }
 
-func (p *testLockProject) ConfigHash() (string, error) { return "", nil }
+func (p *testLockProject) ConfigHash() (string, error)    { return "", nil }
+func (p *testLockProject) NixConfigHash() (string, error) { return "", nil }
 
 func (p *testLockProject) Stdenv() flake.Ref                                        { return flake.Ref{} }
 func (p *testLockProject) AllPackageNamesIncludingRemovedTriggerPackages() []string { return nil }
