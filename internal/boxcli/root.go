@@ -17,6 +17,7 @@ import (
 	"go.jetify.com/devbox/internal/cmdutil"
 	"go.jetify.com/devbox/internal/debug"
 	"go.jetify.com/devbox/internal/launcher"
+	"go.jetify.com/devbox/internal/plugin"
 	"go.jetify.com/devbox/internal/telemetry"
 	"go.jetify.com/devbox/internal/vercheck"
 )
@@ -101,6 +102,8 @@ func RootCmd() *cobra.Command {
 
 func Execute(ctx context.Context, args []string) int {
 	defer debug.Recover()
+	// Git plugins keep one clone per repo for the whole command.
+	defer plugin.RemoveGitClones()
 	rootCmd := RootCmd()
 	exe := midcobra.New(rootCmd)
 	// Runs first because it might re-run the command with another devbox
