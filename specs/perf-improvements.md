@@ -150,7 +150,7 @@ decision isn't remembered between invocations. Fix:
 
 ## Tier 2: after any `devbox.json` edit
 
-### 8. Split the state hash into nix-relevant and other inputs
+### 8. Split the state hash into nix-relevant and other inputs (done in #3031)
 
 **Win:** ~1s or more on every config edit that doesn't touch packages (biggest
 win for editing workflows).
