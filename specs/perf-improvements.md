@@ -188,7 +188,7 @@ out to `nix profile list --json`. Fix: read
 `<profile>/manifest.json` directly and parse it with the existing structs.
 Fall back to the command for unknown manifest versions.
 
-### 11. Remote plugins: timeout, offline fallback, better caching
+### 11. Remote plugins: timeout, offline fallback, better caching (done in #3029)
 
 **Win:** removes a once-a-day blocking network call.
 **Effort:** ~60–100 LOC.
