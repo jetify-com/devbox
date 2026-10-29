@@ -168,7 +168,7 @@ Fix:
 - When only the "everything else" hash changed, regenerate scripts/env and
   reuse the cached `print-dev-env` output.
 
-### 9. Persist narinfo lookups on disk
+### 9. Persist narinfo lookups on disk (done in #3028)
 
 **Win:** skips HEAD requests to cache.nixos.org on every recompute.
 **Effort:** ~60–100 LOC.
