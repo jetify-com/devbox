@@ -11,6 +11,8 @@ import (
 	"go.jetify.com/devbox/internal/debug"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/xdg"
+	"go.jetify.com/pkg/filecache"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -204,7 +206,24 @@ func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
 	return sysInfo, nil
 }
 
+// narInfoStatusFnCache is the in-memory layer of the narinfo cache. It dedupes
+// lookups within a process, including concurrent ones from FillNarInfoCache,
+// and holds both hits and misses.
 var narInfoStatusFnCache = sync.Map{}
+
+// narInfoDiskCacheTTL is how long a narinfo hit is trusted on disk. The narinfo
+// for a store path hash is effectively immutable, so this only guards against a
+// cache dropping old paths. It matches the default of Nix's own
+// narinfo-cache-positive-ttl.
+const narInfoDiskCacheTTL = 30 * 24 * time.Hour
+
+// narInfoDiskCache returns the on-disk layer of the narinfo cache. It only
+// stores hits. Misses stay in memory because they can become hits later (a path
+// that hasn't been built and pushed yet), and because transport failures are
+// reported as misses, so persisting them would make a network blip stick.
+func narInfoDiskCache() *filecache.Cache[bool] {
+	return filecache.New("devbox/narinfo", filecache.WithCacheDir[bool](xdg.CacheSubpath("")))
+}
 
 // narInfoHTTPTimeout bounds each narinfo HEAD request. The binary cache check
 // is only an optimization, so a slow cache shouldn't hold up the command.
@@ -215,29 +234,53 @@ var narInfoHTTPTimeout = 5 * time.Second
 // resets) are treated as a cache miss rather than an error: the caller falls
 // back to letting Nix build or substitute the package itself, so a flaky
 // cache.nixos.org only makes the command slower, not fail.
+//
+// Results are cached in memory for the life of the process. Hits are also
+// cached on disk so that later commands don't repeat the request.
 func fetchNarInfoStatusFromHTTP(
 	ctx context.Context,
 	uri string,
 	hash string,
 ) (bool, error) {
+	// The key includes the cache URI so that a hit in one binary cache is never
+	// reported for another.
 	key := fmt.Sprintf("%s/%s", uri, hash)
 	fetch, _ := narInfoStatusFnCache.LoadOrStore(key, sync.OnceValues(
 		func() (bool, error) {
-			ctx, cancel := context.WithTimeout(ctx, narInfoHTTPTimeout)
-			defer cancel()
-			url := fmt.Sprintf("%s/%s.narinfo", uri, hash)
-			req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
-			if err != nil {
-				return false, err
+			diskCache := narInfoDiskCache()
+			if inCache, err := diskCache.Get(key); err == nil && inCache {
+				return true, nil
 			}
-			res, err := http.DefaultClient.Do(req)
-			if err != nil {
-				slog.Debug("binary cache narinfo check failed, assuming not cached", "url", url, "err", err)
-				return false, nil
+
+			inCache, err := headNarInfo(ctx, uri, hash)
+			if err == nil && inCache {
+				// The disk cache is only an optimization, so failing to write
+				// it shouldn't fail the command.
+				if err := diskCache.Set(key, true, narInfoDiskCacheTTL); err != nil {
+					slog.Debug("failed to write narinfo disk cache", "key", key, "err", err)
+				}
 			}
-			defer res.Body.Close()
-			return res.StatusCode == http.StatusOK, nil
+			return inCache, err
 		},
 	))
 	return fetch.(func() (bool, error))()
+}
+
+// headNarInfo makes a HEAD request for the narinfo of hash in the binary cache
+// at uri.
+func headNarInfo(ctx context.Context, uri, hash string) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, narInfoHTTPTimeout)
+	defer cancel()
+	url := fmt.Sprintf("%s/%s.narinfo", uri, hash)
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
+	if err != nil {
+		return false, err
+	}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		slog.Debug("binary cache narinfo check failed, assuming not cached", "url", url, "err", err)
+		return false, nil
+	}
+	defer res.Body.Close()
+	return res.StatusCode == http.StatusOK, nil
 }
