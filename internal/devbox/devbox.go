@@ -208,12 +208,29 @@ func (d *Devbox) Config() *devconfig.Config {
 	return d.cfg
 }
 
+// ConfigHash hashes every input that goes into the devbox environment: the
+// whole config, the packages and the plugin configs.
 func (d *Devbox) ConfigHash() (string, error) {
 	h, err := d.cfg.Hash()
 	if err != nil {
 		return "", err
 	}
+	return d.hashWithPackagesAndPlugins(h)
+}
 
+// NixConfigHash is like ConfigHash, but leaves out config fields that are only
+// read after the Nix environment is built (env, init_hook, scripts, etc.). If
+// it hasn't changed, the generated flake, the print-dev-env output and the
+// nix profile are still valid. See configfile.ConfigFile.NixHash.
+func (d *Devbox) NixConfigHash() (string, error) {
+	h, err := d.cfg.NixHash()
+	if err != nil {
+		return "", err
+	}
+	return d.hashWithPackagesAndPlugins(h)
+}
+
+func (d *Devbox) hashWithPackagesAndPlugins(h string) (string, error) {
 	buf := bytes.Buffer{}
 	buf.WriteString(h)
 	for _, pkg := range d.AllPackages() {
@@ -888,11 +905,19 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 
-	upToDate, err := d.lockfile.IsUpToDateAndInstalled(isFishShell())
+	status, err := d.lockfile.StateStatus(isFishShell())
 	if err != nil {
 		return nil, err
 	}
-	if !upToDate {
+	if envOpts.SkipRecompute && status == lock.StateNonNixStale {
+		// Refreshing the non-Nix state doesn't run Nix and is cheap, so do it
+		// even when the caller asked to skip the (expensive) recompute.
+		if err := d.refreshNonNixState(ctx); err != nil {
+			return nil, err
+		}
+		status = lock.StateUpToDate
+	}
+	if status != lock.StateUpToDate {
 		if envOpts.Hooks.OnStaleState != nil {
 			envOpts.Hooks.OnStaleState()
 		}
