@@ -178,7 +178,7 @@ only lasts for the process. Fix: persist positive results in a `filecache`
 keyed by `uri/hash` with a long TTL (a narinfo for a given store hash is
 effectively immutable). Keep misses in memory only or with a short TTL.
 
-### 10. Read the profile manifest instead of running `nix profile list`
+### 10. Read the profile manifest instead of running `nix profile list` (done in #3030)
 
 **Win:** ~50–100ms per recompute.
 **Effort:** ~40–70 LOC.
