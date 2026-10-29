@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
+	"sync"
 
 	"go.jetify.com/devbox/nix/flake"
 	"go.jetify.com/pkg/filecache"
@@ -90,12 +90,56 @@ func (p *gitPlugin) Fetch() ([]byte, error) {
 	return content, nil
 }
 
-func (p *gitPlugin) cloneAndRead(subpath string) ([]byte, error) {
+// gitClones holds one clone per repo/ref/rev for the life of the process, so
+// that reading several files from a git plugin (plugin.json plus the files it
+// creates) clones the repo once instead of once per file. A failed clone is
+// remembered too, so an unreachable remote is only tried once per process.
+var gitClones = struct {
+	sync.Mutex
+	clones map[string]gitClone
+}{clones: map[string]gitClone{}}
+
+type gitClone struct {
+	dir string
+	err error
+}
+
+// cloneGitRepo clones the plugin's repo into a new temporary directory and
+// returns its path. Tests override it.
+var cloneGitRepo = (*gitPlugin).clone
+
+// RemoveGitClones deletes the git plugin clones made by this process.
+func RemoveGitClones() {
+	gitClones.Lock()
+	defer gitClones.Unlock()
+	for key, c := range gitClones.clones {
+		if c.dir != "" {
+			_ = os.RemoveAll(c.dir)
+		}
+		delete(gitClones.clones, key)
+	}
+}
+
+// cloneDir returns a clone of the plugin's repo at its ref/rev, cloning it if
+// this process hasn't already. Plugins that differ only by dir share a clone.
+func (p *gitPlugin) cloneDir() (string, error) {
+	key := strings.Join([]string{p.getBaseURL(), p.ref.Ref, p.ref.Rev}, "\x00")
+
+	gitClones.Lock()
+	defer gitClones.Unlock()
+	c, ok := gitClones.clones[key]
+	if !ok {
+		c.dir, c.err = cloneGitRepo(p)
+		gitClones.clones[key] = c
+	}
+	return c.dir, c.err
+}
+
+func (p *gitPlugin) clone() (string, error) {
 	tempDir, err := os.MkdirTemp("", "devbox-git-plugin-*")
 	if err != nil {
-		return nil, fmt.Errorf("failed to create temp directory: %w", err)
+		return "", fmt.Errorf("failed to create temp directory: %w", err)
 	}
-	defer os.RemoveAll(tempDir)
 
 	baseURL := p.getBaseURL()
 
@@ -121,7 +165,8 @@ func (p *gitPlugin) cloneAndRead(subpath string) ([]byte, error) {
 
 	output, err := cloneCmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("failed to clone repository %s: %w\nOutput: %s", p.ref.URL, err, string(output))
+		_ = os.RemoveAll(tempDir)
+		return "", fmt.Errorf("failed to clone repository %s: %w\nOutput: %s", p.ref.URL, err, string(output))
 	}
 
 	if p.ref.Rev != "" {
@@ -129,21 +174,27 @@ func (p *gitPlugin) cloneAndRead(subpath string) ([]byte, error) {
 		checkoutCmd.Dir = tempDir
 		output, err := checkoutCmd.CombinedOutput()
 		if err != nil {
-			return nil, fmt.Errorf("failed to checkout revision %s: %w\nOutput: %s", p.ref.Rev, err, string(output))
+			_ = os.RemoveAll(tempDir)
+			return "", fmt.Errorf("failed to checkout revision %s: %w\nOutput: %s", p.ref.Rev, err, string(output))
 		}
+	}
+	return tempDir, nil
+}
+
+// readFromClone reads subpath from the plugin's directory in a clone of its
+// repo.
+func (p *gitPlugin) readFromClone(subpath string) ([]byte, error) {
+	cloneDir, err := p.cloneDir()
+	if err != nil {
+		return nil, err
 	}
 
 	// Read file from repository root or specified directory
-	filePath := filepath.Join(tempDir, subpath)
-	if p.ref.Dir != "" {
-		filePath = filepath.Join(tempDir, p.ref.Dir, subpath)
-	}
-
+	filePath := filepath.Join(cloneDir, p.ref.Dir, subpath)
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file %s: %w", filePath, err)
 	}
-
 	return content, nil
 }
 
@@ -194,22 +245,15 @@ func (p *gitPlugin) Hash() string {
 }
 
 func (p *gitPlugin) FileContent(subpath string) ([]byte, error) {
-	ttl := 24 * time.Hour
-	var err error
-	ttlStr := os.Getenv("DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL")
-	if ttlStr != "" {
-		ttl, err = time.ParseDuration(ttlStr)
-		if err != nil {
-			return nil, fmt.Errorf("invalid DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL=%q: %w", ttlStr, err)
-		}
+	// Content at a full commit hash is cached indefinitely. Anything else is
+	// cached for 24 hours.
+	ttl, err := remoteCacheTTL(p.ref.Rev)
+	if err != nil {
+		return nil, err
 	}
 	cacheKey := p.LockfileKey() + "/" + subpath + "/" + ttl.String()
-	return gitCache.GetOrSet(cacheKey, func() ([]byte, time.Duration, error) {
-		content, err := p.cloneAndRead(subpath)
-		if err != nil {
-			return nil, 0, err
-		}
-		return content, ttl, nil
+	return getOrFetch(gitCache, cacheKey, ttl, func() ([]byte, error) {
+		return p.readFromClone(subpath)
 	})
 }
 

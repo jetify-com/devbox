@@ -450,11 +450,7 @@ func setupLocalGitRepo(t *testing.T, content string) string {
 }
 
 func TestGitPluginFileContentCache(t *testing.T) {
-	// Clear the git cache before and after the test to avoid pollution.
-	if err := gitCache.Clear(); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { _ = gitCache.Clear() })
+	useTempPluginCaches(t)
 
 	repoURL := setupLocalGitRepo(t, `{"name": "test-plugin"}`)
 
@@ -476,12 +472,14 @@ func TestGitPluginFileContentCache(t *testing.T) {
 		t.Fatalf("unexpected content: %s", content1)
 	}
 
-	// Delete the source repo. If the cache is working, FileContent should
-	// still return the cached value without attempting a clone.
+	// Delete the source repo and this process's clone. If the cache is
+	// working, FileContent should still return the cached value without
+	// attempting a clone.
 	repoPath := repoURL[len("file://"):]
 	if err := os.RemoveAll(repoPath); err != nil {
 		t.Fatalf("failed to remove repo: %v", err)
 	}
+	RemoveGitClones()
 
 	content2, err := plugin.FileContent("plugin.json")
 	if err != nil {
@@ -492,11 +490,10 @@ func TestGitPluginFileContentCache(t *testing.T) {
 	}
 }
 
-func TestGitPluginFileContentCacheRespectsEnvVar(t *testing.T) {
-	if err := gitCache.Clear(); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { _ = gitCache.Clear() })
+// TestGitPluginFileContentExpiredCloneFails checks, with a real git clone,
+// that expired content is still used when the repo can't be cloned anymore.
+func TestGitPluginFileContentExpiredCloneFails(t *testing.T) {
+	useTempPluginCaches(t)
 
 	repoURL := setupLocalGitRepo(t, `{"name": "ttl-test"}`)
 
@@ -520,22 +517,26 @@ func TestGitPluginFileContentCacheRespectsEnvVar(t *testing.T) {
 		t.Fatalf("unexpected content: %s", content)
 	}
 
-	// With a 1ns TTL the cache entry should already be expired.
-	// Delete the source repo — if the expired cache is not served,
-	// this will attempt a fresh clone and fail, proving the TTL works.
+	// With a 1ns TTL the cache entry is already expired. Delete the source
+	// repo and this process's clone so the refetch fails; the expired
+	// content should be returned instead of an error.
 	repoPath := repoURL[len("file://"):]
 	if err := os.RemoveAll(repoPath); err != nil {
 		t.Fatalf("failed to remove repo: %v", err)
 	}
-	_, err = plugin.FileContent("plugin.json")
-	if err == nil {
-		t.Fatal("expected error after cache expiry with deleted repo, but got nil")
+	RemoveGitClones()
+	content, err = plugin.FileContent("plugin.json")
+	if err != nil {
+		t.Fatalf("expected expired cached content, got error: %v", err)
+	}
+	if string(content) != `{"name": "ttl-test"}` {
+		t.Fatalf("unexpected content: %s", content)
 	}
 }
 
 func TestGitPluginFileContentCacheInvalidTTL(t *testing.T) {
+	useTempPluginCaches(t)
 	t.Setenv("DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL", "not-a-duration")
-	t.Cleanup(func() { _ = gitCache.Clear() })
 
 	plugin := &gitPlugin{
 		ref: &flake.Ref{
@@ -599,9 +600,10 @@ func TestGitPluginCloneRefAndOldRev(t *testing.T) {
 			Rev:  oldRev,
 		},
 	}
-	content, err := plugin.cloneAndRead("plugin.json")
+	t.Cleanup(RemoveGitClones)
+	content, err := plugin.readFromClone("plugin.json")
 	if err != nil {
-		t.Fatalf("cloneAndRead failed: %v", err)
+		t.Fatalf("readFromClone failed: %v", err)
 	}
 	if string(content) != `{"name": "old"}` {
 		t.Fatalf("unexpected content: %s", content)
