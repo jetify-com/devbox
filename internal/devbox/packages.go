@@ -349,6 +349,15 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		if err := d.installPackages(ctx, mode); err != nil {
 			return err
 		}
+		// Installing resolves package definitions that had no lockfile
+		// entry yet, for example after their version was changed in
+		// devbox.json. Their env, init hooks and created files depend on
+		// the entry, so reload includes to apply them in this run.
+		if lo.ContainsBy(d.InstallablePackages(), (*devpkg.Package).IsPkgDef) {
+			if err := d.cfg.LoadRecursive(d.lockfile); err != nil {
+				return err
+			}
+		}
 	}
 
 	recomputeState := mode == ensure || d.IsEnvEnabled()

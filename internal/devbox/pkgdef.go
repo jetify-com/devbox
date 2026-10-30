@@ -5,6 +5,8 @@ package devbox
 
 import (
 	"context"
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/samber/lo"
@@ -70,8 +72,19 @@ func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordD
 	}
 
 	artifact := pkgdef.Artifact{}
-	if info := locked.Systems[system]; info != nil {
-		artifact = pkgdef.Artifact{URL: info.URL, Sha256: info.Sha256}
+	info := locked.Systems[system]
+	if info == nil && len(locked.Systems) > 0 {
+		// The lockfile lists the systems the vendor publishes this version
+		// for, and this is not one of them.
+		return nil, usererr.New(
+			"Package %s resolved to %s@%s, which %s does not publish for %s (it is available for %s). "+
+				"Pick another version, or run `devbox add %s --exclude-platform %s` to skip it on this machine.",
+			pkg.Raw, def.Name, locked.Version, def.Name, system,
+			strings.Join(slices.Sorted(maps.Keys(locked.Systems)), ", "), pkg.Raw, system,
+		)
+	}
+	if info != nil {
+		artifact = pkgdef.Artifact{URL: info.URL, Sha256: info.Sha256, Sha512: info.Sha512}
 	}
 
 	if !client.IsInstalled(def, locked.Version, system) {
@@ -79,7 +92,7 @@ func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordD
 		if def.UsesScripts() {
 			ux.Fwarningf(d.stderr, "Package definition %s runs shell commands while installing.\n", ref.Source)
 		}
-		if artifact.Sha256 == "" {
+		if !artifact.HasDigest() {
 			ux.Fwarningf(d.stderr, "Package definition %s has no checksum for %s; the digest of this download will be recorded in devbox.lock.\n", ref.Source, system)
 		}
 	}
@@ -91,7 +104,7 @@ func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordD
 
 	// Trust on first use: record the digest we observed so every other
 	// machine verifies against it.
-	if recordDigest && artifact.Sha256 == "" && installed.Sha256 != "" {
+	if recordDigest && !artifact.HasDigest() && installed.Sha256 != "" {
 		if err := d.lockfile.SetArtifactForPackage(pkg.Raw, system, installed.URL, installed.Sha256); err != nil {
 			return nil, err
 		}

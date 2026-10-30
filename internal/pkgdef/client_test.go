@@ -291,32 +291,37 @@ func TestChecksumSHA256URL(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, vendor.binSHA, artifacts[testSystem].Sha256)
 
-	// Missing checksum file is an error.
+	// A missing checksum file means there is no artifact for any system.
 	def = vendor.binaryDef(t, fmt.Sprintf(`"checksum": {"type": "sha256_url", "url": "%s/dl/missing.txt"}`, vendor.srv.URL))
 	_, err = cli.Lock(t.Context(), def, "1.2.0")
-	require.ErrorIs(t, err, ErrNotFound)
+	require.ErrorIs(t, err, ErrNoArtifact)
 }
 
-func TestParseSHA256Body(t *testing.T) {
-	digest := strings.Repeat("0a", 32)
-	got, err := parseSHA256Body(digest+"\n", "x", "src")
+func TestParseChecksumFile(t *testing.T) {
+	hexDigest := strings.Repeat("0a", 32)
+	want := digest{algo: algoSHA256, hex: hexDigest}
+	got, err := parseChecksumFile(hexDigest+"\n", "x", "src", algoSHA256)
 	require.NoError(t, err)
-	assert.Equal(t, digest, got)
+	assert.Equal(t, want, got)
 
-	got, err = parseSHA256Body("sha256:"+strings.ToUpper(digest), "x", "src")
+	got, err = parseChecksumFile("sha256:"+strings.ToUpper(hexDigest), "x", "src", algoSHA256)
 	require.NoError(t, err)
-	assert.Equal(t, digest, got)
+	assert.Equal(t, want, got)
 
-	body := strings.Repeat("11", 32) + "  other.tar.gz\n" + digest + "  dist/x.tar.gz\n"
-	got, err = parseSHA256Body(body, "x.tar.gz", "src")
+	body := strings.Repeat("11", 32) + "  other.tar.gz\n" + hexDigest + "  dist/x.tar.gz\n"
+	got, err = parseChecksumFile(body, "x.tar.gz", "src", algoSHA256)
 	require.NoError(t, err)
-	assert.Equal(t, digest, got)
+	assert.Equal(t, want, got)
 
-	_, err = parseSHA256Body(body, "nope.tar.gz", "src")
+	_, err = parseChecksumFile(body, "nope.tar.gz", "src", algoSHA256)
+	require.ErrorIs(t, err, ErrNoArtifact)
+
+	_, err = parseChecksumFile("nothex", "x", "src", algoSHA256)
 	require.Error(t, err)
 
-	_, err = parseSHA256Body("nothex", "x", "src")
-	require.Error(t, err)
+	// A sha512 file must hold a sha512 digest.
+	_, err = parseChecksumFile(hexDigest, "x", "src", algoSHA512)
+	require.ErrorContains(t, err, "expected a sha512 digest")
 }
 
 func TestListVersionsGitHub(t *testing.T) {
@@ -339,7 +344,7 @@ func TestListVersionsGitHub(t *testing.T) {
 
 	// An empty strip_prefix keeps every tag.
 	empty := ""
-	def.Versions.StripPrefix = &empty
+	def.Versions[0].StripPrefix = &empty
 	versions, err = cli.ListVersions(t.Context(), def)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"v1.4.2", "v1.4.1", "nightly"}, versions)
@@ -496,7 +501,7 @@ func TestGitHubTokenOnlyForGitHubAPI(t *testing.T) {
 	_, err = cli.ListVersions(t.Context(), def)
 	require.NoError(t, err)
 
-	def.Versions = VersionSource{Type: VersionsGitHubReleases, Repo: "acme/x"}
+	def.Versions = VersionSources{{Type: VersionsGitHubReleases, Repo: "acme/x"}}
 	_, err = cli.ListVersions(t.Context(), def)
 	require.NoError(t, err)
 
@@ -613,7 +618,7 @@ func TestInstallRedoneWhenRecipeChanges(t *testing.T) {
 	// Activation-only edits do not invalidate the install.
 	def.Env = map[string]string{"X": "y"}
 	assert.True(t, cli.IsInstalled(def, "1.2.0", testSystem))
-	assert.Equal(t, def.InstallFingerprint(testSystem), def.InstallFingerprint(testSystem))
+	assert.Equal(t, def.InstallFingerprint(testSystem, "1.2.0"), def.InstallFingerprint(testSystem, "1.2.0"))
 
 	// Changing the install recipe does: the hook now writes a different file.
 	def.Hooks.PostInstall = []string{"echo redone > $DEVBOX_PKG_INSTALL_DIR/redone.txt"}
