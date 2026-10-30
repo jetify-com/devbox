@@ -51,13 +51,15 @@ func (f *File) resolvePkgDef(ctx context.Context, raw string, refresh bool) (*Pa
 		DefinitionHash: loaded.Hash,
 		Systems:        make(map[string]*SystemInfo, len(resolved.Artifacts)),
 	}
+	// Systems the vendor publishes no artifact for are absent from
+	// Systems; installing on one of them is an error.
 	for system, artifact := range resolved.Artifacts {
-		info := &SystemInfo{URL: artifact.URL, Sha256: artifact.Sha256}
+		info := &SystemInfo{URL: artifact.URL, Sha256: artifact.Sha256, Sha512: artifact.Sha512}
 		// A definition without a checksum source gets its digest recorded
 		// by the first install (trust on first use). Keep that digest when
 		// re-resolving to the same artifact so `devbox update` doesn't
 		// throw it away.
-		if info.Sha256 == "" && existing != nil && existing.Version == resolved.Version {
+		if !artifact.HasDigest() && existing != nil && existing.Version == resolved.Version {
 			if old := existing.Systems[system]; old != nil && old.URL == artifact.URL {
 				info.Sha256 = old.Sha256
 			}

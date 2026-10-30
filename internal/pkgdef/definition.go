@@ -11,6 +11,7 @@
 package pkgdef
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -56,9 +57,11 @@ const (
 
 // Checksum source types.
 const (
-	ChecksumHTTPJSON  = "http_json"
-	ChecksumSHA256URL = "sha256_url"
-	ChecksumNone      = "none"
+	ChecksumHTTPJSON      = "http_json"
+	ChecksumSHA256URL     = "sha256_url"
+	ChecksumSHA512URL     = "sha512_url"
+	ChecksumGitHubRelease = "github_release"
+	ChecksumNone          = "none"
 )
 
 // Definition is a parsed package definition file.
@@ -73,8 +76,8 @@ type Definition struct {
 	OSMap     map[string]string `json:"os_map,omitempty"`
 	ArchMap   map[string]string `json:"arch_map,omitempty"`
 
-	Versions VersionSource `json:"versions"`
-	Install  Install       `json:"install"`
+	Versions VersionSources `json:"versions"`
+	Install  Install        `json:"install"`
 
 	Bin      []string `json:"bin,omitempty"`
 	Binaries []string `json:"binaries,omitempty"`
@@ -104,6 +107,40 @@ func (d *Definition) ResolveURL(rawURL string) string {
 	return "file://" + filepath.Join(d.baseDir, p)
 }
 
+// VersionSources is one version source or a list of them. In JSON it is
+// either an object or an array of objects. A list is the union of its
+// sources, for packages whose versions are published in more than one place
+// (yarn 1.x and yarn 2+ live in different npm packages).
+type VersionSources []VersionSource
+
+// UnmarshalJSON accepts a single source object or an array of them.
+func (v *VersionSources) UnmarshalJSON(data []byte) error {
+	data = bytes.TrimSpace(data)
+	if len(data) > 0 && data[0] == '[' {
+		var list []VersionSource
+		if err := json.Unmarshal(data, &list); err != nil {
+			return err
+		}
+		*v = list
+		return nil
+	}
+	var single VersionSource
+	if err := json.Unmarshal(data, &single); err != nil {
+		return err
+	}
+	*v = VersionSources{single}
+	return nil
+}
+
+// MarshalJSON writes a single source as an object so that a definition
+// round-trips to the shape it was written in.
+func (v VersionSources) MarshalJSON() ([]byte, error) {
+	if len(v) == 1 {
+		return json.Marshal(v[0])
+	}
+	return json.Marshal([]VersionSource(v))
+}
+
 // VersionSource describes how to list the available versions of a package.
 type VersionSource struct {
 	Type string `json:"type"`
@@ -111,7 +148,8 @@ type VersionSource struct {
 	// static
 	Versions []string `json:"versions,omitempty"`
 
-	// http_json
+	// http_json. When URL contains {{.Page}}, pages 0, 1, ... are fetched
+	// until one returns 404 or no versions.
 	URL    string `json:"url,omitempty"`
 	Select string `json:"select,omitempty"`
 
@@ -128,9 +166,10 @@ type VersionSource struct {
 type Install struct {
 	Type string `json:"type"`
 
-	// archive and binary
+	// archive and binary: either url (and checksum) or lookup.
 	URL      string    `json:"url,omitempty"`
 	Checksum *Checksum `json:"checksum,omitempty"`
+	Lookup   *Lookup   `json:"lookup,omitempty"`
 
 	// archive
 	StripComponents *int `json:"strip_components,omitempty"`
@@ -151,13 +190,42 @@ type Install struct {
 	// fields replace the defaults for that system. Overrides may not
 	// themselves contain overrides.
 	Overrides map[string]*Install `json:"overrides,omitempty"`
+
+	// VersionOverrides are partial Installs for the versions matching
+	// their constraint, for vendors that changed how they ship artifacts.
+	// The first matching entry applies. An entry may carry its own
+	// per-system overrides but no further version overrides.
+	VersionOverrides []*VersionOverride `json:"version_overrides,omitempty"`
 }
 
-// Checksum describes where to find the sha256 of an artifact.
+// VersionOverride is an Install that applies to the versions matching
+// Versions, a constraint such as "<11" or ">=2 <4". See MatchesConstraint.
+type VersionOverride struct {
+	Versions string `json:"versions"`
+	Install
+}
+
+// Lookup finds an artifact in a JSON index: the jq expression in Select is
+// evaluated against the document at URL and must produce an object with
+// "url" and "checksum" for the requested version and system. A lookup that
+// produces nothing means the version is not available for that system.
+type Lookup struct {
+	URL    string `json:"url"`
+	Select string `json:"select"`
+}
+
+// Checksum describes where to find the digest of an artifact. Digests may
+// be sha256 or sha512, as hex, "sha256:<hex>" or an SRI string
+// ("sha512-<base64>").
 type Checksum struct {
 	Type   string `json:"type"`
 	URL    string `json:"url,omitempty"`
 	Select string `json:"select,omitempty"`
+
+	// github_release: the asset digest GitHub computes for every release
+	// asset. Tag defaults to "v{{.Version}}".
+	Repo string `json:"repo,omitempty"`
+	Tag  string `json:"tag,omitempty"`
 }
 
 // Hooks are shell commands run at specific points of a package's lifecycle.
@@ -227,21 +295,34 @@ func (d *Definition) Validate() error {
 		}
 	}
 
-	errs = append(errs, d.Versions.validate()...)
-	errs = append(errs, d.Install.validate("install")...)
-	for sys, override := range d.Install.Overrides {
-		if !slices.Contains(d.Platforms, sys) {
-			fail("install.overrides: %q is not in platforms", sys)
+	if len(d.Versions) == 0 {
+		fail("versions is required")
+	}
+	for i, src := range d.Versions {
+		path := "versions"
+		if len(d.Versions) > 1 {
+			path = fmt.Sprintf("versions[%d]", i)
 		}
+		errs = append(errs, src.validate(path)...)
+	}
+
+	errs = append(errs, d.Install.validate("install")...)
+	errs = append(errs, d.validateSystemOverrides("install", d.Install, d.Install.Overrides)...)
+	for i, override := range d.Install.VersionOverrides {
+		path := fmt.Sprintf("install.version_overrides[%d]", i)
 		if override == nil {
-			fail("install.overrides.%s must be an object", sys)
+			fail("%s must be an object", path)
 			continue
 		}
-		if len(override.Overrides) > 0 {
-			fail("install.overrides.%s may not contain overrides", sys)
+		if err := validateConstraint(override.Versions); err != nil {
+			fail("%s.versions: %v", path, err)
 		}
-		merged := d.Install.merge(override)
-		errs = append(errs, merged.validate("install.overrides."+sys)...)
+		if len(override.VersionOverrides) > 0 {
+			fail("%s may not contain version_overrides", path)
+		}
+		merged := d.Install.merge(&override.Install)
+		errs = append(errs, merged.validate(path)...)
+		errs = append(errs, d.validateSystemOverrides(path, merged, override.Overrides)...)
 	}
 
 	if len(errs) == 0 {
@@ -250,45 +331,95 @@ func (d *Definition) Validate() error {
 	return fmt.Errorf("invalid package definition %q:\n  - %s", d.Name, strings.Join(errs, "\n  - "))
 }
 
-func (v *VersionSource) validate() []string {
+// validateSystemOverrides validates per-system overrides applied on top of
+// base, the install they override.
+func (d *Definition) validateSystemOverrides(path string, base Install, overrides map[string]*Install) []string {
+	var errs []string
+	for sys, override := range overrides {
+		if !slices.Contains(d.Platforms, sys) {
+			errs = append(errs, fmt.Sprintf("%s.overrides: %q is not in platforms", path, sys))
+		}
+		if override == nil {
+			errs = append(errs, fmt.Sprintf("%s.overrides.%s must be an object", path, sys))
+			continue
+		}
+		if len(override.Overrides) > 0 || len(override.VersionOverrides) > 0 {
+			errs = append(errs, fmt.Sprintf("%s.overrides.%s may not contain overrides", path, sys))
+		}
+		merged := base.merge(override)
+		errs = append(errs, merged.validate(path+".overrides."+sys)...)
+	}
+	return errs
+}
+
+func (v *VersionSource) validate(path string) []string {
 	var errs []string
 	switch v.Type {
 	case VersionsStatic:
 		if len(v.Versions) == 0 {
-			errs = append(errs, "versions.versions must list at least one version")
+			errs = append(errs, path+".versions must list at least one version")
 		}
 	case VersionsHTTPJSON:
 		if v.URL == "" {
-			errs = append(errs, "versions.url is required for type http_json")
+			errs = append(errs, path+".url is required for type http_json")
 		}
 		if v.Select == "" {
-			errs = append(errs, "versions.select is required for type http_json")
-		} else if _, err := compileJQ(v.Select); err != nil {
-			errs = append(errs, fmt.Sprintf("versions.select: %v", err))
+			errs = append(errs, path+".select is required for type http_json")
+		} else if err := validateJQ(v.Select); err != nil {
+			errs = append(errs, fmt.Sprintf("%s.select: %v", path, err))
 		}
 	case VersionsGitHubReleases:
-		if _, repo, _ := strings.Cut(v.Repo, "/"); !githubRepoRegexp.MatchString(v.Repo) || repo == "." || repo == ".." {
-			errs = append(errs, "versions.repo must be of the form owner/name")
+		if !isGitHubRepo(v.Repo) {
+			errs = append(errs, path+".repo must be of the form owner/name")
 		}
 	case VersionsScript:
 		if v.Run == "" {
-			errs = append(errs, "versions.run is required for type script")
+			errs = append(errs, path+".run is required for type script")
 		}
 	case "":
-		errs = append(errs, "versions.type is required")
+		errs = append(errs, path+".type is required")
 	default:
-		errs = append(errs, fmt.Sprintf("versions.type %q is not one of %s, %s, %s, %s",
-			v.Type, VersionsStatic, VersionsHTTPJSON, VersionsGitHubReleases, VersionsScript))
+		errs = append(errs, fmt.Sprintf("%s.type %q is not one of %s, %s, %s, %s",
+			path, v.Type, VersionsStatic, VersionsHTTPJSON, VersionsGitHubReleases, VersionsScript))
 	}
 	return errs
+}
+
+func isGitHubRepo(repo string) bool {
+	_, name, _ := strings.Cut(repo, "/")
+	return githubRepoRegexp.MatchString(repo) && name != "." && name != ".."
+}
+
+// validateJQ compiles a jq expression. Expressions that contain template
+// actions are only checked once rendered, because an action may expand to
+// anything.
+func validateJQ(expr string) error {
+	if strings.Contains(expr, "{{") {
+		return nil
+	}
+	_, err := compileJQ(expr)
+	return err
 }
 
 func (in *Install) validate(path string) []string {
 	var errs []string
 	switch in.Type {
 	case InstallArchive, InstallBinary:
-		if in.URL == "" {
-			errs = append(errs, path+".url is required for type "+in.Type)
+		switch {
+		case in.URL == "" && in.Lookup == nil:
+			errs = append(errs, path+".url or .lookup is required for type "+in.Type)
+		case in.URL != "" && in.Lookup != nil:
+			errs = append(errs, path+".url and .lookup are mutually exclusive")
+		}
+		if in.Lookup != nil {
+			if in.Lookup.URL == "" || in.Lookup.Select == "" {
+				errs = append(errs, path+".lookup.url and .lookup.select are required")
+			} else if err := validateJQ(in.Lookup.Select); err != nil {
+				errs = append(errs, fmt.Sprintf("%s.lookup.select: %v", path, err))
+			}
+			if in.Checksum != nil {
+				errs = append(errs, path+".checksum is not used with .lookup, which provides the checksum")
+			}
 		}
 		if in.StripComponents != nil && *in.StripComponents < 0 {
 			errs = append(errs, path+".strip_components must be >= 0")
@@ -319,19 +450,23 @@ func (c *Checksum) validate(path string) []string {
 	case ChecksumHTTPJSON:
 		if c.URL == "" || c.Select == "" {
 			errs = append(errs, path+".url and .select are required for type http_json")
-		} else if _, err := compileJQ(c.Select); err != nil {
+		} else if err := validateJQ(c.Select); err != nil {
 			errs = append(errs, fmt.Sprintf("%s.select: %v", path, err))
 		}
-	case ChecksumSHA256URL:
+	case ChecksumSHA256URL, ChecksumSHA512URL:
 		if c.URL == "" {
-			errs = append(errs, path+".url is required for type sha256_url")
+			errs = append(errs, path+".url is required for type "+c.Type)
+		}
+	case ChecksumGitHubRelease:
+		if !isGitHubRepo(c.Repo) {
+			errs = append(errs, path+".repo must be of the form owner/name")
 		}
 	case ChecksumNone:
 	case "":
 		errs = append(errs, path+".type is required")
 	default:
-		errs = append(errs, fmt.Sprintf("%s.type %q is not one of %s, %s, %s",
-			path, c.Type, ChecksumHTTPJSON, ChecksumSHA256URL, ChecksumNone))
+		errs = append(errs, fmt.Sprintf("%s.type %q is not one of %s, %s, %s, %s, %s",
+			path, c.Type, ChecksumHTTPJSON, ChecksumSHA256URL, ChecksumSHA512URL, ChecksumGitHubRelease, ChecksumNone))
 	}
 	return errs
 }
@@ -350,27 +485,51 @@ func (d *Definition) BinDirs() []string {
 	return d.Bin
 }
 
-// InstallFor returns the install strategy for system with any override for
-// that system applied.
-func (d *Definition) InstallFor(system string) Install {
-	override := d.Install.Overrides[system]
-	if override == nil {
-		merged := d.Install
-		merged.Overrides = nil
-		return merged
+// InstallFor returns the install strategy for version on system. Overrides
+// apply in order: the first version override matching version, the
+// definition's override for system, and the version override's own
+// override for system.
+func (d *Definition) InstallFor(system, version string) Install {
+	merged := d.Install.merge(&Install{})
+	var versionOverride *VersionOverride
+	for _, vo := range d.Install.VersionOverrides {
+		if vo != nil && MatchesConstraint(version, vo.Versions) {
+			versionOverride = vo
+			break
+		}
 	}
-	return d.Install.merge(override)
+	if versionOverride != nil {
+		merged = merged.merge(&versionOverride.Install)
+	}
+	if override := d.Install.Overrides[system]; override != nil {
+		merged = merged.merge(override)
+	}
+	if versionOverride != nil {
+		if override := versionOverride.Overrides[system]; override != nil {
+			merged = merged.merge(override)
+		}
+	}
+	return merged
 }
 
 // merge returns a copy of in with every non-zero field of override applied.
+// The result has no overrides of its own. url and lookup are alternatives,
+// so an override that sets one clears the other.
 func (in *Install) merge(override *Install) Install {
 	merged := *in
 	merged.Overrides = nil
+	merged.VersionOverrides = nil
 	if override.Type != "" {
 		merged.Type = override.Type
 	}
 	if override.URL != "" {
 		merged.URL = override.URL
+		merged.Lookup = nil
+	}
+	if override.Lookup != nil {
+		merged.Lookup = override.Lookup
+		merged.URL = ""
+		merged.Checksum = nil
 	}
 	if override.Checksum != nil {
 		merged.Checksum = override.Checksum
@@ -409,19 +568,20 @@ func (in *Install) ChecksumType() string {
 }
 
 // InstallFingerprint identifies everything about the definition that
-// affects what an install of a version on system contains: the install
+// affects what an install of version on system contains: the install
 // strategy, the bin layout, hooks and platform maps. Activation fields
 // (env, shell, create_files) are excluded because they are applied at
 // shell time. A changed fingerprint makes Install redo an existing install.
-func (d *Definition) InstallFingerprint(system string) string {
-	install := d.InstallFor(system)
+func (d *Definition) InstallFingerprint(system, version string) string {
+	install := d.InstallFor(system, version)
 	payload, err := json.Marshal(struct {
-		Install Install           `json:"install"`
-		Bin     []string          `json:"bin"`
-		Hooks   Hooks             `json:"hooks"`
-		OSMap   map[string]string `json:"os_map"`
-		ArchMap map[string]string `json:"arch_map"`
-	}{install, d.Bin, d.Hooks, d.OSMap, d.ArchMap})
+		Install  Install           `json:"install"`
+		Bin      []string          `json:"bin"`
+		Binaries []string          `json:"binaries"`
+		Hooks    Hooks             `json:"hooks"`
+		OSMap    map[string]string `json:"os_map"`
+		ArchMap  map[string]string `json:"arch_map"`
+	}{install, d.Bin, d.Binaries, d.Hooks, d.OSMap, d.ArchMap})
 	if err != nil {
 		return ""
 	}
@@ -433,12 +593,30 @@ func (d *Definition) InstallFingerprint(system string) string {
 // should be told about: script-type sources or strategies, or post-install
 // hooks.
 func (d *Definition) UsesScripts() bool {
-	if d.Versions.Type == VersionsScript || d.Install.Type == InstallScript {
+	for _, src := range d.Versions {
+		if src.Type == VersionsScript {
+			return true
+		}
+	}
+	if d.Install.Type == InstallScript {
 		return true
 	}
 	for _, o := range d.Install.Overrides {
 		if o != nil && o.Type == InstallScript {
 			return true
+		}
+	}
+	for _, vo := range d.Install.VersionOverrides {
+		if vo == nil {
+			continue
+		}
+		if vo.Type == InstallScript {
+			return true
+		}
+		for _, o := range vo.Overrides {
+			if o != nil && o.Type == InstallScript {
+				return true
+			}
 		}
 	}
 	return len(d.Hooks.PostInstall) > 0

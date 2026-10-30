@@ -50,9 +50,21 @@ exec devbox rm pkg:./hello.pkg.json@2
 ! devboxjson.packages.contains devbox.json 'pkg:./hello.pkg.json@2'
 ! devboxlock.packages.contains devbox.lock 'pkg:./hello.pkg.json@2'
 
+# Editing devbox.json to a version that is not in devbox.lock yet applies the
+# definition's env and init hook in the same run that resolves it.
+cp devbox.v1.json devbox.json
+exec devbox run -- sh -c 'echo "HELLO_VERSION=$HELLO_VERSION"; cat "$HELLO_INIT_FILE"'
+stdout 'HELLO_VERSION=1.2.0'
+stdout 'init hook ran for 1.2.0'
+
 -- devbox.json --
 {
   "packages": []
+}
+
+-- devbox.v1.json --
+{
+  "packages": ["pkg:./hello.pkg.json@1"]
 }
 
 -- hello.pkg.json --
