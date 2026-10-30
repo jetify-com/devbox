@@ -1,0 +1,33 @@
+// Package definition for Gradle, installed from services.gradle.org. Gradle
+// runs on the JVM, so the project also needs java.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "gradle",
+  "description": "Build automation tool for the JVM",
+  "homepage": "https://gradle.org",
+  "license": "Apache-2.0",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+
+  // One JSON document lists every version with its download checksum.
+  "versions": {
+    "type": "http_json",
+    "url": "https://services.gradle.org/versions/all",
+    "select": ".[] | select(.snapshot or .nightly or .releaseNightly or .broken or .rcFor != \"\" or .milestoneFor != \"\" | not) | .version"
+  },
+
+  "install": {
+    "type": "archive",
+    "url": "https://services.gradle.org/distributions/gradle-{{.Version}}-bin.zip",
+    "checksum": {
+      "type": "http_json",
+      "url": "https://services.gradle.org/versions/all",
+      "select": ".[] | select(.version == \"{{.Version}}\") | .checksum"
+    },
+    "strip_components": 1
+  },
+
+  "bin": ["bin"],
+  "binaries": ["gradle"]
+}

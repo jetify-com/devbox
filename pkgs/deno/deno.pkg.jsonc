@@ -1,0 +1,34 @@
+// Package definition for Deno, installed from its GitHub releases.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "deno",
+  "description": "JavaScript, TypeScript and WebAssembly runtime",
+  "homepage": "https://deno.com",
+  "license": "MIT",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+  // Rust target triples.
+  "os_map": { "darwin": "apple-darwin", "linux": "unknown-linux-gnu" },
+  "arch_map": { "x86_64": "x86_64", "aarch64": "aarch64" },
+
+  "versions": { "type": "github_releases", "repo": "denoland/deno" },
+
+  "install": {
+    "type": "archive",
+    "url": "https://github.com/denoland/deno/releases/download/v{{.Version}}/deno-{{.Arch}}-{{.OS}}.zip",
+    "checksum": { "type": "sha256_url", "url": "{{.URL}}.sha256sum" },
+    "version_overrides": [
+      {
+        // Releases before 2.0.1 published no checksums and their GitHub
+        // assets have no digest; the first install records one.
+        "versions": "<2.0.1",
+        "checksum": { "type": "none" }
+      }
+    ]
+  },
+
+  // The zip holds just the deno executable.
+  "bin": ["."],
+  "binaries": ["deno"]
+}

@@ -1,0 +1,29 @@
+// Package definition for Terraform, installed from releases.hashicorp.com.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "terraform",
+  "description": "Infrastructure as code tool",
+  "homepage": "https://www.terraform.io",
+  "license": "BUSL-1.1",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+
+  "versions": {
+    "type": "http_json",
+    "url": "https://releases.hashicorp.com/terraform/index.json",
+    "select": ".versions | keys[]"
+  },
+
+  "install": {
+    "type": "archive",
+    "url": "https://releases.hashicorp.com/terraform/{{.Version}}/terraform_{{.Version}}_{{.OS}}_{{.Arch}}.zip",
+    "checksum": {
+      "type": "sha256_url",
+      "url": "https://releases.hashicorp.com/terraform/{{.Version}}/terraform_{{.Version}}_SHA256SUMS"
+    }
+  },
+
+  "bin": ["."],
+  "binaries": ["terraform"]
+}

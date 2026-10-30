@@ -1,0 +1,24 @@
+// Package definition for Helm, installed from get.helm.sh.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "helm",
+  "description": "The package manager for Kubernetes",
+  "homepage": "https://helm.sh",
+  "license": "Apache-2.0",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+
+  "versions": { "type": "github_releases", "repo": "helm/helm" },
+
+  "install": {
+    "type": "archive",
+    "url": "https://get.helm.sh/helm-v{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz",
+    "checksum": { "type": "sha256_url", "url": "{{.URL}}.sha256sum" },
+    "strip_components": 1
+  },
+
+  // The tarball holds <os>-<arch>/helm.
+  "bin": ["."],
+  "binaries": ["helm"]
+}

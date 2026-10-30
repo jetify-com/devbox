@@ -1,0 +1,34 @@
+// Package definition for Apache Maven, installed from Maven Central. Maven
+// runs on the JVM, so the project also needs java.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "maven",
+  "description": "Build automation and dependency management for Java",
+  "homepage": "https://maven.apache.org",
+  "license": "Apache-2.0",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+
+  "versions": {
+    "type": "http_json",
+    "url": "https://search.maven.org/solrsearch/select?q=g:org.apache.maven+AND+a:apache-maven&core=gav&rows=500&wt=json",
+    "select": ".response.docs[].v"
+  },
+
+  // Downloads come from Maven Central's CDN. Central only has digests for
+  // some releases, so the sha512 comes from the Apache release archive,
+  // which publishes one for every release since 3.5.
+  "install": {
+    "type": "archive",
+    "url": "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/{{.Version}}/apache-maven-{{.Version}}-bin.tar.gz",
+    "checksum": {
+      "type": "sha512_url",
+      "url": "https://archive.apache.org/dist/maven/maven-{{ index (splitList \".\" .Version) 0 }}/{{.Version}}/binaries/apache-maven-{{.Version}}-bin.tar.gz.sha512"
+    },
+    "strip_components": 1
+  },
+
+  "bin": ["bin"],
+  "binaries": ["mvn"]
+}

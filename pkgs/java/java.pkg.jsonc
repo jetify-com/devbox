@@ -1,0 +1,49 @@
+// Package definition for Java, installed as the Eclipse Temurin JDK from
+// Adoptium. Versions are OpenJDK version strings such as "21.0.5+11", so
+// `java@21` picks the newest Java 21 build.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "java",
+  "description": "Eclipse Temurin, the Adoptium build of the OpenJDK Java Development Kit",
+  "homepage": "https://adoptium.net",
+  "license": "GPL-2.0-with-classpath-exception",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+  "os_map": { "darwin": "mac", "linux": "linux" },
+  "arch_map": { "x86_64": "x64", "aarch64": "aarch64" },
+
+  // The API pages its results 50 at a time, newest first. Long-term
+  // support builds carry a ".0.LTS" suffix, which is dropped.
+  "versions": {
+    "type": "http_json",
+    "url": "https://api.adoptium.net/v3/info/release_versions?release_type=ga&vendor=eclipse&image_type=jdk&sort_order=DESC&page_size=50&page={{.Page}}",
+    "select": ".versions[].semver | rtrimstr(\".0.LTS\") | rtrimstr(\".LTS\")"
+  },
+
+  // Download names can't be derived from the version (respins are renamed,
+  // Java 8 uses "8u432b06"), so the artifact and its checksum come from the
+  // API's list of releases for the version's feature release. Java 8 has no
+  // build for Apple silicon; the API returns 404 and that platform is
+  // skipped.
+  "install": {
+    "type": "archive",
+    "lookup": {
+      "url": "https://api.adoptium.net/v3/assets/feature_releases/{{ index (splitList \".\" .Version) 0 }}/ga?os={{.OS}}&architecture={{.Arch}}&image_type=jdk&jvm_impl=hotspot&heap_size=normal&vendor=eclipse&page_size=50&sort_order=DESC",
+      "select": ".[] | select((.version_data.semver | rtrimstr(\".0.LTS\") | rtrimstr(\".LTS\")) == \"{{.Version}}\") | .binaries[0].package | {url: .link, checksum: .checksum}"
+    },
+    "strip_components": 1,
+    // macOS builds are bundles; the JDK is in <root>/Contents/Home.
+    "overrides": {
+      "aarch64-darwin": { "strip_components": 3 },
+      "x86_64-darwin": { "strip_components": 3 }
+    }
+  },
+
+  "bin": ["bin"],
+  "binaries": ["java", "javac", "jar"],
+
+  "env": {
+    "JAVA_HOME": "{{ .InstallDir }}"
+  }
+}

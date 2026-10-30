@@ -1,0 +1,24 @@
+// Package definition for kubectl, installed from the Kubernetes release
+// downloads at dl.k8s.io.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "kubectl",
+  "description": "Kubernetes command-line tool",
+  "homepage": "https://kubernetes.io/docs/reference/kubectl/",
+  "license": "Apache-2.0",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+
+  // Kubernetes releases are GitHub releases; alphas, betas and release
+  // candidates are marked as pre-releases.
+  "versions": { "type": "github_releases", "repo": "kubernetes/kubernetes" },
+
+  "install": {
+    "type": "binary",
+    "url": "https://dl.k8s.io/release/v{{.Version}}/bin/{{.OS}}/{{.Arch}}/kubectl",
+    "checksum": { "type": "sha256_url", "url": "{{.URL}}.sha256" }
+  },
+
+  "binaries": ["kubectl"]
+}

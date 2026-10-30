@@ -1,0 +1,51 @@
+// Package definition for Rust. Rust's own installer is rustup, which also
+// provides `rustup target add` and `rustup component add`, so this
+// definition installs rustup-init (verified against static.rust-lang.org)
+// and has it install the requested toolchain. rustup verifies the
+// toolchain against the channel manifest.
+//
+// Toolchains live in one shared RUSTUP_HOME in the Devbox cache, and
+// RUSTUP_TOOLCHAIN selects the version, so switching versions in
+// devbox.json switches the toolchain. RUSTUP_TOOLCHAIN takes precedence
+// over a rust-toolchain.toml file.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "rust",
+  "description": "The Rust toolchain (rustc, cargo, rustfmt, clippy) managed by rustup",
+  "homepage": "https://www.rust-lang.org",
+  "license": "MIT OR Apache-2.0",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+  // Rust target triples.
+  "os_map": { "darwin": "apple-darwin", "linux": "unknown-linux-gnu" },
+  "arch_map": { "x86_64": "x86_64", "aarch64": "aarch64" },
+
+  // Every stable release is a GitHub release tagged "1.82.0".
+  "versions": { "type": "github_releases", "repo": "rust-lang/rust", "strip_prefix": "" },
+
+  // The rustup version is pinned so that installs are reproducible; it
+  // does not limit which toolchains can be installed.
+  "install": {
+    "type": "binary",
+    "url": "https://static.rust-lang.org/rustup/archive/1.29.2/{{.Arch}}-{{.OS}}/rustup-init",
+    "checksum": { "type": "sha256_url", "url": "{{.URL}}.sha256" },
+    "bin_name": "rustup-init"
+  },
+
+  "hooks": {
+    "post_install": [
+      // Installs rustup and its proxies (cargo, rustc, ...) into bin/ and
+      // the toolchain into the shared RUSTUP_HOME.
+      "RUSTUP_HOME=\"{{ .CacheDir }}/rustup\" CARGO_HOME=\"$DEVBOX_PKG_INSTALL_DIR\" RUSTUP_INIT_SKIP_PATH_CHECK=yes ./bin/rustup-init -y --no-modify-path --profile minimal --component rustfmt,clippy --default-toolchain {{.Version}}"
+    ]
+  },
+
+  "bin": ["bin"],
+  "binaries": ["rustup", "rustc", "cargo", "rustfmt", "cargo-clippy"],
+
+  "env": {
+    "RUSTUP_HOME": "{{ .CacheDir }}/rustup",
+    "RUSTUP_TOOLCHAIN": "{{ .Version }}"
+  }
+}
