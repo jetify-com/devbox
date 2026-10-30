@@ -53,8 +53,7 @@ import (
 const (
 
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
-	shellHistoryFile     = ".devbox/shell_history"
-	arbitraryCmdFilename = ".cmd"
+	shellHistoryFile = ".devbox/shell_history"
 )
 
 type Devbox struct {
@@ -370,11 +369,11 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		if err != nil {
 			return err
 		}
-		err = shellgen.WriteScriptFile(d, arbitraryCmdFilename, scriptBody)
+		err = shellgen.WriteScriptFile(d, shellgen.ArbitraryCmdFilename, scriptBody)
 		if err != nil {
 			return err
 		}
-		script := shellgen.ScriptPath(d.ProjectDir(), arbitraryCmdFilename)
+		script := shellgen.ScriptPath(d.ProjectDir(), shellgen.ArbitraryCmdFilename)
 		cmdWithArgs = []string{strconv.Quote(script)}
 		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{runCmd}, cmdArgs...), " ")
 	}
