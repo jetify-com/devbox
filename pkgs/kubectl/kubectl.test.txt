@@ -1,0 +1,31 @@
+# kubectl from dl.k8s.io. 1.30 is several pages back in the GitHub releases.
+#
+# Installs kubectl@1.30 from devbox.json, switches to 1.33 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/kubectl/kubectl.pkg.jsonc kubectl.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./kubectl.pkg.jsonc@1.30
+exec devbox run -- kubectl version --client
+stdout 'Client Version: v1\.30\.'
+
+exec devbox add pkg:./kubectl.pkg.jsonc@1.33
+! devboxjson.packages.contains devbox.json pkg:./kubectl.pkg.jsonc@1.30
+! devboxlock.packages.contains devbox.lock pkg:./kubectl.pkg.jsonc@1.30
+exec devbox run -- kubectl version --client
+stdout 'Client Version: v1\.33\.'
+
+# 1.30 is still installed, so switching back needs no download.
+cp devbox.1.30.json devbox.json
+exec devbox run -- kubectl version --client
+stdout 'Client Version: v1\.30\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./kubectl.pkg.jsonc@1.30"]
+}
+-- devbox.1.30.json --
+{
+  "packages": ["pkg:./kubectl.pkg.jsonc@1.30"]
+}

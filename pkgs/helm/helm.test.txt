@@ -1,0 +1,31 @@
+# Helm from get.helm.sh.
+#
+# Installs helm@3 from devbox.json, switches to 4 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/helm/helm.pkg.jsonc helm.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./helm.pkg.jsonc@3
+exec devbox run -- helm version --short
+stdout '^v3\.'
+
+exec devbox add pkg:./helm.pkg.jsonc@4
+! devboxjson.packages.contains devbox.json pkg:./helm.pkg.jsonc@3
+! devboxlock.packages.contains devbox.lock pkg:./helm.pkg.jsonc@3
+exec devbox run -- helm version --short
+stdout '^v4\.'
+
+# 3 is still installed, so switching back needs no download.
+cp devbox.3.json devbox.json
+exec devbox run -- helm version --short
+stdout '^v3\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./helm.pkg.jsonc@3"]
+}
+-- devbox.3.json --
+{
+  "packages": ["pkg:./helm.pkg.jsonc@3"]
+}

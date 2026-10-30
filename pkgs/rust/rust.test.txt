@@ -1,0 +1,40 @@
+# Rust: rustup-init installs rustup, which installs the toolchain into a
+# shared RUSTUP_HOME; RUSTUP_TOOLCHAIN selects the version.
+#
+# Installs rust@1.85 from devbox.json, switches to 1.90 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/rust/rust.pkg.jsonc rust.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./rust.pkg.jsonc@1.85
+exec devbox run -- rustc --version
+stdout '^rustc 1\.85\.'
+exec devbox run -- cargo --version
+stdout '^cargo 1\.85\.'
+exec devbox run -- cargo clippy --version
+stdout '^clippy 0\.1\.85'
+exec devbox run -- sh -c 'echo $RUSTUP_TOOLCHAIN'
+stdout '^1\.85\.'
+
+exec devbox add pkg:./rust.pkg.jsonc@1.90
+! devboxjson.packages.contains devbox.json pkg:./rust.pkg.jsonc@1.85
+! devboxlock.packages.contains devbox.lock pkg:./rust.pkg.jsonc@1.85
+exec devbox run -- rustc --version
+stdout '^rustc 1\.90\.'
+exec devbox run -- rustfmt --version
+stdout '^rustfmt 1\.'
+
+# 1.85 is still installed, so switching back needs no download.
+cp devbox.1.85.json devbox.json
+exec devbox run -- rustc --version
+stdout '^rustc 1\.85\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./rust.pkg.jsonc@1.85"]
+}
+-- devbox.1.85.json --
+{
+  "packages": ["pkg:./rust.pkg.jsonc@1.85"]
+}

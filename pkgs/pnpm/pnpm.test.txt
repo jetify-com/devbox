@@ -1,0 +1,33 @@
+# pnpm: 9 comes from npm (sha512), 12 from GitHub release tarballs
+# (GitHub asset digests).
+#
+# Installs pnpm@9 from devbox.json, switches to 12 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/pnpm/pnpm.pkg.jsonc pnpm.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./pnpm.pkg.jsonc@9
+exec devbox run -- pnpm --version
+stdout '^9\.'
+grep '"sha512": "' devbox.lock
+
+exec devbox add pkg:./pnpm.pkg.jsonc@12
+! devboxjson.packages.contains devbox.json pkg:./pnpm.pkg.jsonc@9
+! devboxlock.packages.contains devbox.lock pkg:./pnpm.pkg.jsonc@9
+exec devbox run -- pnpm --version
+stdout '^12\.'
+
+# 9 is still installed, so switching back needs no download.
+cp devbox.9.json devbox.json
+exec devbox run -- pnpm --version
+stdout '^9\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./pnpm.pkg.jsonc@9"]
+}
+-- devbox.9.json --
+{
+  "packages": ["pkg:./pnpm.pkg.jsonc@9"]
+}
