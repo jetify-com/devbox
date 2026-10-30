@@ -11,11 +11,11 @@ Most NodeJS Projects will install their dependencies locally using NPM or Yarn, 
 
 ```json
   "packages": [
-    "nodejs@18"
+    "nodejs@24"
   ],
 ```
 
-This will install NodeJS 18, and comes bundled with `npm`. You can find other installable versions of NodeJS by running `devbox search nodejs`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/nodejs)
+This will install NodeJS 24, and comes bundled with `npm`. You can find other installable versions of NodeJS by running `devbox search nodejs`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/nodejs)
 
 ## Installing Global Packages
 
@@ -26,7 +26,7 @@ You can instead install these global packages by adding them to the list of pack
 ```json
 {
     "packages": [
-        "nodejs@18",
+        "nodejs@24",
         "nodePackages.yalc@latest",
         "nodePackages.pm2@latest"
     ]

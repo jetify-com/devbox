@@ -45,10 +45,11 @@ func (f *File) FetchResolvedPackage(pkg string, refresh bool) (*Package, error) 
 		if err != nil {
 			return nil, err
 		}
-		return &Package{
-			Resolved:     installable.String(),
-			LastModified: time.Unix(installable.Ref.LastModified, 0).UTC().Format(time.RFC3339),
-		}, nil
+		locked := &Package{Resolved: installable.String()}
+		if installable.Ref.LastModified != 0 {
+			locked.LastModified = time.Unix(installable.Ref.LastModified, 0).UTC().Format(time.RFC3339)
+		}
+		return locked, nil
 	}
 
 	name, version, _ := searcher.ParseVersionedPackage(pkg)
@@ -71,8 +72,11 @@ func (f *File) FetchResolvedPackage(pkg string, refresh bool) (*Package, error) 
 	}
 
 	packageVersion, err := searcher.Client().Resolve(name, version)
-	if err != nil {
+	if errors.Is(err, searcher.ErrNotFound) {
 		return nil, errors.Wrapf(nix.ErrPackageNotFound, "%s@%s", name, version)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	sysInfos, err := buildLockSystemInfos(packageVersion)
@@ -223,9 +227,9 @@ func lockFlake(ctx context.Context, ref flake.Ref, refresh bool) (flake.Ref, err
 	// file is a bit more lenient and only requires a revision so that we
 	// don't need to download the nixpkgs source for cached packages. If the
 	// search index is ever able to return the NAR hash then we can remove
-	// this check. Skip this shortcut when refresh is requested — the caller
-	// is asking us to re-query upstream for a newer rev.
-	if !refresh && ref.Type == flake.TypeGitHub && (ref.Rev != "") {
+	// this check. A pinned rev can't change, so this also applies when
+	// refresh is requested.
+	if ref.Type == flake.TypeGitHub && ref.Rev != "" {
 		return ref, nil
 	}
 

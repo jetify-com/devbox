@@ -132,3 +132,58 @@ func devboxForTesting(t *testing.T) *Devbox {
 
 	return d
 }
+
+func TestSyncSymlinks(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "runx", "bin")
+	require.NoError(t, os.MkdirAll(dir, 0o755))
+
+	targets := t.TempDir()
+	target := func(name string) string { return filepath.Join(targets, name) }
+
+	// Pre-existing state: one correct link, one stale link pointing at the
+	// wrong target, one link that's no longer wanted, and a regular file.
+	require.NoError(t, os.Symlink(target("correct"), filepath.Join(dir, "correct")))
+	require.NoError(t, os.Symlink(target("old"), filepath.Join(dir, "stale")))
+	require.NoError(t, os.Symlink(target("removed"), filepath.Join(dir, "removed")))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "file"), nil, 0o644))
+
+	links := map[string]string{
+		"correct": target("correct"),
+		"stale":   target("stale"),
+		"new":     target("new"),
+		"file":    target("file"),
+	}
+	require.NoError(t, syncSymlinks(dir, links))
+
+	entries, err := os.ReadDir(dir)
+	require.NoError(t, err)
+	got := map[string]string{}
+	for _, e := range entries {
+		dst, err := os.Readlink(filepath.Join(dir, e.Name()))
+		require.NoError(t, err, "%s should be a symlink", e.Name())
+		got[e.Name()] = dst
+	}
+	assert.Equal(t, links, got)
+}
+
+func TestSyncSymlinksConcurrent(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "runx", "bin")
+	targets := t.TempDir()
+	links := map[string]string{}
+	for i := range 50 {
+		name := fmt.Sprintf("bin%d", i)
+		links[name] = filepath.Join(targets, name)
+	}
+
+	errs := make(chan error, 8)
+	for range cap(errs) {
+		go func() { errs <- syncSymlinks(dir, links) }()
+	}
+	for range cap(errs) {
+		assert.NoError(t, <-errs)
+	}
+
+	entries, err := os.ReadDir(dir)
+	require.NoError(t, err)
+	assert.Len(t, entries, len(links))
+}

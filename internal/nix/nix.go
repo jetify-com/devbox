@@ -59,7 +59,9 @@ func (*NixInstance) PrintDevEnv(ctx context.Context, args *PrintDevEnvArgs) (*Pr
 		data, err = os.ReadFile(args.PrintDevEnvCachePath)
 		if err == nil {
 			if err := json.Unmarshal(data, &out); err != nil {
-				return nil, errors.WithStack(err)
+				// The cache may be truncated or corrupt, so recompute it.
+				slog.Debug("ignoring invalid print-dev-env cache", "err", err)
+				data, out = nil, PrintDevEnvOut{}
 			}
 		} else if !errors.Is(err, fs.ErrNotExist) {
 			return nil, errors.WithStack(err)

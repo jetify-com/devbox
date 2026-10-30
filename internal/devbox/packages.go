@@ -63,7 +63,9 @@ func (d *Devbox) Outdated(ctx context.Context) (map[string]UpdateVersion, error)
 			continue
 		}
 		existingLockPackage := lockfile.Packages[pkg.Raw]
-		if lockPackage.Version == existingLockPackage.Version {
+		// Packages that aren't locked yet will be locked to the latest version
+		// on the next install, so they aren't outdated.
+		if existingLockPackage == nil || lockPackage.Version == existingLockPackage.Version {
 			continue
 		}
 
@@ -307,10 +309,11 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	defer trace.StartRegion(ctx, "devboxEnsureStateIsUpToDate").End()
 	defer debug.FunctionTimer().End()
 
-	upToDate, err := d.lockfile.IsUpToDateAndInstalled(isFishShell())
+	status, err := d.lockfile.StateStatus(isFishShell())
 	if err != nil {
 		return err
 	}
+	upToDate := status == lock.StateUpToDate
 
 	// if mode is install or uninstall, then we need to compute some state
 	// like updating the flake or installing packages locally, so must continue
@@ -318,6 +321,15 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	if mode == ensure {
 		// if mode is ensure and we are up to date, then we can skip the rest
 		if upToDate {
+			return nil
+		}
+		// Only env, init_hook, scripts, etc. changed. The Nix environment
+		// is still valid, so skip installing packages and recomputing it.
+		if status == lock.StateNonNixStale {
+			if err := d.refreshNonNixState(ctx); err != nil {
+				return err
+			}
+			d.warnIfEnvIsStale(ctx)
 			return nil
 		}
 		ux.Finfof(d.stderr, "Ensuring packages are installed.\n")
@@ -346,10 +358,20 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 		}
 	}
 
+	if !upToDate {
+		d.warnIfEnvIsStale(ctx)
+	}
+
+	return d.updateLockfile(mode, recomputeState)
+}
+
+// warnIfEnvIsStale warns that the current shell's environment is out of date.
+// It should be called after the project state changed.
+func (d *Devbox) warnIfEnvIsStale(ctx context.Context) {
 	// If we're in a devbox shell (global or project), then the environment might
 	// be out of date after the user installs something. If have direnv active
 	// it should reload automatically so we don't need to refresh.
-	if d.IsEnvEnabled() && !upToDate && !d.IsDirenvActive() {
+	if d.IsEnvEnabled() && !d.IsDirenvActive() {
 		ux.FHidableWarning(
 			ctx,
 			d.stderr,
@@ -357,8 +379,43 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 			d.RefreshAliasOrCommand(),
 		)
 	}
+}
 
-	return d.updateLockfile(mode, recomputeState)
+// refreshNonNixState brings the project state up to date when only inputs
+// that don't affect the Nix environment changed (lock.StateNonNixStale). The
+// generated flake, the print-dev-env cache and the nix profile are still
+// valid, so this skips all Nix work. It rewrites the scripts and init hook
+// files and saves the new state hashes. Env vars, env_from and aliases need no
+// work here because they are read from the config every time the environment
+// is computed.
+func (d *Devbox) refreshNonNixState(ctx context.Context) error {
+	defer trace.StartRegion(ctx, "devboxRefreshNonNixState").End()
+	defer debug.FunctionTimer().End()
+	slog.Debug("only non-nix inputs changed, skipping nix environment recompute")
+
+	if err := shellgen.WriteScriptsToFiles(d); err != nil {
+		return err
+	}
+	return d.saveStateHashFile()
+}
+
+// saveStateHashFile records the current inputs in .devbox/state.json so that
+// later commands know the state is up to date.
+func (d *Devbox) saveStateHashFile() error {
+	configHash, err := d.ConfigHash()
+	if err != nil {
+		return err
+	}
+	nixConfigHash, err := d.NixConfigHash()
+	if err != nil {
+		return err
+	}
+	return lock.UpdateAndSaveStateHashFile(lock.UpdateStateHashFileArgs{
+		ProjectDir:    d.projectDir,
+		ConfigHash:    configHash,
+		NixConfigHash: nixConfigHash,
+		IsFish:        isFishShell(),
+	})
 }
 
 // updateLockfile will ensure devbox.lock is up to date with the current state of the project.update
@@ -392,15 +449,7 @@ func (d *Devbox) updateLockfile(mode installMode, recomputeState bool) error {
 	// If not, we leave the local.lock in a stale state, so that state is recomputed
 	// on the next ensureStateIsUpToDate call with mode=ensure.
 	if recomputeState {
-		configHash, err := d.ConfigHash()
-		if err != nil {
-			return err
-		}
-		return lock.UpdateAndSaveStateHashFile(lock.UpdateStateHashFileArgs{
-			ProjectDir: d.projectDir,
-			ConfigHash: configHash,
-			IsFish:     isFishShell(),
-		})
+		return d.saveStateHashFile()
 	}
 	return nil
 }

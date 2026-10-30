@@ -1,6 +1,6 @@
 # Drupal Stack
 
-This example shows how to run a Drupal application in Devbox. It makes use of the PHP and Apache Plugins, while demonstrating how to configure a MariaDB instance to work with Devbox Cloud.
+This example shows how to run a Drupal 11 application (PHP 8.4, MariaDB, and NGINX) in Devbox. It makes use of the PHP, MariaDB, and NGINX Plugins, while demonstrating how to configure a MariaDB instance to work with Devbox Cloud.
 
 
 ## How to Run the example
@@ -15,7 +15,7 @@ To create the `devbox_drupal` database and example table, you should run:
 
 `mysql -u root < setup_db.sql`
 
-To install Drupal and your dependencies, run `composer install`. The Drupal app will be installed in the `/web` directory, and you can configure your site by visiting `localhost:8000/autoload` in your browser and following the interactive instructions
+To install Drupal and your dependencies, run `composer install`. The Drupal app will be installed in the `/web` directory, and you can configure your site by visiting `localhost:8081` in your browser and following the interactive instructions
 
 To exit the shell, use `exit`
 

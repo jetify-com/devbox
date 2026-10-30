@@ -194,7 +194,7 @@ func (m *Manager) createFile(
 	filePath, contentPath, virtenvPath string,
 ) error {
 	name := pkg.CanonicalName()
-	slog.Debug("Creating file %q from contentPath: %q", filePath, contentPath)
+	slog.Debug("Creating file from contentPath", "file", filePath, "contentPath", contentPath)
 	content, err := pkg.FileContent(contentPath)
 	if err != nil {
 		return errors.WithStack(err)

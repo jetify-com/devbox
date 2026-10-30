@@ -4,7 +4,6 @@
 package boxcli
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -23,11 +22,10 @@ func genDocsCmd() *cobra.Command {
 		Hidden: true,
 		Args:   cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			wd, err := os.Getwd()
+			docsPath, err := filepath.Abs(args[0])
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			docsPath := filepath.Join(wd, args[0] /* relative path */)
 
 			// We clear out the existing directory so that the doc-pages for
 			// commands that have been deleted in the CLI will also be removed

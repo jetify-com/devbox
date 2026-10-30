@@ -26,14 +26,17 @@ func Untar(archive io.Reader, destPath string) error {
 	format := archives.CompressedArchive{
 		Compression: archives.Gz{},
 		Archival:    archives.Tar{},
+		Extraction:  archives.Tar{},
 	}
 
 	// The handler will be called for each entry in the archive.
 	handler := func(ctx context.Context, fromFile archives.FileInfo) error {
-		// TODO: consider whether the path provided in the archive is a valid
-		// relative path to begin with.
 		rel := filepath.Clean(fromFile.NameInArchive)
 		abs := filepath.Join(destPath, rel)
+		// Reject entries like "../foo" that would escape destPath (zip-slip).
+		if r, err := filepath.Rel(destPath, abs); err != nil || !filepath.IsLocal(r) {
+			return fmt.Errorf("archive entry %s is outside the destination directory", fromFile.NameInArchive)
+		}
 
 		mode := fromFile.Mode()
 

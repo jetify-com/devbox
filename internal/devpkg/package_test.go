@@ -6,10 +6,12 @@ package devpkg
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/samber/lo"
+	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/nix/flake"
@@ -94,6 +96,23 @@ func TestInput(t *testing.T) {
 		if urlForInput := i.URLForFlakeInput(); testCase.urlForInput != urlForInput {
 			t.Errorf("URLForFlakeInput() = %v, want %v", urlForInput, testCase.urlForInput)
 		}
+	}
+}
+
+func TestFlakeInputNameUnique(t *testing.T) {
+	pkgs := []string{
+		"github:owner/repo/abc123#x",
+		"github:owner/repo/abc123?dir=a#x",
+		"github:owner/repo/abc123?dir=b#y",
+		"github:owner/repo/abc123?host=git.example.com#x",
+	}
+	seen := map[string]string{}
+	for _, pkg := range pkgs {
+		name := testInputFromString(pkg, "/tmp/my-project").FlakeInputName()
+		if other, ok := seen[name]; ok {
+			t.Errorf("FlakeInputName() = %q for both %q and %q", name, other, pkg)
+		}
+		seen[name] = pkg
 	}
 }
 
@@ -194,6 +213,8 @@ func TestCanonicalName(t *testing.T) {
 		{"go", "go"},
 		{"go@latest", "go"},
 		{"go@1.21", "go"},
+		{"nodePackages.@vue/cli@5.0", "nodePackages.@vue/cli"},
+		{"emacsPackages.@", "emacsPackages.@"},
 		{"runx:golangci/golangci-lint@latest", "runx:golangci/golangci-lint"},
 		{"runx:golangci/golangci-lint@v0.0.2", "runx:golangci/golangci-lint"},
 		{"runx:golangci/golangci-lint", "runx:golangci/golangci-lint"},
@@ -211,6 +232,51 @@ func TestCanonicalName(t *testing.T) {
 			got := pkg.CanonicalName()
 			if got != tt.expectedName {
 				t.Errorf("Expected canonical name %q, but got %q", tt.expectedName, got)
+			}
+		})
+	}
+}
+
+func TestVersioned(t *testing.T) {
+	tests := []struct {
+		pkgName   string
+		version   string
+		versioned string
+	}{
+		{"go", "", "go@latest"},
+		{"go@1.21", "1.21", "go@1.21"},
+		{"nodePackages.@vue/cli@5.0", "5.0", "nodePackages.@vue/cli@5.0"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.pkgName, func(t *testing.T) {
+			pkg := PackageFromStringWithDefaults(tt.pkgName, &lockfile{})
+			if got := pkg.version(); got != tt.version {
+				t.Errorf("version() = %q, want %q", got, tt.version)
+			}
+			if got := pkg.Versioned(); got != tt.versioned {
+				t.Errorf("Versioned() = %q, want %q", got, tt.versioned)
+			}
+		})
+	}
+}
+
+func TestFlakeOutputNames(t *testing.T) {
+	tests := []struct {
+		pkg     string
+		opts    []string
+		outputs []string
+	}{
+		{"github:NixOS/nixpkgs/12345#curl", nil, []string{}},
+		{"github:NixOS/nixpkgs/12345#curl", []string{"dev", "out"}, []string{"dev", "out"}},
+		{"github:NixOS/nixpkgs/12345#curl^bin,dev", nil, []string{"bin", "dev"}},
+		{"github:NixOS/nixpkgs/12345#curl^bin", []string{"dev"}, []string{"bin", "dev"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.pkg, func(t *testing.T) {
+			pkg := PackageFromStringWithOptions(tt.pkg, &lockfile{}, devopt.AddOpts{Outputs: tt.opts})
+			got := pkg.outputs.selectedNames
+			if !slices.Equal(got, tt.outputs) {
+				t.Errorf("got outputs %q, want %q", got, tt.outputs)
 			}
 		})
 	}

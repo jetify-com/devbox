@@ -26,6 +26,7 @@ import (
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/internal/pkgdef"
+	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/ux"
 	"go.jetify.com/devbox/nix/flake"
 	"go.jetify.com/devbox/plugins"
@@ -160,7 +161,7 @@ func newPackage(raw string, isInstallable func() bool, locker lock.Locker) *Pack
 		return resolve(pkg)
 	})
 	pkg.setInstallable(parsed, locker.ProjectDir())
-	pkg.outputs = outputs{selectedNames: strings.Split(parsed.Outputs, ",")}
+	pkg.outputs = outputs{selectedNames: lo.Compact(strings.Split(parsed.Outputs, ","))}
 	pkg.Patch = pkgNeedsPatch(pkg.CanonicalName(), configfile.PatchAuto)
 	return pkg
 }
@@ -237,6 +238,11 @@ func (p *Package) FlakeInputName() string {
 				result += "-" + p.installable.Ref.Rev
 			} else if p.installable.Ref.Ref != "" {
 				result += "-" + p.installable.Ref.Ref
+			}
+			// Disambiguate flakes in different subdirectories or hosts of
+			// the same repo.
+			if p.installable.Ref.Dir != "" || p.installable.Ref.Host != "" {
+				result += "-" + cachehash.Bytes6([]byte(p.installable.Ref.String()))
 			}
 		}
 	default:
@@ -518,8 +524,10 @@ func (p *Package) CanonicalName() string {
 	if ref, ok := p.pkgDefRef(); ok {
 		return pkgdef.Ref{Source: ref.Source}.String()
 	}
-	name, _, _ := strings.Cut(p.Raw, "@")
-	return name
+	if name, _, ok := searcher.ParseVersionedPackage(p.Raw); ok {
+		return name
+	}
+	return p.Raw
 }
 
 // pkgDefRef parses the package string as a package definition reference.
@@ -593,7 +601,7 @@ func (p *Package) version() string {
 	if ref, ok := p.pkgDefRef(); ok {
 		return ref.Version
 	}
-	_, version, _ := strings.Cut(p.Raw, "@")
+	_, version, _ := searcher.ParseVersionedPackage(p.Raw)
 	return version
 }
 
@@ -601,7 +609,8 @@ func (p *Package) isVersioned() bool {
 	if ref, ok := p.pkgDefRef(); ok {
 		return ref.Version != ""
 	}
-	return p.IsDevboxPackage && strings.Contains(p.Raw, "@")
+	_, _, versioned := searcher.ParseVersionedPackage(p.Raw)
+	return p.IsDevboxPackage && versioned
 }
 
 func (p *Package) HashFromNixPkgsURL() string {

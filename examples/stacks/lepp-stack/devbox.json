@@ -3,7 +3,7 @@
     "curl@latest",
     "postgresql@latest",
     "php@latest",
-    "php83Extensions.pgsql@latest",
+    "php85Extensions.pgsql@latest",
     "nginx@latest"
   ],
   "env": {

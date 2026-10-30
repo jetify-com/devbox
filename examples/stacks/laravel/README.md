@@ -21,7 +21,7 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 
 1. If you're using Laravel on Devbox Cloud, you can test the app by appending `/port/8000` to your Devbox Cloud URL
 
-1. For more details on building and developing your Laravel project, visit the [Laravel Docs](https://laravel.com/docs/10.x)
+1. For more details on building and developing your Laravel project, visit the [Laravel Docs](https://laravel.com/docs)
 
 
 ## How to Recreate this Example
@@ -33,7 +33,7 @@ This example shows how to build a simple Laravel application backed by MariaDB a
 2. Add the packages using the command below. Installing the packages with `devbox add` will ensure that the plugins are activated:
 
     ```bash
-    devbox add mariadb@latest, php@8.1, nodejs@18, redis@latest, php81Packages.composer@latest
+    devbox add mariadb@latest php@8.4 nodejs@24 redis@latest php84Packages.composer@latest
     ```
 
 3. Run `devbox shell` to start your shell. This will also initialize your database by running `initdb` in the init hook.
@@ -43,7 +43,7 @@ This example shows how to build a simple Laravel application backed by MariaDB a
     ```bash
     composer create-project laravel/laravel tmp
 
-    mv tmp/* tmp/.* .
+    cp -a tmp/. . && rm -rf tmp
     ```
 
 ### Setting up MariaDB

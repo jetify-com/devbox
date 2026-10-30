@@ -5,7 +5,7 @@ let main args =
     let dotNetVersion = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription
     printfn "Installed version is %A" dotNetVersion
 
-    let expectedVersionPrefix = ".NET 6"
+    let expectedVersionPrefix = ".NET 10"
     if (not (dotNetVersion.StartsWith(expectedVersionPrefix))) then
       raise (System.Exception(sprintf "Expected version %A but got version %A" expectedVersionPrefix dotNetVersion))
     else 

@@ -131,9 +131,10 @@ func TestBuildConfigTemplatePlaceholders(t *testing.T) {
 // lockProjectForTest is a minimal lock.File project rooted at dir.
 type lockProjectForTest struct{ dir string }
 
-func (p lockProjectForTest) ConfigHash() (string, error) { return "", nil }
-func (p lockProjectForTest) Stdenv() flake.Ref           { return flake.Ref{} }
-func (p lockProjectForTest) ProjectDir() string          { return p.dir }
+func (p lockProjectForTest) ConfigHash() (string, error)    { return "", nil }
+func (p lockProjectForTest) NixConfigHash() (string, error) { return "", nil }
+func (p lockProjectForTest) Stdenv() flake.Ref              { return flake.Ref{} }
+func (p lockProjectForTest) ProjectDir() string             { return p.dir }
 func (p lockProjectForTest) AllPackageNamesIncludingRemovedTriggerPackages() []string {
 	return nil
 }
@@ -172,4 +173,15 @@ func TestUpdateLockfileVersion(t *testing.T) {
 			assert.Equal(t, test.want, lockfile.Packages["nodejs@22"].PluginVersion)
 		})
 	}
+}
+
+// TestLoadConfigFromIncludeUnknownBuiltin verifies that including a built-in
+// plugin that doesn't exist returns an error instead of a nil config.
+func TestLoadConfigFromIncludeUnknownBuiltin(t *testing.T) {
+	lockfile, err := lock.GetFile(lockProjectForTest{dir: t.TempDir()})
+	require.NoError(t, err)
+
+	cfg, err := LoadConfigFromInclude("plugin:not-a-real-plugin", lockfile, t.TempDir())
+	require.Error(t, err)
+	assert.Nil(t, cfg)
 }

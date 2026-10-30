@@ -624,6 +624,44 @@ func TestSetOutputs(t *testing.T) {
 	}
 }
 
+func TestSetOutputsTwice(t *testing.T) {
+	in, want := parseConfigTxtarTest(t, `
+-- in --
+{
+  "packages": {
+    "hello": {
+      "version": "latest"
+    }
+  }
+}
+-- want --
+{
+  "packages": {
+    "hello": {
+      "version": "latest",
+      "outputs": ["dev"]
+    }
+  }
+}`)
+
+	for range 2 {
+		err := in.PackagesMutator.SetOutputs(io.Discard, "hello@latest", []string{"dev"})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	pkg, ok := in.GetPackage("hello@latest")
+	if !ok {
+		t.Fatal("package hello@latest not found")
+	}
+	if diff := cmp.Diff([]string{"dev"}, pkg.Outputs); diff != "" {
+		t.Errorf("wrong in-memory outputs (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
+	}
+}
+
 func TestSetOutputsMigrateArray(t *testing.T) {
 	in, want := parseConfigTxtarTest(t, `
 -- in --
@@ -651,6 +689,47 @@ func TestSetOutputsMigrateArray(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, in.Bytes()); diff != "" {
 		t.Errorf("wrong raw config hujson (-want +got):\n%s", diff)
+	}
+}
+
+func TestSetPatchAutoRemovesPatchGlibc(t *testing.T) {
+	in, want := parseConfigTxtarTest(t, `
+-- in --
+{
+  "packages": {
+    "python": {
+      "version":     "latest",
+      "patch_glibc": true
+    }
+  }
+}
+-- want --
+{
+  "packages": {
+    "python": {
+      "version": "latest"
+    }
+  }
+}`)
+
+	err := in.PackagesMutator.SetPatch("python@latest", PatchAuto)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(want, in.Bytes(), optParseHujson()); diff != "" {
+		t.Errorf("wrong parsed config json (-want +got):\n%s", diff)
+	}
+
+	reloaded, err := LoadBytes(in.Bytes())
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkg, ok := reloaded.GetPackage("python@latest")
+	if !ok {
+		t.Fatal("package python@latest not found")
+	}
+	if pkg.Patch != PatchAuto {
+		t.Errorf("reloaded patch = %q, want %q", pkg.Patch, PatchAuto)
 	}
 }
 
