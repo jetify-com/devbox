@@ -1,0 +1,36 @@
+# Go from go.dev.
+#
+# Installs go@1.22 from devbox.json, switches to 1.27 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/go/go.pkg.jsonc go.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./go.pkg.jsonc@1.22
+exec devbox run -- go version
+stdout 'go1\.22\.'
+# The version in devbox.json runs even if go.mod asks for a newer one.
+exec devbox run -- go env GOTOOLCHAIN
+stdout '^local$'
+
+exec devbox add pkg:./go.pkg.jsonc@1.27
+! devboxjson.packages.contains devbox.json pkg:./go.pkg.jsonc@1.22
+! devboxlock.packages.contains devbox.lock pkg:./go.pkg.jsonc@1.22
+exec devbox run -- go version
+stdout 'go1\.27\.'
+
+# 1.22 is still installed, so switching back needs no download.
+cp devbox.1.22.json devbox.json
+exec devbox run -- go version
+stdout 'go1\.22\.'
+exec devbox run -- go env GOTOOLCHAIN
+stdout '^local$'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./go.pkg.jsonc@1.22"]
+}
+-- devbox.1.22.json --
+{
+  "packages": ["pkg:./go.pkg.jsonc@1.22"]
+}

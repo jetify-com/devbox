@@ -1,0 +1,81 @@
+name: pkgdef-tests
+# Installs every package definition in pkgs/ from its vendor and switches
+# between two of its versions (see specs/package-definitions.md). Runs when
+# the definitions or their implementation change, and weekly to catch vendors
+# that change their downloads or metadata.
+
+concurrency:
+  group: pkgdef-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    paths:
+      - pkgs/**
+      - internal/pkgdef/**
+      - internal/devbox/pkgdef.go
+      - internal/lock/pkgdef.go
+      - internal/plugin/pkgdef.go
+      - testscripts/testrunner/pkgdefs.go
+      - .github/workflows/pkgdef-tests.yaml
+  push:
+    branches:
+      - main
+    paths:
+      - pkgs/**
+      - internal/pkgdef/**
+      - internal/devbox/pkgdef.go
+      - internal/lock/pkgdef.go
+      - internal/plugin/pkgdef.go
+      - testscripts/testrunner/pkgdefs.go
+      - .github/workflows/pkgdef-tests.yaml
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * 1' # Mondays at 9:00 UTC
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # Version lookups and asset digests go through the GitHub API.
+  DEVBOX_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NIX_CONFIG: |
+    access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+  DEVBOX_RUN_PKGDEF_TESTS: 1
+
+jobs:
+  pkgdef-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - name: clear directories to reduce disk usage
+        if: runner.os == 'Linux'
+        # Every package installs two toolchains (several GB in total).
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - uses: actions/checkout@v7
+      - name: Mount golang cache
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg
+          key: go-devbox-tests-${{ runner.os }}-${{ hashFiles('go.sum') }}
+      - name: Install devbox
+        uses: jetify-com/devbox-install-action@v0.15.0
+        with:
+          enable-cache: true
+      - name: Resolve and lock the latest version of every package
+        run: devbox run go test -v -count=1 -run TestShippedDefinitionsResolve ./internal/pkgdef
+      - name: Install and switch versions of every package
+        run: devbox run go test -v -count=1 -timeout 50m -run TestPackageDefinitions ./testscripts

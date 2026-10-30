@@ -1,0 +1,32 @@
+# Gradle from services.gradle.org, running on the Temurin JDK.
+#
+# Installs gradle@8 from devbox.json, switches to 9 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/java/java.pkg.jsonc java.pkg.jsonc
+cp $PKGS/gradle/gradle.pkg.jsonc gradle.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./gradle.pkg.jsonc@8
+exec devbox run -- gradle --version
+stdout '^Gradle 8\.'
+
+exec devbox add pkg:./gradle.pkg.jsonc@9
+! devboxjson.packages.contains devbox.json pkg:./gradle.pkg.jsonc@8
+! devboxlock.packages.contains devbox.lock pkg:./gradle.pkg.jsonc@8
+exec devbox run -- gradle --version
+stdout '^Gradle 9\.'
+
+# 8 is still installed, so switching back needs no download.
+cp devbox.8.json devbox.json
+exec devbox run -- gradle --version
+stdout '^Gradle 8\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./java.pkg.jsonc@21", "pkg:./gradle.pkg.jsonc@8"]
+}
+-- devbox.8.json --
+{
+  "packages": ["pkg:./java.pkg.jsonc@21", "pkg:./gradle.pkg.jsonc@8"]
+}
