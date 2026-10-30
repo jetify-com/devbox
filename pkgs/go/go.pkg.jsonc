@@ -33,8 +33,13 @@
   },
 
   "bin": ["bin"],
-  "binaries": ["go", "gofmt"]
+  "binaries": ["go", "gofmt"],
 
-  // GOROOT is intentionally not set: the go binary locates its own root and
-  // upstream discourages setting it.
+  // Run the version in devbox.json even when go.mod asks for a newer
+  // toolchain, instead of downloading that one (the same default as the
+  // nixpkgs go). GOROOT is intentionally not set: the go binary locates its
+  // own root and upstream discourages setting it.
+  "env": {
+    "GOTOOLCHAIN": "local"
+  }
 }

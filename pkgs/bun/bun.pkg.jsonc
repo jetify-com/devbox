@@ -1,0 +1,30 @@
+// Package definition for Bun, installed from its GitHub releases.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "bun",
+  "description": "JavaScript runtime, bundler, test runner and package manager",
+  "homepage": "https://bun.sh",
+  "license": "MIT",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+  "arch_map": { "x86_64": "x64", "aarch64": "aarch64" },
+
+  "versions": { "type": "github_releases", "repo": "oven-sh/bun", "strip_prefix": "bun-v" },
+
+  "install": {
+    "type": "archive",
+    "url": "https://github.com/oven-sh/bun/releases/download/bun-v{{.Version}}/bun-{{.OS}}-{{.Arch}}.zip",
+    "checksum": {
+      "type": "sha256_url",
+      "url": "https://github.com/oven-sh/bun/releases/download/bun-v{{.Version}}/SHASUMS256.txt"
+    },
+    "strip_components": 1
+  },
+
+  // bunx is a link to bun, as Bun's own installer creates it.
+  "hooks": { "post_install": ["ln -sf bun bunx"] },
+
+  "bin": ["."],
+  "binaries": ["bun", "bunx"]
+}
