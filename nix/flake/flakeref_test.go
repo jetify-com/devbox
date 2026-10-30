@@ -66,6 +66,7 @@ func TestParseFlakeRef(t *testing.T) {
 		"github:NixOS/nix?rev=5233fd2ba76a3accb5aaa999c00509a11fd0793c":  {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Rev: "5233fd2ba76a3accb5aaa999c00509a11fd0793c"},
 		"github:NixOS/nix?host=example.com":                              {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com"},
 		"github:NixOS/nix?host=example.com&dir=subdir":                   {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com", Dir: "subdir"},
+
 		"github:NixOS/nix?host=example.com&dir=subdir&lastModified=1734435836&narHash=sha256-kMBQ5PRiFLagltK0sH%2B08aiNt3zGERC2297iB6vrvlU%3D": {Type: TypeGitHub, Owner: "NixOS", Repo: "nix", Host: "example.com", Dir: "subdir", NARHash: "sha256-kMBQ5PRiFLagltK0sH+08aiNt3zGERC2297iB6vrvlU="},
 
 		// The github type allows clone-style URLs. The username and

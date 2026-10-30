@@ -45,6 +45,35 @@ func TestStorePathParts(t *testing.T) {
 				Output:  "bar",
 			},
 		},
+		// version with dashes and an output
+		{
+			storePath: "/nix/store/0z1zq1zq1zq1zq1zq1zq1zq1zq1zq1zq-glibc-2.39-52-bin",
+			expected: StorePathParts{
+				Hash:    "0z1zq1zq1zq1zq1zq1zq1zq1zq1zq1zq",
+				Name:    "glibc",
+				Version: "2.39-52",
+				Output:  "bin",
+			},
+		},
+		// version with dashes and no output
+		{
+			storePath: "/nix/store/0z1zq1zq1zq1zq1zq1zq1zq1zq1zq1zq-foo-0-unstable-2024-01-01",
+			expected: StorePathParts{
+				Hash:    "0z1zq1zq1zq1zq1zq1zq1zq1zq1zq1zq",
+				Name:    "foo",
+				Version: "0-unstable-2024-01-01",
+			},
+		},
+		// unstable version with an output
+		{
+			storePath: "/nix/store/0z1zq1zq1zq1zq1zq1zq1zq1zq1zq1zq-foo-0-unstable-2024-01-01-dev",
+			expected: StorePathParts{
+				Hash:    "0z1zq1zq1zq1zq1zq1zq1zq1zq1zq1zq",
+				Name:    "foo",
+				Version: "0-unstable-2024-01-01",
+				Output:  "dev",
+			},
+		},
 	}
 
 	for _, testCase := range testCases {

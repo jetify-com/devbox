@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/fileutil"
 )
 
 // to be composed into xyzCmdFlags structs
@@ -30,6 +31,10 @@ func (f *envFlag) Env(path string) (map[string]string, error) {
 	if f.EnvFile != "" {
 		envPath := f.EnvFile
 		if !filepath.IsAbs(envPath) {
+			// path may point to a config file rather than its directory.
+			if fileutil.IsFile(path) {
+				path = filepath.Dir(path)
+			}
 			envPath = filepath.Join(path, envPath)
 		}
 		envs, err = godotenv.Read(envPath)

@@ -70,7 +70,7 @@ func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) err
 	}
 
 	if flags.allProjects {
-		return updateAllProjects(cmd, args)
+		return updateAllProjects(cmd, args, flags.noInstall)
 	}
 
 	if flags.sync {
@@ -92,7 +92,7 @@ func updateCmdFunc(cmd *cobra.Command, args []string, flags *updateCmdFlags) err
 	})
 }
 
-func updateAllProjects(cmd *cobra.Command, args []string) error {
+func updateAllProjects(cmd *cobra.Command, args []string, noInstall bool) error {
 	boxes, err := multi.Open(&devopt.Opts{
 		Stderr: cmd.ErrOrStderr(),
 	})
@@ -103,6 +103,7 @@ func updateAllProjects(cmd *cobra.Command, args []string) error {
 		if err := box.Update(cmd.Context(), devopt.UpdateOpts{
 			Pkgs:                  args,
 			IgnoreMissingPackages: true,
+			NoInstall:             noInstall,
 		}); err != nil {
 			return err
 		}

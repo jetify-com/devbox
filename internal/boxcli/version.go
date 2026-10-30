@@ -39,14 +39,22 @@ func versionCmd() *cobra.Command {
 }
 
 func selfUpdateCmd() *cobra.Command {
+	updateLauncher := false
 	command := &cobra.Command{
 		Use:   "update",
 		Short: "Update devbox launcher and binary",
-		Args:  cobra.ExactArgs(0),
+		Long: "Update devbox to the latest version.\n\n" +
+			"This also replaces the launcher, the devbox in your PATH, when it's out of date. " +
+			"Use --launcher to replace it with the latest devbox even when it's up to date, " +
+			"so that commands run it directly instead of switching to the latest version on every run. " +
+			"Replacing the launcher may ask for sudo.",
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return vercheck.SelfUpdate(cmd.OutOrStdout(), cmd.ErrOrStderr())
+			return vercheck.SelfUpdate(cmd.ErrOrStderr(), updateLauncher)
 		},
 	}
+	command.Flags().BoolVar(&updateLauncher, "launcher", false,
+		"also replace the launcher with the latest devbox, even when it's up to date (may ask for sudo)")
 
 	return command
 }

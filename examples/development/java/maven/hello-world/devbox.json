@@ -1,7 +1,7 @@
 {
     "packages": [
         "maven@latest",
-        "jdk@19",
+        "jdk@25",
         "binutils@latest"
     ],
     "shell": {

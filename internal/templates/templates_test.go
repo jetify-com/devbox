@@ -46,3 +46,34 @@ func TestParseRepoURL(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "http://github.com", u)
 }
+
+func TestCopyDirContents(t *testing.T) {
+	src := filepath.Join(t.TempDir(), "my template")
+	files := map[string]string{
+		"devbox.json":       "{}",
+		".envrc":            "use devbox",
+		"sub dir/.hidden":   "hidden",
+		"with space.txt":    "space",
+		".git/HEAD":         "ref: refs/heads/main",
+		"sub dir/plain.txt": "plain",
+	}
+	for name, content := range files {
+		path := filepath.Join(src, name)
+		assert.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
+		assert.NoError(t, os.WriteFile(path, []byte(content), 0o644))
+	}
+
+	dst := filepath.Join(t.TempDir(), "my project")
+	assert.NoError(t, os.MkdirAll(dst, 0o755))
+	assert.NoError(t, copyDirContents(src, dst))
+
+	for name, content := range files {
+		got, err := os.ReadFile(filepath.Join(dst, name))
+		if name == ".git/HEAD" {
+			assert.ErrorIs(t, err, os.ErrNotExist, "%s should not be copied", name)
+			continue
+		}
+		assert.NoError(t, err, name)
+		assert.Equal(t, content, string(got), name)
+	}
+}

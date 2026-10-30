@@ -4,12 +4,12 @@ version = "0.1.0"
 description = ""
 authors = ["jetify.com"]
 readme = "README.md"
-packages = [{include = "devbox_cuda_dev"}]
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.10"
-torch = "^2.7.0"
-numpy = "^1.24.2"
+python = "^3.12"
+torch = "^2.14.1"
+numpy = "^2.5.4"
 
 
 [build-system]

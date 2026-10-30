@@ -47,7 +47,13 @@ func (ex *midcobraExecutable) AddMiddleware(mids ...Middleware) {
 func (ex *midcobraExecutable) Execute(ctx context.Context, args []string) int {
 	// Ensure cobra uses the same arguments
 	ex.cmd.SetContext(ctx)
+	// Parse the root's persistent flags (e.g. --debug) so middlewares can see
+	// them. Skip unknown flags, which belong to subcommands, instead of
+	// stopping at the first one.
+	allowlist := ex.cmd.FParseErrWhitelist
+	ex.cmd.FParseErrWhitelist.UnknownFlags = true
 	_ = ex.cmd.ParseFlags(args)
+	ex.cmd.FParseErrWhitelist = allowlist
 
 	// Run the 'pre' hooks
 	for _, m := range ex.middlewares {

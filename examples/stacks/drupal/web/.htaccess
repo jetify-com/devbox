@@ -3,7 +3,7 @@
 #
 
 # Protect files and directories from prying eyes.
-<FilesMatch "\.(engine|inc|install|make|module|profile|po|sh|.*sql|theme|twig|tpl(\.php)?|xtmpl|yml)(~|\.sw[op]|\.bak|\.orig|\.save)?$|^(\.(?!well-known).*|Entries.*|Repository|Root|Tag|Template|composer\.(json|lock)|web\.config|yarn\.lock|package\.json)$|^#.*#$|\.php(~|\.sw[op]|\.bak|\.orig|\.save)$">
+<FilesMatch "\.(engine|inc|install|make|module|profile|po|sh|.*sql|theme|twig|tpl(\.php)?|xtmpl|yml)(~|\.sw[op]|\.bak|\.orig|\.save)?$|^(\.(?!well-known).*|Entries.*|Repository|Root|Tag|Template|composer\.(json|lock)|web\.config|yarn\.lock|package(-lock)?\.json)$|^#.*#$|\.php(~|\.sw[op]|\.bak|\.orig|\.save)$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
@@ -22,12 +22,18 @@ DirectoryIndex index.php index.html index.htm
 AddType image/svg+xml svg svgz
 AddEncoding gzip svgz
 
-# Most of the following PHP settings cannot be changed at runtime. See
+# Add correct encoding for webp.
+AddType image/webp .webp
+
+# PHP settings that cannot be changed at runtime can be set here. See
 # sites/default/default.settings.php and
 # Drupal\Core\DrupalKernel::bootEnvironment() for settings that can be
 # changed at runtime.
 <IfModule mod_php.c>
-  php_value assert.active                   0
+  # It is strongly recommended that you set zend.assertions to 1 on development
+  # machines and to 0 or -1 in production.
+  # See https://www.php.net/manual/en/ini.core.php#ini.zend.assertions
+  php_value zend.assertions 0
 </IfModule>
 
 # Requires mod_expires to be enabled.
@@ -137,10 +143,7 @@ AddEncoding gzip svgz
   RewriteCond %{REQUEST_URI} !/core/[^/]*\.php$
   # Allow access to test-specific PHP files:
   RewriteCond %{REQUEST_URI} !/core/modules/system/tests/https?\.php
-  # Allow access to Statistics module's custom front controller.
-  # Copy and adapt this rule to directly execute PHP files in contributed or
-  # custom modules or to run another PHP application in the same directory.
-  RewriteCond %{REQUEST_URI} !/core/modules/statistics/statistics\.php$
+  RewriteCond %{REQUEST_URI} !/core/modules/system/tests/modules/legacy_front_controller_test/test_index.php
   # Deny access to any other PHP files that do not match the rules above.
   # Specifically, disallow autoload.php from being served directly.
   RewriteRule "^(.+/.*|autoload)\.php($|/)" - [F]
@@ -148,10 +151,20 @@ AddEncoding gzip svgz
   # Rules to correctly serve gzip compressed CSS and JS files.
   # Requires both mod_rewrite and mod_headers to be enabled.
   <IfModule mod_headers.c>
+    # Serve brotli compressed CSS files if they exist and the client accepts brotli.
+    RewriteCond %{HTTP:Accept-encoding} br
+    RewriteCond %{REQUEST_FILENAME}\.br -s
+    RewriteRule ^(.*css_[a-zA-Z0-9-_]+)\.css$ $1\.css\.br [QSA]
+
     # Serve gzip compressed CSS files if they exist and the client accepts gzip.
     RewriteCond %{HTTP:Accept-encoding} gzip
     RewriteCond %{REQUEST_FILENAME}\.gz -s
     RewriteRule ^(.*css_[a-zA-Z0-9-_]+)\.css$ $1\.css\.gz [QSA]
+
+    # Serve brotli compressed JS files if they exist and the client accepts brotli.
+    RewriteCond %{HTTP:Accept-encoding} br
+    RewriteCond %{REQUEST_FILENAME}\.br -s
+    RewriteRule ^(.*js_[a-zA-Z0-9-_]+)\.js$ $1\.js\.br [QSA]
 
     # Serve gzip compressed JS files if they exist and the client accepts gzip.
     RewriteCond %{HTTP:Accept-encoding} gzip
@@ -161,11 +174,20 @@ AddEncoding gzip svgz
     # Serve correct content types, and prevent double compression.
     RewriteRule \.css\.gz$ - [T=text/css,E=no-gzip:1,E=no-brotli:1]
     RewriteRule \.js\.gz$ - [T=text/javascript,E=no-gzip:1,E=no-brotli:1]
+    RewriteRule \.css\.br$ - [T=text/css,E=no-gzip:1,E=no-brotli:1]
+    RewriteRule \.js\.br$ - [T=text/javascript,E=no-gzip:1,E=no-brotli:1]
 
     <FilesMatch "(\.js\.gz|\.css\.gz)$">
       # Serve correct encoding type.
       Header set Content-Encoding gzip
       # Force proxies to cache gzipped & non-gzipped css/js files separately.
+      Header append Vary Accept-Encoding
+    </FilesMatch>
+
+    <FilesMatch "(\.js\.br|\.css\.br)$">
+      # Serve correct encoding type.
+      Header set Content-Encoding br
+      # Force proxies to cache compressed & non-compressed css/js files separately.
       Header append Vary Accept-Encoding
     </FilesMatch>
   </IfModule>

@@ -145,10 +145,18 @@ func (f *File) UpdateStdenv() error {
 	if err := nix.ClearFlakeCache(f.devboxProject.Stdenv()); err != nil {
 		return err
 	}
-	if err := f.Remove(f.devboxProject.Stdenv().String()); err != nil {
+	// Remove the old entry in memory only so that a failed resolve doesn't
+	// leave the lockfile without a stdenv.
+	stdenv := f.devboxProject.Stdenv().String()
+	old, hasOld := f.Packages[stdenv]
+	delete(f.Packages, stdenv)
+	if err := f.Add(stdenv); err != nil {
+		if hasOld {
+			f.Packages[stdenv] = old
+		}
 		return err
 	}
-	return f.Add(f.devboxProject.Stdenv().String())
+	return nil
 }
 
 // TODO: We should improve a few issues with this function:
@@ -215,19 +223,32 @@ func (f *File) Tidy() {
 // local hashes match, which generally indicates all packages are correctly
 // installed and print-dev-env has been computed and cached.
 func (f *File) IsUpToDateAndInstalled(isFish bool) (bool, error) {
+	status, err := f.StateStatus(isFish)
+	return status == StateUpToDate, err
+}
+
+// StateStatus is like IsUpToDateAndInstalled, but also reports whether only
+// non-Nix inputs (env, init_hook, scripts, etc.) changed, in which case the
+// Nix environment doesn't need to be recomputed.
+func (f *File) StateStatus(isFish bool) (StateStatus, error) {
 	if dirty, err := f.isDirty(); err != nil {
-		return false, err
+		return StateStale, err
 	} else if dirty {
-		return false, nil
+		return StateStale, nil
 	}
 	configHash, err := f.devboxProject.ConfigHash()
 	if err != nil {
-		return false, err
+		return StateStale, err
 	}
-	return isStateUpToDate(UpdateStateHashFileArgs{
-		ProjectDir: f.devboxProject.ProjectDir(),
-		ConfigHash: configHash,
-		IsFish:     isFish,
+	nixConfigHash, err := f.devboxProject.NixConfigHash()
+	if err != nil {
+		return StateStale, err
+	}
+	return stateStatus(UpdateStateHashFileArgs{
+		ProjectDir:    f.devboxProject.ProjectDir(),
+		ConfigHash:    configHash,
+		NixConfigHash: nixConfigHash,
+		IsFish:        isFish,
 	})
 }
 

@@ -22,6 +22,14 @@ import (
 
 var githubCache = filecache.New[[]byte]("devbox/plugin/github")
 
+// githubHTTPClient fetches plugin files from GitHub. The timeout keeps an
+// unreachable or hanging network from blocking devbox indefinitely.
+var githubHTTPClient = &http.Client{Timeout: 15 * time.Second}
+
+// githubContentBaseURL is where plugin files are downloaded from. Tests
+// override it.
+var githubContentBaseURL = "https://raw.githubusercontent.com/"
+
 type githubPlugin struct {
 	ref  flake.Ref
 	name string
@@ -71,37 +79,28 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 		return nil, err
 	}
 
-	// Cache for 24 hours. Once we store the plugin in the lockfile, we
+	// Content at a full commit hash is cached indefinitely. Anything else is
+	// cached for 24 hours. Once we store the plugin in the lockfile, we
 	// should cache this indefinitely and only invalidate if the plugin
 	// is updated.
-	ttl := 24 * time.Hour
-
-	// This is a stopgap until plugin is stored in lockfile.
-	// DEVBOX_X indicates this is an experimental env var.
-	// Use DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL to override the default TTL.
-	// e.g. DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL=1h will cache the plugin for 1 hour.
-	// Note: If you want to disable cache, we recommend using a low second value instead of zero to
-	// ensure only one network request is made.
-	ttlStr := os.Getenv("DEVBOX_X_GITHUB_PLUGIN_CACHE_TTL")
-	if ttlStr != "" {
-		ttl, err = time.ParseDuration(ttlStr)
-		if err != nil {
-			return nil, err
-		}
+	ttl, err := remoteCacheTTL(p.ref.Rev)
+	if err != nil {
+		return nil, err
 	}
 
-	return githubCache.GetOrSet(
+	return getOrFetch(
+		githubCache,
 		contentURL+ttl.String(),
-		func() ([]byte, time.Duration, error) {
+		ttl,
+		func() ([]byte, error) {
 			req, err := p.request(contentURL)
 			if err != nil {
-				return nil, 0, err
+				return nil, err
 			}
 
-			client := &http.Client{}
-			res, err := client.Do(req)
+			res, err := githubHTTPClient.Do(req)
 			if err != nil {
-				return nil, 0, err
+				return nil, err
 			}
 			defer res.Body.Close()
 			if res.StatusCode != http.StatusOK {
@@ -112,7 +111,7 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 						getRedactedAuthHeader(req),
 					)
 				}
-				return nil, 0, usererr.New(
+				return nil, usererr.New(
 					"failed to get plugin %s @ %s (Status code %d).\n%s\nPlease make "+
 						"sure a plugin.json file exists in plugin directory.",
 					p.LockfileKey(),
@@ -121,12 +120,7 @@ func (p *githubPlugin) FileContent(subpath string) ([]byte, error) {
 					authInfo,
 				)
 			}
-			body, err := io.ReadAll(res.Body)
-			if err != nil {
-				return nil, 0, err
-			}
-
-			return body, ttl, nil
+			return io.ReadAll(res.Body)
 		},
 	)
 }
@@ -135,7 +129,7 @@ func (p *githubPlugin) url(subpath string) (string, error) {
 	// Github redirects "master" to "main" in new repos. They don't do the reverse
 	// so setting master here is better.
 	return url.JoinPath(
-		"https://raw.githubusercontent.com/",
+		githubContentBaseURL,
 		p.ref.Owner,
 		p.ref.Repo,
 		cmp.Or(p.ref.Rev, p.ref.Ref, "master"),

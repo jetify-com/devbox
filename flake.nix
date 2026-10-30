@@ -17,7 +17,7 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        lastTag = "0.18.4";
+        lastTag = "0.19.0";
 
         revision = if (self ? shortRev) then "${self.shortRev}" else "${self.dirtyShortRev or "dirty"}";
 
@@ -27,7 +27,7 @@
         # Run `devbox run update-hash` to update the vendor-hash
         vendorHash = if builtins.pathExists ./vendor-hash then builtins.readFile ./vendor-hash else "";
 
-        buildGoModule = pkgs.buildGo126Module;
+        buildGoModule = pkgs.buildGo127Module;
 
       in
       {

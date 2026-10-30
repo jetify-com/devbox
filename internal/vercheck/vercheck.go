@@ -4,14 +4,13 @@
 package vercheck
 
 import (
-	"bytes"
+	"context"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
@@ -20,15 +19,21 @@ import (
 
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/build"
-	"go.jetify.com/devbox/internal/cmdutil"
 	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/launcher"
 	"go.jetify.com/devbox/internal/ux"
 	"go.jetify.com/devbox/internal/xdg"
 )
 
-// Keep this in-sync with latest version in launch.sh.
-// If this version is newer than the version in launch.sh, we'll print a notice.
-const expectedLauncherVersion = "v0.2.2"
+// expectedLauncherVersion is the launcher version that this devbox expects.
+// When the launcher that ran devbox is older, devbox prints a notice asking
+// users to replace it with `devbox version update`.
+const expectedLauncherVersion = "v" + launcher.Version
+
+// launcherNoticeInterval limits how often devbox prints the new launcher
+// notice. Replacing the launcher can need sudo, so it shouldn't nag on every
+// command.
+const launcherNoticeInterval = 24 * time.Hour
 
 // envName determines whether the version check has already occurred.
 // We set this env-var so that this devbox command invoking other devbox commands
@@ -65,6 +70,11 @@ func CheckVersion(w io.Writer, commandPath string) {
 		return
 	}
 
+	// Don't use up the once-a-day launcher notice on a --quiet command.
+	if w == io.Discard {
+		return
+	}
+
 	if envir.IsDevboxCloud() {
 		return
 	}
@@ -94,112 +104,59 @@ func CheckVersion(w io.Writer, commandPath string) {
 	os.Setenv(envName, "1")
 }
 
-// SelfUpdate updates the devbox launcher and devbox CLI binary.
-// It ignores and deletes the version cache.
-//
-// The launcher is a wrapper bash script introduced to manage the auto-update process
-// for devbox. The production devbox application is actually this launcher script
-// that acts as "devbox" and delegates commands to the devbox CLI binary.
-func SelfUpdate(stdOut, stdErr io.Writer) error {
-	if isNewLauncherAvailable() {
-		return selfUpdateLauncher(stdOut, stdErr)
+// SelfUpdate updates devbox to the latest version. It also replaces the
+// launcher, the devbox that users run, when updateLauncher is true or when the
+// launcher is older than this devbox expects. Replacing the launcher can need
+// sudo, which is why it doesn't happen on every update.
+func SelfUpdate(stdErr io.Writer, updateLauncher bool) error {
+	launcherPath := os.Getenv(envir.LauncherPath)
+	if launcherPath == "" {
+		return usererr.New(
+			"Devbox can't update itself because it wasn't installed with the devbox installer. " +
+				"Update it with the package manager you installed it with, or reinstall it with " +
+				"`curl -fsSL https://get.jetify.com/devbox | bash`.",
+		)
 	}
 
-	return selfUpdateDevbox(stdErr)
-}
-
-func selfUpdateLauncher(stdOut, stdErr io.Writer) error {
-	installScript := ""
-	if cmdutil.Exists("curl") {
-		installScript = "curl -fsSL https://get.jetpack.io/devbox | bash"
-	} else if cmdutil.Exists("wget") {
-		installScript = "wget -qO- https://get.jetpack.io/devbox | bash"
-	} else {
-		return usererr.New("curl or wget is required to update devbox. Please install either and try again.")
-	}
-
-	// Delete current version file. This will trigger an update when invoking any devbox command;
-	// in this case, inside triggerUpdate function.
-	if err := removeCurrentVersionFile(); err != nil {
-		return err
-	}
-
-	// Fetch the new launcher. And installs the new devbox CLI binary.
-	cmd := exec.Command("sh", "-c", installScript)
-	cmd.Stdout = stdOut
-	cmd.Stderr = stdErr
-	if err := cmd.Run(); err != nil {
-		return errors.WithStack(err)
-	}
-
-	// Previously, we have already updated the binary. So, we call triggerUpdate
-	// just to get the new version information.
-	updated, err := triggerUpdate(stdErr)
+	ctx := context.Background()
+	latest, err := launcher.FetchLatestVersion(ctx)
 	if err != nil {
-		return errors.WithStack(err)
+		return usererr.WithUserMessage(err, "Failed to get the latest devbox version.")
 	}
-
-	printSuccessMessage(stdErr, "Launcher", currentLauncherVersion(), updated.launcherVersion)
-	printSuccessMessage(stdErr, "Devbox", currentDevboxVersion, updated.devboxVersion)
-
-	return nil
-}
-
-// selfUpdateDevbox will update the devbox CLI binary to the latest version.
-func selfUpdateDevbox(stdErr io.Writer) error {
-	// Delete current version file. This will trigger an update when the next devbox command is run;
-	// in this case, inside triggerUpdate function.
-	if err := removeCurrentVersionFile(); err != nil {
-		return err
-	}
-
-	updated, err := triggerUpdate(stdErr)
+	bin, err := launcher.Install(ctx, latest, stdErr)
 	if err != nil {
+		return usererr.WithUserMessage(err, "Failed to download devbox %s.", latest)
+	}
+	if err := launcher.SetLatestVersion(latest); err != nil {
 		return errors.WithStack(err)
 	}
+	if err := launcher.SetCurrentVersion(latest); err != nil {
+		return errors.WithStack(err)
+	}
+	printSuccessMessage(stdErr, "Devbox", currentDevboxVersion, latest)
+	if useVersion := userChosenVersion(); useVersion != "" {
+		ux.Fwarningf(stdErr, "%s=%s is set, so devbox will keep running version %s until you unset it.\n",
+			envir.DevboxUseVersion, useVersion, useVersion)
+	}
 
-	printSuccessMessage(stdErr, "Devbox", currentDevboxVersion, updated.devboxVersion)
-
+	if !updateLauncher && !isNewLauncherAvailable() {
+		return nil
+	}
+	// The new launcher must be a devbox with a built-in launcher. This devbox
+	// has one, and so does every later version.
+	src, srcVersion := bin, latest
+	if SemverCompare(latest, currentDevboxVersion) < 0 {
+		if src, err = os.Executable(); err != nil {
+			return errors.WithStack(err)
+		}
+		srcVersion = currentDevboxVersion
+	}
+	if err := launcher.ReplaceLauncher(src, launcherPath, stdErr); err != nil {
+		return usererr.WithUserMessage(err, "Failed to replace the devbox launcher at %s.", launcherPath)
+	}
+	fmt.Fprintf(stdErr, "%sreplaced the launcher at %s with devbox %s\n",
+		color.New(color.FgGreen).Sprint("Success: "), launcherPath, strings.TrimPrefix(srcVersion, "v"))
 	return nil
-}
-
-type updatedVersions struct {
-	devboxVersion   string
-	launcherVersion string
-}
-
-// triggerUpdate runs `devbox version -v` and triggers an update since a new
-// version is available. It parses the output to get the new launcher and
-// devbox versions.
-func triggerUpdate(stdErr io.Writer) (*updatedVersions, error) {
-	exePath := os.Getenv(envir.LauncherPath)
-	if exePath == "" {
-		ux.Fwarningf(stdErr, "expected LAUNCHER_PATH to be set. Defaulting to \"devbox\".")
-		exePath = "devbox"
-	}
-
-	// TODO savil. Add a --json flag to devbox version and parse the output as JSON
-	cmd := exec.Command(exePath, "version", "-v")
-
-	buf := new(bytes.Buffer)
-	cmd.Stdout = io.MultiWriter(stdErr, buf)
-	cmd.Stderr = stdErr
-	if err := cmd.Run(); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	// Parse the output to ascertain the new devbox and launcher versions
-	updated := &updatedVersions{}
-	for _, line := range strings.Split(buf.String(), "\n") {
-		if strings.HasPrefix(line, "Version:") {
-			updated.devboxVersion = strings.TrimSpace(strings.TrimPrefix(line, "Version:"))
-		}
-
-		if strings.HasPrefix(line, "Launcher:") {
-			updated.launcherVersion = strings.TrimSpace(strings.TrimPrefix(line, "Launcher:"))
-		}
-	}
-	return updated, nil
 }
 
 func printSuccessMessage(w io.Writer, toolName, oldVersion, newVersion string) {
@@ -220,8 +177,17 @@ func launcherVersionNotice() string {
 		return ""
 	}
 
+	// Print the notice at most once per interval.
+	noticeFile := xdg.CacheSubpath("devbox/launcher-notice")
+	if fi, err := os.Stat(noticeFile); err == nil && time.Since(fi.ModTime()) < launcherNoticeInterval {
+		return ""
+	}
+	if err := os.MkdirAll(filepath.Dir(noticeFile), 0o755); err == nil {
+		_ = os.WriteFile(noticeFile, nil, 0o644)
+	}
+
 	return fmt.Sprintf(
-		"New launcher available: %s -> %s. Please run `devbox version update`.\n",
+		"New launcher available: %s -> %s. Please run `devbox version update` (it may ask for sudo).\n",
 		currentLauncherVersion(),
 		expectedLauncherVersion,
 	)
@@ -265,24 +231,6 @@ func currentLauncherVersion() string {
 		return ""
 	}
 	return "v" + launcherVersion
-}
-
-func removeCurrentVersionFile() error {
-	// currentVersionFilePath is the path to the file that contains the cached
-	// version. The launcher checks this file to see if a new version is available.
-	// If the version is newer, then the launcher updates.
-	//
-	// Note: keep this in sync with launch.sh code
-	currentVersionFilePath := filepath.Join(xdg.CacheSubpath("devbox"), "current-version")
-
-	if err := os.Remove(currentVersionFilePath); err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return usererr.WithLoggedUserMessage(
-			err,
-			"Failed to delete version-cache at %s. Please manually delete it and try again.",
-			currentVersionFilePath,
-		)
-	}
-	return nil
 }
 
 func SemverCompare(ver1, ver2 string) int {

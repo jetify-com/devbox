@@ -42,6 +42,8 @@ func doLogCommand(cmd *cobra.Command, args []string) error {
 		telemetry.Event(telemetry.EventShellInteractive, telemetry.Metadata{
 			EventStart: telemetry.ParseShellStart(args[1]),
 		})
+	default:
+		return usererr.New("unrecognized event-name %s for command: %s", args[0], cmd.CommandPath())
 	}
-	return usererr.New("unrecognized event-name %s for command: %s", args[0], cmd.CommandPath())
+	return nil
 }

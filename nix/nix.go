@@ -161,6 +161,10 @@ func (n *Nix) Version() string {
 // Info returns Nix version information. It caches the result after the first
 // call, which means it won't reflect any configuration changes to Nix. Create a
 // new Nix instance to retrieve uncached information.
+//
+// Info also caches the result on disk across processes. The disk cache is
+// invalidated when the Nix binary, its config files, or relevant environment
+// variables change.
 func (n *Nix) Info() (Info, error) {
 	// Create the command first, which will catch any errors finding the Nix
 	// executable outside of the once. This allows us to retry after
@@ -171,6 +175,18 @@ func (n *Nix) Info() (Info, error) {
 	}
 
 	n.infoOnce.Do(func() {
+		cache := newInfoCache()
+		cacheKey := infoCacheKey(cmd)
+		if info, ok := loadCachedInfo(cache, cacheKey); ok {
+			n.info = info
+			return
+		}
+		defer func() {
+			if n.infoErr == nil {
+				storeCachedInfo(cache, cacheKey, n.info, infoFiles(cmd, n.info))
+			}
+		}()
+
 		out, err := cmd.Output(context.Background())
 		if err != nil {
 			var exitErr *exec.ExitError
