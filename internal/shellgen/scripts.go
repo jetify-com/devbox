@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -113,22 +114,40 @@ func WriteScriptFile(devbox devboxer, name, body string) error {
 // scripts, so writing in place could let one of them execute an empty,
 // partial, or not yet executable file.
 func writeScriptFileAtomic(path, body string) error {
-	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+"-*")
+	tmp, err := writeTempFile(filepath.Dir(path), "."+filepath.Base(path)+"-*", body)
+	if tmp != "" {
+		defer os.Remove(tmp) // no-op after a successful rename
+	}
 	if err != nil {
+		return err
+	}
+	if err := os.Chmod(tmp, 0o755); err != nil {
 		return errors.WithStack(err)
 	}
-	defer os.Remove(tmp.Name()) // no-op after a successful rename
+	return errors.WithStack(os.Rename(tmp, path))
+}
+
+// writeTempFile creates a temp file in dir, writes body to it, and closes it.
+// It returns the file's name whenever the file was created, even on error.
+//
+// It holds syscall.ForkLock for reading while the file is open, so that no
+// other goroutine forks in that window. A forked child inherits the writable
+// fd until it execs, and on Linux exec'ing the script while any process holds
+// it open for writing fails with ETXTBSY ("Text file busy").
+// See https://go.dev/issue/22315.
+func writeTempFile(dir, pattern, body string) (string, error) {
+	syscall.ForkLock.RLock()
+	defer syscall.ForkLock.RUnlock()
+
+	tmp, err := os.CreateTemp(dir, pattern)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
 	if _, err := tmp.WriteString(body); err != nil {
 		tmp.Close()
-		return errors.WithStack(err)
+		return tmp.Name(), errors.WithStack(err)
 	}
-	if err := tmp.Close(); err != nil {
-		return errors.WithStack(err)
-	}
-	if err := os.Chmod(tmp.Name(), 0o755); err != nil {
-		return errors.WithStack(err)
-	}
-	return errors.WithStack(os.Rename(tmp.Name(), path))
+	return tmp.Name(), errors.WithStack(tmp.Close())
 }
 
 func ScriptPath(projectDir, scriptName string) string {
