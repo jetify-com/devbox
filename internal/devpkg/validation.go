@@ -9,7 +9,7 @@ import (
 )
 
 func (p *Package) ValidateExists(ctx context.Context) (bool, error) {
-	if p.IsRunX() {
+	if p.IsRunX() || p.IsPkgDef() {
 		_, err := p.lockfile.Resolve(p.Raw)
 		return err == nil, err
 	}

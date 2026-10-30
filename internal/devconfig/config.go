@@ -289,6 +289,23 @@ func (c *Config) loadRecursive(
 		included = append(included, includable)
 	}
 
+	// Package definitions ("pkg:" packages) carry their own env, init hook
+	// and create_files. They cannot include anything, so there is nothing
+	// to recurse into.
+	pkgDefs, err := plugin.GetPkgDefConfigsForPackages(
+		c.Root.TopLevelPackages(),
+		lockfile,
+	)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	for _, pkgDef := range pkgDefs {
+		included = append(included, &Config{
+			Root:       pkgDef.ConfigFile,
+			pluginData: &pkgDef.PluginOnlyData,
+		})
+	}
+
 	c.included = included
 	return nil
 }
