@@ -7,12 +7,12 @@ PHP projects can manage most of their dependencies locally with `composer`. Some
 
 ## Adding PHP to your Project
 
-Run `devbox add php php83Packages.composer`, or add the following to your `devbox.json`:
+Run `devbox add php php85Packages.composer`, or add the following to your `devbox.json`:
 
 ```json
     "packages": [
         "php@latest",
-        "php83Packages.composer@latest
+        "php85Packages.composer@latest"
     ]
 ```
 
@@ -22,13 +22,13 @@ If you want a different version of PHP for your project, you can search for avai
 
 You can compile additional extensions into PHP by adding them to `packages` in your `devbox.json`. Devbox will automatically ensure that your extensions are included in PHP at compile time.
 
-For example -- to add the `ds` extension, run `devbox add php81Extensions.ds`, or update your packages to include the following:
+For example -- to add the `ds` extension, run `devbox add php85Extensions.ds`, or update your packages to include the following:
 
 ```json
     "packages": [
         "php@latest",
-        "php83Packages.composer",
-        "php83Extensions.ds"
+        "php85Packages.composer",
+        "php85Extensions.ds"
     ]
 ```
 
@@ -59,7 +59,7 @@ PHPRC={PROJECT_DIR}/devbox.d/php/php.ini
 
 ### Helper Files
 
-* {PROJECT_DIR}/devbox.d/php81/php-fpm.conf
-* {PROJECT_DIR}/devbox.d/php81/php.ini
+* {PROJECT_DIR}/devbox.d/php/php-fpm.conf
+* {PROJECT_DIR}/devbox.d/php/php.ini
 
 You can modify these files to configure PHP or your PHP-FPM server

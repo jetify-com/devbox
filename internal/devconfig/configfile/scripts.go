@@ -92,6 +92,11 @@ func (c *ConfigFile) Scripts() Scripts {
 	}
 	result := make(Scripts)
 	for name, commands := range c.Shell.Scripts {
+		if commands == nil {
+			// A JSON null script unmarshals to a nil pointer. Treat it as an
+			// empty script so validation reports it instead of panicking.
+			commands = &shellcmd.Commands{}
+		}
 		comments := ""
 		if c.ast != nil {
 			comments = string(c.ast.beforeComment("shell", "scripts", name))

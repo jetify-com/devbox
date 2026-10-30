@@ -13,7 +13,7 @@ This example combines Java, Spring Boot, and MySQL to expose a simple REST API. 
 ## How to Recreate this Example
 
 1. Create a blank Devbox project with `devbox init`
-2. Add the required packages with `devbox add jdk@17 mysql@latest gradle@latest`
+2. Add the required packages with `devbox add jdk@21 mysql@latest gradle@latest`
 3. Create a new Spring Boot application using the [Spring Boot initializer](https://start.spring.io/).
 4. Copy the devbox.json and devbox.lock files into the project directory.
 5. Initialize your mysql database by running `devbox services up`, and create the example DB and user using the `setup_db.sql` file in this directory.

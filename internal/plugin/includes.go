@@ -3,6 +3,7 @@ package plugin
 import (
 	"strings"
 
+	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
 )
@@ -21,5 +22,9 @@ func LoadConfigFromInclude(include string, lockfile *lock.File, workingDir strin
 			return nil, err
 		}
 	}
-	return getConfigIfAny(includable, lockfile.ProjectDir())
+	config, err := getConfigIfAny(includable, lockfile.ProjectDir())
+	if err == nil && config == nil {
+		return nil, usererr.New("No built-in plugin found for include %q", include)
+	}
+	return config, err
 }

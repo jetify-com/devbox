@@ -20,12 +20,14 @@ import (
 	"go.jetify.com/devbox/internal/build"
 )
 
+const devboxRepo = "https://github.com/jetify-com/devbox"
+
 func InitFromName(w io.Writer, template, target string) error {
 	templatePath, ok := templates[template]
 	if !ok {
 		return usererr.New("unknown template name or format %q", template)
 	}
-	return InitFromRepo(w, "https://github.com/jetify-com/devbox", templatePath, target)
+	return InitFromRepo(w, devboxRepo, templatePath, target)
 }
 
 func InitFromRepo(w io.Writer, repo, subdir, target string) error {
@@ -41,14 +43,16 @@ func InitFromRepo(w io.Writer, repo, subdir, target string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	cmd := exec.Command(
-		"git", "clone", parsedRepoURL,
-		// Clone and checkout a specific ref
-		"-b", lo.Ternary(build.IsDev, "main", build.Version),
-		// Create shallow clone with depth of 1
-		"--depth", "1",
-		tmp,
-	)
+	defer os.RemoveAll(tmp)
+
+	args := []string{"clone", parsedRepoURL}
+	// Built-in templates are checked out at the ref matching this devbox version.
+	if parsedRepoURL == devboxRepo {
+		args = append(args, "-b", lo.Ternary(build.IsDev, "main", build.Version))
+	}
+	// Create shallow clone with depth of 1
+	args = append(args, "--depth", "1", tmp)
+	cmd := exec.Command("git", args...)
 	fmt.Fprintf(w, "%s\n", cmd)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
@@ -56,14 +60,27 @@ func InitFromRepo(w io.Writer, repo, subdir, target string) error {
 		return errors.WithStack(err)
 	}
 
-	cmd = exec.Command(
-		"sh", "-c",
-		fmt.Sprintf("cp -r %s %s", filepath.Join(tmp, subdir, "*"), target),
-	)
-	fmt.Fprintf(w, "%s\n", cmd)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	return errors.WithStack(cmd.Run())
+	return copyDirContents(filepath.Join(tmp, subdir), target)
+}
+
+// copyDirContents copies everything in src (including dotfiles, but excluding
+// .git) into dst.
+func copyDirContents(src, dst string) error {
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	for _, entry := range entries {
+		if entry.Name() == ".git" {
+			continue
+		}
+		cmd := exec.Command("cp", "-R", filepath.Join(src, entry.Name()), dst)
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }
 
 func List(w io.Writer, showAll bool) {

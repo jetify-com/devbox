@@ -34,7 +34,7 @@ jobs:
     steps:
       - name: Notify jetpack.io slack of release status (only if tests fail)
         id: slack
-        uses: slackapi/slack-github-action@v3.0.3
+        uses: slackapi/slack-github-action@v4.0.0
         with:
           # v2+ moved the webhook URL from the SLACK_WEBHOOK_URL env var to the
           # `webhook` input and made `webhook-type` required.
@@ -64,7 +64,7 @@ jobs:
           git tag -f "$EDGE_TAG"
           git push -f origin "refs/tags/$EDGE_TAG"
       - name: Set up go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: ./go.mod
       - name: Build snapshot with goreleaser
@@ -78,15 +78,16 @@ jobs:
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       - name: Create Sentry release
-        uses: getsentry/action-release@v1
+        uses: getsentry/action-release@v3
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         with:
           environment: development
-          version:  ${{ env.EDGE_TAG }}
-          version_prefix: "devbox@"
+          # v3 renamed `version`/`version_prefix` to `release`/`release_prefix`.
+          release: ${{ env.EDGE_TAG }}
+          release_prefix: "devbox@"
       - name: Publish snapshot release to GitHub
         uses: softprops/action-gh-release@v3
         with:
@@ -120,11 +121,11 @@ jobs:
         with:
           fetch-depth: 0 # Needed by goreleaser to browse history.
       - name: Set up go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: ./go.mod
       - name: Create Sentry release
-        uses: getsentry/action-release@v1
+        uses: getsentry/action-release@v3
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
@@ -134,8 +135,8 @@ jobs:
           # ref_name, not ref: `github.ref` is the full `refs/tags/0.17.5`, which
           # produced Sentry releases named `devbox@refs/tags/0.17.5` that don't
           # match the version the binary reports.
-          version: ${{ github.ref_name }}
-          version_prefix: "devbox@"
+          release: ${{ github.ref_name }}
+          release_prefix: "devbox@"
       - name: Build with goreleaser
         uses: goreleaser/goreleaser-action@v7
         with:
@@ -185,7 +186,7 @@ jobs:
       - name: Notify jetpack.io slack of release status
         id: slack
         if: always()
-        uses: slackapi/slack-github-action@v3.0.3
+        uses: slackapi/slack-github-action@v4.0.0
         with:
           # v2+ moved the webhook URL from the SLACK_WEBHOOK_URL env var to the
           # `webhook` input and made `webhook-type` required.

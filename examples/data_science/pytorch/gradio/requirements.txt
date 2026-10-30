@@ -1,4 +1,3 @@
 torch
 gradio
-pathlib
 gdown

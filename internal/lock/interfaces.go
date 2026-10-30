@@ -7,6 +7,7 @@ import "go.jetify.com/devbox/nix/flake"
 
 type devboxProject interface {
 	ConfigHash() (string, error)
+	NixConfigHash() (string, error)
 	Stdenv() flake.Ref
 	AllPackageNamesIncludingRemovedTriggerPackages() []string
 	ProjectDir() string

@@ -2,8 +2,8 @@
   "lockfile_version": "1",
   "packages": {
     "github:NixOS/nixpkgs/nixpkgs-unstable": {
-      "last_modified": "2026-08-03T09:05:39Z",
-      "resolved": "github:NixOS/nixpkgs/104240a772428cc2e20d8fd86c9ddbb886bbaff2?lastModified=1785747939&narHash=sha256-D740uKsMbgsfK2oaDenJLLPIZfq7W0%2Fg4KN%2FFls8eKs%3D"
+      "last_modified": "2026-10-20T14:23:57Z",
+      "resolved": "github:NixOS/nixpkgs/5adc50831c259f87faeb09ddf930d43597197473?lastModified=1792506237&narHash=sha256-Q%2F8KLB6jNfpaUN1HAedE%2Fu%2FEt9feE%2FzYSsutBLKrCFk%3D"
     },
     "pipenv@latest": {
       "last_modified": "2026-08-27T07:16:00Z",
@@ -69,60 +69,50 @@
         }
       }
     },
-    "python@3.10": {
-      "last_modified": "2026-01-23T17:20:52Z",
+    "python@3.13": {
+      "last_modified": "2026-10-20T14:23:57Z",
       "plugin_version": "0.0.5",
-      "resolved": "github:NixOS/nixpkgs/a1bab9e494f5f4939442a57a58d0449a109593fe#python310",
+      "resolved": "github:NixOS/nixpkgs/5adc50831c259f87faeb09ddf930d43597197473#python313",
       "source": "devbox-search",
-      "version": "3.10.19",
+      "version": "3.13.16",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/5h2k4jz5zxvyhqlixcf86jk4fn95gzal-python3-3.10.19",
+              "path": "/nix/store/igbn577l0ylqad4ks9asxlprkjavfvg0-python3-3.13.16",
               "default": true
             }
           ],
-          "store_path": "/nix/store/5h2k4jz5zxvyhqlixcf86jk4fn95gzal-python3-3.10.19"
+          "store_path": "/nix/store/igbn577l0ylqad4ks9asxlprkjavfvg0-python3-3.13.16"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/mljv7m81jx9b4as68nb29nw6gl03jdrx-python3-3.10.19",
+              "path": "/nix/store/1mr1x2jzwwjl67qq90sbj01g7cj6g7vv-python3-3.13.16",
               "default": true
             },
             {
               "name": "debug",
-              "path": "/nix/store/pqm2j8l4vswdnrjvf68rp6vz8ynslf1a-python3-3.10.19-debug"
+              "path": "/nix/store/p1bspdz8glhzg52x67s6p5m6pp13rral-python3-3.13.16-debug"
             }
           ],
-          "store_path": "/nix/store/mljv7m81jx9b4as68nb29nw6gl03jdrx-python3-3.10.19"
-        },
-        "x86_64-darwin": {
-          "outputs": [
-            {
-              "name": "out",
-              "path": "/nix/store/3h3ymc7w0rhanylyjs76x0cwmg7p388x-python3-3.10.19",
-              "default": true
-            }
-          ],
-          "store_path": "/nix/store/3h3ymc7w0rhanylyjs76x0cwmg7p388x-python3-3.10.19"
+          "store_path": "/nix/store/1mr1x2jzwwjl67qq90sbj01g7cj6g7vv-python3-3.13.16"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/n2brlq51yab2fblzga7q5qkhrmrfwyz9-python3-3.10.19",
+              "path": "/nix/store/4168xqs4l5jbfc7xyi9zrhdhszx0pnlb-python3-3.13.16",
               "default": true
             },
             {
               "name": "debug",
-              "path": "/nix/store/sy28dcaypmbc2z1508qcb32297xbcsvh-python3-3.10.19-debug"
+              "path": "/nix/store/qfg3cmyffnqracdb08k7325z3i46m8jq-python3-3.13.16-debug"
             }
           ],
-          "store_path": "/nix/store/n2brlq51yab2fblzga7q5qkhrmrfwyz9-python3-3.10.19"
+          "store_path": "/nix/store/4168xqs4l5jbfc7xyi9zrhdhszx0pnlb-python3-3.13.16"
         }
       }
     }
