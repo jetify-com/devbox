@@ -28,8 +28,11 @@ func TestRunScriptHelper(t *testing.T) {
 	if os.Getenv(runScriptHelperEnv) == "" {
 		t.Skip("helper process for TestRunScriptWaitsForCommandOnCtrlC")
 	}
+	// The test waits for "command: started", so it mustn't appear verbatim in
+	// the script: with DEVBOX_DEBUG=1 (as in CI), RunScript logs the script
+	// before running it, and the test would send Ctrl-C before the trap is set.
 	script := `trap 'echo command: shutting down; sleep 0.5; echo command: shutdown complete; exit 3' INT
-echo command: started
+printf 'command: %s\n' started
 while true; do sleep 0.1; done`
 	err := RunScript(t.TempDir(), script, map[string]string{"PATH": os.Getenv("PATH")})
 	var exitErr *usererr.ExitError
