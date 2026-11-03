@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	processComposeLogfile = ".devbox/compose.log"
-	fileLockTimeout       = 5 * time.Second
+	processComposeLogfile         = ".devbox/compose.log"
+	processComposeInternalLogfile = ".devbox/process-compose.log"
+	fileLockTimeout               = 5 * time.Second
 )
 
 type instance struct {
@@ -135,7 +136,7 @@ func StartProcessManager(
 	}
 
 	// Start building the process-compose command
-	flags := []string{"-p", strconv.Itoa(port)}
+	flags := []string{"-p", strconv.Itoa(port), "--log-file", filepath.Join(projectDir, processComposeInternalLogfile)}
 	upCommand := []string{"up"}
 
 	if len(requestedServices) > 0 {
