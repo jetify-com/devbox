@@ -231,6 +231,15 @@ func (d *Devbox) mergeResolvedPackageToLockfile(
 		return nil
 	}
 
+	// A package definition can change without changing the version or the
+	// artifacts (for example a new env var or init hook). The lockfile pins
+	// the definition by hash, so the new hash must be recorded.
+	if existing.DefinitionHash != resolved.DefinitionHash {
+		useResolvedPackageInLockfile(lockfile, pkg, resolved, existing)
+		ux.Finfof(d.stderr, "Updated package definition for %s\n", pkg)
+		return nil
+	}
+
 	ux.Finfof(d.stderr, "Already up-to-date %s %s\n", pkg, existing.Version)
 	return nil
 }

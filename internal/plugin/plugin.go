@@ -214,8 +214,7 @@ func (m *Manager) createFile(
 		urlForInput = pkg.URLForFlakeInput()
 	}
 
-	var buf bytes.Buffer
-	if err = tmpl.Execute(&buf, map[string]any{
+	data := map[string]any{
 		"DevboxProjectDir":     m.ProjectDir(),
 		"DevboxDir":            filepath.Join(m.ProjectDir(), devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
@@ -225,7 +224,14 @@ func (m *Manager) createFile(
 		"System":               nix.System(),
 		"URLForInput":          urlForInput,
 		"Virtenv":              filepath.Join(virtenvPath, name),
-	}); err != nil {
+	}
+	if pkgDef, ok := pkg.(*pkgDefPlugin); ok {
+		for k, v := range pkgDef.vars {
+			data[k] = v
+		}
+	}
+	var buf bytes.Buffer
+	if err = tmpl.Execute(&buf, data); err != nil {
 		return errors.WithStack(err)
 	}
 	var fileMode fs.FileMode = 0o644
@@ -246,20 +252,30 @@ func (m *Manager) createFile(
 
 // buildConfig returns a plugin.Config
 func buildConfig(pkg Includable, projectDir, content string) (*Config, error) {
+	return buildConfigWithVars(pkg, projectDir, content, nil)
+}
+
+// buildConfigWithVars is buildConfig with additional template variables,
+// which package definitions use to expose their install location.
+func buildConfigWithVars(pkg Includable, projectDir, content string, extraVars map[string]string) (*Config, error) {
 	cfg := &Config{PluginOnlyData: PluginOnlyData{Source: pkg}}
 	name := pkg.CanonicalName()
-	t, err := template.New(name + "-template").Parse(content)
+	tmpl, err := template.New(name + "-template").Parse(content)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	var buf bytes.Buffer
-	if err = t.Execute(&buf, map[string]string{
+	vars := map[string]string{
 		"DevboxProjectDir":     projectDir,
 		"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
 		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
 		"Virtenv":              filepath.Join(projectDir, VirtenvPath, name),
-	}); err != nil {
+	}
+	for k, v := range extraVars {
+		vars[k] = v
+	}
+	var buf bytes.Buffer
+	if err = tmpl.Execute(&buf, vars); err != nil {
 		return nil, errors.WithStack(err)
 	}
 

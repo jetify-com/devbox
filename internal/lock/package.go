@@ -23,11 +23,21 @@ type Package struct {
 	// Systems is keyed by the system name
 	Systems map[string]*SystemInfo `json:"systems,omitempty"`
 
+	// DefinitionHash is the sha256 of the package definition file for
+	// packages with Source "pkg-def". It pins remote definitions.
+	DefinitionHash string `json:"definition_hash,omitempty"`
+
 	// NOTE: if you add more fields, please update SyncLockfiles
 }
 
 type SystemInfo struct {
 	Outputs []Output `json:"outputs,omitempty"`
+
+	// URL and Sha256 locate and verify the vendor artifact for packages
+	// with Source "pkg-def". Sha256 may be empty until the first install
+	// records it.
+	URL    string `json:"url,omitempty"`
+	Sha256 string `json:"sha256,omitempty"`
 
 	// Legacy Format
 	StorePath             string `json:"store_path,omitempty"`
@@ -113,7 +123,9 @@ func (i *SystemInfo) Equals(other *SystemInfo) bool {
 		return i == other
 	}
 
-	return slices.Equal(i.Outputs, other.Outputs)
+	return slices.Equal(i.Outputs, other.Outputs) &&
+		i.URL == other.URL &&
+		i.Sha256 == other.Sha256
 }
 
 // If we have a StorePath and no Outputs, we need to convert to the new format.

@@ -13,7 +13,7 @@ import (
 
 // fetchChecksum returns the lowercase hex sha256 for the artifact described
 // by vars, or "" when the checksum type is "none".
-func (c *Client) fetchChecksum(ctx context.Context, src *Checksum, vars Vars) (string, error) {
+func (c *Client) fetchChecksum(ctx context.Context, def *Definition, src *Checksum, vars Vars) (string, error) {
 	if src == nil || src.Type == ChecksumNone {
 		return "", nil
 	}
@@ -21,6 +21,7 @@ func (c *Client) fetchChecksum(ctx context.Context, src *Checksum, vars Vars) (s
 	if err != nil {
 		return "", err
 	}
+	rawURL = def.ResolveURL(rawURL)
 	switch src.Type {
 	case ChecksumHTTPJSON:
 		return c.fetchChecksumHTTPJSON(ctx, src, rawURL, vars)

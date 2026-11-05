@@ -77,6 +77,7 @@ func loadLocal(ref Ref, projectDir string) (*Loaded, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
+	def.baseDir = filepath.Dir(path)
 	return &Loaded{
 		Ref:        ref,
 		Definition: def,

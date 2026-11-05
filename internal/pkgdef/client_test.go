@@ -556,3 +556,75 @@ func TestInstallHookFailureIncludesOutput(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, os.FileMode(0o755), info.Mode().Perm(), "install dir is world readable")
 }
+
+func TestRelativeFileURLsResolveAgainstDefinitionDir(t *testing.T) {
+	projectDir := t.TempDir()
+	defDir := filepath.Join(projectDir, "defs")
+	require.NoError(t, os.MkdirAll(filepath.Join(defDir, "vendor"), 0o755))
+	binary := []byte("#!/bin/sh\necho rel\n")
+	require.NoError(t, os.WriteFile(filepath.Join(defDir, "vendor", "tool-1.0.0"), binary, 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(defDir, "vendor", "SHA256SUMS"), []byte(sha256Hex(binary)+"  tool-1.0.0\n"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(defDir, "vendor", "versions.json"), []byte(`{"versions": ["1.0.0"]}`), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(defDir, "tool.pkg.json"), []byte(`{
+	  "schema": 1, "name": "tool", "platforms": ["x86_64-linux"],
+	  "versions": {"type": "http_json", "url": "file://vendor/versions.json", "select": ".versions[]"},
+	  "install": {"type": "binary", "url": "file://vendor/tool-{{.Version}}",
+	              "checksum": {"type": "sha256_url", "url": "file://vendor/SHA256SUMS"}}
+	}`), 0o644))
+
+	cli := NewClient()
+	cli.CacheDir = t.TempDir()
+	loaded, err := cli.Load(t.Context(), Ref{Source: "./defs/tool.pkg.json", Version: "latest"}, projectDir, "")
+	require.NoError(t, err)
+
+	resolved, err := cli.Resolve(t.Context(), loaded.Definition, "latest")
+	require.NoError(t, err)
+	assert.Equal(t, "1.0.0", resolved.Version)
+	// The lock keeps the relative URL so devbox.lock stays portable.
+	want := "file://vendor/tool-1.0.0"
+	assert.Equal(t, Artifact{URL: want, Sha256: sha256Hex(binary)}, resolved.Artifacts[testSystem])
+
+	installed, err := cli.Install(t.Context(), loaded.Definition, "1.0.0", testSystem, resolved.Artifacts[testSystem])
+	require.NoError(t, err)
+	assert.Equal(t, want, installed.URL)
+	content, err := os.ReadFile(filepath.Join(installed.Dir, "bin", "tool"))
+	require.NoError(t, err)
+	assert.Equal(t, binary, content)
+
+	// Absolute file URLs and remote definitions are left alone.
+	assert.Equal(t, "file:///abs/x", loaded.Definition.ResolveURL("file:///abs/x"))
+	assert.Equal(t, "https://example.com/x", loaded.Definition.ResolveURL("https://example.com/x"))
+	assert.Equal(t, "file://rel/x", (&Definition{}).ResolveURL("file://rel/x"))
+}
+
+func TestInstallRedoneWhenRecipeChanges(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("sh is required")
+	}
+	vendor := newFakeVendor(t)
+	cli := vendor.client(t)
+	def := vendor.archiveDef(t)
+	art := Artifact{Sha256: vendor.tarSHA}
+
+	first, err := cli.Install(t.Context(), def, "1.2.0", testSystem, art)
+	require.NoError(t, err)
+	assert.True(t, cli.IsInstalled(def, "1.2.0", testSystem))
+
+	// Activation-only edits do not invalidate the install.
+	def.Env = map[string]string{"X": "y"}
+	assert.True(t, cli.IsInstalled(def, "1.2.0", testSystem))
+	assert.Equal(t, def.InstallFingerprint(testSystem), def.InstallFingerprint(testSystem))
+
+	// Changing the install recipe does: the hook now writes a different file.
+	def.Hooks.PostInstall = []string{"echo redone > $DEVBOX_PKG_INSTALL_DIR/redone.txt"}
+	assert.False(t, cli.IsInstalled(def, "1.2.0", testSystem))
+	second, err := cli.Install(t.Context(), def, "1.2.0", testSystem, art)
+	require.NoError(t, err)
+	assert.Equal(t, first.Dir, second.Dir)
+	_, err = os.Stat(filepath.Join(second.Dir, "redone.txt"))
+	require.NoError(t, err)
+	_, err = os.Stat(filepath.Join(second.Dir, "hook.txt"))
+	assert.True(t, os.IsNotExist(err), "the old install was replaced, not layered on")
+	assert.True(t, cli.IsInstalled(def, "1.2.0", testSystem))
+	assert.Equal(t, 2, vendor.hitCount("/dl/hello-1.2.0-linux-amd64.tar.gz"))
+}

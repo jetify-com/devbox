@@ -11,8 +11,11 @@
 package pkgdef
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
@@ -84,6 +87,21 @@ type Definition struct {
 	CreateFiles map[string]string          `json:"create_files,omitempty"`
 
 	Hooks Hooks `json:"hooks,omitempty"`
+
+	// baseDir is the directory of the definition file for local
+	// definitions. Relative file:// URLs are resolved against it.
+	baseDir string
+}
+
+// ResolveURL makes a relative file:// URL ("file://artifacts/x.tar.gz")
+// absolute by resolving it against the directory of a local definition.
+// Every other URL is returned unchanged.
+func (d *Definition) ResolveURL(rawURL string) string {
+	p, ok := strings.CutPrefix(rawURL, "file://")
+	if !ok || filepath.IsAbs(p) || d.baseDir == "" {
+		return rawURL
+	}
+	return "file://" + filepath.Join(d.baseDir, p)
 }
 
 // VersionSource describes how to list the available versions of a package.
@@ -388,6 +406,27 @@ func (in *Install) ChecksumType() string {
 		return ChecksumNone
 	}
 	return in.Checksum.Type
+}
+
+// InstallFingerprint identifies everything about the definition that
+// affects what an install of a version on system contains: the install
+// strategy, the bin layout, hooks and platform maps. Activation fields
+// (env, shell, create_files) are excluded because they are applied at
+// shell time. A changed fingerprint makes Install redo an existing install.
+func (d *Definition) InstallFingerprint(system string) string {
+	install := d.InstallFor(system)
+	payload, err := json.Marshal(struct {
+		Install Install           `json:"install"`
+		Bin     []string          `json:"bin"`
+		Hooks   Hooks             `json:"hooks"`
+		OSMap   map[string]string `json:"os_map"`
+		ArchMap map[string]string `json:"arch_map"`
+	}{install, d.Bin, d.Hooks, d.OSMap, d.ArchMap})
+	if err != nil {
+		return ""
+	}
+	sum := sha256.Sum256(payload)
+	return hex.EncodeToString(sum[:8])
 }
 
 // UsesScripts reports whether the definition runs shell that the user
