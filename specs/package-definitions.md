@@ -233,7 +233,9 @@ variables:
 | `{{.InstallDir}}` | `env`, `shell`, `create_files`, `hooks` | Install root for this version and system. |
 | `{{.CacheDir}}` | `env`, `shell`, `hooks`, `install.env` | `$XDG_CACHE_HOME/devbox/pkgs`. |
 
-Functions: `trimPrefix`, `trimSuffix`, `replace`, `lower`, `upper`.
+Functions: `trimPrefix`, `trimSuffix`, `replace`, `lower`, `upper`. Arguments
+follow the sprig order with the string last, so pipelines read naturally:
+`{{ .Version | trimPrefix "v" }}`, `{{ replace "." "_" .Version }}`.
 
 ### Activation
 
