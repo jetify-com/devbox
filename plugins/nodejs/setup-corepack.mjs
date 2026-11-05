@@ -15,7 +15,7 @@
 //      DEVBOX_DISABLE_NODEJS_PACKAGE_MANAGER_AUTODETECT is set.
 
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 if (!process.env.DEVBOX_COREPACK_ENABLED) {
@@ -43,6 +43,12 @@ if (enableCorepack()) {
 // offline) are ignored so they don't block shell initialization.
 function enableCorepack() {
   try {
+    // Corepack fails with ENOENT if the install directory doesn't exist. The
+    // plugin's create_files normally makes it, but devbox skips that step when
+    // its state is up to date, so a .devbox copied without empty directories
+    // (e.g. into a new git worktree) or a manually deleted directory would
+    // break every shell and run.
+    mkdirSync(corepackBinDir, { recursive: true });
     execFileSync("corepack", ["enable", "--install-directory", corepackBinDir], {
       stdio: "inherit",
     });
