@@ -1,2 +1,1 @@
-temporalio==0.1b4
-cython
+temporalio==1.34.0

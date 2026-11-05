@@ -2,6 +2,7 @@ package devbox
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"io"
 	"os"
@@ -48,15 +49,13 @@ func (d *Devbox) StartServices(
 		}
 	}
 
+	var errs []error
 	for _, s := range serviceNames {
-		err := services.StartServices(ctx, d.stderr, s, d.projectDir)
-		if err != nil {
-			fmt.Fprintf(d.stderr, "Error starting service %s: %s", s, err)
-		} else {
-			fmt.Fprintf(d.stderr, "Service %s started successfully", s)
+		if err := services.StartServices(ctx, d.stderr, s, d.projectDir); err != nil {
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return stderrors.Join(errs...)
 }
 
 func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProjects bool, serviceNames ...string) error {
@@ -86,16 +85,16 @@ func (d *Devbox) StopServices(ctx context.Context, runInCurrentShell, allProject
 		return err
 	}
 
+	var errs []error
 	for _, s := range serviceNames {
 		if _, ok := svcSet[s]; !ok {
 			return usererr.New("Service %s not found in your project", s)
 		}
-		err := services.StopServices(ctx, s, d.projectDir, d.stderr)
-		if err != nil {
-			fmt.Fprintf(d.stderr, "Error stopping service %s: %s", s, err)
+		if err := services.StopServices(ctx, s, d.projectDir, d.stderr); err != nil {
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return stderrors.Join(errs...)
 }
 
 func (d *Devbox) ListServices(ctx context.Context, runInCurrentShell bool) error {
@@ -173,18 +172,16 @@ func (d *Devbox) RestartServices(
 		return err
 	}
 
+	var errs []error
 	for _, s := range serviceNames {
 		if _, ok := svcSet[s]; !ok {
 			return usererr.New("Service %s not found in your project", s)
 		}
-		err := services.RestartServices(ctx, s, d.projectDir, d.stderr)
-		if err != nil {
-			fmt.Printf("Error restarting service %s: %s", s, err)
-		} else {
-			fmt.Printf("Service %s restarted", s)
+		if err := services.RestartServices(ctx, s, d.projectDir, d.stderr); err != nil {
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return stderrors.Join(errs...)
 }
 
 func (d *Devbox) AttachToProcessManager(ctx context.Context) error {

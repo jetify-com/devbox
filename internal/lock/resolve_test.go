@@ -41,3 +41,19 @@ func TestFetchResolvedPackageErrors(t *testing.T) {
 		}
 	}
 }
+
+func TestFetchResolvedPackagePinnedGitHubFlake(t *testing.T) {
+	const pkg = "github:owner/repo/1111111111111111111111111111111111111111#hello"
+	for _, refresh := range []bool{false, true} {
+		got, err := (&File{}).FetchResolvedPackage(pkg, refresh)
+		if err != nil {
+			t.Fatalf("refresh=%v: got error: %v", refresh, err)
+		}
+		if got.Resolved != pkg {
+			t.Errorf("refresh=%v: got Resolved %q, want %q", refresh, got.Resolved, pkg)
+		}
+		if got.LastModified != "" {
+			t.Errorf("refresh=%v: got LastModified %q, want empty", refresh, got.LastModified)
+		}
+	}
+}

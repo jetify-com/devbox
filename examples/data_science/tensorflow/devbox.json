@@ -1,16 +1,12 @@
 {
   "packages": [
-    "python310Packages.pip",
     "stdenv.cc.cc.lib",
-    "python310@latest"
+    "python@3.13"
   ],
   "shell": {
     "init_hook": [
       ". $VENV_DIR/bin/activate",
       "pip install -r requirements.txt"
     ]
-  },
-  "nixpkgs": {
-    "commit": "f80ac848e3d6f0c12c52758c0f25c10c97ca3b62"
   }
 }

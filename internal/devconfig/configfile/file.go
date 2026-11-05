@@ -109,6 +109,58 @@ func (c *ConfigFile) Hash() (string, error) {
 	return cachehash.Bytes(ast.Pack()), nil
 }
 
+// nonNixFields are the top-level devbox.json fields that devbox only reads
+// after the Nix environment has been built. None of them end up in the
+// generated flake, the `nix print-dev-env` output, or the Nix profile:
+//
+//   - env, env_from: merged into the environment by Devbox.computeEnv on
+//     every run.
+//   - shell (init_hook and scripts): written to .devbox/gen/scripts by
+//     shellgen.WriteScriptsToFiles.
+//   - aliases: read when starting a shell or running a command.
+//   - name, description, $schema: metadata.
+//   - devbox_version: read by vercheck. The state file already records the
+//     running Devbox version separately.
+//
+// Any field not listed here (including unknown fields) is treated as a Nix
+// input.
+var nonNixFields = []string{
+	"$schema",
+	"aliases",
+	"description",
+	"devbox_version",
+	"env",
+	"env_from",
+	"name",
+	"shell",
+}
+
+// NixHash is like Hash, but it ignores fields that don't affect the Nix
+// environment (see nonNixFields). Two configs with the same NixHash produce
+// the same flake, print-dev-env output and Nix profile.
+func (c *ConfigFile) NixHash() (string, error) {
+	if c.ast == nil {
+		nixOnly := *c
+		nixOnly.Name = ""
+		nixOnly.Description = ""
+		nixOnly.DevboxVersion = nil
+		nixOnly.Env = nil
+		nixOnly.EnvFrom = ""
+		nixOnly.Shell = nil
+		nixOnly.Aliases = nil
+		return cachehash.JSON(&nixOnly)
+	}
+	ast := c.ast.root.Clone()
+	if obj, ok := ast.Value.(*hujson.Object); ok {
+		obj.Members = slices.DeleteFunc(obj.Members, func(m hujson.ObjectMember) bool {
+			name, ok := m.Name.Value.(hujson.Literal)
+			return ok && slices.Contains(nonNixFields, name.String())
+		})
+	}
+	ast.Minimize()
+	return cachehash.Bytes(ast.Pack()), nil
+}
+
 func (c *ConfigFile) Equals(other *ConfigFile) bool {
 	hash1, _ := c.Hash()
 	hash2, _ := other.Hash()
@@ -146,9 +198,14 @@ func (c *ConfigFile) SaveTo(dir string) error {
 	return os.WriteFile(filepath.Join(dir, c.FileName()), c.Bytes(), 0o644)
 }
 
+// Save writes the config back to the file at AbsRootPath.
+//
 // TODO: Can we remove SaveTo and just use Save()?
 func (c *ConfigFile) Save() error {
-	return c.SaveTo(c.AbsRootPath)
+	if c.AbsRootPath == "" {
+		return errors.New("cannot save config: no file path")
+	}
+	return c.SaveTo(filepath.Dir(c.AbsRootPath))
 }
 
 // Get returns the package with the given versionedName

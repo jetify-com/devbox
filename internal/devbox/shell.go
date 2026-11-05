@@ -91,7 +91,7 @@ func (d *Devbox) newShell(envOpts devopt.EnvOptions, opts ...ShellOption) (*Devb
 // shellPath returns the path to a shell binary, or error if none found.
 func (d *Devbox) shellPath(envOpts devopt.EnvOptions) (path string, err error) {
 	defer func() {
-		if err != nil {
+		if err == nil {
 			path = filepath.Clean(path)
 		}
 	}()
@@ -245,7 +245,7 @@ func (s *DevboxShell) Run() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	slog.Debug("Executing shell %s with args: %v", s.binPath, cmd.Args)
+	slog.Debug("executing shell", "shell", s.binPath, "args", cmd.Args)
 	err = cmd.Run()
 
 	// If the error is an ExitError, this means the shell started up fine but there was
@@ -265,15 +265,17 @@ func (s *DevboxShell) Run() error {
 func (s *DevboxShell) shellRCOverrides(shellrc string) (extraEnv map[string]string, extraArgs []string) {
 	// Shells have different ways of overriding the shellrc, so we need to
 	// look at the name to know which env vars or args to set when launching the shell.
+	// Args and env values are passed directly to exec, so they must not be
+	// shell-quoted. Only fish's -C value is parsed as a shell command.
 	switch s.name {
 	case shBash:
-		extraArgs = []string{"--rcfile", shellescape.Quote(shellrc)}
+		extraArgs = []string{"--rcfile", shellrc}
 	case shZsh:
-		extraEnv = map[string]string{"ZDOTDIR": shellescape.Quote(filepath.Dir(shellrc))}
+		extraEnv = map[string]string{"ZDOTDIR": filepath.Dir(shellrc)}
 	case shKsh, shPosix:
-		extraEnv = map[string]string{"ENV": shellescape.Quote(shellrc)}
+		extraEnv = map[string]string{"ENV": shellrc}
 	case shFish:
-		extraArgs = []string{"-C", ". " + shellrc}
+		extraArgs = []string{"-C", ". " + shellescape.Quote(shellrc)}
 	}
 	return extraEnv, extraArgs
 }
@@ -420,7 +422,7 @@ func (s *DevboxShell) setupShellStartupFiles(shellSettingsDir string) {
 				continue
 			}
 			if err != nil {
-				slog.Debug("os.Stat error for %s is %v", userFile, err)
+				slog.Debug("os.Stat error", "file", userFile, "err", err)
 			}
 
 			fileNew := filepath.Join(shellSettingsDir, filename)

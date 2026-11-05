@@ -17,7 +17,7 @@ import (
 	"go.jetify.com/devbox/internal/xdg"
 )
 
-const processComposeVersion = "1.116.0"
+const processComposeVersion = "1.122.0"
 
 var utilProjectConfigPath string
 

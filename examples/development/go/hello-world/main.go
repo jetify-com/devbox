@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	expected := "go1.24.5"
+	expected := "go1.27.3"
 	goVersion := runtime.Version()
 	fmt.Printf("Go version: %s\n", goVersion)
 	if goVersion != expected {

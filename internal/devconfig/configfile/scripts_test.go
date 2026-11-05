@@ -17,6 +17,11 @@ func scriptNames(scripts []ScriptWithName) []string {
 	return names
 }
 
+func TestNullScriptIsInvalid(t *testing.T) {
+	_, err := LoadBytes([]byte(`{"shell": {"scripts": {"foo": null}}}`))
+	require.ErrorContains(t, err, "cannot have an empty script body in devbox.json: foo")
+}
+
 func TestScriptsInOrderPreservesSourceOrder(t *testing.T) {
 	config := []byte(`{
 		"shell": {

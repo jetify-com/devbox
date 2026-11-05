@@ -24,7 +24,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	segment "github.com/segmentio/analytics-go"
+	segment "github.com/segmentio/analytics-go/v3"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/nix"
 
@@ -51,7 +51,20 @@ var (
 	// procStartTime records the start time of the current process.
 	procStartTime = time.Now()
 	needsFlush    atomic.Bool
-	started       bool
+	// uploadNow skips upload throttling. It's set when an error is buffered
+	// so that errors are reported promptly.
+	uploadNow atomic.Bool
+	started   bool
+)
+
+const (
+	// uploadInterval is the minimum time between spawning upload processes.
+	// Events are buffered on disk in the meantime.
+	uploadInterval = 30 * time.Minute
+
+	// uploadThreshold is the number of buffered events that triggers an
+	// upload before uploadInterval has passed.
+	uploadThreshold = 50
 )
 
 // Start enables telemetry for the current program.
@@ -60,10 +73,31 @@ func Start() {
 		return
 	}
 
-	const deviceSalt = "64ee464f-9450-4b14-8d9c-014c0012ac1a"
-	deviceID, _ = machineid.ProtectedID(deviceSalt)
-
+	deviceID = loadDeviceID()
 	started = true
+}
+
+// Enabled reports whether telemetry was started for the current program.
+func Enabled() bool {
+	return started
+}
+
+// loadDeviceID returns the device ID cached in the state dir, computing and
+// caching it if needed. Computing it is slow on macOS because it runs ioreg.
+func loadDeviceID() string {
+	if data, err := os.ReadFile(deviceIDFile); err == nil {
+		if id := strings.TrimSpace(string(data)); id != "" {
+			return id
+		}
+	}
+
+	const deviceSalt = "64ee464f-9450-4b14-8d9c-014c0012ac1a"
+	id, err := machineid.ProtectedID(deviceSalt)
+	if err != nil {
+		return ""
+	}
+	_ = writeStateFile(deviceIDFile, []byte(id))
+	return id
 }
 
 func userID() string {
@@ -78,18 +112,58 @@ func userID() string {
 	return ""
 }
 
-// Stop stops gathering telemetry and flushes buffered events to disk.
+// Stop stops gathering telemetry and, if it's time for an upload, uploads
+// buffered events in a separate process.
 func Stop() {
 	if !started || !needsFlush.Load() {
 		return
 	}
+	started = false
+	if !shouldUpload() {
+		return
+	}
+
+	// Record the upload time before spawning so that other commands running
+	// at the same time don't also spawn an uploader.
+	_ = writeStateFile(lastUploadFile, []byte(strconv.FormatInt(time.Now().Unix(), 10)))
 
 	// Report errors in a separate process so we don't block exiting.
 	exe, err := os.Executable()
 	if err == nil {
 		_ = exec.Command(exe, "upload-telemetry").Start()
 	}
-	started = false
+}
+
+// shouldUpload reports whether buffered events should be uploaded now. Uploads
+// happen at most once per uploadInterval unless an error was reported or
+// there are at least uploadThreshold buffered events.
+func shouldUpload() bool {
+	if uploadNow.Load() {
+		return true
+	}
+	data, err := os.ReadFile(lastUploadFile)
+	if err != nil {
+		return true
+	}
+	lastUpload, err := strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64)
+	if err != nil {
+		return true
+	}
+	// A last upload time in the future means the clock changed, so don't
+	// trust it.
+	if age := time.Since(time.Unix(lastUpload, 0)); age < 0 || age >= uploadInterval {
+		return true
+	}
+	return bufferedEventCount() >= uploadThreshold
+}
+
+func bufferedEventCount() int {
+	count := 0
+	for _, dir := range []string{segmentBufferDir, sentryBufferDir} {
+		entries, _ := os.ReadDir(dir)
+		count += len(entries)
+	}
+	return count
 }
 
 func Event(e EventName, meta Metadata) {
@@ -132,7 +206,10 @@ func Error(err error, meta Metadata) {
 	nixVersion := cmp.Or(nix.Version(), "unknown")
 
 	event := &sentry.Event{
-		EventID:   sentry.EventID(ExecutionID),
+		EventID: sentry.EventID(ExecutionID),
+		// Uploads are throttled, so record when the error happened rather
+		// than when it's uploaded.
+		Timestamp: time.Now(),
 		Level:     sentry.LevelError,
 		User:      sentry.User{ID: deviceID},
 		Exception: newSentryException(redact.Error(errToLog)),
@@ -174,6 +251,7 @@ func Error(err error, meta Metadata) {
 		event.User.ID = uid
 	}
 	bufferSentryEvent(event)
+	uploadNow.Store(true)
 
 	msgID, msg := commandEvent(meta)
 	msg.Properties["failed"] = true
@@ -258,6 +336,9 @@ func (m *Metadata) pkgContext() map[string]any {
 var (
 	sentryBufferDir  = xdg.StateSubpath(filepath.FromSlash("devbox/sentry"))
 	segmentBufferDir = xdg.StateSubpath(filepath.FromSlash("devbox/segment"))
+
+	deviceIDFile   = xdg.StateSubpath(filepath.FromSlash("devbox/telemetry/device-id"))
+	lastUploadFile = xdg.StateSubpath(filepath.FromSlash("devbox/telemetry/last-upload"))
 )
 
 func Upload() {
@@ -326,18 +407,23 @@ func bufferEvent(file string, event any) {
 	if err != nil {
 		return
 	}
+	if writeStateFile(file, data) == nil {
+		needsFlush.Store(true)
+	}
+}
 
-	err = os.WriteFile(file, data, 0o600)
+// writeStateFile writes data to a file in the XDG state dir, creating its
+// parent directory if needed.
+func writeStateFile(file string, data []byte) error {
+	err := os.WriteFile(file, data, 0o600)
 	if errors.Is(err, fs.ErrNotExist) {
 		// XDG specifies perms 0700.
 		if err := os.MkdirAll(filepath.Dir(file), 0o700); err != nil {
-			return
+			return err
 		}
 		err = os.WriteFile(file, data, 0o600)
 	}
-	if err == nil {
-		needsFlush.Store(true)
-	}
+	return err
 }
 
 func newEventID() string {

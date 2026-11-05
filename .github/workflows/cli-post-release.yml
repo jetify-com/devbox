@@ -25,7 +25,7 @@ jobs:
       # so wait for it to complete. The action exits with failure if the waited
       # workflow failed, which blocks the publish job below.
       - name: Wait for cli-release to succeed for this tag
-        uses: int128/wait-for-workflows-action@v1.76.0
+        uses: int128/wait-for-workflows-action@v1.110.0
         with:
           sha: ${{ github.sha }}
           # cli-release is triggered by the tag push, not the release event.

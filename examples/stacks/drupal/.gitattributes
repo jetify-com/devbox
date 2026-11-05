@@ -48,6 +48,7 @@ core/.phpstan-baseline.php text eol=lf whitespace=blank-at-eol,-blank-at-eof,-sp
 # Define binary file attributes.
 # - Do not treat them as text.
 # - Include binary diff in patches instead of "binary files differ."
+*.avif    -text diff
 *.eot     -text diff
 *.exe     -text diff
 *.gif     -text diff

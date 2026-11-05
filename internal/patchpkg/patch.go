@@ -131,7 +131,7 @@ func (p *libPatcher) patch(ctx context.Context, path, outPath string) error {
 	if err != nil {
 		return err
 	}
-	oldRpath := strings.Split(string(out), ":")
+	oldRpath := splitRPATH(string(out))
 
 	cmd = &patchelf{
 		SetInterpreter: p.ld,
@@ -146,6 +146,15 @@ func (p *libPatcher) patch(ctx context.Context, path, outPath string) error {
 	)
 	_, err = cmd.run(ctx, path)
 	return err
+}
+
+// splitRPATH splits a colon-separated RPATH into its directories, dropping any
+// empty entries. The dynamic linker treats an empty RPATH entry as the current
+// working directory, so they must not end up in a patched binary.
+func splitRPATH(rpath string) []string {
+	return slices.DeleteFunc(strings.Split(rpath, ":"), func(dir string) bool {
+		return dir == ""
+	})
 }
 
 // patchelf runs the patchelf command.

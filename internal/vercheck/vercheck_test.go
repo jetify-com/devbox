@@ -14,6 +14,7 @@ import (
 
 func TestCheckVersion(t *testing.T) {
 	isDevBuild = false
+	t.Setenv(envir.XDGCacheHome, t.TempDir())
 
 	t.Run("skip_if_devbox_cloud", func(t *testing.T) {
 		defer os.Unsetenv(envName)
@@ -49,6 +50,21 @@ func TestCheckVersion(t *testing.T) {
 		if !strings.Contains(buf.String(), "New launcher available") {
 			t.Errorf("expected notice about new launcher version, got %q", buf.String())
 		}
+	})
+
+	t.Run("print_launcher_notice_once_per_interval", func(t *testing.T) {
+		t.Setenv(envir.XDGCacheHome, t.TempDir())
+		t.Setenv(envir.LauncherVersion, "0.2.2")
+
+		for i, want := range []bool{true, false} {
+			os.Unsetenv(envName)
+			buf := new(bytes.Buffer)
+			CheckVersion(buf, "devbox shell")
+			if got := strings.Contains(buf.String(), "New launcher available"); got != want {
+				t.Errorf("run %d: got notice %v, want %v (output %q)", i, got, want, buf.String())
+			}
+		}
+		os.Unsetenv(envName)
 	})
 
 	t.Run("print_if_binary_version_outdated", func(t *testing.T) {

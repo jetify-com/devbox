@@ -16,6 +16,7 @@ import (
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/launcher"
 	"go.jetify.com/devbox/internal/ux"
 )
 
@@ -43,13 +44,9 @@ func CheckProjectVersion(w io.Writer, configPath string, required *configfile.De
 		return nil
 	}
 
-	policy := required.Policy()
-	if env := os.Getenv(envir.DevboxVersionPolicy); env != "" {
-		p, err := configfile.ParseVersionPolicy(env)
-		if err != nil {
-			return usererr.New("Invalid %s: %v", envir.DevboxVersionPolicy, err)
-		}
-		policy = p
+	policy, err := projectPolicy(required)
+	if err != nil {
+		return err
 	}
 	if policy == configfile.VersionPolicyOff {
 		return nil
@@ -59,12 +56,7 @@ func CheckProjectVersion(w io.Writer, configPath string, required *configfile.De
 	if err != nil {
 		return err
 	}
-	current, err := semver.NewVersion(currentDevboxVersion)
-	if err != nil {
-		slog.Debug("skipping devbox_version check: can't parse running version", "version", currentDevboxVersion, "err", err)
-		return nil
-	}
-	if constraint.Check(current) {
+	if satisfies(constraint) {
 		return nil
 	}
 
@@ -79,9 +71,69 @@ func CheckProjectVersion(w io.Writer, configPath string, required *configfile.De
 	}
 }
 
+// SwitchProjectVersion is a fast path for the "auto" policy that runs before
+// the CLI does any other work, so that switching versions doesn't pay for
+// devbox startup twice. It re-runs the current command with the required
+// version (and doesn't return) only when CheckProjectVersion would. In every
+// other case it returns without printing anything, leaving any warnings or
+// errors to CheckProjectVersion when the project is opened.
+func SwitchProjectVersion(configPath string, required *configfile.DevboxVersion) {
+	if required == nil || isDevBuild {
+		return
+	}
+	if policy, err := projectPolicy(required); err != nil || policy != configfile.VersionPolicyAuto {
+		return
+	}
+	constraint, err := required.Constraint()
+	if err != nil || satisfies(constraint) {
+		return
+	}
+	// CheckProjectVersion warns about this case, so leave it to that.
+	if userChosenVersion() != "" {
+		return
+	}
+	// CheckProjectVersion reports any error when the project is opened.
+	_ = switchVersion(io.Discard, configPath, required, "")
+}
+
+// projectPolicy returns the policy for required, which the
+// DEVBOX_VERSION_POLICY environment variable overrides.
+func projectPolicy(required *configfile.DevboxVersion) (configfile.VersionPolicy, error) {
+	env := os.Getenv(envir.DevboxVersionPolicy)
+	if env == "" {
+		return required.Policy(), nil
+	}
+	p, err := configfile.ParseVersionPolicy(env)
+	if err != nil {
+		return "", usererr.New("Invalid %s: %v", envir.DevboxVersionPolicy, err)
+	}
+	return p, nil
+}
+
+// satisfies reports whether the running devbox version satisfies constraint.
+// It's true when the running version can't be parsed, which skips the check.
+func satisfies(constraint *semver.Constraints) bool {
+	current, err := semver.NewVersion(currentDevboxVersion)
+	if err != nil {
+		slog.Debug("skipping devbox_version check: can't parse running version", "version", currentDevboxVersion, "err", err)
+		return true
+	}
+	return constraint.Check(current)
+}
+
+// userChosenVersion returns DEVBOX_USE_VERSION if the user set it, or an
+// empty string if it's unset or the auto policy set it.
+func userChosenVersion() string {
+	if useVersion := os.Getenv(envir.DevboxUseVersion); useVersion != os.Getenv(autoVersionEnvName) {
+		return useVersion
+	}
+	return ""
+}
+
 // switchVersion re-runs the current command with the exact version required
-// by devbox_version. It uses the devbox launcher, which downloads the version
-// if needed and runs the version named by DEVBOX_USE_VERSION.
+// by devbox_version. It runs that version's binary directly if the launcher
+// already downloaded it. Otherwise it uses the launcher, which downloads the
+// version and runs the version named by DEVBOX_USE_VERSION.
 func switchVersion(w io.Writer, configPath string, required *configfile.DevboxVersion, msg string) error {
 	target, ok := required.ExactVersion()
 	if !ok {
@@ -94,23 +146,22 @@ func switchVersion(w io.Writer, configPath string, required *configfile.DevboxVe
 	}
 
 	// Respect a version the user chose explicitly.
-	autoVersion := os.Getenv(autoVersionEnvName)
-	if useVersion := os.Getenv(envir.DevboxUseVersion); useVersion != "" && useVersion != autoVersion {
+	if useVersion := userChosenVersion(); useVersion != "" {
 		return warnOnce(w, configPath, fmt.Sprintf(
 			"%s\nNot switching versions automatically because %s=%s is set.",
 			msg, envir.DevboxUseVersion, useVersion,
 		))
 	}
 
-	if autoVersion == target {
+	if os.Getenv(autoVersionEnvName) == target {
 		return usererr.New(
 			"%s\nDevbox tried to switch to version %s automatically, but the launcher ran version %s instead.",
 			msg, target, currentDevboxVersion,
 		)
 	}
 
-	launcher := os.Getenv(envir.LauncherPath)
-	if launcher == "" {
+	launcherPath := os.Getenv(envir.LauncherPath)
+	if launcherPath == "" {
 		return usererr.New(
 			"%s\nDevbox can't switch versions automatically because it wasn't started by the devbox launcher. "+
 				"Install devbox with `curl -fsSL https://get.jetify.com/devbox | bash` to enable automatic switching.",
@@ -118,14 +169,21 @@ func switchVersion(w io.Writer, configPath string, required *configfile.DevboxVe
 		)
 	}
 
-	slog.Debug("switching devbox version for devbox_version", "from", currentDevboxVersion, "to", target, "launcher", launcher)
+	// Running the downloaded binary directly skips the launcher's startup
+	// cost. It still gets the launcher's environment variables because this
+	// process inherited them.
+	bin := launcher.InstalledBinary(target)
+	if bin == "" {
+		bin = launcherPath
+	}
+	slog.Debug("switching devbox version for devbox_version", "from", currentDevboxVersion, "to", target, "bin", bin)
 	env := withEnv(os.Environ(), map[string]string{
 		envir.DevboxUseVersion: target,
 		autoVersionEnvName:     target,
 	})
-	args := append([]string{launcher}, os.Args[1:]...)
-	if err := execFunc(launcher, args, env); err != nil {
-		return usererr.WithUserMessage(err, "Failed to switch to devbox version %s using the launcher at %s.", target, launcher)
+	args := append([]string{bin}, os.Args[1:]...)
+	if err := execFunc(bin, args, env); err != nil {
+		return usererr.WithUserMessage(err, "Failed to switch to devbox version %s using %s.", target, bin)
 	}
 	return nil
 }

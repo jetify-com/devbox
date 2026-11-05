@@ -17,3 +17,14 @@ parameters:
 services:
   cache.backend.null:
     class: Drupal\Core\Cache\NullBackendFactory
+  logger.channel.config_schema:
+    parent: logger.channel_base
+    arguments: [ 'config_schema' ]
+  config.schema_checker:
+    class: Drupal\Core\Config\Development\LenientConfigSchemaChecker
+    arguments:
+      - '@config.typed'
+      - '@messenger'
+      - '@logger.channel.config_schema'
+    tags:
+      - { name: event_subscriber }

@@ -1,8 +1,6 @@
 import * as os from 'os';
-import * as which from 'which';
-import fetch from 'node-fetch';
+import which from 'which';
 import { exec } from 'child_process';
-import * as FormData from 'form-data';
 import { Uri, commands, window } from 'vscode';
 import { chmod, mkdir, open, writeFile } from 'fs/promises';
 
@@ -52,7 +50,7 @@ async function getVMInfo(token: string | null, vmId: string | null): Promise<any
   // send post request to gateway to get vm info and ssh keys
   const gatewayHost = 'https://api.devbox.sh/g/vm_info';
   const data = new FormData();
-  data.append("vm_id", vmId);
+  data.append("vm_id", vmId ?? '');
   console.debug("calling devbox to get vm_info...");
   const response = await fetch(gatewayHost, {
     method: 'post',

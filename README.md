@@ -8,7 +8,7 @@
 
 ### Instant, easy, and predictable development environments
 
-[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff&cacheSeconds=1800)](https://discord.gg/jetify)
+[![Join Discord](https://img.shields.io/discord/903306922852245526?color=7389D8&label=discord&logo=discord&logoColor=ffffff&cacheSeconds=1800)](https://discord.gg/agbskCJXk2)
 ![License: Apache 2.0](https://img.shields.io/github/license/jetify-com/devbox)
 [![version](https://img.shields.io/github/v/release/jetify-com/devbox?color=green&label=version&sort=semver)](https://github.com/jetify-com/devbox/releases)
 [![tests](https://github.com/jetify-com/devbox/actions/workflows/cli-post-release.yml/badge.svg)](https://github.com/jetify-com/devbox/actions/workflows/cli-release.yml?branch=main)
@@ -171,7 +171,7 @@ the full list of commands.
 
 ## Join our Developer Community
 
-- Chat with us by joining the [Jetify Discord Server](https://discord.gg/jetify)
+- Chat with us by joining the [Devbox Discord Server](https://discord.gg/agbskCJXk2)
   – we have a #devbox channel dedicated to this project.
 - File bug reports and feature requests using
   [Github Issues](https://github.com/jetify-com/devbox/issues)

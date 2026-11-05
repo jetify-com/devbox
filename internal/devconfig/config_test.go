@@ -50,6 +50,45 @@ func TestOpen(t *testing.T) {
 	})
 }
 
+func TestInitSave(t *testing.T) {
+	cwd := t.TempDir()
+	t.Chdir(cwd)
+	root, _, _ := mkNestedDirs(t)
+
+	cfg, err := Init(root)
+	if err != nil {
+		t.Fatalf("Init(%q) error: %v", root, err)
+	}
+	cfg.Root.SetEnv(map[string]string{"FOO": "bar"})
+	if err := cfg.Root.Save(); err != nil {
+		t.Fatalf("Save() error: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(cwd, configfile.DefaultName)); err == nil {
+		t.Errorf("Save() wrote %s to the working directory", configfile.DefaultName)
+	}
+	saved, err := Open(root)
+	if err != nil {
+		t.Fatalf("Open(%q) error: %v", root, err)
+	}
+	if got := saved.Root.Env["FOO"]; got != "bar" {
+		t.Errorf("saved config env FOO = %q, want %q", got, "bar")
+	}
+
+	// Saving a config that was opened from a file should overwrite that file.
+	saved.Root.SetEnv(map[string]string{"FOO": "baz"})
+	if err := saved.Root.Save(); err != nil {
+		t.Fatalf("Save() error: %v", err)
+	}
+	reopened, err := Open(root)
+	if err != nil {
+		t.Fatalf("Open(%q) error: %v", root, err)
+	}
+	if got := reopened.Root.Env["FOO"]; got != "baz" {
+		t.Errorf("re-saved config env FOO = %q, want %q", got, "baz")
+	}
+}
+
 func TestOpenError(t *testing.T) {
 	t.Run("NotExist", func(t *testing.T) {
 		root, _, _ := mkNestedDirs(t)
@@ -674,7 +713,8 @@ type testLockProject struct {
 	dir string
 }
 
-func (p *testLockProject) ConfigHash() (string, error) { return "", nil }
+func (p *testLockProject) ConfigHash() (string, error)    { return "", nil }
+func (p *testLockProject) NixConfigHash() (string, error) { return "", nil }
 
 func (p *testLockProject) Stdenv() flake.Ref                                        { return flake.Ref{} }
 func (p *testLockProject) AllPackageNamesIncludingRemovedTriggerPackages() []string { return nil }

@@ -423,6 +423,26 @@ func (c *Config) Hash() (string, error) {
 	return cachehash.Bytes(data), nil
 }
 
+// NixHash is like Hash but ignores the root config's fields that don't affect
+// the Nix environment (see configfile.ConfigFile.NixHash). Included configs
+// (plugins) are hashed in full because they can add packages and create files.
+func (c *Config) NixHash() (string, error) {
+	data := []byte{}
+	for _, i := range c.included {
+		hash, err := i.Hash()
+		if err != nil {
+			return "", err
+		}
+		data = append(data, hash...)
+	}
+	hash, err := c.Root.NixHash()
+	if err != nil {
+		return "", err
+	}
+	data = append(data, hash...)
+	return cachehash.Bytes(data), nil
+}
+
 func (c *Config) IsJetifyCloudEnvFrom() bool {
 	for _, i := range c.included {
 		if i.IsJetifyCloudEnvFrom() {

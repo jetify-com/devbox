@@ -1,6 +1,11 @@
 package shellgen
 
 import (
+	"errors"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"go.jetify.com/devbox/internal/devbox/devopt"
@@ -25,6 +30,9 @@ func (l *lockMock) ProjectDir() string {
 }
 
 func (l *lockMock) Resolve(key string) (*lock.Package, error) {
+	if strings.HasPrefix(key, "runx:") {
+		return &lock.Package{Resolved: key}, nil
+	}
 	return &lock.Package{
 		Resolved: "github:NixOS/nixpkgs/10b813040df67c4039086db0f6eaf65c536886c6#python312",
 	}, nil
@@ -52,5 +60,57 @@ func TestNewGlibcPatchFlake(t *testing.T) {
 
 	if len(patchFlake.Outputs.Packages) != 1 {
 		t.Errorf("expected 1 package in Outputs, got %d", len(patchFlake.Outputs.Packages))
+	}
+}
+
+func TestNewGlibcPatchFlakeSkipsNonNix(t *testing.T) {
+	stdenv := flake.Ref{
+		Type: flake.TypeGitHub,
+		URL:  "https://github.com/NixOS/nixpkgs",
+		Ref:  "nixpkgs-unstable",
+	}
+	packages := devpkg.PackagesFromStringsWithOptions(
+		[]string{"python@latest", "runx:golangci/golangci-lint@latest"},
+		&lockMock{},
+		devopt.AddOpts{Patch: string(configfile.PatchAlways)},
+	)
+
+	patchFlake, err := newGlibcPatchFlake(stdenv, packages)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(patchFlake.Inputs) != 1 {
+		t.Errorf("expected 1 flake input, got %v", patchFlake.Inputs)
+	}
+}
+
+func TestFetchClosureStorePathExpr(t *testing.T) {
+	got := fetchClosureStorePathExpr("/nix/store/0123456789abcdfghijklmnpqrsvwxyz-python3-3.12.0")
+	want := `builtins.fetchClosure {
+  fromStore = "https://cache.nixos.org";
+  fromPath = "/nix/store/0123456789abcdfghijklmnpqrsvwxyz-python3-3.12.0";
+  inputAddressed = true;
+}`
+	if got != want {
+		t.Errorf("got expression:\n%s\n\nwant:\n%s", got, want)
+	}
+}
+
+func TestCopySystemCUDALibRemovesStaleLibs(t *testing.T) {
+	flakeDir := t.TempDir()
+	libDir := filepath.Join(flakeDir, "lib")
+	if err := os.Mkdir(libDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	stale := filepath.Join(libDir, "libcuda.so.0.0.0-stale")
+	if err := os.WriteFile(stale, []byte("stale"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// The result depends on whether the system has a CUDA driver, but
+	// either way the stale library should be gone.
+	_ = (&glibcPatchFlake{}).copySystemCUDALib(flakeDir)
+	if _, err := os.Lstat(stale); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("got stale library error %v, want %v", err, fs.ErrNotExist)
 	}
 }

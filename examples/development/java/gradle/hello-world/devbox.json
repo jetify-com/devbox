@@ -1,7 +1,7 @@
 {
     "packages": [
         "gradle@latest",
-        "jdk@19",
+        "jdk@21",
         "binutils@latest"
     ],
     "shell": {

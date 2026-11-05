@@ -1,7 +1,7 @@
 {
   "packages": [
-    "php83Extensions.xdebug@latest",
-    "php83Extensions.imagick@latest",
+    "php85Extensions.xdebug@latest",
+    "php85Extensions.imagick@latest",
     "php@latest"
   ],
   "env": {

@@ -32,6 +32,12 @@ var (
 	// https://segment.com/docs/connections/sources/catalog/libraries/server/go/quickstart/
 	// It is disabled by default.
 	TelemetryKey = ""
+
+	// Launcher is "true" in official release builds, which makes devbox its
+	// own launcher (see the launcher package). Builds from package managers
+	// such as nixpkgs leave it unset, so the package manager stays in charge
+	// of the installed devbox version.
+	Launcher = ""
 )
 
 // User-presentable names of operating systems supported by Devbox.
@@ -52,8 +58,9 @@ func OS() string {
 		case "linux":
 			if fileutil.Exists("/proc/sys/fs/binfmt_misc/WSLInterop") || fileutil.Exists("/run/WSL") {
 				osName = OSWSL
+			} else {
+				osName = OSLinux
 			}
-			osName = OSLinux
 		case "darwin":
 			osName = OSDarwin
 		default:

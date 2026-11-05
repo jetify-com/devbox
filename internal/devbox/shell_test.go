@@ -219,6 +219,13 @@ func TestShellPath(t *testing.T) {
 			},
 			expected: "^/usr/local/bin/bash$",
 		},
+		{
+			name: "path is cleaned",
+			env: map[string]string{
+				envir.Shell: "/usr/local//bin/../bin/bash",
+			},
+			expected: "^/usr/local/bin/bash$",
+		},
 	}
 
 	for _, test := range tests {
@@ -248,6 +255,33 @@ func TestShellPath(t *testing.T) {
 			}
 			if !matched {
 				t.Errorf("Expected shell path %s, but got %s", test.expected, gotPath)
+			}
+		})
+	}
+}
+
+func TestShellRCOverridesPathWithSpace(t *testing.T) {
+	shellrc := "/tmp/my dir/devbox123/.bashrc"
+	tests := []struct {
+		name     name
+		wantEnv  map[string]string
+		wantArgs []string
+	}{
+		{name: shBash, wantArgs: []string{"--rcfile", shellrc}},
+		{name: shZsh, wantEnv: map[string]string{"ZDOTDIR": "/tmp/my dir/devbox123"}},
+		{name: shKsh, wantEnv: map[string]string{"ENV": shellrc}},
+		{name: shPosix, wantEnv: map[string]string{"ENV": shellrc}},
+		{name: shFish, wantArgs: []string{"-C", ". '" + shellrc + "'"}},
+	}
+	for _, tt := range tests {
+		t.Run(string(tt.name), func(t *testing.T) {
+			s := &DevboxShell{name: tt.name}
+			gotEnv, gotArgs := s.shellRCOverrides(shellrc)
+			if diff := cmp.Diff(tt.wantEnv, gotEnv); diff != "" {
+				t.Errorf("extraEnv mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.wantArgs, gotArgs); diff != "" {
+				t.Errorf("extraArgs mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

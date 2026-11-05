@@ -40,7 +40,6 @@ func (d *PoetryDetector) Packages(ctx context.Context) ([]string, error) {
 	var pyprojectToml struct {
 		Tool struct {
 			Poetry struct {
-				Version      string `toml:"version"`
 				Dependencies struct {
 					Python string `toml:"python"`
 				} `toml:"dependencies"`
@@ -52,10 +51,11 @@ func (d *PoetryDetector) Packages(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
-	poetryVersion := determineBestVersion(ctx, "poetry", pyprojectToml.Tool.Poetry.Version)
 	pythonVersion := determineBestVersion(ctx, "python", pyprojectToml.Tool.Poetry.Dependencies.Python)
 
-	return []string{"python@" + pythonVersion, "poetry@" + poetryVersion}, nil
+	// Use the latest poetry. [tool.poetry].version is the project's own
+	// version, not a constraint on Poetry itself.
+	return []string{"python@" + pythonVersion, "poetry@latest"}, nil
 }
 
 func (d *PoetryDetector) Env(ctx context.Context) (map[string]string, error) {
@@ -78,6 +78,11 @@ func determineBestVersion(ctx context.Context, pkg, version string) string {
 }
 
 func sanitizeVersion(version string) string {
+	// Only use the first constraint of a range like ">=3.8,<4.0" or
+	// "^2.7 || ^3.6".
+	if i := strings.IndexAny(version, ",|"); i != -1 {
+		version = version[:i]
+	}
 	// Remove non-numeric characters and 'v' prefix
 	sanitized := strings.TrimPrefix(version, "v")
 	return regexp.MustCompile(`[^\d.]`).ReplaceAllString(sanitized, "")

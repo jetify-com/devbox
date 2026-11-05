@@ -217,7 +217,8 @@ func (c *configAST) appendAllowInsecure(name, fieldName string, whitelist []stri
 	c.appendStringSliceField(name, fieldName, whitelist)
 }
 
-// removePatch removes the patch field from the named package.
+// removePatch removes the patch field and the deprecated patch_glibc field
+// from the named package.
 func (c *configAST) removePatch(name string) {
 	pkgs := c.packagesField(false)
 	obj, ok := pkgs.Value.Value.(*hujson.Object)
@@ -236,13 +237,15 @@ func (c *configAST) removePatch(name string) {
 		// Package is a string, not an object.
 		return
 	}
-	i = c.memberIndex(obj, "patch")
-	if i == -1 {
-		// Patch field doesn't exist.
+	n := len(obj.Members)
+	obj.Members = slices.DeleteFunc(obj.Members, func(m hujson.ObjectMember) bool {
+		field := m.Name.Value.(hujson.Literal).String()
+		return field == "patch" || field == "patch_glibc" // patch_glibc is deprecated
+	})
+	if len(obj.Members) == n {
+		// Neither field exists.
 		return
 	}
-
-	obj.Members = slices.Delete(obj.Members, i, i+1)
 	c.root.Format()
 }
 

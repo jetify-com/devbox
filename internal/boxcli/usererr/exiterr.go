@@ -6,6 +6,7 @@ package usererr
 import (
 	"errors"
 	"os/exec"
+	"syscall"
 )
 
 // ExitError is an ExitError for a command run on behalf of a user
@@ -26,4 +27,20 @@ func NewExecError(source error) error {
 		return source
 	}
 	return &ExitError{ExitError: exitErr}
+}
+
+// ExitCode returns the command's exit code or, if a signal killed it, 128 plus
+// the signal number, the same as a shell reports it (e.g. 130 for Ctrl-C).
+func (e *ExitError) ExitCode() int {
+	if status, ok := e.Sys().(syscall.WaitStatus); ok && status.Signaled() {
+		return 128 + int(status.Signal())
+	}
+	return e.ExitError.ExitCode()
+}
+
+// Interrupted reports whether the command was killed by SIGINT, which usually
+// means the user pressed Ctrl-C.
+func (e *ExitError) Interrupted() bool {
+	status, ok := e.Sys().(syscall.WaitStatus)
+	return ok && status.Signaled() && status.Signal() == syscall.SIGINT
 }

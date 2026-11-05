@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"sync"
 )
 
 func CommandTTY(name string, arg ...string) *exec.Cmd {
@@ -27,10 +28,22 @@ func CommandTTYWithBuffer(
 	cmd := exec.Command(name, arg...)
 	cmd.Stdin = os.Stdin
 
-	errBuf := bytes.NewBuffer(nil)
+	// stdout and stderr are copied by separate goroutines, so guard the
+	// shared buffer with a mutex.
 	outBuf := bytes.NewBuffer(nil)
-	cmd.Stderr = io.MultiWriter(os.Stderr, errBuf)
-	cmd.Stdout = io.MultiWriter(os.Stdout, outBuf)
-	outBuf.Write(errBuf.Bytes())
+	w := &syncWriter{w: outBuf}
+	cmd.Stderr = io.MultiWriter(os.Stderr, w)
+	cmd.Stdout = io.MultiWriter(os.Stdout, w)
 	return cmd, outBuf
+}
+
+type syncWriter struct {
+	mu sync.Mutex
+	w  io.Writer
+}
+
+func (s *syncWriter) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.w.Write(p)
 }

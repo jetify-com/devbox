@@ -37,12 +37,18 @@ Gradle is a popular, multi-language build tool that is commonly used with JVM pr
 
         ```gradle
         /* build.gradle */
-        apply plugin: 'java'
-        apply plugin: 'application'
+        plugins {
+            id 'java'
+            id 'application'
+        }
         /* Change these versions to the JDK version you have installed */
-        sourceCompatibility = 17
-        targetCompatibility = 17
-        mainClassName = 'hello.HelloWorld'
+        java {
+            sourceCompatibility = JavaVersion.VERSION_21
+            targetCompatibility = JavaVersion.VERSION_21
+        }
+        application {
+            mainClass = 'hello.HelloWorld'
+        }
         jar {
             manifest {
               /* assuming main class is in src/main/java/hello/HelloWorld.java */

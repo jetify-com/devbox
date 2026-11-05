@@ -52,7 +52,7 @@ func (flags *serviceStopFlags) register(cmd *cobra.Command) {
 	)
 }
 
-func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
+func servicesCmd() *cobra.Command {
 	flags := servicesCmdFlags{}
 	serviceUpFlags := serviceUpFlags{}
 	serviceStopFlags := serviceStopFlags{}
@@ -65,15 +65,7 @@ func servicesCmd(persistentPreRunE ...cobraFunc) *cobra.Command {
 			"the --env or --env-file flag. You may also override in devbox.json by " +
 			"using the `env` field or exporting an environment variable in the " +
 			"init hook.",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			preruns := append([]cobraFunc{ensureNixInstalled}, persistentPreRunE...)
-			for _, fn := range preruns {
-				if err := fn(cmd, args); err != nil {
-					return err
-				}
-			}
-			return nil
-		},
+		PersistentPreRunE: ensureNixInstalled,
 	}
 
 	attachCommand := &cobra.Command{

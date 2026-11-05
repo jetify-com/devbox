@@ -19,13 +19,19 @@ To test a sample Gradle app with devbox, follow the steps below:
     - Replace `jdk` with the version of JDK you want. Get the exact nix-pkg name from `search.nixos.org`.
 2. Then do `devbox shell` to get a shell with that `jdk` nix pkg.
 3. Then do: `gradle init`
-    - In the generated `gradle.build` file, put the following text block:
+    - In the generated `build.gradle` file, put the following text block:
         ```gradle
-        apply plugin: 'java'
-        apply plugin: 'application'
-        sourceCompatibility = 17
-        targetCompatibility = 17
-        mainClassName = 'hello.HelloWorld'
+        plugins {
+            id 'java'
+            id 'application'
+        }
+        java {
+            sourceCompatibility = JavaVersion.VERSION_21
+            targetCompatibility = JavaVersion.VERSION_21
+        }
+        application {
+            mainClass = 'hello.HelloWorld'
+        }
         jar {
             manifest {
                 attributes 'Main-Class': 'hello.HelloWorld'

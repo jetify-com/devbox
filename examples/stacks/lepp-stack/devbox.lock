@@ -309,6 +309,10 @@
         }
       }
     },
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2026-10-20T14:23:57Z",
+      "resolved": "github:NixOS/nixpkgs/5adc50831c259f87faeb09ddf930d43597197473?lastModified=1792506237&narHash=sha256-Q%2F8KLB6jNfpaUN1HAedE%2Fu%2FEt9feE%2FzYSsutBLKrCFk%3D"
+    },
     "glibcLocales@latest": {
       "last_modified": "2026-08-27T07:16:00Z",
       "resolved": "github:NixOS/nixpkgs/c27cdad491a991b11ed731760aa2ef8db0cb0410#glibcLocales",
@@ -339,7 +343,7 @@
     },
     "nginx@latest": {
       "last_modified": "2026-08-29T00:50:12Z",
-      "plugin_version": "0.0.5",
+      "plugin_version": "0.0.6",
       "resolved": "github:NixOS/nixpkgs/e8be7818e19ada32105a8af937a6a473b38167ca#nginx",
       "source": "devbox-search",
       "version": "1.30.4",
@@ -388,53 +392,53 @@
         }
       }
     },
-    "php83Extensions.pgsql@latest": {
-      "last_modified": "2026-08-27T07:16:00Z",
-      "resolved": "github:NixOS/nixpkgs/c27cdad491a991b11ed731760aa2ef8db0cb0410#php83Extensions.pgsql",
+    "php85Extensions.pgsql@latest": {
+      "last_modified": "2026-10-20T14:23:57Z",
+      "resolved": "github:NixOS/nixpkgs/5adc50831c259f87faeb09ddf930d43597197473#php85Extensions.pgsql",
       "source": "devbox-search",
-      "version": "8.3.33",
+      "version": "8.5.11",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/n507s2xpnaf7zwwn6faz1gwcpr0ngd5v-php-pgsql-8.3.33",
+              "path": "/nix/store/4vf5ksrv6iilwqsvrn4jxvjhyn87csni-php-pgsql-8.5.11",
               "default": true
             },
             {
               "name": "dev",
-              "path": "/nix/store/k2g56vwzbsn5xdwvwjgldsbkkr0j8lv9-php-pgsql-8.3.33-dev"
+              "path": "/nix/store/qrsixkmlh7i1bi0z3z1ymirnjjfxh9rp-php-pgsql-8.5.11-dev"
             }
           ],
-          "store_path": "/nix/store/n507s2xpnaf7zwwn6faz1gwcpr0ngd5v-php-pgsql-8.3.33"
+          "store_path": "/nix/store/4vf5ksrv6iilwqsvrn4jxvjhyn87csni-php-pgsql-8.5.11"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/5x4hw3g29lwz5s5x79krp1q9hby8n5jm-php-pgsql-8.3.33",
+              "path": "/nix/store/hpm2z0lcyh016iyih865xld0kjymbbrn-php-pgsql-8.5.11",
               "default": true
             },
             {
               "name": "dev",
-              "path": "/nix/store/2irgh7l02j0j0gnb1j5r61jsiq1s5iya-php-pgsql-8.3.33-dev"
+              "path": "/nix/store/v7m2cnq7wf35zymra1qzr322wrq4g9p5-php-pgsql-8.5.11-dev"
             }
           ],
-          "store_path": "/nix/store/5x4hw3g29lwz5s5x79krp1q9hby8n5jm-php-pgsql-8.3.33"
+          "store_path": "/nix/store/hpm2z0lcyh016iyih865xld0kjymbbrn-php-pgsql-8.5.11"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/yxgzbhchqajslagd12ryylzpqzmvxb2f-php-pgsql-8.3.33",
+              "path": "/nix/store/bqnq8vxwqjriqn0kgidxmqllg0lvbaxl-php-pgsql-8.5.11",
               "default": true
             },
             {
               "name": "dev",
-              "path": "/nix/store/bwj205kx5wk5q6n3wnn1cqx1kg74vgqy-php-pgsql-8.3.33-dev"
+              "path": "/nix/store/km82jlbx14bp4ilz99kplxmbgyisplqw-php-pgsql-8.5.11-dev"
             }
           ],
-          "store_path": "/nix/store/yxgzbhchqajslagd12ryylzpqzmvxb2f-php-pgsql-8.3.33"
+          "store_path": "/nix/store/bqnq8vxwqjriqn0kgidxmqllg0lvbaxl-php-pgsql-8.5.11"
         }
       }
     },

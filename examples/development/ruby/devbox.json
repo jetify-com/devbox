@@ -1,7 +1,7 @@
 {
   "packages": [
-    "bundler@2.4",
-    "ruby@3.1"
+    "bundler@2.7",
+    "ruby@3.4"
   ],
   "shell": {
     "init_hook": [],

@@ -6,15 +6,15 @@ Python by default will attempt to install your packages globally, or in the Nix 
 
 ## Adding Python to your Project
 
-`devbox add python@3.10`, or in your `devbox.json` add:
+`devbox add python@3.13`, or in your `devbox.json` add:
 
 ```json
   "packages": [
-    "python@3.10"
+    "python@3.13"
   ],
 ```
 
-This will install Python 3.10 in your shell. You can find other versions of Python by running `devbox search python`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/python)
+This will install Python 3.13 in your shell. You can find other versions of Python by running `devbox search python`. You can also view the available versions on [Nixhub](https://www.nixhub.io/packages/python)
 
 ## Installing Packages with Pip
 
@@ -30,8 +30,8 @@ Your virtual environment is created in the root directory of your project by def
 ```json
 {
     "packages": [
-        "python310",
-        "python310Packages.pip"
+        "python313",
+        "python313Packages.pip"
     ],
     "shell": {
         "init_hook": ". $VENV_DIR/bin/activate"

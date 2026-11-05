@@ -161,7 +161,7 @@ func DaemonVersion(ctx context.Context) (string, error) {
 	}
 
 	if len(out) == 0 {
-		return "", redact.Errorf("command %s: empty output", redact.Safe(cmd), err)
+		return "", redact.Errorf("command %s: empty output", redact.Safe(cmd))
 	}
 	if canJSON {
 		info := struct{ Version string }{}

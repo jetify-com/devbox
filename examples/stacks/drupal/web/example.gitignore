@@ -18,8 +18,10 @@
 /vendor/
 
 # Ignore configuration files that may contain sensitive information.
-sites/*/settings*.php
-sites/*/services*.yml
+sites/*/*settings*.php
+!sites/*/default.settings.php
+sites/*/*services*.yml
+!sites/*/default.services.yml
 
 # Ignore paths that contain user-generated content.
 sites/*/files
@@ -32,7 +34,10 @@ sites/simpletest
 # or delete the previous settings and uncomment the following ones, instead.
 
 # Ignore configuration files that may contain sensitive information.
-# */settings*.php
+# */*settings*.php
+# !*/default.settings.php
+# */*services*.yml
+# !*/default.services.yml
 
 # Ignore paths that contain user-generated content.
 # */files

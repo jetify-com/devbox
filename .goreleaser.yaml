@@ -15,6 +15,7 @@ builds:
       - -X go.jetify.com/devbox/internal/build.CommitDate={{.CommitDate}}
       - -X go.jetify.com/devbox/internal/build.SentryDSN={{ .Env.SENTRY_DSN }}
       - -X go.jetify.com/devbox/internal/build.TelemetryKey={{ .Env.TELEMETRY_KEY }}
+      - -X go.jetify.com/devbox/internal/build.Launcher=true
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on

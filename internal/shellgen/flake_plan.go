@@ -119,6 +119,11 @@ func newGlibcPatchFlake(nixpkgs flake.Ref, packages []*devpkg.Package) (glibcPat
 	}
 
 	for _, pkg := range packages {
+		// Non-nix packages (e.g. runx) don't belong in the flake.
+		if !pkg.IsNix() {
+			continue
+		}
+
 		// Check to see if this is a CUDA package. If so, we need to add
 		// it to the flake dependencies so that we can patch other
 		// packages to reference it (like Python).
@@ -249,17 +254,32 @@ func (g *glibcPatchFlake) fetchClosureExpr(pkg *devpkg.Package) (string, error) 
 	if len(storePaths) == 0 {
 		return "", fmt.Errorf("no store path for package %s", pkg.Raw)
 	}
+	return fetchClosureStorePathExpr(storePaths[0]), nil
+}
+
+// fetchClosureStorePathExpr returns a builtins.fetchClosure expression that
+// fetches storePath from the default binary cache. It uses the same store as
+// the fetchClosure calls in flake.nix.tmpl.
+func fetchClosureStorePathExpr(storePath string) string {
 	return fmt.Sprintf(`builtins.fetchClosure {
   fromStore = "%s";
   fromPath = "%s";
   inputAddressed = true;
-}`, "devpkg.BinaryCache", storePaths[0]), nil
+}`, "https://cache.nixos.org", storePath)
 }
 
 // copySystemCUDALib searches for the system's libcuda.so shared library and
 // copies it in the flake's lib directory.
 func (g *glibcPatchFlake) copySystemCUDALib(flakeDir string) error {
 	slog.Debug("found CUDA package in devbox environment, attempting to find system driver libraries")
+
+	// Remove any libraries copied by a previous run. Otherwise a driver
+	// upgrade leaves the old library behind and the symlinks to the new
+	// one fail to be created because they already exist.
+	libDir := filepath.Join(flakeDir, "lib")
+	if err := os.RemoveAll(libDir); err != nil {
+		return err
+	}
 
 	searchPath := slices.Concat(
 		patchpkg.EnvLDLibrarySearchPath,
@@ -274,6 +294,7 @@ func (g *glibcPatchFlake) copySystemCUDALib(flakeDir string) error {
 		stat, err := lib.Stat()
 		if err != nil {
 			logger.Error("skipping system CUDA library because of stat error", "err", err)
+			continue
 		}
 		const mib = 1 << 20
 		if stat.Size() < 1*mib {
@@ -285,7 +306,6 @@ func (g *glibcPatchFlake) copySystemCUDALib(flakeDir string) error {
 			continue
 		}
 
-		libDir := filepath.Join(flakeDir, "lib")
 		if err := lib.CopyAndLink(libDir); err == nil {
 			slog.Debug("copied system CUDA library to flake directory", "dst", libDir)
 		} else {

@@ -2,7 +2,7 @@
   "packages": [
     "curl@latest",
     "php@latest",
-    "php83Extensions.pgsql@latest",
+    "php85Extensions.pgsql@latest",
     "apache@latest",
     "postgresql@latest"
   ],

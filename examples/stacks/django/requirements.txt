@@ -1,4 +1,4 @@
-asgiref==3.12.1
-Django==5.2.17
-psycopg2==2.9.13
+asgiref==3.13.0
+Django==5.2.18
+psycopg2-binary==2.9.13
 sqlparse==0.6.0

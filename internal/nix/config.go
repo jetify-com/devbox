@@ -56,6 +56,10 @@ func (c Config) IsUserTrusted(ctx context.Context, username string) (bool, error
 	if len(trusted) == 0 {
 		return false, nil
 	}
+	// A "*" entry trusts all users.
+	if slices.Contains(trusted, "*") {
+		return true, nil
+	}
 
 	current, err := user.Lookup(username)
 	if err != nil {

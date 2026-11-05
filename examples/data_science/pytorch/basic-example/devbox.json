@@ -1,6 +1,7 @@
 {
   "packages": {
-    "poetry":           "",
+    "python":           "3.13",
+    "poetry":           "latest",
     "stdenv.cc.cc.lib": "",
     "cudatoolkit": {
       "version":            "latest",

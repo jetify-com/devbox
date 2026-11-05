@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/pflag"
 	"go.jetify.com/devbox/internal/boxcli/featureflag"
 	"go.jetify.com/devbox/internal/devbox"
-	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/envir"
 	"go.jetify.com/devbox/internal/telemetry"
 )
@@ -32,6 +31,23 @@ type telemetryMiddleware struct{}
 // telemetryMiddleware implements interface Middleware (compile-time check)
 var _ Middleware = (*telemetryMiddleware)(nil)
 
+// skipTelemetryAnnotation is set on a command by SkipTelemetry.
+const skipTelemetryAnnotation = "devbox.skip-telemetry"
+
+// SkipTelemetry stops the telemetry middleware from recording the current run
+// of cmd. Use it for commands that run so often in the background (e.g. on
+// every direnv reload) that recording them isn't useful.
+func SkipTelemetry(cmd *cobra.Command) {
+	if cmd.Annotations == nil {
+		cmd.Annotations = map[string]string{}
+	}
+	cmd.Annotations[skipTelemetryAnnotation] = "true"
+}
+
+func telemetrySkipped(cmd *cobra.Command) bool {
+	return cmd.Annotations[skipTelemetryAnnotation] != ""
+}
+
 func (m *telemetryMiddleware) preRun(cmd *cobra.Command, args []string) {
 	telemetry.Start()
 }
@@ -39,6 +55,10 @@ func (m *telemetryMiddleware) preRun(cmd *cobra.Command, args []string) {
 func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr error) {
 	defer trace.StartRegion(cmd.Context(), "telemetryPostRun").End()
 	defer telemetry.Stop()
+
+	if !telemetry.Enabled() {
+		return
+	}
 
 	meta := telemetry.Metadata{
 		FeatureFlags: featureflag.All(),
@@ -51,10 +71,13 @@ func (m *telemetryMiddleware) postRun(cmd *cobra.Command, args []string, runErr 
 		// Ignore invalid commands/flags.
 		return
 	}
+	if telemetrySkipped(subcmd) {
+		return
+	}
 	meta.Command = subcmd.CommandPath()
 	meta.CommandFlags = flags
 
-	meta.Packages, meta.NixpkgsHash = getPackagesAndCommitHash(cmd)
+	meta.Packages, meta.NixpkgsHash = getPackagesAndCommitHash()
 	meta.InShell = envir.IsDevboxShellEnabled()
 	meta.InBrowser = envir.IsInBrowser()
 	meta.InCloud = envir.IsDevboxCloud()
@@ -81,28 +104,15 @@ func getSubcommand(cmd *cobra.Command, args []string) (subcmd *cobra.Command, fl
 	return subcmd, flags, err
 }
 
-func getPackagesAndCommitHash(c *cobra.Command) ([]string, string) {
-	configFlag := c.Flag("config")
-	// for shell, run, and add command, path can be set via --config
-	// if --config is not set, default to current directory which is ""
-	// the only exception is the init command, for the path can be set with args
-	// since after running init there will be no packages set in devbox.json
-	// we can safely ignore this case.
-	var path string
-	if configFlag != nil {
-		path = configFlag.Value.String()
-	}
-
-	box, err := devbox.Open(&devopt.Opts{
-		Dir:              path,
-		Stderr:           os.Stderr,
-		IgnoreWarnings:   true,
-		SkipVersionCheck: true,
-	})
-	if err != nil {
+// getPackagesAndCommitHash returns the packages and nixpkgs commit of the
+// project that the command opened. It reuses the already-opened project instead
+// of opening it again, which would re-parse the config and reload plugins.
+// Commands that don't open a project report no packages.
+func getPackagesAndCommitHash() ([]string, string) {
+	box := devbox.LastOpened()
+	if box == nil {
 		return []string{}, ""
 	}
-
 	return box.AllPackageNamesIncludingRemovedTriggerPackages(),
 		box.Lockfile().Stdenv().Rev
 }

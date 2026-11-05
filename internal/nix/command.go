@@ -8,6 +8,10 @@ func init() {
 		"--option", "experimental-features", "nix-command flakes fetch-closure",
 	}
 
+	// Retry commands that fail because of a flaky network, such as a
+	// truncated nixpkgs tarball download.
+	Default.MaxAttempts = 3
+
 	// Add GitHub access token if available to avoid rate limiting
 	// This is a backup in case the config file isn't picked up properly
 	if token := os.Getenv("GITHUB_TOKEN"); token != "" {

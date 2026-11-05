@@ -1,8 +1,8 @@
 {
   "packages": {
     "git":                    "latest",
-    "php":                    "8.1",
-    "php81Packages.composer": "latest",
+    "php":                    "8.4",
+    "php84Packages.composer": "latest",
     "mariadb":                "latest",
     "nginx":                  "latest",
     "curl": {
