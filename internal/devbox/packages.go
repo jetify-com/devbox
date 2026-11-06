@@ -113,18 +113,6 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			continue
 		}
 
-		// On the other hand, if there's a package with same canonical name, replace
-		// it. Ignore error (which is either missing or more than one). We search by
-		// CanonicalName so any legacy or versioned packages will be removed if they
-		// match.
-		found, _ := d.findPackageByName(pkg.CanonicalName())
-		if found != nil {
-			ux.Finfof(d.stderr, "Replacing package %q in devbox.json\n", found.Raw)
-			if err := d.Remove(ctx, found.Raw); err != nil {
-				return err
-			}
-		}
-
 		// validate that the versioned package exists in the search endpoint.
 		// if not, fallback to legacy vanilla nix.
 		versionedPkg := devpkg.PackageFromStringWithOptions(pkg.Versioned(), d.lockfile, opts)
@@ -164,6 +152,19 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 				// This means it looked like a devbox package or attribute path, but we
 				// could not find it in search or in the legacy nixpkgs path.
 				return packageNotFoundError(pkg)
+			}
+		}
+
+		// On the other hand, if there's a package with same canonical name, replace
+		// it. Ignore error (which is either missing or more than one). We search by
+		// CanonicalName so any legacy or versioned packages will be removed if they
+		// match. This happens after validation so that a failed lookup (e.g. search
+		// is down) doesn't leave the existing package removed.
+		found, _ := d.findPackageByName(pkg.CanonicalName())
+		if found != nil {
+			ux.Finfof(d.stderr, "Replacing package %q in devbox.json\n", found.Raw)
+			if err := d.Remove(ctx, found.Raw); err != nil {
+				return err
 			}
 		}
 

@@ -19,7 +19,18 @@ stderr 'which may not match "hello@2.12.1"'
 
 json.superset devbox.json expected_devbox.json
 
+# A failed add must not remove a package that's already in devbox.json.
+cp devbox_with_hello.json devbox.json
+! exec devbox add hello@2.12.1
+! stderr 'Replacing package'
+json.superset devbox.json devbox_with_hello.json
+
 -- expected_devbox.json --
 {
   "packages": []
+}
+
+-- devbox_with_hello.json --
+{
+  "packages": ["hello"]
 }
