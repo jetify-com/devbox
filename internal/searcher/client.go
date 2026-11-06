@@ -8,9 +8,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"runtime"
+	"time"
 
 	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/build"
@@ -87,35 +89,73 @@ func (c *client) ResolveV2(ctx context.Context, name, version string) (*ResolveR
 
 var userAgent = fmt.Sprintf("Devbox/%s (%s; %s)", build.Version, runtime.GOOS, runtime.GOARCH)
 
+// ErrUnavailable is returned when the search service can't be reached or keeps
+// returning server errors after all retries.
+var ErrUnavailable = errors.New("search service unavailable")
+
+// maxRetries is the number of times a request is retried after the first
+// attempt fails with a network error, a 5xx, or a 429.
+const maxRetries = 3
+
+// retryBackoff returns how long to wait before retry number attempt (1-based).
+// It's a variable so tests can make it instant.
+var retryBackoff = func(attempt int) time.Duration {
+	return time.Duration(attempt) * 250 * time.Millisecond
+}
+
 func execGet[T any](ctx context.Context, url string) (*T, error) {
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			slog.Debug("retrying search request", "url", url, "attempt", attempt, "err", lastErr)
+			select {
+			case <-ctx.Done():
+				return nil, redact.Errorf("GET %s: %w", redact.Safe(url), redact.Safe(ctx.Err()))
+			case <-time.After(retryBackoff(attempt)):
+			}
+		}
+		result, retryable, err := execGetOnce[T](ctx, url)
+		if err == nil || !retryable {
+			return result, err
+		}
+		lastErr = err
+	}
+	return nil, redact.Errorf("%w: %w", redact.Safe(ErrUnavailable), redact.Safe(lastErr))
+}
+
+// execGetOnce makes a single request. retryable reports whether the error is
+// transient (network error, 429, or 5xx).
+func execGetOnce[T any](ctx context.Context, url string) (result *T, retryable bool, err error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, redact.Errorf("GET %s: %w", redact.Safe(url), redact.Safe(err))
+		return nil, false, redact.Errorf("GET %s: %w", redact.Safe(url), redact.Safe(err))
 	}
 	req.Header.Set("User-Agent", userAgent)
 
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, redact.Errorf("GET %s: %w", redact.Safe(url), redact.Safe(err))
+		// Don't retry if the caller gave up.
+		return nil, ctx.Err() == nil, redact.Errorf("GET %s: %w", redact.Safe(url), redact.Safe(err))
 	}
 	defer response.Body.Close()
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, redact.Errorf("GET %s: read respoonse body: %w", redact.Safe(url), redact.Safe(err))
+		return nil, ctx.Err() == nil, redact.Errorf("GET %s: read response body: %w", redact.Safe(url), redact.Safe(err))
 	}
 	if response.StatusCode == http.StatusNotFound {
-		return nil, ErrNotFound
+		return nil, false, ErrNotFound
 	}
 	if response.StatusCode >= 400 {
-		return nil, redact.Errorf("GET %s: unexpected status code %s: %s",
+		retryable := response.StatusCode >= 500 || response.StatusCode == http.StatusTooManyRequests
+		return nil, retryable, redact.Errorf("GET %s: unexpected status code %s: %s",
 			redact.Safe(url),
 			redact.Safe(response.Status),
 			redact.Safe(data),
 		)
 	}
-	var result T
-	if err := json.Unmarshal(data, &result); err != nil {
-		return nil, redact.Errorf("GET %s: unmarshal response JSON: %w", redact.Safe(url), redact.Safe(err))
+	var out T
+	if err := json.Unmarshal(data, &out); err != nil {
+		return nil, false, redact.Errorf("GET %s: unmarshal response JSON: %w", redact.Safe(url), redact.Safe(err))
 	}
-	return &result, nil
+	return &out, false, nil
 }

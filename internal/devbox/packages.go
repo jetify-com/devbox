@@ -32,6 +32,7 @@ import (
 	"go.jetify.com/devbox/internal/debug"
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/internal/plugin"
+	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/ux"
 )
 
@@ -112,18 +113,6 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			continue
 		}
 
-		// On the other hand, if there's a package with same canonical name, replace
-		// it. Ignore error (which is either missing or more than one). We search by
-		// CanonicalName so any legacy or versioned packages will be removed if they
-		// match.
-		found, _ := d.findPackageByName(pkg.CanonicalName())
-		if found != nil {
-			ux.Finfof(d.stderr, "Replacing package %q in devbox.json\n", found.Raw)
-			if err := d.Remove(ctx, found.Raw); err != nil {
-				return err
-			}
-		}
-
 		// validate that the versioned package exists in the search endpoint.
 		// if not, fallback to legacy vanilla nix.
 		versionedPkg := devpkg.PackageFromStringWithOptions(pkg.Versioned(), d.lockfile, opts)
@@ -135,6 +124,11 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			// about not building on the current system, since user's can continue
 			// via --exclude-platform flag.
 			packageNameForConfig = pkg.Versioned()
+		} else if errors.Is(err, searcher.ErrUnavailable) {
+			// Search kept failing even after retries, so we don't know whether the
+			// package exists. Don't silently fall back to nixpkgs (which would drop
+			// the version); tell the user and show how to opt into it.
+			return d.searchUnavailableError(pkg, err)
 		} else if errors.Is(err, nix.ErrPackageNotFound) &&
 			versionedPkg.IsDevboxPackage &&
 			!strings.Contains(pkg.CanonicalName(), ".") {
@@ -158,6 +152,19 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 				// This means it looked like a devbox package or attribute path, but we
 				// could not find it in search or in the legacy nixpkgs path.
 				return packageNotFoundError(pkg)
+			}
+		}
+
+		// On the other hand, if there's a package with same canonical name, replace
+		// it. Ignore error (which is either missing or more than one). We search by
+		// CanonicalName so any legacy or versioned packages will be removed if they
+		// match. This happens after validation so that a failed lookup (e.g. search
+		// is down) doesn't leave the existing package removed.
+		found, _ := d.findPackageByName(pkg.CanonicalName())
+		if found != nil {
+			ux.Finfof(d.stderr, "Replacing package %q in devbox.json\n", found.Raw)
+			if err := d.Remove(ctx, found.Raw); err != nil {
+				return err
 			}
 		}
 
@@ -187,6 +194,32 @@ func packageNotFoundError(pkg *devpkg.Package) error {
 		"Package %q not found. To search for packages, use `devbox search %s`",
 		pkg.Raw, pkg.CanonicalName(),
 	)
+}
+
+func (d *Devbox) searchUnavailableError(pkg *devpkg.Package, err error) error {
+	name := pkg.CanonicalName()
+	if name == "" {
+		name = pkg.Raw
+	}
+	// Pin to the project's nixpkgs revision, but drop the narHash and
+	// lastModified query params so the suggested command is readable.
+	ref := d.lockfile.Stdenv()
+	ref.NARHash = ""
+	ref.LastModified = 0
+	installable := flake.Installable{Ref: ref, AttrPath: name}
+	msg := fmt.Sprintf(
+		"Failed to look up package %q: the Devbox search service is unavailable. "+
+			"Please try again later.\n\n"+
+			"Do you want to install it directly from nixpkgs instead? Run:\n\n"+
+			"    devbox add %s\n",
+		pkg.Raw, installable,
+	)
+	if _, version, ok := searcher.ParseVersionedPackage(pkg.Raw); ok && version != "latest" {
+		// The user asked for a specific version, which nixpkgs can't pin.
+		msg += fmt.Sprintf("\nThis installs the version of %s in that nixpkgs revision, "+
+			"which may not match %q.\n", name, pkg.Raw)
+	}
+	return usererr.WithUserMessage(err, "%s", msg)
 }
 
 func (d *Devbox) setPackageOptions(pkgs []string, opts devopt.AddOpts) error {
