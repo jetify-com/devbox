@@ -1,0 +1,20 @@
+# Testscript for adding a package that doesn't exist.
+
+exec devbox init
+
+# A bare name that search doesn't know should fail fast without
+# downloading nixpkgs.
+! exec devbox add inotifywait
+stderr 'Package "inotifywait" not found. To search for packages, use `devbox search inotifywait`'
+! stderr 'Ensuring nixpkgs registry is downloaded'
+
+# The search hint drops the version.
+! exec devbox add hello@99999
+stderr 'Package "hello@99999" not found. To search for packages, use `devbox search hello`'
+
+json.superset devbox.json expected_devbox.json
+
+-- expected_devbox.json --
+{
+  "packages": []
+}
