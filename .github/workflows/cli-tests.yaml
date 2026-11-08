@@ -86,7 +86,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.15.0
+        uses: jetify-com/devbox-install-action@v0.16.0
         with:
           enable-cache: true
       - name: Build flake
@@ -119,7 +119,7 @@ jobs:
           key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}
 
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.15.0
+        uses: jetify-com/devbox-install-action@v0.16.0
         with:
           enable-cache: true
 
@@ -195,7 +195,7 @@ jobs:
             brew install dash zsh
           fi
       - name: Install devbox
-        uses: jetify-com/devbox-install-action@v0.15.0
+        uses: jetify-com/devbox-install-action@v0.16.0
         with:
           enable-cache: true
       - name: Setup Nix GitHub authentication
