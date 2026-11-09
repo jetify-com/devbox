@@ -195,7 +195,8 @@ result and the current `flake.nix` version in one shot.
 | `cli-release` never started | Tag push didn't land | Re-run the same command |
 | `cli-release` failed in `tests` | Red `main` (see below) | Fix the test, re-run |
 | Draft has 0 assets | The upload step didn't run or failed | Check `cli-release`'s "Attach artifacts" step, re-run |
-| Published but installer serves the old version | `cli-post-release` failed or is still running | `gh run list --workflow=cli-post-release.yml` |
+| Published but installer serves the old version | Release not marked latest on GitHub (installer reads `releases/latest/download/checksums.txt`) | `gh release list --limit 3`; fix with `gh release edit <v> --latest` |
+| devbox 0.20.0 or older doesn't see the release | Legacy `cli-post-release` (S3 `stable/version`) failed | `gh run list --workflow=cli-post-release.yml` |
 | Docker build failed | Published before assets uploaded | Re-run `docker-image-release` via `workflow_dispatch` with the tag |
 
 ## Known breakage

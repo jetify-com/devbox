@@ -6,9 +6,9 @@ installed in `/usr/local/bin` (the "front binary") picks the devbox version to
 run, downloads it if needed, and either runs the command itself or execs that
 version. All of this then lives in this repo, in `internal/launcher`.
 
-**Status:** implemented, except publishing the new installer
-(`scripts/install.sh`) to `get.jetify.com/devbox` and retiring the launcher in
-the axiom repo. See [Rollout](#rollout).
+**Status:** implemented. Since 0.21.0, the installer and launcher only use
+GitHub: see [Releases on GitHub](#releases-on-github). Retiring the old bash
+launcher and the S3 version files is left. See [Rollout](#rollout).
 
 ## Why
 
@@ -127,7 +127,7 @@ Most updates never touch the front binary, so they never need sudo.
   the cache. It isn't printed (and doesn't use up the day's notice) when
   `--quiet` discards stderr. It's still skipped for `shellenv` and the other
   commands in `commandSkipList`, and it never prompts.
-- **The new installer**, `scripts/install.sh`, gets the latest version,
+- **The new installer**, `install.sh` at the repo root, gets the latest version,
   downloads the archive and `checksums.txt` from GitHub, checks the archive,
   and installs the binary to `/usr/local/bin/devbox`. It uses sudo only when
   that directory isn't writable. It writes `current-version` and
@@ -137,16 +137,38 @@ Most updates never touch the front binary, so they never need sudo.
   `DEVBOX_USE_VERSION` (which the generated Dockerfiles set) by downloading
   that version on the first run.
 
+## Releases on GitHub
+
+Since 0.21.0, nothing in the install or update path uses a Jetify domain.
+
+- **Latest stable version:** the release GitHub marks as "latest", which is
+  never a draft or prerelease. The installer and launcher download
+  `https://github.com/jetify-com/devbox/releases/latest/download/checksums.txt`
+  and take the version from the archive name for their platform. This needs
+  no API token or rate limit, no extra release asset, and works for every
+  existing release. `release.ts` publishes non-prereleases with `--latest`,
+  and refuses to publish a release without `checksums.txt`, which
+  `cli-release` uploads after the archives.
+- **Archives and checksums:**
+  `https://github.com/jetify-com/devbox/releases/download/<version>/<file>`.
+- **Installer:** `https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh`.
+- **Channel file:** still a URL, which can return either a bare version (like
+  the old S3 files) or a release's `checksums.txt`.
+- **Legacy:** 0.20.0 and older, and the bash launcher, read
+  `releases.jetify.com/devbox/{stable,edge}/version` from S3. `cli-release`
+  (edge) and `cli-post-release` (stable) keep updating those files, but
+  failures there don't fail a release. Remove them once those versions are
+  gone.
+
 ## Rollout
 
 1. Ship this in a release. New and existing installs keep working as before
    until users run `devbox version update`.
-2. After that release is the stable version, publish `scripts/install.sh` to
-   `get.jetify.com/devbox` (it's currently published from
-   `axiom/installers/devbox/install.sh`). It needs a release with the native
-   launcher, because it installs the latest release as the front binary.
-   Older devbox versions' `devbox version update` runs this installer too,
-   through `get.jetpack.io/devbox`, which redirects to the same script.
+2. Done in 0.21.0: the installer is `install.sh` at the repo root, served
+   from GitHub. `get.jetify.com/devbox` still serves the old installer
+   (`axiom/installers/devbox/install.sh`) for anyone using that URL, and older
+   devbox versions' `devbox version update` runs it through
+   `get.jetpack.io/devbox`.
 3. Keep `releases.jetify.com/devbox` (the bash launcher) published for
    anything that downloads it directly. Later, retire it and
    `axiom/installers/devbox`.

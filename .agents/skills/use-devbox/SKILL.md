@@ -26,7 +26,7 @@ command -v devbox
 If that prints nothing, install it (non-interactive):
 
 ```bash
-curl -fsSL https://get.jetify.com/devbox | bash
+curl -fsSL https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh | bash
 ```
 
 devbox installs to `~/.local/bin` (or `/usr/local/bin`). If `devbox` still isn't found after installing, ensure that directory is on `PATH`. devbox itself requires the Nix package manager; the install script sets it up if missing.
@@ -110,7 +110,7 @@ devbox services stop         # stop them
 
 ## Key facts
 
-- devbox is not always installed — check with `command -v devbox` and install via `curl -fsSL https://get.jetify.com/devbox | bash` if missing.
+- devbox is not always installed — check with `command -v devbox` and install via `curl -fsSL https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh | bash` if missing.
 - Only directories with a `devbox.json` use it.
 - `devbox.json` may live in the repo root **or** a subdir root — check both.
 - Packages/scripts defined in `devbox.json` are only on PATH inside `devbox run`/`devbox shell`, not the plain shell.

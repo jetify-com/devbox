@@ -164,7 +164,7 @@ func switchVersion(w io.Writer, configPath string, required *configfile.DevboxVe
 	if launcherPath == "" {
 		return usererr.New(
 			"%s\nDevbox can't switch versions automatically because it wasn't started by the devbox launcher. "+
-				"Install devbox with `curl -fsSL https://get.jetify.com/devbox | bash` to enable automatic switching.",
+				"Install devbox with `curl -fsSL https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh | bash` to enable automatic switching.",
 			msg,
 		)
 	}

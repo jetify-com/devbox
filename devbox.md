@@ -12,7 +12,7 @@ development environment.
 Install devbox:
 
 ```sh
-curl -fsSL https://get.jetify.com/devbox | bash
+curl -fsSL https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh | bash
 ```
 
 Start the devbox shell:
