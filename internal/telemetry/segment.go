@@ -70,7 +70,6 @@ func newTrackMessage(name string, meta Metadata) *segment.Track {
 			"nix_version":  nixVersion,
 			"packages":     meta.Packages,
 			"shell":        os.Getenv(envir.Shell),
-			"shell_access": shellAccess(),
 		},
 	}
 
@@ -93,24 +92,4 @@ func newTrackMessage(name string, meta Metadata) *segment.Track {
 // upload it later.
 func bufferSegmentMessage(id string, msg segment.Message) {
 	bufferEvent(filepath.Join(segmentBufferDir, id+".json"), msg)
-}
-
-type shellAccessKind string
-
-const (
-	local   shellAccessKind = "local"
-	ssh     shellAccessKind = "ssh"
-	browser shellAccessKind = "browser"
-)
-
-func shellAccess() shellAccessKind {
-	// Check if running in devbox cloud
-	if envir.IsDevboxCloud() {
-		// Check if running via ssh tty (i.e. ssh shell)
-		if os.Getenv(envir.SSHTTY) != "" {
-			return ssh
-		}
-		return browser
-	}
-	return local
 }
