@@ -75,10 +75,6 @@ func CheckVersion(w io.Writer, commandPath string) {
 		return
 	}
 
-	if envir.IsDevboxCloud() {
-		return
-	}
-
 	hasSkipPrefix := lo.ContainsBy(
 		commandSkipList,
 		func(skipPath string) bool { return strings.HasPrefix(commandPath, skipPath) },

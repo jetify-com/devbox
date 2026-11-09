@@ -10,10 +10,6 @@ import (
 	"strings"
 )
 
-func IsDevboxCloud() bool {
-	return os.Getenv(DevboxRegion) != ""
-}
-
 func IsDevboxShellEnabled() bool {
 	inDevboxShell, _ := strconv.ParseBool(os.Getenv(DevboxShellEnabled))
 	return inDevboxShell

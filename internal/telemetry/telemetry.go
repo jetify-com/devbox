@@ -266,14 +266,12 @@ type Metadata struct {
 	FeatureFlags map[string]bool
 
 	InShell   bool
-	InCloud   bool
 	InBrowser bool
 
 	NixpkgsHash string
 	Packages    []string
 
-	CloudRegion string
-	CloudCache  string
+	CloudCache string
 }
 
 func (m *Metadata) cmdContext() map[string]any {
@@ -290,14 +288,10 @@ func (m *Metadata) cmdContext() map[string]any {
 func (m *Metadata) envContext() map[string]any {
 	sentryCtx := map[string]any{
 		"In Shell":   m.InShell,
-		"In Cloud":   m.InCloud,
 		"In Browser": m.InBrowser,
 	}
 	if m.CloudCache != "" {
 		sentryCtx["Cloud Cache"] = m.CloudCache
-	}
-	if m.CloudRegion != "" {
-		sentryCtx["Cloud Region"] = m.CloudRegion
 	}
 	return sentryCtx
 }
