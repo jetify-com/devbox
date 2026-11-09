@@ -154,6 +154,11 @@ Since 0.21.0, nothing in the install or update path uses a Jetify domain.
 - **Installer:** `https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh`.
 - **Channel file:** still a URL, which can return either a bare version (like
   the old S3 files) or a release's `checksums.txt`.
+- **Launcher 1.1.0:** the background version check runs in the front binary,
+  so 1.0.0 front binaries (devbox 0.19.0 and 0.20.0) keep reading
+  `releases.jetify.com` even after `devbox version update` installs 0.21.0.
+  0.21.0 bumps `launcher.Version` to 1.1.0, so those users see "New launcher
+  available" and `devbox version update` replaces the front binary.
 - **Legacy:** 0.20.0 and older, and the bash launcher, read
   `releases.jetify.com/devbox/{stable,edge}/version` from S3. `cli-release`
   (edge) and `cli-post-release` (stable) keep updating those files, but

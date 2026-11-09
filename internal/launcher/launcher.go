@@ -31,7 +31,12 @@ import (
 // as LAUNCHER_VERSION. Bump it only when installed launchers need to change,
 // because a newer version makes devbox ask users to replace their launcher,
 // which can need sudo. The bash launcher's versions are all below 1.0.0.
-const Version = "1.0.0"
+//
+// 1.1.0: the launcher's background check reads the latest version from GitHub
+// releases instead of releases.jetify.com. The check runs in the front
+// binary, so 1.0.0 launchers (devbox 0.19.0 and 0.20.0) keep reading
+// releases.jetify.com until they're replaced.
+const Version = "1.1.0"
 
 // refreshArg is a hidden command that checks for a new devbox version. The
 // launcher runs it in a detached child process so that commands don't wait
