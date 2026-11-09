@@ -12,7 +12,6 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/f1bonacc1/process-compose v1.122.0
 	github.com/fatih/color v1.19.0
-	github.com/fsnotify/fsnotify v1.10.1
 	github.com/getsentry/sentry-go v0.50.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
@@ -114,6 +113,7 @@ require (
 	github.com/f1bonacc1/go-health/v2 v2.1.6 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/firefart/nonamedreturns v1.0.8 // indirect
+	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/ghostiam/protogetter v1.0.1 // indirect
 	github.com/go-critic/go-critic v0.15.0 // indirect
