@@ -12,9 +12,14 @@ import (
 	"net/http"
 	"net/url"
 	"runtime"
+	"slices"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
+
 	"go.jetify.com/devbox/internal/build"
 	"go.jetify.com/devbox/internal/envir"
 	"go.jetify.com/devbox/internal/redact"
@@ -34,18 +39,136 @@ func Client() *client {
 	}
 }
 
-func (c *client) Search(ctx context.Context, query string) (*SearchResults, error) {
+func (c *client) Host() string {
+	return c.host
+}
+
+// Search returns the packages that match query, most relevant first. A
+// positive limit caps both the number of packages and each package's newest
+// releases; otherwise every package and release is returned.
+func (c *client) Search(ctx context.Context, query string, limit int) (*SearchResults, error) {
 	if query == "" {
 		return nil, fmt.Errorf("query should not be empty")
 	}
 
-	endpoint, err := url.JoinPath(c.host, "v1/search")
+	endpoint, err := url.JoinPath(c.host, "v2/search")
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	searchURL := endpoint + "?q=" + url.QueryEscape(query)
+	releases := "all"
+	if limit > 0 {
+		releases = strconv.Itoa(limit)
+	}
+	searchURL := endpoint + "?q=" + url.QueryEscape(query) + "&releases=" + releases
 
-	return execGet[SearchResults](ctx, searchURL)
+	searchResults, err := execGet[SearchResultsV2](ctx, searchURL)
+	if err != nil {
+		return nil, err
+	}
+	hits := searchResults.Results
+	if limit > 0 && len(hits) > limit {
+		hits = hits[:limit]
+	}
+
+	found := make([]*Package, len(hits))
+	var lookups []int
+	for i, hit := range hits {
+		if hit.Releases == nil {
+			lookups = append(lookups, i)
+			continue
+		}
+		versions := make([]SearchRelease, len(hit.Releases))
+		for j, release := range hit.Releases {
+			versions[j] = SearchRelease{Version: release.Version, Systems: sortedSystems(release.Systems)}
+		}
+		found[i] = &Package{Name: hit.Name, Versions: versions}
+	}
+	if err := c.lookupPackages(ctx, hits, lookups, limit, found); err != nil {
+		return nil, err
+	}
+
+	results := &SearchResults{NumResults: searchResults.TotalResults}
+	for _, pkg := range found {
+		if pkg != nil {
+			results.Packages = append(results.Packages, *pkg)
+		}
+	}
+	return results, nil
+}
+
+// lookupPackages fills found[i] from /v2/pkg for each index in lookups, for
+// search services that don't return releases inline. A package whose lookup
+// fails is left out, unless every lookup fails.
+func (c *client) lookupPackages(ctx context.Context, hits []SearchResultV2, lookups []int, limit int, found []*Package) error {
+	if len(lookups) == 0 {
+		return nil
+	}
+	pkgEndpoint, err := url.JoinPath(c.host, "v2/pkg")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	errs := make([]error, len(lookups))
+	var group errgroup.Group
+	group.SetLimit(8)
+	for n, i := range lookups {
+		group.Go(func() error {
+			pkgURL := pkgEndpoint + "?name=" + url.QueryEscape(hits[i].Name)
+			packageInfo, err := execGet[PackageV2](ctx, pkgURL)
+			errs[n] = err
+			if err == nil {
+				pkg := newPackage(packageInfo, limit)
+				found[i] = &pkg
+			}
+			return nil
+		})
+	}
+	_ = group.Wait()
+
+	var firstErr error
+	for _, err := range errs {
+		if err == nil {
+			return nil
+		}
+		if firstErr == nil && !errors.Is(err, ErrNotFound) {
+			firstErr = err
+		}
+	}
+	return firstErr
+}
+
+func newPackage(info *PackageV2, limit int) Package {
+	releases := info.Releases
+	if limit > 0 && len(releases) > limit {
+		releases = releases[:limit]
+	}
+	versions := make([]SearchRelease, len(releases))
+	for i, release := range releases {
+		systems := make([]string, len(release.Platforms))
+		for j, platform := range release.Platforms {
+			systems[j] = platform.nixSystem()
+		}
+		versions[i] = SearchRelease{Version: release.Version, Systems: sortedSystems(systems)}
+	}
+	return Package{Name: info.Name, Versions: versions}
+}
+
+func sortedSystems(systems []string) []string {
+	sorted := slices.Clone(systems)
+	slices.Sort(sorted)
+	return slices.Compact(sorted)
+}
+
+func (p Platform) nixSystem() string {
+	arch := strings.ReplaceAll(p.Arch, "-", "_")
+	if arch == "arm64" {
+		arch = "aarch64"
+	}
+	goos := strings.ToLower(p.OS)
+	if goos == "macos" {
+		goos = "darwin"
+	}
+	return arch + "-" + goos
 }
 
 // Resolve calls the /resolve endpoint of the search service. This returns
