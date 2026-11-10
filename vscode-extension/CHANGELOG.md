@@ -4,6 +4,10 @@ All notable changes to the "devbox" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [Unreleased]
+
+- Removed the Devbox Cloud "open in VS Code" URI handler, since Devbox Cloud and api.devbox.sh are shut down.
+
 ## [0.1.9]
 
 - Added `devbox.runInitHookOnReopen` setting (off by default) to run the project's `init_hook` and include its environment variables when reopening in the Devbox environment.

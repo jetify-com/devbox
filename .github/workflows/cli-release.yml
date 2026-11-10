@@ -98,12 +98,18 @@ jobs:
           files: |
             dist/checksums.txt
             dist/*.tar.gz
-      - name: Configure AWS Credentials
+      # Legacy: devbox 0.20.0 and older (and the old bash launcher) read the
+      # edge channel from releases.jetify.com, which is served from this S3
+      # bucket. Newer versions don't need it, so failures here don't fail the
+      # release. Remove these steps once those versions are gone.
+      - name: Configure AWS Credentials (legacy)
+        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: us-west-2
-      - name: Update edge version in s3
+      - name: Update edge version in s3 (legacy)
+        continue-on-error: true
         run: |
           tmp_file=$(mktemp)
           echo "${{ env.EDGE_TAG }}" > $tmp_file
@@ -181,7 +187,12 @@ jobs:
           fi
           # --clobber so a re-run of this workflow replaces the assets instead of
           # failing on the ones already uploaded.
-          gh release upload "$TAG" dist/*.tar.gz dist/checksums.txt \
+          gh release upload "$TAG" dist/*.tar.gz \
+            --repo "$GITHUB_REPOSITORY" --clobber
+          # checksums.txt goes last: the installer and launcher find a release's
+          # version and archives through it, and release.ts won't publish a
+          # release without it.
+          gh release upload "$TAG" dist/checksums.txt \
             --repo "$GITHUB_REPOSITORY" --clobber
       - name: Notify jetpack.io slack of release status
         id: slack

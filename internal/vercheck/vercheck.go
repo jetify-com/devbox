@@ -110,7 +110,7 @@ func SelfUpdate(stdErr io.Writer, updateLauncher bool) error {
 		return usererr.New(
 			"Devbox can't update itself because it wasn't installed with the devbox installer. " +
 				"Update it with the package manager you installed it with, or reinstall it with " +
-				"`curl -fsSL https://get.jetify.com/devbox | bash`.",
+				"`curl -fsSL https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh | bash`.",
 		)
 	}
 

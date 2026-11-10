@@ -1,5 +1,13 @@
 name: cli-post-release
-# Finalize and announce the release once its been published on Github.
+# Legacy: promote the release on releases.jetify.com once it's published.
+#
+# The installer (install.sh) and the launcher in devbox releases after 0.20.0 find
+# the latest stable version from GitHub itself
+# (releases/latest/download/checksums.txt), so publishing a release as
+# "latest" is all a release needs. devbox 0.20.0 and older, and the old bash
+# launcher, still read s3://releases.jetpack.io/devbox/stable/version, so this
+# keeps it in sync for them. Failures don't affect new installs. Delete this
+# workflow once those versions are gone.
 
 on:
   release:
@@ -38,11 +46,13 @@ jobs:
     needs: check-release
     steps:
       - name: Configure AWS Credentials
+        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: us-west-2
       - name: Update latest version in s3
+        continue-on-error: true
         run: |
           tmp_file=$(mktemp)
           echo "${{ github.ref_name }}" > $tmp_file

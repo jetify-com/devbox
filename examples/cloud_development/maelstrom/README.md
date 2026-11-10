@@ -10,7 +10,7 @@ You should also check out the [Fly.io Distributed Systems Challenge](https://fly
 If you don't already have [Devbox](https://www.jetify.com/docs/devbox/installing-devbox/index), you can install it by running the following command:
 
 ```bash
-curl -s https://get.jetify.com/install.sh | bash
+curl -s https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh | bash
 ```
 
 You can skip this step if you're running on devbox.sh

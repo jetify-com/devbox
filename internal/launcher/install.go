@@ -20,39 +20,67 @@ import (
 	"go.jetify.com/devbox/internal/fileutil"
 )
 
-// These URLs are variables so that tests can serve them locally.
-var (
-	// releasesURL serves the latest version of each channel.
-	releasesURL = "https://releases.jetify.com/devbox"
-	// downloadURL serves the release archives and checksums.
-	downloadURL = "https://github.com/jetify-com/devbox/releases/download"
-)
+// releasesURL is the GitHub releases page. It's a variable so that tests can
+// serve releases locally. Everything the launcher downloads comes from here:
+//
+//   - <releasesURL>/download/<version>/<file> is a release's archive or
+//     checksums.txt.
+//   - <releasesURL>/latest/download/checksums.txt is the checksums.txt of the
+//     latest stable release, which GitHub resolves to the release that's marked
+//     "latest" (never a draft or prerelease). Its archive names give the
+//     latest stable version.
+var releasesURL = "https://github.com/jetify-com/devbox/releases"
 
 // httpClient's timeout is a backstop: callers set their own deadlines.
 var httpClient = &http.Client{Timeout: 10 * time.Minute}
 
 // FetchLatestVersion returns the latest devbox version from the release
-// channel, which is the stable channel unless the channel config file names
-// another URL.
+// channel, which is the latest stable GitHub release unless the channel config
+// file names another URL.
 func FetchLatestVersion(ctx context.Context) (string, error) {
 	url := readConfig(channelFile())
 	if url == "" {
-		url = releasesURL + "/stable/version"
+		url = releasesURL + "/latest/download/checksums.txt"
 	}
 	resp, err := get(ctx, url)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
-	data, err := io.ReadAll(io.LimitReader(resp.Body, 1024))
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
 	if err != nil {
 		return "", fmt.Errorf("read %s: %w", url, err)
 	}
-	version := strings.TrimSpace(string(data))
-	if !validVersion(version) {
-		return "", fmt.Errorf("%s returned an invalid version %q", url, version)
+	version, err := parseLatestVersion(data)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", url, err)
 	}
 	return normalizeVersion(version), nil
+}
+
+// parseLatestVersion returns the version in a channel response, which is
+// either a bare version (as served by older channel URLs) or a release's
+// checksums.txt, whose archive for this platform names the version.
+func parseLatestVersion(data []byte) (string, error) {
+	if version := strings.TrimSpace(string(data)); validVersion(version) {
+		return version, nil
+	}
+	suffix := "_" + platform() + ".tar.gz"
+	for _, line := range strings.Split(string(data), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) != 2 {
+			continue
+		}
+		name, ok := strings.CutPrefix(fields[1], "devbox_")
+		if !ok {
+			continue
+		}
+		version, ok := strings.CutSuffix(name, suffix)
+		if ok && validVersion(version) {
+			return version, nil
+		}
+	}
+	return "", fmt.Errorf("found no devbox version for %s", platform())
 }
 
 // Install downloads devbox version unless it's already installed, and returns
@@ -98,7 +126,7 @@ func download(ctx context.Context, version, dir string) error {
 	}
 
 	archivePath := filepath.Join(tmp, archiveName)
-	gotSum, err := fetchFile(ctx, fmt.Sprintf("%s/%s/%s", downloadURL, version, archiveName), archivePath)
+	gotSum, err := fetchFile(ctx, fmt.Sprintf("%s/download/%s/%s", releasesURL, version, archiveName), archivePath)
 	if err != nil {
 		return err
 	}
@@ -140,7 +168,7 @@ func download(ctx context.Context, version, dir string) error {
 // fetchChecksum returns the SHA-256 checksum of archiveName from the
 // release's checksums.txt.
 func fetchChecksum(ctx context.Context, version, archiveName string) (string, error) {
-	url := fmt.Sprintf("%s/%s/checksums.txt", downloadURL, version)
+	url := fmt.Sprintf("%s/download/%s/checksums.txt", releasesURL, version)
 	resp, err := get(ctx, url)
 	if err != nil {
 		return "", err
