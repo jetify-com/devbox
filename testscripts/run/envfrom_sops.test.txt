@@ -1,0 +1,77 @@
+# Tests for env_from with sops: prefix.
+
+chmod 755 bin/sops
+env PATH=$WORK/bin:$PATH
+
+# Test 1: SOPS-decrypted JSON variables are available in devbox run.
+exec devbox run test_db
+stdout 'secret123'
+
+# Test 2: SOPS-decrypted variable for PORT (numeric value).
+exec devbox run test_port
+stdout '5432'
+
+# Test 3: devbox.json env overrides SOPS values.
+exec devbox run test_override
+stdout 'overridden'
+
+# Test 4: sops is decrypted only once per command.
+rm $WORK/calls
+exec devbox run test_db
+grep -count=1 call $WORK/calls
+
+# Test 5: secrets are not expanded, and devbox.json env can reference them.
+exec devbox run test_pass
+stdout '^pa\$\$word$'
+exec devbox run test_dsn
+stdout '^db://u:secret123@h$'
+
+# Test 6: shellenv exports the secrets.
+exec devbox shellenv
+stdout 'export DB_PASSWORD="secret123";'
+
+# Test 7: a decryption failure only prints a warning.
+env SOPS_MOCK_FAIL=1
+exec devbox run test_override
+stdout 'overridden'
+stderr 'could not decrypt'
+stderr 'failed to decrypt SOPS file'
+env SOPS_MOCK_FAIL=
+
+# Test 8: a missing SOPS file only prints a warning.
+rm secrets.enc.json
+exec devbox run test_override
+stdout 'overridden'
+stderr 'SOPS file .* does not exist'
+
+-- bin/sops --
+#!/bin/sh
+# Mock sops binary that outputs known JSON for any decrypt call.
+echo call >> "$WORK/calls"
+if [ -n "$SOPS_MOCK_FAIL" ]; then
+  echo "could not decrypt" >&2
+  exit 1
+fi
+echo '{"DB_PASSWORD":"secret123","PASS":"pa$$word","PORT":5432,"OVERRIDE_ME":"from_sops"}'
+
+-- devbox.json --
+{
+  "packages": [],
+  "env": {
+    "OVERRIDE_ME": "overridden",
+    "DSN": "db://u:$DB_PASSWORD@h"
+  },
+  "shell": {
+    "scripts": {
+      "test_db": "echo $DB_PASSWORD",
+      "test_port": "echo $PORT",
+      "test_override": "echo $OVERRIDE_ME",
+      "test_pass": "echo \"$PASS\"",
+      "test_dsn": "echo $DSN"
+    }
+  },
+  "env_from": "sops:secrets.enc.json"
+}
+
+-- secrets.enc.json --
+{}

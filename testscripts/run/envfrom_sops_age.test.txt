@@ -1,0 +1,80 @@
+# Tests env_from with sops: against real age-encrypted files, decrypted with
+# the sops installed in the project.
+
+exec devbox run show_pass
+stdout '^pa\$\$word$'
+
+exec devbox run show_version
+stdout '^1\.10$'
+
+exec devbox run show_multi
+stdout '^line1$'
+stdout '^line2$'
+
+cp devbox.json.dotenv devbox.json
+exec devbox run show_token
+stdout '^it''s "quoted" # not a comment$'
+
+-- devbox.json --
+{
+  "packages": ["sops@3.13.3"],
+  "env": {
+    "SOPS_AGE_KEY_FILE": "$PWD/key.txt"
+  },
+  "shell": {
+    "scripts": {
+      "show_pass": "echo \"$PASS\"",
+      "show_version": "echo \"$VERSION\"",
+      "show_multi": "echo \"$MULTI\""
+    }
+  },
+  "env_from": "sops:secrets.yaml"
+}
+
+-- devbox.json.dotenv --
+{
+  "packages": ["sops@3.13.3"],
+  "env": {
+    "SOPS_AGE_KEY_FILE": "$PWD/key.txt"
+  },
+  "shell": {
+    "scripts": {
+      "show_token": "echo \"$TOKEN\""
+    }
+  },
+  "env_from": "sops:secrets.env"
+}
+
+-- key.txt --
+# created: 2026-11-12T10:27:01+01:00
+# public key: age1huljrz2t7t6ewj53wcs05s40q7p69wzk790uxmlj0hyw4v3y5gdshwjq3t
+AGE-SECRET-KEY-12WXTHQG3QXDZKXJDP9FPC0Y43T8D7KREQX2PJHDCX8MWYECK6XYQGR4KUV
+
+-- secrets.yaml --
+PASS: ENC[AES256_GCM,data:m5IRwL00p70=,iv:JtWXt1plk3ZTCYfbwvfmpFqvvNpejUWzvp+NODExyEI=,tag:K4hNYTIi043aSq736N6Nqw==,type:str]
+VERSION: ENC[AES256_GCM,data:qn7geA==,iv:noo716aPQDBXMVbQI/1Gz+1F9wFFZVqdT6V7v4OEcIg=,tag:9Y3F4a8ZaF39U714lU12Aw==,type:str]
+MULTI: ENC[AES256_GCM,data:MLQ4hFpYztO1hkHr,iv:qBe3PCD43nIKJg5dSIFTItdNItnYrx1TGCY0CwJaS44=,tag:NCa7x7kVHZJ2rZWD5CFdeg==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBGUi9EelE5REkraGUwUTIx
+            Q3FHN0UvTkV3ckRHZXR5WUhFc2hYekUvU1ZZClIvY1dMWlhzZzNicEExdDZCR2Fo
+            NHZLU2VYdEpqRUw4aldiSjRTUzJBS2sKLS0tIHYyNVNFeUpvb2FJRURkc0pwcWZY
+            ZnVuMEE5Zk93RjZSZmFvMkw2WnplYk0KHQSztvA15oJgifbzVnRJPCKnG2ZgQIOy
+            yEO96y3+f9EJ3+Ig0jN0PVj35mqR5LAjnA8eqfOPiDSjHSznf9VQYg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1huljrz2t7t6ewj53wcs05s40q7p69wzk790uxmlj0hyw4v3y5gdshwjq3t
+    lastmodified: "2026-11-12T09:27:01Z"
+    mac: ENC[AES256_GCM,data:FurWBpoTaxYHysRGVpZ5l1IekEJa/HNU7xeXzde3MLA4heqNPoX97DhB7K15dFAsR1mnwJ8/d384mEUKY1jp36OuLq2uLhHUcChBZyqwjdsZBE0XWh4Fmt6+yt7P4C9FSfn5xBJTwbDCwQxAq2bWY3AggOgB1D62Nu7wjMY/H+U=,iv:vH4jUwXHx683n9nRZ8UXK/WC56HcLfS47YWtXLTWBCI=,tag:/qXDSn3zwXHk7RakUb68sg==,type:str]
+    unencrypted_suffix: _unencrypted
+    version: 3.13.3
+
+-- secrets.env --
+TOKEN=ENC[AES256_GCM,data:TY4Kl10ynLth/vNpVWORRtawNqLzRFkt/11M0FU=,iv:TbqbTuT0eJapUznoTH9EfYY+NcI65upwM5GD5FSodMk=,tag:dWdqGdF2Xd8RdZ71/iekWw==,type:str]
+sops_age__list_0__map_enc=-----BEGIN AGE ENCRYPTED FILE-----\nYWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBDT011VnlmRHhFdVBCZnl4\ndFI5Nk40SzVmc25SbUc0cUJPbndSZ1k0dENvCnpKZWswd2xIMUNjK0FwRzFVSTBX\nSGFscm9vN2czaFJSWW1laGNzK1NUb3cKLS0tIDIrVEFFMi9rcExJc2JuRDVEaWZw\ncnRHVTdLN1E0UytNbU1LSDdkNkdFZ2cKHEu4EGC+os0nBh6MAduv4XRKjmENNEt1\n1thFZuYKnpG273b7r6dzuIX4oBL5ubR49I5VYphwqeKEswETFzpa+A==\n-----END AGE ENCRYPTED FILE-----\n
+sops_age__list_0__map_recipient=age1huljrz2t7t6ewj53wcs05s40q7p69wzk790uxmlj0hyw4v3y5gdshwjq3t
+sops_lastmodified=2026-11-12T09:27:01Z
+sops_mac=ENC[AES256_GCM,data:w9JaNdJiqFIwtKLlXj64OQdrO3U8zQvz14nGxe7vyVUO9P/EPbOEECXFvj29fDzZl1W0ffSuHjMFQxpAdKshcInA9VwTjmJANBDanO4FLCnHB2lOO9n8sfcDuLCF28KXZL7PADlR+XcN0JE0PhSI/OXLmjYz8fGN3WSRl+qLGJc=,iv:4OWebVT2tR88+kEdKevUVwfTmeajsbhLqKtabT/FESE=,tag:37AWFSi6oaiSn8GQh05XNw==,type:str]
+sops_unencrypted_suffix=_unencrypted
+sops_version=3.13.3

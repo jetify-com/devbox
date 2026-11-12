@@ -28,6 +28,10 @@ func isValidEnvName(name string) bool {
 	return envNameRegexp.MatchString(name)
 }
 
+func isBashFunc(name string) bool {
+	return strings.HasPrefix(name, "BASH_FUNC_") && strings.HasSuffix(name, "%%")
+}
+
 // warnInvalidEnvNames prints a single warning naming any environment variables
 // that were skipped because they aren't valid shell identifiers. The most common
 // cause is a "//" comment key in a devbox.json env block, which devbox would
@@ -68,7 +72,7 @@ func exportify(w io.Writer, vars map[string]string) string {
 	var invalidNames []string
 	strb := strings.Builder{}
 	for _, key := range keys {
-		if strings.HasPrefix(key, "BASH_FUNC_") && strings.HasSuffix(key, "%%") {
+		if isBashFunc(key) {
 			// Bash function
 			funcName := strings.TrimSuffix(key, "%%")
 			funcName = strings.TrimPrefix(funcName, "BASH_FUNC_")

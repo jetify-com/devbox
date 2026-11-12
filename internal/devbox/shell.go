@@ -9,14 +9,17 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"text/template"
 
 	"al.essio.dev/pkg/shellescape"
+	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/shellgen"
@@ -59,6 +62,7 @@ type DevboxShell struct {
 	projectDir      string // path to where devbox.json config resides
 	env             map[string]string
 	userShellrcPath string
+	interactive     bool
 
 	historyFile string
 }
@@ -74,6 +78,7 @@ func (d *Devbox) newShell(envOpts devopt.EnvOptions, opts ...ShellOption) (*Devb
 	}
 	sh := initShellBinaryFields(shPath)
 	sh.devbox = d
+	sh.interactive = isatty.IsTerminal(os.Stdin.Fd())
 
 	for _, opt := range opts {
 		opt(sh)
@@ -221,14 +226,9 @@ func (s *DevboxShell) Run() error {
 	// Setup other files that affect the shell settings and environments.
 	s.setupShellStartupFiles(filepath.Dir(shellrc))
 	extraEnv, extraArgs := s.shellRCOverrides(shellrc)
-	env := s.env
-	for k, v := range extraEnv {
-		env[k] = v
-	}
-	env["SHELL"] = s.binPath
 
 	cmd = exec.Command(s.binPath)
-	cmd.Env = envir.MapToPairs(env)
+	cmd.Env = envir.MapToPairs(s.processEnv(extraEnv))
 	cmd.Args = append(cmd.Args, extraArgs...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -327,7 +327,7 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		OriginalInitPath:   s.userShellrcPath,
 		HooksFilePath:      shellgen.ScriptPath(s.projectDir, shellgen.HooksFilename),
 		HistoryFile:        strings.TrimSpace(s.historyFile),
-		ExportEnv:          exportify(s.devbox.stderr, s.env),
+		ExportEnv:          s.exportEnv(),
 		ShellName:          string(s.name),
 		ShellAliases:       s.aliasLines(),
 		RefreshAliasName:   s.devbox.refreshAliasName(),
@@ -340,6 +340,68 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 
 	slog.Debug("wrote devbox shellrc", "path", path)
 	return path, nil
+}
+
+func (s *DevboxShell) processEnv(extraEnv map[string]string) map[string]string {
+	env := s.env
+	for k, v := range extraEnv {
+		env[k] = v
+	}
+	env["SHELL"] = s.binPath
+	maps.DeleteFunc(env, func(k, _ string) bool {
+		return strings.HasPrefix(k, secretEnvPrefix)
+	})
+	for _, k := range s.secretKeys() {
+		env[secretEnvPrefix+k] = env[k]
+	}
+	return env
+}
+
+// secretEnvPrefix names the process env variables that carry secrets to the
+// shell. The shellrc is written to disk and never removed, so it only holds
+// references to them, which it resolves after sourcing the user's shellrc so
+// that devbox values keep precedence.
+const secretEnvPrefix = "__DEVBOX_SECRET_"
+
+// secretKeys returns the secrets that can be passed by reference, which needs
+// an interactive shell that sources the shellrc and a valid variable name.
+func (s *DevboxShell) secretKeys() []string {
+	if s.name == shUnknown || !s.interactive {
+		return nil
+	}
+	var keys []string
+	for _, k := range s.devbox.secretEnvKeys {
+		if _, ok := s.env[k]; ok && isValidEnvName(k) {
+			keys = append(keys, k)
+		}
+	}
+	slices.Sort(keys)
+	return keys
+}
+
+func (s *DevboxShell) exportEnv() string {
+	env := maps.Clone(s.env)
+	for _, k := range s.devbox.secretEnvKeys {
+		// Other invalid names are left to exportify, which skips them with a
+		// warning.
+		if isValidEnvName(k) || isBashFunc(k) {
+			delete(env, k)
+		}
+	}
+	maps.DeleteFunc(env, func(k, _ string) bool {
+		return strings.HasPrefix(k, secretEnvPrefix)
+	})
+
+	var refs strings.Builder
+	for _, k := range s.secretKeys() {
+		ref := secretEnvPrefix + k
+		if s.name == shFish {
+			fmt.Fprintf(&refs, "\nset -gx %s \"$%s\"; set -e %s", k, ref, ref)
+		} else {
+			fmt.Fprintf(&refs, "\nexport %s=\"${%s}\"; unset %s;", k, ref, ref)
+		}
+	}
+	return strings.TrimSpace(exportify(s.devbox.stderr, env) + refs.String())
 }
 
 // aliasLines returns the shell `alias` commands for the aliases defined in

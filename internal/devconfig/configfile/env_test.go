@@ -40,3 +40,36 @@ func TestParseEnvsFromDotEnv(t *testing.T) {
 		}
 	})
 }
+
+func TestSopsEnvFrom(t *testing.T) {
+	rootPath := filepath.Join("/project", "devbox.json")
+	tests := []struct {
+		envFrom  string
+		sops     bool
+		dotEnv   bool
+		sopsPath string
+	}{
+		{envFrom: "sops:secrets.yaml", sops: true, sopsPath: "/project/secrets.yaml"},
+		{envFrom: "sops:sub/secrets.env", sops: true, sopsPath: "/project/sub/secrets.env"},
+		{envFrom: "sops:/etc/secrets.json", sops: true, sopsPath: "/etc/secrets.json"},
+		{envFrom: "sops: secrets.json", sops: true, sopsPath: "/project/secrets.json"},
+		{envFrom: "secrets.env", dotEnv: true},
+		{envFrom: "jetify-cloud"},
+	}
+	for _, test := range tests {
+		t.Run(test.envFrom, func(t *testing.T) {
+			c := &ConfigFile{EnvFrom: test.envFrom, AbsRootPath: rootPath}
+			if got := c.IsSopsEnabled(); got != test.sops {
+				t.Errorf("IsSopsEnabled() = %v, want %v", got, test.sops)
+			}
+			if got := c.IsdotEnvEnabled(); got != test.dotEnv {
+				t.Errorf("IsdotEnvEnabled() = %v, want %v", got, test.dotEnv)
+			}
+			if test.sops {
+				if got := c.SopsFilePath(); got != test.sopsPath {
+					t.Errorf("SopsFilePath() = %q, want %q", got, test.sopsPath)
+				}
+			}
+		})
+	}
+}

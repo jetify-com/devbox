@@ -173,7 +173,8 @@
             }
         },
         "env_from": {
-            "type": "string"
+            "type": "string",
+            "description": "Path to a .env file to load environment variables from, or \"sops:<path>\" for a SOPS-encrypted .yaml, .yml, .json or .env file decrypted with the sops CLI."
         },
         "nixpkgs": {
             "type": "object",

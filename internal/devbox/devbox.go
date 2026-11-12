@@ -77,6 +77,11 @@ type Devbox struct {
 	// compute it (hashing the lockfile, config, print-dev-env cache and nix
 	// profile) more than once. See stateStatus.
 	cachedStateStatus *lock.StateStatus
+
+	sopsCache *sopsResult
+	// secretEnvKeys are the env variables holding SOPS secrets. They must not
+	// be written to disk.
+	secretEnvKeys []string
 }
 
 var legacyPackagesWarningHasBeenShown = false
@@ -808,8 +813,14 @@ func (d *Devbox) computeEnv(
 	env["DEVBOX_CONFIG_DIR"] = d.projectDir + "/devbox.d"
 	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/" + nix.ProfilePath
 
+	// Synced before configEnvs because sops may need runx binaries.
+	runXPaths, err := d.RunXPaths(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Include env variables in devbox.json
-	configEnv, err := d.configEnvs(env)
+	configEnv, err := d.configEnvs(ctx, env)
 	if err != nil {
 		return nil, err
 	}
@@ -858,14 +869,11 @@ func (d *Devbox) computeEnv(
 		slog.Debug("PATH after glibc-patch hack", "path", devboxEnvPath)
 	}
 
-	runXPaths, err := d.RunXPaths(ctx)
-	if err != nil {
-		return nil, err
-	}
 	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, runXPaths)
 
 	pathStack := envpath.Stack(env, originalEnv)
 	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, envOpts.PreservePathStack)
+	d.markPathStackSecret()
 	env["PATH"] = pathStack.Path(env)
 	slog.Debug("new path stack is", "path_stack", pathStack)
 
@@ -1062,10 +1070,12 @@ func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
 // allow env variables from outside the shell to be referenced so
 // no leaked variables are caused by this function.
 func (d *Devbox) configEnvs(
+	ctx context.Context,
 	existingEnv map[string]string,
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
 	env := map[string]string{}
+	var secrets *sopsResult
 	if d.cfg.IsJetifyCloudEnvFrom() {
 		ux.Fwarningf(
 			d.stderr,
@@ -1073,6 +1083,12 @@ func (d *Devbox) configEnvs(
 				"supported by Devbox.\n",
 			d.cfg.Root.EnvFrom,
 		)
+	} else if d.cfg.Root.IsSopsEnabled() {
+		var err error
+		secrets, err = d.sopsEnv(ctx, d.sopsProcessEnv(existingEnv))
+		if err != nil {
+			return nil, err
+		}
 	} else if d.cfg.Root.IsdotEnvEnabled() {
 		// if env_from points to a .env file, parse and add it
 		parsedEnvs, err := d.cfg.Root.ParseEnvsFromDotEnv()
@@ -1100,14 +1116,31 @@ func (d *Devbox) configEnvs(
 		}
 	} else if d.cfg.Root.EnvFrom != "" {
 		return nil, usererr.New(
-			"unknown env_from value: %s. It must be a path to a file ending in \".env\"",
+			"unknown env_from value: %s. It must be a path to a file ending in \".env\" or \"sops:<path>\" for SOPS-encrypted files",
 			d.cfg.Root.EnvFrom,
 		)
 	}
-	for k, v := range d.cfg.Env() {
+	cfgEnv := d.cfg.Env()
+	for k, v := range cfgEnv {
 		env[k] = v
 	}
-	return conf.OSExpandEnvMap(env, existingEnv, d.ProjectDir()), nil
+	if secrets == nil {
+		return conf.OSExpandEnvMap(env, existingEnv, d.ProjectDir()), nil
+	}
+
+	d.secretEnvKeys = collectSecretEnvKeys(secrets.keys, cfgEnv)
+	lookupEnv := make(map[string]string, len(existingEnv)+len(secrets.env))
+	maps.Copy(lookupEnv, existingEnv)
+	maps.Copy(lookupEnv, secrets.env)
+	expanded := conf.OSExpandEnvMap(env, lookupEnv, d.ProjectDir())
+	// Secrets are used verbatim: expanding them would mangle any value
+	// containing a $.
+	for k, v := range secrets.env {
+		if _, ok := expanded[k]; !ok {
+			expanded[k] = v
+		}
+	}
+	return expanded, nil
 }
 
 // ignoreCurrentEnvVar contains environment variables that Devbox should remove
@@ -1186,7 +1219,16 @@ func (d *Devbox) ProjectDirHash() string {
 }
 
 func (d *Devbox) addHashToEnv(env map[string]string) error {
-	hash, err := cachehash.JSON(env)
+	hashed := env
+	if len(d.secretEnvKeys) > 0 {
+		// The hash is written to the shellrc, where it would allow
+		// brute-forcing low-entropy secrets offline.
+		hashed = maps.Clone(env)
+		for _, k := range d.secretEnvKeys {
+			delete(hashed, k)
+		}
+	}
+	hash, err := cachehash.JSON(hashed)
 	if err == nil {
 		env[d.shellEnvHashKey()] = hash
 	}
@@ -1240,7 +1282,7 @@ func (d *Devbox) Lockfile() *lock.File {
 }
 
 func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
-	runxBinPath := filepath.Join(d.projectDir, ".devbox", "virtenv", "runx", "bin")
+	binPath := runxBinPath(d.projectDir)
 
 	// Map of symlink name -> target for every runx binary. If two packages
 	// provide a binary with the same name, the first one wins.
@@ -1272,13 +1314,13 @@ func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 	}
 	// Most projects have no runx packages. Don't touch the filesystem for
 	// them unless a previous run left links behind that need removing.
-	if len(links) == 0 && !fileutil.Exists(runxBinPath) {
-		return runxBinPath, nil
+	if len(links) == 0 && !fileutil.Exists(binPath) {
+		return binPath, nil
 	}
-	if err := syncSymlinks(runxBinPath, links); err != nil {
+	if err := syncSymlinks(binPath, links); err != nil {
 		return "", err
 	}
-	return runxBinPath, nil
+	return binPath, nil
 }
 
 // syncSymlinks makes dir contain exactly the symlinks in links (name ->
