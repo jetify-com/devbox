@@ -54,16 +54,7 @@ func (p *Package) IsInBinaryCache() (bool, error) {
 func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	defer debug.FunctionTimer().End()
 
-	eligiblePackages := []*Package{}
-	for _, p := range packages {
-		// IMPORTANT: isEligibleForBinaryCache will call resolve() which is NOT
-		// concurrency safe. Hence, we call it outside of the go-routine.
-		isEligible, err := p.isEligibleForBinaryCache()
-		// If the package is not eligible or there is an error in determining that, then skip it.
-		if isEligible && err == nil {
-			eligiblePackages = append(eligiblePackages, p)
-		}
-	}
+	eligiblePackages := eligibleForBinaryCache(packages)
 	if len(eligiblePackages) == 0 {
 		return nil
 	}
@@ -85,6 +76,37 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 		}
 	}
 	return group.Wait()
+}
+
+// maxConcurrentResolves bounds how many packages are resolved at once. Each
+// resolve can make a search API request or run `nix flake prefetch`.
+const maxConcurrentResolves = 8
+
+// eligibleForBinaryCache returns the packages that are eligible for the binary
+// cache, preserving their order. Checking eligibility resolves packages that
+// aren't in the lockfile yet, so the checks run concurrently.
+func eligibleForBinaryCache(packages []*Package) []*Package {
+	eligible := make([]bool, len(packages))
+	var group errgroup.Group
+	group.SetLimit(maxConcurrentResolves)
+	for i, p := range packages {
+		group.Go(func() error {
+			// If the package is not eligible or there is an error in
+			// determining that, then skip it.
+			isEligible, err := p.isEligibleForBinaryCache()
+			eligible[i] = isEligible && err == nil
+			return nil
+		})
+	}
+	_ = group.Wait()
+
+	var result []*Package
+	for i, p := range packages {
+		if eligible[i] {
+			result = append(result, p)
+		}
+	}
+	return result
 }
 
 // areExpectedOutputsInCacheOnce wraps fetchNarInfoStatusOnce and returns true
@@ -177,8 +199,8 @@ func (p *Package) isEligibleForBinaryCache() (bool, error) {
 // sysInfoIfExists returns the system info for the user's system. If the sysInfo
 // is missing, then nil is returned
 // NOTE: this is called from multiple go-routines and needs to be concurrency safe.
-// Hence, we compute nix.Version, nix.System and lockfile.Resolve prior to calling this
-// function from within a goroutine.
+// nix.Version and nix.System are computed once, and lock.File.Resolve is safe to
+// call concurrently.
 func (p *Package) sysInfoIfExists() (*lock.SystemInfo, error) {
 	if !p.isVersioned() {
 		return nil, nil

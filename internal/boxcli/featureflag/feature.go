@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"strconv"
+	"sync"
 	"testing"
 
 	"go.jetify.com/devbox/internal/build"
@@ -43,7 +44,9 @@ func enable(name string) *feature {
 	return features[name]
 }
 
-var logMap = map[string]bool{}
+// logged records which env var overrides have been logged. Enabled can be
+// called from multiple goroutines.
+var logged sync.Map
 
 func (f *feature) Enabled() bool {
 	if f == nil {
@@ -54,9 +57,8 @@ func (f *feature) Enabled() bool {
 		if !on {
 			status = "disabled"
 		}
-		if !logMap[f.name] {
+		if _, loaded := logged.LoadOrStore(f.name, true); !loaded {
 			slog.Debug("feature flag set via environment variable", "feature", f.name, "status", status)
-			logMap[f.name] = true
 		}
 		return on
 	}

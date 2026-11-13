@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/cachehash"
@@ -18,6 +19,7 @@ import (
 	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/nix/flake"
 	"go.jetify.com/pkg/runx/impl/types"
+	"golang.org/x/sync/singleflight"
 
 	"go.jetify.com/devbox/internal/cuecfg"
 )
@@ -25,8 +27,17 @@ import (
 const lockFileVersion = "1"
 
 // Lightly inspired by package-lock.json
+//
+// File's methods are safe to call concurrently. Code that reads or writes
+// Packages directly must not run while other goroutines call File methods.
 type File struct {
 	devboxProject `json:"-"`
+
+	// mu guards Packages and the entries in it. It is never held while
+	// resolving a package, which can make network requests or run nix.
+	mu sync.Mutex
+	// resolving dedupes concurrent resolutions of the same package.
+	resolving singleflight.Group
 
 	LockFileVersion string `json:"lockfile_version"`
 
@@ -65,20 +76,59 @@ func (f *File) Add(pkgs ...string) error {
 }
 
 func (f *File) Remove(pkgs ...string) error {
+	f.mu.Lock()
 	for _, p := range pkgs {
 		delete(f.Packages, p)
 	}
+	f.mu.Unlock()
 	return f.Save()
 }
 
 // Resolve updates the in memory copy for performance but does not write to disk
 // This avoids writing values that may need to be removed in case of error.
+//
+// Resolve is safe to call concurrently. The lockfile's lock is only held to read
+// and write the entry; the search or flake request runs outside of it.
+// Concurrent calls for the same package share a single request.
 func (f *File) Resolve(pkg string) (*Package, error) {
-	entry, hasEntry := f.Packages[pkg]
-	if hasEntry && entry.Resolved != "" {
-		return f.Packages[pkg], nil
+	if entry := f.resolvedEntry(pkg); entry != nil {
+		return entry, nil
 	}
+	result, err, _ := f.resolving.Do(pkg, func() (any, error) {
+		// Another call may have finished resolving pkg between the check
+		// above and joining this group.
+		if entry := f.resolvedEntry(pkg); entry != nil {
+			return entry, nil
+		}
+		locked, err := f.fetchLockEntry(pkg)
+		if err != nil {
+			return nil, err
+		}
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		f.Packages[pkg] = locked
+		return locked, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*Package), nil
+}
 
+// resolvedEntry returns the lockfile entry for pkg if it's already resolved, or
+// nil otherwise.
+func (f *File) resolvedEntry(pkg string) *Package {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if entry, ok := f.Packages[pkg]; ok && entry.Resolved != "" {
+		return entry
+	}
+	return nil
+}
+
+// fetchLockEntry computes a new lockfile entry for pkg without storing it. It
+// must not be called with f.mu held.
+func (f *File) fetchLockEntry(pkg string) (*Package, error) {
 	locked := &Package{}
 	_, _, versioned := searcher.ParseVersionedPackage(pkg)
 	if pkgtype.IsRunX(pkg) || versioned || pkgtype.IsFlake(pkg) {
@@ -100,9 +150,7 @@ func (f *File) Resolve(pkg string) (*Package, error) {
 			Source: nixpkgSource,
 		}
 	}
-	f.Packages[pkg] = locked
-
-	return f.Packages[pkg], nil
+	return locked, nil
 }
 
 // TODO:
@@ -116,7 +164,10 @@ func (f *File) Resolve(pkg string) (*Package, error) {
 // 2. Then, in Save(), we can check if OutputsRaw is zero and fill it in prior to writing
 // to disk.
 func (f *File) Save() error {
-	isDirty, err := f.isDirty()
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	isDirty, err := f.isDirtyLocked()
 	if err != nil {
 		return err
 	}
@@ -148,11 +199,15 @@ func (f *File) UpdateStdenv() error {
 	// Remove the old entry in memory only so that a failed resolve doesn't
 	// leave the lockfile without a stdenv.
 	stdenv := f.devboxProject.Stdenv().String()
+	f.mu.Lock()
 	old, hasOld := f.Packages[stdenv]
 	delete(f.Packages, stdenv)
+	f.mu.Unlock()
 	if err := f.Add(stdenv); err != nil {
 		if hasOld {
+			f.mu.Lock()
 			f.Packages[stdenv] = old
+			f.mu.Unlock()
 		}
 		return err
 	}
@@ -180,14 +235,12 @@ func (f *File) Stdenv() flake.Ref {
 }
 
 func (f *File) Get(pkg string) *Package {
-	entry, hasEntry := f.Packages[pkg]
-	if !hasEntry || entry.Resolved == "" {
-		return nil
-	}
-	return entry
+	return f.resolvedEntry(pkg)
 }
 
 func (f *File) HasAllowInsecurePackages() bool {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	for _, pkg := range f.Packages {
 		if pkg.AllowInsecure {
 			return true
@@ -214,6 +267,8 @@ func IsLegacyPackage(pkg string) bool {
 func (f *File) Tidy() {
 	keep := f.devboxProject.AllPackageNamesIncludingRemovedTriggerPackages()
 	keep = append(keep, f.devboxProject.Stdenv().String())
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	maps.DeleteFunc(f.Packages, func(key string, pkg *Package) bool {
 		return !slices.Contains(keep, key)
 	})
@@ -253,21 +308,29 @@ func (f *File) StateStatus(isFish bool) (StateStatus, error) {
 }
 
 func (f *File) SetOutputsForPackage(pkg string, outputs []Output) error {
-	p, err := f.Resolve(pkg)
+	entry, err := f.Resolve(pkg)
 	if err != nil {
 		return err
 	}
-	if p.Systems == nil {
-		p.Systems = map[string]*SystemInfo{}
+	f.mu.Lock()
+	if entry.Systems == nil {
+		entry.Systems = map[string]*SystemInfo{}
 	}
-	if p.Systems[nix.System()] == nil {
-		p.Systems[nix.System()] = &SystemInfo{}
+	if entry.Systems[nix.System()] == nil {
+		entry.Systems[nix.System()] = &SystemInfo{}
 	}
-	p.Systems[nix.System()].Outputs = outputs
+	entry.Systems[nix.System()].Outputs = outputs
+	f.mu.Unlock()
 	return f.Save()
 }
 
 func (f *File) isDirty() (bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.isDirtyLocked()
+}
+
+func (f *File) isDirtyLocked() (bool, error) {
 	currentHash, err := cachehash.JSON(f)
 	if err != nil {
 		return false, err
