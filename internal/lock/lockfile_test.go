@@ -20,7 +20,7 @@ import (
 )
 
 // fakeResolveServer serves /v1/resolve. It counts requests per package name,
-// and its handler blocks until release is closed, so tests can control when
+// and its handler blocks until unblock is called, so tests can control when
 // requests finish.
 type fakeResolveServer struct {
 	*httptest.Server
@@ -29,6 +29,8 @@ type fakeResolveServer struct {
 	requests map[string]int
 	inFlight chan string
 	release  chan struct{}
+	// unblock releases blocked handlers. It's safe to call more than once.
+	unblock func()
 }
 
 func newFakeResolveServer(t *testing.T) *fakeResolveServer {
@@ -38,6 +40,7 @@ func newFakeResolveServer(t *testing.T) *fakeResolveServer {
 		inFlight: make(chan string, 100),
 		release:  make(chan struct{}),
 	}
+	srv.unblock = sync.OnceFunc(func() { close(srv.release) })
 	srv.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
 		srv.mu.Lock()
@@ -59,6 +62,9 @@ func newFakeResolveServer(t *testing.T) *fakeResolveServer {
 		})
 	}))
 	t.Cleanup(srv.Close)
+	// Cleanups run in reverse order, so this releases any handlers still
+	// blocked (e.g. after a t.Fatal) before Close waits for them.
+	t.Cleanup(srv.unblock)
 	t.Setenv(envir.DevboxSearchHost, srv.URL)
 	t.Setenv("DEVBOX_FEATURE_RESOLVE_V2", "0")
 	return srv
@@ -118,7 +124,7 @@ func TestResolveConcurrent(t *testing.T) {
 	}
 	_ = lockfile.HasAllowInsecurePackages()
 
-	close(srv.release)
+	srv.unblock()
 	callers.Wait()
 	close(results)
 

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -280,6 +281,9 @@ func TestEligibleForBinaryCacheResolvesConcurrently(t *testing.T) {
 		inFlight: make(chan struct{}, len(raws)),
 		release:  make(chan struct{}),
 	}
+	unblock := sync.OnceFunc(func() { close(locker.release) })
+	// Don't leave resolves blocked if the test fails early.
+	t.Cleanup(unblock)
 	pkgs := make([]*Package, len(raws))
 	for i, raw := range raws {
 		pkgs[i] = PackageFromStringWithDefaults(raw, locker)
@@ -298,7 +302,7 @@ func TestEligibleForBinaryCacheResolvesConcurrently(t *testing.T) {
 			t.Fatal("packages were not resolved concurrently")
 		}
 	}
-	close(locker.release)
+	unblock()
 
 	got := <-done
 	var gotRaws []string
