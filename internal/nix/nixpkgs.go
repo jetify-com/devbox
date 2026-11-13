@@ -38,13 +38,15 @@ func EnsureNixpkgsPrefetched(w io.Writer, commit string) error {
 	}
 
 	fmt.Fprintf(w, "Ensuring nixpkgs registry is downloaded.\n")
+	// --json makes nix print the store location on stdout, so we don't need
+	// a second prefetch to look it up. Progress still goes to stderr.
 	cmd := Command(
-		"flake", "prefetch",
+		"flake", "prefetch", "--json",
 		FlakeNixpkgs(commit),
 	)
-	cmd.Stdout = w
-	cmd.Stderr = cmd.Stdout
-	if err := cmd.Run(context.TODO()); err != nil {
+	cmd.Stderr = w
+	out, err := cmd.Output(context.TODO())
+	if err != nil {
 		fmt.Fprintf(w, "Ensuring nixpkgs registry is downloaded: ")
 		color.New(color.FgRed).Fprintf(w, "Fail\n")
 		return err
@@ -52,7 +54,26 @@ func EnsureNixpkgsPrefetched(w io.Writer, commit string) error {
 	fmt.Fprintf(w, "Ensuring nixpkgs registry is downloaded: ")
 	color.New(color.FgGreen).Fprintf(w, "Success\n")
 
-	return saveToNixpkgsCommitFile(commit, commitToLocation)
+	storePath, err := parsePrefetchStorePath(out)
+	if err != nil {
+		return err
+	}
+	return saveToNixpkgsCommitFile(commit, storePath, commitToLocation)
+}
+
+// parsePrefetchStorePath extracts the store path from the output of
+// `nix flake prefetch --json`.
+func parsePrefetchStorePath(out []byte) (string, error) {
+	var prefetchData struct {
+		StorePath string `json:"storePath"`
+	}
+	if err := json.Unmarshal(out, &prefetchData); err != nil {
+		return "", errors.WithStack(err)
+	}
+	if prefetchData.StorePath == "" {
+		return "", errors.Errorf("nix flake prefetch output has no storePath: %s", out)
+	}
+	return prefetchData.StorePath, nil
 }
 
 func nixpkgsCommitFileContents() (map[string]string, error) {
@@ -70,33 +91,16 @@ func nixpkgsCommitFileContents() (map[string]string, error) {
 	return commitToLocation, errors.WithStack(json.Unmarshal(contents, &commitToLocation))
 }
 
-func saveToNixpkgsCommitFile(commit string, commitToLocation map[string]string) error {
-	// Make a query to get the /nix/store path for this commit hash.
-	cmd := Command("flake", "prefetch", "--json",
-		FlakeNixpkgs(commit),
-	)
-	out, err := cmd.Output(context.TODO())
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	// read the json response
-	var prefetchData struct {
-		StorePath string `json:"storePath"`
-	}
-	if err := json.Unmarshal(out, &prefetchData); err != nil {
-		return errors.WithStack(err)
-	}
-
+func saveToNixpkgsCommitFile(commit, storePath string, commitToLocation map[string]string) error {
 	// Ensure the nixpkgs commit file path exists so we can write an update to it
 	path := nixpkgsCommitFilePath()
-	err = os.MkdirAll(filepath.Dir(path), 0o755)
+	err := os.MkdirAll(filepath.Dir(path), 0o755)
 	if err != nil && !errors.Is(err, fs.ErrExist) {
 		return errors.WithStack(err)
 	}
 
 	// write to the map, jsonify it, and write that json to the nixpkgsCommit file
-	commitToLocation[commit] = prefetchData.StorePath
+	commitToLocation[commit] = storePath
 	serialized, err := json.Marshal(commitToLocation)
 	if err != nil {
 		return errors.WithStack(err)

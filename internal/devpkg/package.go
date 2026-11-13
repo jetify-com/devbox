@@ -16,7 +16,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"go.jetify.com/devbox/internal/boxcli/featureflag"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/cachehash"
 	"go.jetify.com/devbox/internal/debug"
@@ -26,7 +25,6 @@ import (
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/internal/searcher"
-	"go.jetify.com/devbox/internal/ux"
 	"go.jetify.com/devbox/nix/flake"
 	"go.jetify.com/devbox/plugins"
 )
@@ -772,21 +770,14 @@ func (p *Package) GetResolvedStorePaths() ([]string, error) {
 const MissingStorePathsWarning = "Outputs for %s are not in lockfile. To fix this issue and improve performance, please run " +
 	"`devbox install --tidy-lockfile`\n"
 
-func (p *Package) GetStorePaths(ctx context.Context, w io.Writer) ([]string, error) {
-	storePathsForPackage, err := p.GetResolvedStorePaths()
-	if err != nil || len(storePathsForPackage) > 0 {
-		return storePathsForPackage, err
-	}
-
-	if featureflag.TidyWarning.Enabled() && p.IsDevboxPackage {
-		// No fast path, we need to query nix.
-		ux.FHidableWarning(ctx, w, MissingStorePathsWarning, p.Raw)
-	}
-
+// storePathsFromInstallables queries nix for the store paths of p's
+// installables, one installable at a time so that errors can be attributed.
+func (p *Package) storePathsFromInstallables(ctx context.Context) ([]string, error) {
 	installables, err := p.Installables()
 	if err != nil {
 		return nil, err
 	}
+	storePaths := []string{}
 	for _, installable := range installables {
 		storePathsForInstallable, err := nix.StorePathsFromInstallable(
 			ctx, installable, p.HasAllowInsecure(),
@@ -794,9 +785,9 @@ func (p *Package) GetStorePaths(ctx context.Context, w io.Writer) ([]string, err
 		if err != nil {
 			return nil, packageInstallErrorHandler(err, p, installable)
 		}
-		storePathsForPackage = append(storePathsForPackage, storePathsForInstallable...)
+		storePaths = append(storePaths, storePathsForInstallable...)
 	}
-	return storePathsForPackage, nil
+	return storePaths, nil
 }
 
 // packageInstallErrorHandler checks for two kinds of errors to print custom messages for so that Devbox users
