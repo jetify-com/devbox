@@ -106,7 +106,9 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 type addedPackages struct {
 	pkgs                  []*devpkg.Package
 	unchangedPackageNames []string
-	opts                  devopt.AddOpts
+	// addedNames are the names written to the config.
+	addedNames []string
+	opts       devopt.AddOpts
 }
 
 // addToConfig validates `pkgsNames` and adds them to the in-memory config,
@@ -198,6 +200,9 @@ func (d *Devbox) addToConfig(
 			if err := d.removeFromConfig(found.Raw); err != nil {
 				return nil, err
 			}
+			if found.Raw == packageNameForConfig {
+				d.forgetLockEntry(found.Raw)
+			}
 		}
 
 		ux.Finfof(d.stderr, "Adding package %q to devbox.json\n", packageNameForConfig)
@@ -213,6 +218,7 @@ func (d *Devbox) addToConfig(
 	return &addedPackages{
 		pkgs:                  pkgs,
 		unchangedPackageNames: unchangedPackageNames,
+		addedNames:            addedPackageNames,
 		opts:                  opts,
 	}, nil
 }
@@ -341,7 +347,8 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 // removeFromConfig removes `pkgs` from the in-memory config and cleans up
 // their plugin files. It does not uninstall anything or save the config;
 // callers run ensureStateIsUpToDate and saveCfg once after all config changes
-// are made. It also drops the packages' in-memory lockfile entries.
+// are made. Lockfile entries are left for lock.File.Tidy, which keeps ones
+// still used by includes.
 func (d *Devbox) removeFromConfig(pkgs ...string) error {
 	removed := []string{}
 	missingPkgs := []string{}
@@ -350,11 +357,6 @@ func (d *Devbox) removeFromConfig(pkgs ...string) error {
 		if found != nil {
 			removed = append(removed, found.Raw)
 			d.cfg.PackageMutator().Remove(found.Raw)
-			// Drop the lock entry now rather than waiting for the next
-			// lockfile tidy. If the package is re-added under the same name
-			// (e.g. a legacy package that falls back to nixpkgs), it must
-			// be resolved fresh instead of reusing the old revision.
-			delete(d.lockfile.Packages, found.Raw)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
 		}
@@ -369,6 +371,15 @@ func (d *Devbox) removeFromConfig(pkgs ...string) error {
 	}
 
 	return plugin.Remove(d.projectDir, removed)
+}
+
+// forgetLockEntry drops pkg's lockfile entry so that a package removed and
+// re-added under the same name (e.g. a legacy package that falls back to
+// nixpkgs on update) is resolved fresh instead of reusing its old revision.
+// Only use it for such replacements: a plain removal must leave the entry for
+// lock.File.Tidy, which keeps entries still needed by includes.
+func (d *Devbox) forgetLockEntry(pkg string) {
+	delete(d.lockfile.Packages, pkg)
 }
 
 // installMode is an enum for helping with ensureStateIsUpToDate implementation

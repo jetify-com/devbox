@@ -74,6 +74,10 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		if err != nil {
 			return err
 		}
+		if slices.Contains(added.addedNames, pkg.Raw) {
+			// Re-added under the same (unversioned) name: resolve it fresh.
+			d.forgetLockEntry(pkg.Raw)
+		}
 		migrated = append(migrated, added)
 	}
 

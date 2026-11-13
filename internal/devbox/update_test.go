@@ -476,18 +476,21 @@ func TestResolveAndMergePackagesSkipsUnversioned(t *testing.T) {
 	require.Empty(t, changed)
 }
 
-func TestRemoveFromConfigDropsLockEntry(t *testing.T) {
+func TestRemoveFromConfigKeepsLockEntry(t *testing.T) {
 	devbox := devboxForTesting(t)
-	devbox.cfg.PackageMutator().Add("hello")
-	devbox.lockfile.Packages = map[string]*lock.Package{
-		"hello": {Resolved: "github:NixOS/nixpkgs/oldrev#hello"},
-	}
+	devbox.cfg.PackageMutator().Add("hello@latest")
+	entry := &lock.Package{Resolved: "github:NixOS/nixpkgs/oldrev#hello", Version: "2.10"}
+	devbox.lockfile.Packages = map[string]*lock.Package{"hello@latest": entry}
 
-	require.NoError(t, devbox.removeFromConfig("hello"))
+	require.NoError(t, devbox.removeFromConfig("hello@latest"))
 
-	// A re-added package with the same name must resolve fresh, not reuse
-	// the old revision.
-	require.NotContains(t, devbox.lockfile.Packages, "hello")
-	_, err := devbox.findPackageByName("hello")
-	require.Error(t, err)
+	_, err := devbox.findPackageByName("hello@latest")
+	require.Error(t, err, "package should be removed from config")
+	// Plain removal leaves the entry for lock.File.Tidy, which keeps it if an
+	// include still needs the package, so its pin isn't lost.
+	require.Same(t, entry, devbox.lockfile.Packages["hello@latest"])
+
+	// A same-name replacement forgets it so the package resolves fresh.
+	devbox.forgetLockEntry("hello@latest")
+	require.NotContains(t, devbox.lockfile.Packages, "hello@latest")
 }
