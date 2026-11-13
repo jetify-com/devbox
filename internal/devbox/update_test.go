@@ -475,3 +475,19 @@ func TestResolveAndMergePackagesSkipsUnversioned(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, changed)
 }
+
+func TestRemoveFromConfigDropsLockEntry(t *testing.T) {
+	devbox := devboxForTesting(t)
+	devbox.cfg.PackageMutator().Add("hello")
+	devbox.lockfile.Packages = map[string]*lock.Package{
+		"hello": {Resolved: "github:NixOS/nixpkgs/oldrev#hello"},
+	}
+
+	require.NoError(t, devbox.removeFromConfig("hello"))
+
+	// A re-added package with the same name must resolve fresh, not reuse
+	// the old revision.
+	require.NotContains(t, devbox.lockfile.Packages, "hello")
+	_, err := devbox.findPackageByName("hello")
+	require.Error(t, err)
+}

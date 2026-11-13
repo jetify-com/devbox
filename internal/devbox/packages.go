@@ -341,7 +341,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 // removeFromConfig removes `pkgs` from the in-memory config and cleans up
 // their plugin files. It does not uninstall anything or save the config;
 // callers run ensureStateIsUpToDate and saveCfg once after all config changes
-// are made.
+// are made. It also drops the packages' in-memory lockfile entries.
 func (d *Devbox) removeFromConfig(pkgs ...string) error {
 	removed := []string{}
 	missingPkgs := []string{}
@@ -350,6 +350,11 @@ func (d *Devbox) removeFromConfig(pkgs ...string) error {
 		if found != nil {
 			removed = append(removed, found.Raw)
 			d.cfg.PackageMutator().Remove(found.Raw)
+			// Drop the lock entry now rather than waiting for the next
+			// lockfile tidy. If the package is re-added under the same name
+			// (e.g. a legacy package that falls back to nixpkgs), it must
+			// be resolved fresh instead of reusing the old revision.
+			delete(d.lockfile.Packages, found.Raw)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
 		}

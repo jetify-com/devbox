@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strings"
+	"sync"
 
 	"go.jetify.com/pkg/runx/impl/registry"
 	"go.jetify.com/pkg/runx/impl/runx"
@@ -17,7 +18,10 @@ const (
 	oldGithubAPITokenVarName = "DEVBOX_GITHUB_API_TOKEN"
 )
 
-var cachedRegistry *registry.Registry
+var (
+	cachedRegistry   *registry.Registry
+	cachedRegistryMu sync.Mutex
+)
 
 func IsRunX(s string) bool {
 	return strings.HasPrefix(s, RunXPrefix)
@@ -29,7 +33,12 @@ func RunXClient() *runx.RunX {
 	}
 }
 
+// RunXRegistry returns the shared runx registry, creating it on first use. It
+// is safe for concurrent use (e.g. parallel package resolution in
+// `devbox update`).
 func RunXRegistry(ctx context.Context) (*registry.Registry, error) {
+	cachedRegistryMu.Lock()
+	defer cachedRegistryMu.Unlock()
 	if cachedRegistry == nil {
 		var err error
 		cachedRegistry, err = registry.NewLocalRegistry(ctx, getGithubToken())
