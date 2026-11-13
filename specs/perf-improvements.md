@@ -215,7 +215,7 @@ serially. Fix: resolve in an `errgroup` with bounded concurrency, then apply
 lockfile writes serially. Preserve the existing error semantics (flakes
 warn-and-continue, versioned packages abort).
 
-### 13. Resolve lockfile-missing packages in parallel
+### 13. Resolve lockfile-missing packages in parallel (done in #3054)
 
 **Effort:** ~60–100 LOC.
 
