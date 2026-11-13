@@ -72,6 +72,12 @@ type Devbox struct {
 	// packagesBeingUpdated tracks which packages are being updated so that
 	// installNixPackagesToStore only refreshes those, not all packages.
 	packagesBeingUpdated []*devpkg.Package
+
+	// cachedStateStatus memoizes lockfile.StateStatus for the duration of a
+	// single ensureStateIsUpToDate[AndComputeEnv] call, which would otherwise
+	// compute it (hashing the lockfile, config, print-dev-env cache and nix
+	// profile) more than once. See stateStatus.
+	cachedStateStatus *lock.StateStatus
 }
 
 var legacyPackagesWarningHasBeenShown = false
@@ -903,8 +909,10 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	envOpts devopt.EnvOptions,
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
+	// The status computed here is reused by ensureStateIsUpToDate below.
+	defer d.invalidateStateStatus()
 
-	status, err := d.lockfile.StateStatus(isFishShell())
+	status, err := d.stateStatus()
 	if err != nil {
 		return nil, err
 	}
@@ -914,6 +922,7 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 		if err := d.refreshNonNixState(ctx); err != nil {
 			return nil, err
 		}
+		d.invalidateStateStatus()
 		status = lock.StateUpToDate
 	}
 	if status != lock.StateUpToDate {
@@ -948,6 +957,26 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	// doing some non-nix work twice if lockfile is not up to date.
 	// TODO: Improve this to avoid extra work.
 	return d.computeEnv(ctx, true /*usePrintDevEnvCache*/, envOpts)
+}
+
+// stateStatus returns lockfile.StateStatus, memoized until the next
+// invalidateStateStatus. Callers that populate the cache must invalidate it
+// when they return, so that the cached value never outlives a change to the
+// config, lockfile or state.
+func (d *Devbox) stateStatus() (lock.StateStatus, error) {
+	if d.cachedStateStatus != nil {
+		return *d.cachedStateStatus, nil
+	}
+	status, err := d.lockfile.StateStatus(isFishShell())
+	if err != nil {
+		return status, err
+	}
+	d.cachedStateStatus = &status
+	return status, nil
+}
+
+func (d *Devbox) invalidateStateStatus() {
+	d.cachedStateStatus = nil
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {
@@ -1261,6 +1290,11 @@ func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 				}
 			}
 		}
+	}
+	// Most projects have no runx packages. Don't touch the filesystem for
+	// them unless a previous run left links behind that need removing.
+	if len(links) == 0 && !fileutil.Exists(runxBinPath) {
+		return runxBinPath, nil
 	}
 	if err := syncSymlinks(runxBinPath, links); err != nil {
 		return "", err

@@ -261,15 +261,19 @@ Each ~5–20 LOC:
 - Run `nix flake prefetch` once instead of twice
   (`internal/nix/nixpkgs.go:39-78`): use `--json` on the first call and save
   the location from its output.
-- `RunXPaths` (`internal/devbox/devbox.go:1196`) deletes and recreates
-  `.devbox/virtenv/runx/bin` on every env compute. Skip it when there are no
-  runx packages, and otherwise only rewrite changed links.
-- `WriteScriptsToFiles` (`internal/shellgen/scripts.go:41`) rewrites all
-  scripts on every `devbox run`. Use the existing `overwriteFileIfChanged`
-  (`internal/shellgen/generate.go:106`).
-- `IsUpToDateAndInstalled` runs 2–3 times per shellenv
-  (`internal/devbox/packages.go:310`, `internal/devbox/devbox.go:877`).
-  Memoize it per `Devbox` instance.
+- (done in #PRNUM) `RunXPaths` (`internal/devbox/devbox.go`) deleted and
+  recreated `.devbox/virtenv/runx/bin` on every env compute. #3019 already made
+  it rewrite only changed links; it now also skips the filesystem entirely
+  when there are no runx packages and no leftover links.
+- (done in #PRNUM) `WriteScriptsToFiles` (`internal/shellgen/scripts.go`)
+  rewrote all scripts on every `devbox run`. It now skips scripts whose
+  contents and mode already match. It doesn't use `overwriteFileIfChanged`,
+  because that writes in place and would bring back the races fixed in #3032
+  and #3037.
+- (done in #PRNUM) `StateStatus` (formerly `IsUpToDateAndInstalled`) ran twice
+  per shellenv (`ensureStateIsUpToDateAndComputeEnv` and
+  `ensureStateIsUpToDate`). It's now memoized on the `Devbox` for the duration
+  of one such call and dropped when the call returns or changes state.
 
 ---
 
