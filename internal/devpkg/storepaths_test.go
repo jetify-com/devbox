@@ -20,17 +20,17 @@ type fakeNix struct {
 	singleCalls  []string
 }
 
-func (f *fakeNix) query(installables map[string][]string, resolved map[string][]string, secure, insecure []string) *storePathQuery[string] {
+func (fake *fakeNix) query(installables map[string][]string, resolved map[string][]string, secure, insecure []string) *storePathQuery[string] {
 	return &storePathQuery[string]{
 		resolved:     resolved,
 		secure:       secure,
 		insecure:     insecure,
 		installables: installables,
 		pathInfo: func(_ context.Context, inst []string, _ bool) ([]string, error) {
-			f.pathInfoArgs = append(f.pathInfoArgs, inst)
+			fake.pathInfoArgs = append(fake.pathInfoArgs, inst)
 			paths := []string{}
 			for _, i := range inst {
-				if f.failing[i] {
+				if fake.failing[i] {
 					return nil, errors.New("eval failed: " + i)
 				}
 				paths = append(paths, "/nix/store/"+strings.ReplaceAll(i, "#", "-"))
@@ -40,15 +40,15 @@ func (f *fakeNix) query(installables map[string][]string, resolved map[string][]
 		inStore: func(_ context.Context, paths []string) (map[string]bool, error) {
 			m := map[string]bool{}
 			for _, p := range paths {
-				m[p] = f.inStore[p]
+				m[p] = fake.inStore[p]
 			}
 			return m, nil
 		},
 		single: func(_ context.Context, item string) ([]string, error) {
-			f.singleCalls = append(f.singleCalls, item)
+			fake.singleCalls = append(fake.singleCalls, item)
 			paths := []string{}
 			for _, i := range installables[item] {
-				if f.failing[i] {
+				if fake.failing[i] {
 					return nil, errors.New("error installing package " + item)
 				}
 				paths = append(paths, "/nix/store/"+strings.ReplaceAll(i, "#", "-"))
@@ -65,35 +65,35 @@ var testInstallables = map[string][]string{
 }
 
 func TestNotInStoreAllInstalledUsesOneBatch(t *testing.T) {
-	f := &fakeNix{inStore: map[string]bool{
+	fake := &fakeNix{inStore: map[string]bool{
 		"/nix/store/a-out": true, "/nix/store/a-man": true,
 		"/nix/store/b-out": true, "/nix/store/c-out": true,
 		"/nix/store/resolved": true,
 	}}
-	q := f.query(testInstallables, map[string][]string{"r": {"/nix/store/resolved"}}, []string{"a", "b", "c"}, nil)
-	missing, err := q.notInStore(context.Background(), []string{"r", "a", "b", "c"})
+	query := fake.query(testInstallables, map[string][]string{"r": {"/nix/store/resolved"}}, []string{"a", "b", "c"}, nil)
+	missing, err := query.notInStore(context.Background(), []string{"r", "a", "b", "c"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(missing) != 0 {
 		t.Errorf("got missing %v, want none", missing)
 	}
-	if len(f.pathInfoArgs) != 1 || len(f.pathInfoArgs[0]) != 4 {
-		t.Errorf("got path-info calls %v, want one call with all 4 installables", f.pathInfoArgs)
+	if len(fake.pathInfoArgs) != 1 || len(fake.pathInfoArgs[0]) != 4 {
+		t.Errorf("got path-info calls %v, want one call with all 4 installables", fake.pathInfoArgs)
 	}
-	if len(f.singleCalls) != 0 {
-		t.Errorf("got single calls %v, want none", f.singleCalls)
+	if len(fake.singleCalls) != 0 {
+		t.Errorf("got single calls %v, want none", fake.singleCalls)
 	}
 }
 
 func TestNotInStoreMissingPathIsAttributed(t *testing.T) {
-	f := &fakeNix{inStore: map[string]bool{
+	fake := &fakeNix{inStore: map[string]bool{
 		"/nix/store/a-out": true, // a-man is missing
 		"/nix/store/b-out": true,
 		// resolved r is missing
 	}}
-	q := f.query(testInstallables, map[string][]string{"r": {"/nix/store/resolved"}}, []string{"a", "b"}, []string{"c"})
-	missing, err := q.notInStore(context.Background(), []string{"r", "a", "b", "c"})
+	query := fake.query(testInstallables, map[string][]string{"r": {"/nix/store/resolved"}}, []string{"a", "b"}, []string{"c"})
+	missing, err := query.notInStore(context.Background(), []string{"r", "a", "b", "c"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,22 +101,22 @@ func TestNotInStoreMissingPathIsAttributed(t *testing.T) {
 		t.Errorf("got missing %v, want %v", missing, want)
 	}
 	// The single insecure item skips the batch call.
-	if len(f.pathInfoArgs) != 1 {
-		t.Errorf("got path-info calls %v, want 1", f.pathInfoArgs)
+	if len(fake.pathInfoArgs) != 1 {
+		t.Errorf("got path-info calls %v, want 1", fake.pathInfoArgs)
 	}
-	if want := []string{"c", "a", "b"}; !slices.Equal(f.singleCalls, want) {
-		t.Errorf("got single calls %v, want %v", f.singleCalls, want)
+	if want := []string{"c", "a", "b"}; !slices.Equal(fake.singleCalls, want) {
+		t.Errorf("got single calls %v, want %v", fake.singleCalls, want)
 	}
 }
 
 func TestNotInStoreBatchErrorIsAttributed(t *testing.T) {
-	f := &fakeNix{failing: map[string]bool{"b#out": true}}
-	q := f.query(testInstallables, nil, []string{"a", "b", "c"}, nil)
-	_, err := q.notInStore(context.Background(), []string{"a", "b", "c"})
+	fake := &fakeNix{failing: map[string]bool{"b#out": true}}
+	query := fake.query(testInstallables, nil, []string{"a", "b", "c"}, nil)
+	_, err := query.notInStore(context.Background(), []string{"a", "b", "c"})
 	if err == nil || err.Error() != "error installing package b" {
 		t.Errorf("got error %v, want error attributed to package b", err)
 	}
-	if want := []string{"a", "b"}; !slices.Equal(f.singleCalls, want) {
-		t.Errorf("got single calls %v, want %v", f.singleCalls, want)
+	if want := []string{"a", "b"}; !slices.Equal(fake.singleCalls, want) {
+		t.Errorf("got single calls %v, want %v", fake.singleCalls, want)
 	}
 }
