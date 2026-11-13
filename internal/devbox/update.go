@@ -43,42 +43,9 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		return err
 	}
 
-	// Legacy (unversioned) packages are migrated to versioned ones by
-	// replacing them in the config. This only edits the config; packages are
-	// installed once by the ensureStateIsUpToDate call below.
-	pendingPackagesToUpdate := []*devpkg.Package{}
-	var migrated []*addedPackages
-	for _, pkg := range inputs {
-		if !pkg.IsLegacy() {
-			pendingPackagesToUpdate = append(pendingPackagesToUpdate, pkg)
-			continue
-		}
-		fmt.Fprintf(d.stderr, "Updating %s -> %s\n", pkg.Raw, pkg.LegacyToVersioned())
-
-		// Get the package from the config to get the Platforms and ExcludedPlatforms later
-		cfgPackage, ok := d.cfg.Root.GetPackage(pkg.Raw)
-		if !ok {
-			return fmt.Errorf("package %s not found in config", pkg.Raw)
-		}
-
-		if err := d.removeFromConfig(pkg.Raw); err != nil {
-			return err
-		}
-		// Calling addToConfig with the original package names, since it will
-		// automatically append @latest if search is able to handle that.
-		// If not, it will fallback to the nixpkg format.
-		added, err := d.addToConfig(ctx, []string{pkg.Raw}, devopt.AddOpts{
-			Platforms:        cfgPackage.Platforms,
-			ExcludePlatforms: cfgPackage.ExcludedPlatforms,
-		})
-		if err != nil {
-			return err
-		}
-		if slices.Contains(added.addedNames, pkg.Raw) {
-			// Re-added under the same (unversioned) name: resolve it fresh.
-			d.forgetLockEntry(pkg.Raw)
-		}
-		migrated = append(migrated, added)
+	pendingPackagesToUpdate, migrated, err := d.migrateLegacyPackages(ctx, inputs)
+	if err != nil {
+		return err
 	}
 
 	changed, err := d.updatePendingPackages(pendingPackagesToUpdate)
@@ -123,6 +90,53 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	}
 
 	return plugin.Update()
+}
+
+// migrateLegacyPackages migrates legacy (unversioned) packages in inputs to
+// versioned ones by replacing them in the config. It only edits the config;
+// the caller installs packages once with ensureStateIsUpToDate. It returns the
+// non-legacy packages, whose lockfile entries still need updating, and what
+// was added for each migrated package.
+func (d *Devbox) migrateLegacyPackages(
+	ctx context.Context,
+	inputs []*devpkg.Package,
+) ([]*devpkg.Package, []*addedPackages, error) {
+	pending := []*devpkg.Package{}
+	var migrated []*addedPackages
+	for _, pkg := range inputs {
+		if !pkg.IsLegacy() {
+			pending = append(pending, pkg)
+			continue
+		}
+		fmt.Fprintf(d.stderr, "Updating %s -> %s\n", pkg.Raw, pkg.LegacyToVersioned())
+
+		// Get the package from the config to get the Platforms and ExcludedPlatforms later
+		cfgPackage, ok := d.cfg.Root.GetPackage(pkg.Raw)
+		if !ok {
+			return nil, nil, fmt.Errorf("package %s not found in config", pkg.Raw)
+		}
+
+		if err := d.removeFromConfig(pkg.Raw); err != nil {
+			return nil, nil, err
+		}
+		// Calling addToConfig with the original package names, since it will
+		// automatically append @latest if search is able to handle that.
+		// If not, it will fallback to the nixpkg format.
+		added, err := d.addToConfig(ctx, []string{pkg.Raw}, devopt.AddOpts{
+			Platforms:        cfgPackage.Platforms,
+			ExcludePlatforms: cfgPackage.ExcludedPlatforms,
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		if slices.Contains(added.addedNames, pkg.Raw) {
+			// Re-added under the same (unversioned) name: resolve it fresh.
+			d.forgetLockEntry(pkg.Raw)
+		}
+		migrated = append(migrated, added)
+	}
+
+	return pending, migrated, nil
 }
 
 func (d *Devbox) inputsToUpdate(
