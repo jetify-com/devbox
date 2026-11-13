@@ -86,6 +86,38 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 	ctx, task := trace.NewTask(ctx, "devboxAdd")
 	defer task.End()
 
+	added, err := d.addToConfig(ctx, pkgsNames, opts)
+	if err != nil {
+		return err
+	}
+
+	if err := d.ensureStateIsUpToDate(ctx, install); err != nil {
+		return usererr.WithUserMessage(err, "There was an error installing nix packages")
+	}
+
+	if err := d.saveCfg(); err != nil {
+		return err
+	}
+
+	return d.printPostAddMessage(ctx, added.pkgs, added.unchangedPackageNames, opts)
+}
+
+// addedPackages is what addToConfig added, for printPostAddMessage.
+type addedPackages struct {
+	pkgs                  []*devpkg.Package
+	unchangedPackageNames []string
+	opts                  devopt.AddOpts
+}
+
+// addToConfig validates `pkgsNames` and adds them to the in-memory config,
+// replacing any package with the same canonical name. It does not install
+// anything or save the config; callers run ensureStateIsUpToDate and saveCfg
+// once after all config changes are made.
+func (d *Devbox) addToConfig(
+	ctx context.Context,
+	pkgsNames []string,
+	opts devopt.AddOpts,
+) (*addedPackages, error) {
 	// Track which packages had no changes so we can report that to the user.
 	unchangedPackageNames := []string{}
 
@@ -128,7 +160,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			// Search kept failing even after retries, so we don't know whether the
 			// package exists. Don't silently fall back to nixpkgs (which would drop
 			// the version); tell the user and show how to opt into it.
-			return d.searchUnavailableError(pkg, err)
+			return nil, d.searchUnavailableError(pkg, err)
 		} else if errors.Is(err, nix.ErrPackageNotFound) &&
 			versionedPkg.IsDevboxPackage &&
 			!strings.Contains(pkg.CanonicalName(), ".") {
@@ -137,11 +169,11 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			// either. Nested attribute paths (e.g. stdenv.cc.cc.lib, openssl.dev,
 			// python3Packages.requests) are not all indexed, so those still fall
 			// back below.
-			return packageNotFoundError(pkg)
+			return nil, packageNotFoundError(pkg)
 		} else if !versionedPkg.IsDevboxPackage {
 			// This means it didn't validate and we don't want to fallback to legacy
 			// Just propagate the error.
-			return err
+			return nil, err
 		} else {
 			installable := flake.Installable{
 				Ref:      d.lockfile.Stdenv(),
@@ -151,7 +183,7 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 			if err != nil {
 				// This means it looked like a devbox package or attribute path, but we
 				// could not find it in search or in the legacy nixpkgs path.
-				return packageNotFoundError(pkg)
+				return nil, packageNotFoundError(pkg)
 			}
 		}
 
@@ -163,8 +195,8 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 		found, _ := d.findPackageByName(pkg.CanonicalName())
 		if found != nil {
 			ux.Finfof(d.stderr, "Replacing package %q in devbox.json\n", found.Raw)
-			if err := d.Remove(ctx, found.Raw); err != nil {
-				return err
+			if err := d.removeFromConfig(found.Raw); err != nil {
+				return nil, err
 			}
 		}
 
@@ -175,18 +207,14 @@ func (d *Devbox) Add(ctx context.Context, pkgsNames []string, opts devopt.AddOpt
 
 	// Options must be set before ensureStateIsUpToDate. See comment in function
 	if err := d.setPackageOptions(addedPackageNames, opts); err != nil {
-		return err
+		return nil, err
 	}
 
-	if err := d.ensureStateIsUpToDate(ctx, install); err != nil {
-		return usererr.WithUserMessage(err, "There was an error installing nix packages")
-	}
-
-	if err := d.saveCfg(); err != nil {
-		return err
-	}
-
-	return d.printPostAddMessage(ctx, pkgs, unchangedPackageNames, opts)
+	return &addedPackages{
+		pkgs:                  pkgs,
+		unchangedPackageNames: unchangedPackageNames,
+		opts:                  opts,
+	}, nil
 }
 
 func packageNotFoundError(pkg *devpkg.Package) error {
@@ -298,12 +326,29 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 	ctx, task := trace.NewTask(ctx, "devboxRemove")
 	defer task.End()
 
-	packagesToUninstall := []string{}
+	if err := d.removeFromConfig(pkgs...); err != nil {
+		return err
+	}
+
+	// this will clean up the now-extra package from nix profile and the lockfile
+	if err := d.ensureStateIsUpToDate(ctx, uninstall); err != nil {
+		return err
+	}
+
+	return d.saveCfg()
+}
+
+// removeFromConfig removes `pkgs` from the in-memory config and cleans up
+// their plugin files. It does not uninstall anything or save the config;
+// callers run ensureStateIsUpToDate and saveCfg once after all config changes
+// are made.
+func (d *Devbox) removeFromConfig(pkgs ...string) error {
+	removed := []string{}
 	missingPkgs := []string{}
 	for _, pkg := range lo.Uniq(pkgs) {
 		found, _ := d.findPackageByName(pkg)
 		if found != nil {
-			packagesToUninstall = append(packagesToUninstall, found.Raw)
+			removed = append(removed, found.Raw)
 			d.cfg.PackageMutator().Remove(found.Raw)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
@@ -318,16 +363,7 @@ func (d *Devbox) Remove(ctx context.Context, pkgs ...string) error {
 		)
 	}
 
-	if err := plugin.Remove(d.projectDir, packagesToUninstall); err != nil {
-		return err
-	}
-
-	// this will clean up the now-extra package from nix profile and the lockfile
-	if err := d.ensureStateIsUpToDate(ctx, uninstall); err != nil {
-		return err
-	}
-
-	return d.saveCfg()
+	return plugin.Remove(d.projectDir, removed)
 }
 
 // installMode is an enum for helping with ensureStateIsUpToDate implementation
@@ -611,17 +647,6 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 		return err
 	}
 
-	// --no-link to avoid generating the result objects
-	flags := []string{"--no-link"}
-	if mode == update {
-		flags = append(flags, "--refresh")
-	}
-
-	args := &nix.BuildArgs{
-		Flags:  flags,
-		Writer: d.stderr,
-	}
-
 	packageNames := lo.Map(
 		packages,
 		func(p *devpkg.Package, _ int) string { return p.Raw },
@@ -632,32 +657,52 @@ func (d *Devbox) installNixPackagesToStore(ctx context.Context, mode installMode
 		strings.Join(packageNames, ", "),
 	)
 
-	installables := map[bool][]string{false: {}, true: {}}
+	// Group installables by the flags they need. Only packages whose lockfile
+	// entry changed in this update are built with --refresh; the rest are
+	// just missing from the store and don't need to bypass nix's caches.
+	type buildGroup struct {
+		allowInsecure bool
+		refresh       bool
+	}
+	installables := map[buildGroup][]string{}
 	for _, pkg := range packages {
 		pkgInstallables, err := pkg.Installables()
 		if err != nil {
 			return err
 		}
-		installables[pkg.HasAllowInsecure()] = append(
-			installables[pkg.HasAllowInsecure()],
-			pkgInstallables...,
-		)
+		group := buildGroup{
+			allowInsecure: pkg.HasAllowInsecure(),
+			refresh:       mode == update && d.isBeingUpdated(pkg),
+		}
+		installables[group] = append(installables[group], pkgInstallables...)
 	}
 
-	for allowInsecure, installables := range installables {
-		if len(installables) == 0 {
-			continue
+	// Iterate in a fixed order so builds are deterministic.
+	for _, refresh := range []bool{false, true} {
+		for _, allowInsecure := range []bool{false, true} {
+			group := buildGroup{allowInsecure: allowInsecure, refresh: refresh}
+			if len(installables[group]) == 0 {
+				continue
+			}
+			// --no-link to avoid generating the result objects
+			flags := []string{"--no-link"}
+			if refresh {
+				flags = append(flags, "--refresh")
+			}
+			eventStart := time.Now()
+			err = nix.Build(ctx, &nix.BuildArgs{
+				AllowInsecure: allowInsecure,
+				Flags:         flags,
+				Writer:        d.stderr,
+			}, installables[group]...)
+			if err != nil {
+				return err
+			}
+			telemetry.Event(telemetry.EventNixBuildSuccess, telemetry.Metadata{
+				EventStart: eventStart,
+				Packages:   packageNames,
+			})
 		}
-		eventStart := time.Now()
-		args.AllowInsecure = allowInsecure
-		err = nix.Build(ctx, args, installables...)
-		if err != nil {
-			return err
-		}
-		telemetry.Event(telemetry.EventNixBuildSuccess, telemetry.Metadata{
-			EventStart: eventStart,
-			Packages:   packageNames,
-		})
 	}
 
 	return nil

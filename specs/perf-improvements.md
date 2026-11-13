@@ -206,7 +206,7 @@ Fall back to the command for unknown manifest versions.
 
 ## Tier 3: `install` / `add` / `update`
 
-### 12. Resolve packages in parallel in `devbox update`
+### 12. Resolve packages in parallel in `devbox update` (done in #PRNUM)
 
 **Effort:** ~30–50 LOC.
 
@@ -225,7 +225,7 @@ concurrency-safe. Fix: make lockfile resolution safe to call concurrently
 (lock around lockfile mutation, do the search request outside the lock), then
 resolve in parallel. Also speeds up `devbox add a b c`.
 
-### 14. Don't `--refresh` unchanged packages on update
+### 14. Don't `--refresh` unchanged packages on update (done in #PRNUM)
 
 **Effort:** ~20–40 LOC.
 
@@ -243,7 +243,7 @@ installables across packages and run a single `nix path-info` call, then map
 results back. Keep the per-package error handler for the failure case (retry
 individually to attribute the error).
 
-### 16. Avoid repeated full recomputes in `Add` / `Update`
+### 16. Avoid repeated full recomputes in `Add` / `Update` (done in #PRNUM)
 
 **Effort:** ~30–60 LOC.
 
@@ -256,8 +256,9 @@ config-only remove/add, and run a single `ensureStateIsUpToDate` at the end.
 ### 17. Smaller cleanups
 
 Each ~5–20 LOC:
-- Remove the `nix.FlakeUpdate` call in `internal/devbox/update.go:100`; its
-  own comment says it probably isn't needed.
+- (done in #PRNUM) Remove the `nix.FlakeUpdate` call in
+  `internal/devbox/update.go:100`; its own comment says it probably isn't
+  needed.
 - Run `nix flake prefetch` once instead of twice
   (`internal/nix/nixpkgs.go:39-78`): use `--json` on the first call and save
   the location from its output.
