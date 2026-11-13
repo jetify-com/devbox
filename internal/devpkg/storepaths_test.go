@@ -20,7 +20,7 @@ type fakeNix struct {
 	singleCalls  []string
 }
 
-func (fake *fakeNix) query(installables map[string][]string, resolved map[string][]string, secure, insecure []string) *storePathQuery[string] {
+func (fake *fakeNix) query(installables, resolved map[string][]string, secure, insecure []string) *storePathQuery[string] {
 	return &storePathQuery[string]{
 		resolved:     resolved,
 		secure:       secure,
