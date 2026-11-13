@@ -187,3 +187,23 @@ func TestSyncSymlinksConcurrent(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, entries, len(links))
 }
+
+func TestRunXPathsWithoutRunXPackages(t *testing.T) {
+	dir := t.TempDir()
+	box := openStateTestProject(t, dir, stateTestConfig)
+	binDir := filepath.Join(dir, ".devbox", "virtenv", "runx", "bin")
+
+	got, err := box.RunXPaths(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, binDir, got)
+	assert.NoDirExists(t, binDir, "runx bin dir should not be created without runx packages")
+
+	// Links left behind by a removed runx package are cleaned up.
+	require.NoError(t, os.MkdirAll(binDir, 0o755))
+	require.NoError(t, os.Symlink("/nonexistent", filepath.Join(binDir, "stale")))
+	_, err = box.RunXPaths(t.Context())
+	require.NoError(t, err)
+	entries, err := os.ReadDir(binDir)
+	require.NoError(t, err)
+	assert.Empty(t, entries)
+}

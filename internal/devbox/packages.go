@@ -358,7 +358,13 @@ func (d *Devbox) ensureStateIsUpToDate(ctx context.Context, mode installMode) er
 	defer trace.StartRegion(ctx, "devboxEnsureStateIsUpToDate").End()
 	defer debug.FunctionTimer().End()
 
-	status, err := d.lockfile.StateStatus(isFishShell())
+	if mode != ensure {
+		// The caller changed the config, so a cached status is stale.
+		d.invalidateStateStatus()
+	}
+	// This function changes the state, so drop the status when it returns.
+	defer d.invalidateStateStatus()
+	status, err := d.stateStatus()
 	if err != nil {
 		return err
 	}
