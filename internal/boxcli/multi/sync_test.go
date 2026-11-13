@@ -27,7 +27,7 @@ func TestSyncLockfilesOnlyRequestedPackages(t *testing.T) {
 			f.Packages[key] = &lock.Package{LastModified: lastModified, Resolved: key + "-" + lastModified}
 		}
 		path := filepath.Join(dir, "devbox.lock")
-		if err := cuecfg.WriteFile(path, f); err != nil {
+		if err := cuecfg.WriteFile(path, &f); err != nil {
 			t.Fatal(err)
 		}
 		return path

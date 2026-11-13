@@ -8,10 +8,14 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/pkg/filecache"
 )
 
@@ -241,4 +245,68 @@ func TestFetchNarInfoStatusCache(t *testing.T) {
 			t.Error("expected disk cache to be unusable in this test")
 		}
 	})
+}
+
+// blockingLocker is a lock.Locker whose Resolve blocks until release is
+// closed, and reports each call on inFlight.
+type blockingLocker struct {
+	lockfile
+	inFlight chan struct{}
+	release  chan struct{}
+}
+
+func (l *blockingLocker) Resolve(pkg string) (*lock.Package, error) {
+	l.inFlight <- struct{}{}
+	<-l.release
+
+	entry := &lock.Package{
+		Resolved: "github:NixOS/nixpkgs/" + nixCommitHash + "#" + pkg,
+	}
+	// Packages named "uncached@..." have no system info, so they're not
+	// eligible for the binary cache.
+	if !strings.HasPrefix(pkg, "uncached@") {
+		entry.Systems = map[string]*lock.SystemInfo{nix.System(): {}}
+	}
+	return entry, nil
+}
+
+func TestEligibleForBinaryCacheResolvesConcurrently(t *testing.T) {
+	if !nix.AtLeast(nix.Version2_17) {
+		t.Skip("binary cache eligibility requires nix >= 2.17")
+	}
+
+	raws := []string{"hello@1", "uncached@1", "jq@1", "curl@1"}
+	locker := &blockingLocker{
+		inFlight: make(chan struct{}, len(raws)),
+		release:  make(chan struct{}),
+	}
+	pkgs := make([]*Package, len(raws))
+	for i, raw := range raws {
+		pkgs[i] = PackageFromStringWithDefaults(raw, locker)
+	}
+
+	done := make(chan []*Package)
+	go func() { done <- eligibleForBinaryCache(pkgs) }()
+
+	// All resolves must be in flight at once. If eligibility were checked
+	// serially, only the first would start and this would time out.
+	timeout := time.After(10 * time.Second)
+	for range raws {
+		select {
+		case <-locker.inFlight:
+		case <-timeout:
+			t.Fatal("packages were not resolved concurrently")
+		}
+	}
+	close(locker.release)
+
+	got := <-done
+	var gotRaws []string
+	for _, p := range got {
+		gotRaws = append(gotRaws, p.Raw)
+	}
+	want := []string{"hello@1", "jq@1", "curl@1"}
+	if !slices.Equal(gotRaws, want) {
+		t.Errorf("got eligible packages %v, want %v", gotRaws, want)
+	}
 }
