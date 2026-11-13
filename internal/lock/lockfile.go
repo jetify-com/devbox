@@ -94,7 +94,7 @@ func (f *File) Resolve(pkg string) (*Package, error) {
 	if entry := f.resolvedEntry(pkg); entry != nil {
 		return entry, nil
 	}
-	v, err, _ := f.resolving.Do(pkg, func() (any, error) {
+	result, err, _ := f.resolving.Do(pkg, func() (any, error) {
 		// Another call may have finished resolving pkg between the check
 		// above and joining this group.
 		if entry := f.resolvedEntry(pkg); entry != nil {
@@ -112,7 +112,7 @@ func (f *File) Resolve(pkg string) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	return v.(*Package), nil
+	return result.(*Package), nil
 }
 
 // resolvedEntry returns the lockfile entry for pkg if it's already resolved, or
@@ -308,18 +308,18 @@ func (f *File) StateStatus(isFish bool) (StateStatus, error) {
 }
 
 func (f *File) SetOutputsForPackage(pkg string, outputs []Output) error {
-	p, err := f.Resolve(pkg)
+	entry, err := f.Resolve(pkg)
 	if err != nil {
 		return err
 	}
 	f.mu.Lock()
-	if p.Systems == nil {
-		p.Systems = map[string]*SystemInfo{}
+	if entry.Systems == nil {
+		entry.Systems = map[string]*SystemInfo{}
 	}
-	if p.Systems[nix.System()] == nil {
-		p.Systems[nix.System()] = &SystemInfo{}
+	if entry.Systems[nix.System()] == nil {
+		entry.Systems[nix.System()] = &SystemInfo{}
 	}
-	p.Systems[nix.System()].Outputs = outputs
+	entry.Systems[nix.System()].Outputs = outputs
 	f.mu.Unlock()
 	return f.Save()
 }

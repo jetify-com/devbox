@@ -33,18 +33,18 @@ type fakeResolveServer struct {
 
 func newFakeResolveServer(t *testing.T) *fakeResolveServer {
 	t.Helper()
-	s := &fakeResolveServer{
+	srv := &fakeResolveServer{
 		requests: map[string]int{},
 		inFlight: make(chan string, 100),
 		release:  make(chan struct{}),
 	}
-	s.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		name := r.URL.Query().Get("name")
-		s.mu.Lock()
-		s.requests[name]++
-		s.mu.Unlock()
-		s.inFlight <- name
-		<-s.release
+		srv.mu.Lock()
+		srv.requests[name]++
+		srv.mu.Unlock()
+		srv.inFlight <- name
+		<-srv.release
 
 		info := searcher.PackageInfo{
 			CommitHash: "1111111111111111111111111111111111111111",
@@ -58,10 +58,10 @@ func newFakeResolveServer(t *testing.T) *fakeResolveServer {
 			Systems: map[string]searcher.PackageInfo{"x86_64-linux": info},
 		})
 	}))
-	t.Cleanup(s.Close)
-	t.Setenv(envir.DevboxSearchHost, s.URL)
+	t.Cleanup(srv.Close)
+	t.Setenv(envir.DevboxSearchHost, srv.URL)
 	t.Setenv("DEVBOX_FEATURE_RESOLVE_V2", "0")
-	return s
+	return srv
 }
 
 func (s *fakeResolveServer) requestCount(name string) int {
@@ -76,7 +76,7 @@ func (s *fakeResolveServer) requestCount(name string) int {
 // entry.
 func TestResolveConcurrent(t *testing.T) {
 	srv := newFakeResolveServer(t)
-	f := &File{Packages: map[string]*Package{}}
+	lockfile := &File{Packages: map[string]*Package{}}
 
 	names := []string{"hello", "jq", "ripgrep", "curl", "git"}
 	const callersPerPkg = 4
@@ -87,12 +87,12 @@ func TestResolveConcurrent(t *testing.T) {
 		err   error
 	}
 	results := make(chan result, len(names)*callersPerPkg)
-	var wg sync.WaitGroup
+	var callers sync.WaitGroup
 	for _, name := range names {
 		pkg := name + "@1.0"
 		for range callersPerPkg {
-			wg.Go(func() {
-				entry, err := f.Resolve(pkg)
+			callers.Go(func() {
+				entry, err := lockfile.Resolve(pkg)
 				results <- result{pkg, entry, err}
 			})
 		}
@@ -113,20 +113,20 @@ func TestResolveConcurrent(t *testing.T) {
 	}
 
 	// While the requests are blocked, the lockfile must stay usable.
-	if f.Get("hello@1.0") != nil {
+	if lockfile.Get("hello@1.0") != nil {
 		t.Error("Get returned an entry for a package that is still resolving")
 	}
-	_ = f.HasAllowInsecurePackages()
+	_ = lockfile.HasAllowInsecurePackages()
 
 	close(srv.release)
-	wg.Wait()
+	callers.Wait()
 	close(results)
 
 	for r := range results {
 		if r.err != nil {
 			t.Fatalf("Resolve(%q): %v", r.pkg, r.err)
 		}
-		if got := f.Get(r.pkg); got != r.entry {
+		if got := lockfile.Get(r.pkg); got != r.entry {
 			t.Errorf("Resolve(%q) returned %p, but the lockfile has %p", r.pkg, r.entry, got)
 		}
 		name := r.pkg[:len(r.pkg)-len("@1.0")]
@@ -142,7 +142,7 @@ func TestResolveConcurrent(t *testing.T) {
 	}
 
 	// Resolving again uses the lockfile and makes no requests.
-	if _, err := f.Resolve("hello@1.0"); err != nil {
+	if _, err := lockfile.Resolve("hello@1.0"); err != nil {
 		t.Fatal(err)
 	}
 	if got := srv.requestCount("hello"); got != 1 {
@@ -175,32 +175,32 @@ func TestResolveConcurrentError(t *testing.T) {
 	t.Setenv(envir.DevboxSearchHost, srv.URL)
 	t.Setenv("DEVBOX_FEATURE_RESOLVE_V2", "0")
 
-	f := &File{Packages: map[string]*Package{}}
-	var wg sync.WaitGroup
+	lockfile := &File{Packages: map[string]*Package{}}
+	var callers sync.WaitGroup
 	errs := make(chan error, 8)
 	for range 8 {
-		wg.Go(func() {
-			_, err := f.Resolve("hello@1.0")
+		callers.Go(func() {
+			_, err := lockfile.Resolve("hello@1.0")
 			errs <- err
 		})
 	}
-	wg.Wait()
+	callers.Wait()
 	close(errs)
 	for err := range errs {
 		if !errors.Is(err, nix.ErrPackageNotFound) {
 			t.Errorf("got error %v, want nix.ErrPackageNotFound", err)
 		}
 	}
-	if f.Get("hello@1.0") != nil {
+	if lockfile.Get("hello@1.0") != nil {
 		t.Error("failed resolve was stored in the lockfile")
 	}
 
 	fail.Store(false)
-	entry, err := f.Resolve("hello@1.0")
+	entry, err := lockfile.Resolve("hello@1.0")
 	if err != nil {
 		t.Fatalf("Resolve after failure: %v", err)
 	}
-	if f.Get("hello@1.0") != entry {
+	if lockfile.Get("hello@1.0") != entry {
 		t.Error("successful resolve wasn't stored in the lockfile")
 	}
 }
