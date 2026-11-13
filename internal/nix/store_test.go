@@ -56,3 +56,20 @@ func TestParseStorePathFromInstallableOutput(t *testing.T) {
 		})
 	}
 }
+
+func TestParsePrefetchStorePath(t *testing.T) {
+	out := `{"hash":"sha256-abc=","locked":{"owner":"NixOS","repo":"nixpkgs","type":"github"},"original":{"type":"github"},"storePath":"/nix/store/abc-source"}`
+	got, err := parsePrefetchStorePath([]byte(out))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "/nix/store/abc-source"; got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+	if _, err := parsePrefetchStorePath([]byte(`{}`)); err == nil {
+		t.Error("got nil error for output without storePath")
+	}
+	if _, err := parsePrefetchStorePath([]byte(`not json`)); err == nil {
+		t.Error("got nil error for non-JSON output")
+	}
+}

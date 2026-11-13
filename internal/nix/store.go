@@ -26,10 +26,23 @@ func StorePathFromHashPart(ctx context.Context, hash, storeAddr string) (string,
 }
 
 func StorePathsFromInstallable(ctx context.Context, installable string, allowInsecure bool) ([]string, error) {
+	return StorePathsFromInstallables(ctx, []string{installable}, allowInsecure)
+}
+
+// StorePathsFromInstallables runs a single `nix path-info` for all
+// installables and returns the union of their store paths. The output doesn't
+// say which installable produced which path.
+func StorePathsFromInstallables(ctx context.Context, installables []string, allowInsecure bool) ([]string, error) {
 	defer debug.FunctionTimer().End()
+	if len(installables) == 0 {
+		return nil, nil
+	}
 
 	// --impure for NIXPKGS_ALLOW_UNFREE
-	cmd := Command("path-info", FixInstallableArg(installable), "--json", "--impure")
+	cmd := Command("path-info", "--json", "--impure")
+	for _, installable := range installables {
+		cmd.Args = append(cmd.Args, FixInstallableArg(installable))
+	}
 	cmd.Env = allowUnfreeEnv(os.Environ())
 
 	if allowInsecure {
@@ -44,7 +57,7 @@ func StorePathsFromInstallable(ctx context.Context, installable string, allowIns
 
 	paths, err := parseStorePathFromInstallableOutput(resultBytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse path-info for %s: %w", installable, err)
+		return nil, fmt.Errorf("failed to parse path-info for %s: %w", strings.Join(installables, " "), err)
 	}
 
 	return maps.Keys(paths), nil

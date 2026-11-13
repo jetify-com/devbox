@@ -674,33 +674,20 @@ func (d *Devbox) packagesToInstallInStore(ctx context.Context, mode installMode)
 
 	// Second, check which packages are not in the nix store
 	packagesToInstall := []*devpkg.Package{}
-	storePathsForPackage := map[*devpkg.Package][]string{}
+	packagesToCheck := []*devpkg.Package{}
 	for _, pkg := range packages {
 		if mode == update && d.isBeingUpdated(pkg) {
 			packagesToInstall = append(packagesToInstall, pkg)
-			continue
-		}
-		var err error
-		storePathsForPackage[pkg], err = pkg.GetStorePaths(ctx, d.stderr)
-		if err != nil {
-			return nil, err
+		} else {
+			packagesToCheck = append(packagesToCheck, pkg)
 		}
 	}
 
-	// Batch this for perf
-	storePathMap, err := nix.StorePathsAreInStore(ctx, lo.Flatten(lo.Values(storePathsForPackage)))
+	notInStore, err := devpkg.PackagesNotInStore(ctx, d.stderr, packagesToCheck)
 	if err != nil {
 		return nil, err
 	}
-
-	for pkg, storePaths := range storePathsForPackage {
-		for _, storePath := range storePaths {
-			if !storePathMap[storePath] {
-				packagesToInstall = append(packagesToInstall, pkg)
-				break
-			}
-		}
-	}
+	packagesToInstall = append(packagesToInstall, notInStore...)
 
 	return lo.Uniq(packagesToInstall), nil
 }
