@@ -233,7 +233,7 @@ resolve in parallel. Also speeds up `devbox add a b c`.
 (`internal/devbox/update.go:78`), even when its lockfile entry didn't change.
 Fix: only pass `--refresh` for packages whose resolved version/hash changed.
 
-### 15. Batch flake `nix path-info` calls
+### 15. Batch flake `nix path-info` calls (done in #3053)
 
 **Effort:** ~60–100 LOC.
 
@@ -260,7 +260,7 @@ Each ~5–20 LOC:
   own comment says it probably isn't needed.
 - Run `nix flake prefetch` once instead of twice
   (`internal/nix/nixpkgs.go:39-78`): use `--json` on the first call and save
-  the location from its output.
+  the location from its output. (done in #3053)
 - `RunXPaths` (`internal/devbox/devbox.go:1196`) deletes and recreates
   `.devbox/virtenv/runx/bin` on every env compute. Skip it when there are no
   runx packages, and otherwise only rewrite changed links.
