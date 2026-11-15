@@ -20,6 +20,7 @@ import (
 	"go.jetify.com/devbox/internal/conf"
 	"go.jetify.com/devbox/internal/devbox/envpath"
 	"go.jetify.com/devbox/internal/envir"
+	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/internal/ux"
 	"gopkg.in/yaml.v3"
 )
@@ -61,7 +62,13 @@ func (d *Devbox) sopsProcessEnv(existingEnv map[string]string) map[string]string
 	maps.Copy(env, existingEnv)
 	maps.Copy(env, conf.OSExpandEnvMap(d.cfg.Env(), existingEnv, d.ProjectDir()))
 	maps.Copy(env, d.env)
-	env["PATH"] = envpath.JoinPathLists(existingEnv["PATH"], runxBinPath(d.projectDir))
+	// The profile and runx come first: with OmitNixEnv, existingEnv's PATH
+	// already contains the host PATH.
+	env["PATH"] = envpath.JoinPathLists(
+		nix.ProfileBinPath(d.projectDir),
+		runxBinPath(d.projectDir),
+		existingEnv["PATH"],
+	)
 	// Outside of --pure, the final devbox PATH gets the host PATH appended
 	// after configEnvs.
 	if existingEnv["DEVBOX_PURE_SHELL"] != "1" {

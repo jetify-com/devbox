@@ -122,16 +122,24 @@ func TestSopsProcessEnv(t *testing.T) {
 	assert.Equal(t, filepath.Join(box.projectDir, "key.txt"), env["SOPS_AGE_KEY_FILE"])
 	assert.Equal(t, "/home/me", env["HOME"])
 	assert.Equal(t, "flag", env["FROM_FLAG"])
+	profile, runx := nix.ProfileBinPath(box.projectDir), runxBinPath(box.projectDir)
 	t.Setenv("PATH", "/host/bin")
-	env = box.sopsProcessEnv(map[string]string{"PATH": "/profile/bin"})
+	env = box.sopsProcessEnv(map[string]string{"PATH": "/nix/env/bin"})
 	assert.Equal(t, strings.Join(
-		[]string{"/profile/bin", runxBinPath(box.projectDir), "/host/bin"},
+		[]string{profile, runx, "/nix/env/bin", "/host/bin"},
 		string(filepath.ListSeparator),
 	), env["PATH"])
 
-	env = box.sopsProcessEnv(map[string]string{"PATH": "/profile/bin", "DEVBOX_PURE_SHELL": "1"})
+	// With OmitNixEnv, the computed PATH already contains the host PATH.
+	env = box.sopsProcessEnv(map[string]string{"PATH": "/host/bin"})
 	assert.Equal(t, strings.Join(
-		[]string{"/profile/bin", runxBinPath(box.projectDir)},
+		[]string{profile, runx, "/host/bin"},
+		string(filepath.ListSeparator),
+	), env["PATH"])
+
+	env = box.sopsProcessEnv(map[string]string{"PATH": "/nix/env/bin", "DEVBOX_PURE_SHELL": "1"})
+	assert.Equal(t, strings.Join(
+		[]string{profile, runx, "/nix/env/bin"},
 		string(filepath.ListSeparator),
 	), env["PATH"])
 }
@@ -309,6 +317,13 @@ func TestExportEnv_Secrets(t *testing.T) {
 	shell = shellForTesting(t, shBash, env, secretKeys...)
 	shell.interactive = false
 	assert.Equal(t, `export FOO="bar";`, shell.exportEnv())
+
+	shell = shellForTesting(t, shFish, env, secretKeys...)
+	shell.interactive = false
+	assert.Equal(t,
+		"export FOO=\"bar\";\n"+
+			`set -gx API_KEY "$__DEVBOX_SECRET_API_KEY"; set -e __DEVBOX_SECRET_API_KEY`,
+		shell.exportEnv())
 }
 
 func TestExportEnv_WarnsOnInvalidSecretName(t *testing.T) {

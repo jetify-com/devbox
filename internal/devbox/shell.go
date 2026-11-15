@@ -364,9 +364,10 @@ func (s *DevboxShell) processEnv(extraEnv map[string]string) map[string]string {
 const secretEnvPrefix = "__DEVBOX_SECRET_"
 
 // secretKeys returns the secrets that can be passed by reference, which needs
-// an interactive shell that sources the shellrc and a valid variable name.
+// a shell that sources the shellrc and a valid variable name. Unlike the other
+// shells, fish runs config.fish and the shellrc even when not interactive.
 func (s *DevboxShell) secretKeys() []string {
-	if s.name == shUnknown || !s.interactive {
+	if s.name == shUnknown || (!s.interactive && s.name != shFish) {
 		return nil
 	}
 	var keys []string
