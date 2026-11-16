@@ -233,7 +233,7 @@ resolve in parallel. Also speeds up `devbox add a b c`.
 (`internal/devbox/update.go:78`), even when its lockfile entry didn't change.
 Fix: only pass `--refresh` for packages whose resolved version/hash changed.
 
-### 15. Batch flake `nix path-info` calls
+### 15. Batch flake `nix path-info` calls (done in #3053)
 
 **Effort:** ~60–100 LOC.
 
@@ -259,7 +259,7 @@ Each ~5–20 LOC:
 - (done in #3055) Remove the `nix.FlakeUpdate` call in
   `internal/devbox/update.go:100`; its own comment says it probably isn't
   needed.
-- Run `nix flake prefetch` once instead of twice
+- (done in #3053) Run `nix flake prefetch` once instead of twice
   (`internal/nix/nixpkgs.go:39-78`): use `--json` on the first call and save
   the location from its output.
 - (done in #3056) `RunXPaths` (`internal/devbox/devbox.go`) deleted and
