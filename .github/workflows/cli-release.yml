@@ -21,7 +21,8 @@ on:
 permissions:
   contents: write
   pull-requests: read
-  id-token: write # Needed for aws-actions/configure-aws-credentials@v6
+  id-token: write # Needed for aws-actions/configure-aws-credentials@v6 and attestations
+  attestations: write # Needed for actions/attest-build-provenance
 
 jobs:
   tests:
@@ -77,6 +78,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      # Sign a SLSA build provenance attestation (keyless, via Sigstore) for
+      # every archive listed in checksums.txt, so downloads can be verified as
+      # built by this workflow:
+      #   gh attestation verify devbox_<version>_linux_amd64.tar.gz --repo jetify-com/devbox
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-checksums: dist/checksums.txt
       - name: Create Sentry release
         uses: getsentry/action-release@v3
         env:
@@ -155,6 +164,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      # Sign a SLSA build provenance attestation (keyless, via Sigstore) for
+      # every archive listed in checksums.txt, so downloads can be verified as
+      # built by this workflow:
+      #   gh attestation verify devbox_<version>_linux_amd64.tar.gz --repo jetify-com/devbox
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-checksums: dist/checksums.txt
       # `release.disable` is set in .goreleaser.yaml, so goreleaser only builds
       # dist/ — the GitHub release belongs to this step. Both ways of cutting a
       # release land here and both work:
