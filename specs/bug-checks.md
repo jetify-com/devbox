@@ -66,6 +66,16 @@ Most failures came from the audit sandbox: it runs as root and its network proxy
 | 22 | Low | lock | A `devbox.lock` with `null` values panics instead of returning an error |
 | 23 | Low | searcher | Search-service HTTP calls have no timeout |
 | 24 | Low | config | `setStringField` adds `"key": ""` when it should remove the field |
+| 25 | **High** | cli | `devbox run -lq …` panics in `ShorthandLookup` (multi-char shorthand) |
+| 26 | Medium | cli | Recovered panics make the CLI exit with status 0 |
+| 27 | Medium | plugin | `devbox update` never clears the git plugin cache |
+| 28 | Medium | plugin | Removing `pkg@ver` leaves its virtenv and plugin files behind |
+| 29 | Medium | services | Every process-compose exit 1 is reported as "terminated remotely" |
+| 30 | Low | services | `StopProcessManager` drops the deferred write error |
+| 31 | Low | services | `lockFile` leaks a goroutine and a lock on timeout |
+| 32 | Low | cli | `integrate vscode --debugmode` calls `log.Fatal` when the log file is missing |
+| 33 | Low | cli | `devbox setup nix` reinstalls even when nix is present, and `--daemon` is unused |
+| 34 | Low | pullbox | `global pull` wipes the profile before copying, and leaks temp dirs |
 
 ### Details
 
@@ -224,4 +234,93 @@ Most failures came from the audit sandbox: it runs as root and its network proxy
 - **Cause:** When the key is missing and the value is empty, it appends `"key": ""`. The branch for an existing key removes the field instead.
 - **Fix:** Do nothing when the key is absent and the value is empty.
 
-<!-- FINDINGS -->
+#### 25. High: `devbox run` panics on combined short flags
+- **Where:** `internal/boxcli/run.go:301`.
+- **Cause:** `wrapArgsForRun` calls `runFlags.ShorthandLookup(strings.TrimLeft(arg, "-"))`. pflag panics when the name is longer than one character.
+- **Impact:**
+  - `devbox run -lq foo` and `devbox run -cdir script` crash before cobra parses anything.
+  - Because of #26, the crash exits 0.
+- **Confirmed:** Running `devbox run -lq foo bar` printed `can not look up shorthand which is more than one ASCII character` and exited with status 0.
+- **Fix:** Look up only `arg[1:2]` for single-dash arguments, or return `args` unchanged when the name is longer than one character.
+
+#### 26. Medium: Panics exit with status 0
+- **Where:** `internal/boxcli/root.go:103-104`.
+- **Cause:** `Execute` has an unnamed `int` result and uses `defer debug.Recover()`, so after a recovered panic it returns 0.
+- **Impact:** CI and scripts treat crashes as successes.
+- **Fix:** Use a named return value and set it to 1 in the recover handler.
+
+#### 27. Medium: `devbox update` does not refresh `git:` plugins
+- **Where:** `internal/plugin/update.go:4`, `git.go:18` and `cache.go:59-64`.
+- **Cause:** `Update()` only clears `githubCache`, so `gitCache` stays stale for up to 24h.
+- **Related:** `getOrFetch` treats any cache read error as fatal. `filecache.Set` writes non-atomically, so a truncated entry breaks plugin loading until the cache is cleared.
+- **Fix:** Clear both caches, and treat an undecodable entry as a cache miss.
+
+#### 28. Medium: Removing a versioned package leaves its plugin files
+- **Where:** `internal/plugin/rm.go:16`, called from `internal/devbox/packages.go:373`.
+- **Cause:** Removal uses `found.Raw` (`nodejs@20`), but the files were created under `CanonicalName()` (`nodejs`).
+- **Impact:** `.devbox/virtenv/nodejs` and the `bin/` symlinks stay on PATH. The same happens for python and ruby.
+- **Fix:** Pass `CanonicalName()`, and check that the resulting path stays under `VirtenvPath`.
+
+#### 29. Medium: Real process-compose failures are hidden
+- **Where:** `internal/services/manager.go:201`.
+- **Cause:** `waitErr.Error() == "exit status 1"` is treated as "terminated remotely" and returns nil. process-compose also exits with 1 for a bad YAML file or a port it can't bind.
+- **Impact:** `services up` reports a remote stop and exits 0. `cleanupErr` is also dropped.
+- **Fix:** Detect a remote stop explicitly, and return `waitErr` otherwise.
+
+#### 30. Low: `StopProcessManager` loses the write error
+- **Where:** `internal/services/manager.go:281-284`.
+- **Cause:** The deferred `err = writeGlobalProcessComposeJSON(...)` assigns to a local variable, because the return value is unnamed.
+- **Impact:** If the write fails, the stale PID entry stays, and the next `services up` reports "already running".
+- **Related:** `StopAllProcessManagers` (line 310) prints with `fmt.Printf`, without a newline, to stdout rather than `w`.
+- **Fix:** Use a named return and set it from the deferred write; print to `w` with a newline.
+
+#### 31. Low: `lockFile` leaks a goroutine and a lock on timeout
+- **Where:** `internal/services/manager.go:391-412`.
+- **Cause:** `flock` runs in a goroutine that sends on an unbuffered channel. After the 5s timeout the caller closes the file and returns, so:
+  - the goroutine blocks forever, or takes a lock on a file descriptor that has been closed and possibly reused.
+- **Fix:** Use a buffered channel, or `LOCK_NB` with a retry loop until the deadline.
+
+#### 32. Low: `--debugmode` exits when the log file is missing
+- **Where:** `internal/boxcli/integrate.go:183`.
+- **Cause:** The log file is opened without `O_CREATE`, and an error calls `log.Fatal`. The path is relative to the current directory, not the project.
+- **Fix:** Add `O_CREATE`, build the path from the project dir, and log errors instead of exiting.
+
+#### 33. Low: `devbox setup nix` reinstalls nix
+- **Where:** `internal/boxcli/setup.go:43-51` and `internal/nix/install.go:67`.
+- **Cause:** There is no `return` after the "already installed" message, so the installer runs anyway. `--daemon` is never read.
+- **Fix:** Return after the message, and either use the daemon flag or remove it.
+
+#### 34. Low: `global pull` can lose data
+- **Where:** `internal/pullbox/files.go:44`, `pullbox.go:60, 82` and `config.go:37`.
+- **Cause:** `ClearDir(ProjectDir())` runs before the copy.
+- **Impact:**
+  - If the copy fails, the profile has already been wiped.
+  - If the source is inside the profile, the source is deleted before it is copied.
+  - Temp dirs from clone and extract are never removed.
+- **Fix:** Copy into a staging directory and swap it in, and `defer os.RemoveAll(tmp)`.
+
+### Minor items (not counted)
+- `internal/fileutil/untar.go:66` calls `log.Fatal` from inside a library function.
+- "Skipping" errors in `plugin/services.go` and `services/config.go` have no trailing newline.
+- `services/client.go` sends HTTP requests with no timeout, and does not URL-escape service names.
+
+### Checked and found clean
+- **Untar:** the zip-slip and symlink checks are correct.
+- **vercheck:** the version comparisons are correct.
+- **patchpkg:** the slice bounds are safe.
+- **Templates:** the built-in plugin templates only use keys that are provided.
+- **Locking and cache keys:** the lockfile locking, singleflight use, narinfo cache concurrency and cache-key hashing are correct.
+- **Other:** searcher retries, the state-hash comparison and `internal/envir` have no issues.
+
+## Suggested fix order
+1. **Quick, high-value fixes:**
+   - #1 token leak
+   - #25 and #26 (crash, then exit 0)
+   - #2 `sh` shellrc
+2. **Data-loss and correctness:**
+   - #5 and #34 (`global pull`)
+   - #4 and #22 (lockfile panics)
+   - #3 `run` quoting
+   - #27 and #28 (plugin cache and leftover files)
+   - #29 hidden service failures
+3. **The rest:** each is a few lines and can be batched.
