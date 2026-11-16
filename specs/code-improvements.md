@@ -95,7 +95,8 @@ callers are the item's own tests, so delete the tests too.
 - **A16. Feature-flag helpers** `EnableOnDev` and `EnableForTest` (`boxcli/featureflag/feature.go:68,75`): no callers.
 - **A17. `services` dead state.**
   - `globalProcessComposeConfig.Path` (`internal/services/manager.go:39`) is written and never read.
-  - Several `ctx` and `w` parameters are unused: `client.go` `Start/Stop/RestartServices` and `ListServices`; `manager.go` `StopProcessManager`, `StopAllProcessManagers` and `AttachToProcessManager`.
+  - Unused `ctx` parameters: `client.go` `Start/Stop/RestartServices` and `ListServices`; `manager.go` `StopProcessManager`, `StopAllProcessManagers` and `AttachToProcessManager`.
+  - Unused `w` parameters: `ListServices`, `StopAllProcessManagers` and `AttachToProcessManager` only. The other functions write their success messages to `w`, so keep it there.
 - **A18. `shellFlagDefaults`** (`boxcli/shell.go:28-33`): only ever passed as the zero value. Delete the type and the parameter.
 - **A19. `versionInfo` / `getVersionInfo`** (`boxcli/version.go:79-100`): one caller, and `IsPrerelease` is never set. Inline it. ~20 lines.
 - **A20. `integrate` command** (`boxcli/integrate.go`).
@@ -129,8 +130,10 @@ callers are the item's own tests, so delete the tests too.
   - Drop the parameter, `nixDaemonFlagVal` (`boxcli/setup.go:57-85`, including its "running as root" warning) and the constant.
   - Then either delete the `--daemon` flag or wire it into the installer. **Ask the owners which they intended.**
   - ~35 lines.
-- **B2. Code for Nix older than the minimum.** `MinVersion` is 2.18 (`internal/nix/shim.go:27`), and `EnsureNixInstalled` rejects anything older, so these branches never run:
+- **B2. Code for Nix older than the minimum.** `MinVersion` is 2.18 (`internal/nix/shim.go:27`), and `EnsureNixInstalled` rejects anything older, so these branches only exist for old Nix:
   - The non-JSON `nix profile list` parser: `profileListLegacy` and `parseNixProfileListItemLegacy` (`profile.go:175-208,262-298`), and the `useJSON` parameter of `nix.ProfileList`. Keep the legacy *JSON-array* format, because 2.18 and 2.19 still print it.
+    - **Caveat:** this path is still reachable today. `profileListItemsFromCommand` (`profile.go:134-138`) falls back to `profileListLegacy` on *any* error from the JSON command, with no version check.
+    - On Nix 2.18 or newer, that fallback most likely just runs the same failing command again without `--json`. Confirm this before deleting it, then return the JSON error directly.
   - `AtLeast(2_14)` in `store.go:152` (moot once A2 is done) and `!AtLeast(Version2_17)` in `narinfo_cache.go:209`.
   - Unused version constants `Version2_12`, `2_13`, `2_15`, `2_16`, `2_18` and `2_21`–`2_24`.
   - ~90 lines. Risk: medium, but only if some code path skips `EnsureNixInstalled`.
@@ -219,7 +222,10 @@ callers are the item's own tests, so delete the tests too.
 ### Cross-package helpers
 
 - **C19. Atomic file writes.** `launcher.writeVersion` (`internal/launcher/files.go:126`), `launcher.replaceFile` (`replace.go:56`) and `shellgen.writeScriptFileAtomic` (`scripts.go:116,158`) each do temp file, write, chmod and rename. Add `fileutil.WriteFileAtomic`. The shellgen copy must keep holding `ForkLock`. ~30 lines.
-- **C20. "Copy each entry with `cp -r`" loops.** These appear in `fileutil.CopyAll` (`dir.go:16`), `templates.copyDirContents` (`template.go:63`, which skips `.git`) and `pullbox.copyToProfile` (`files.go:21-57`). Give `CopyAll` a `skip ...string` parameter and use it in all three. ~40 lines.
+- **C20. "Copy each entry with `cp -r`" loops.** These appear in `fileutil.CopyAll` (`dir.go:16`), `templates.copyDirContents` (`template.go:63`, which skips `.git`) and `pullbox.copyToProfile` (`files.go:21-57`). Give `CopyAll` a `skip ...string` parameter and use it in all three.
+  - `copyToProfile` also accepts a single file: `pullTextDevboxConfig` passes a local config file straight to it, and `CopyAll` starts with `os.ReadDir`.
+  - So keep a file branch: `ClearDir`, then `CopyAll` for a directory or a single `cp` for a file. Only the directory loop is shared.
+  - ~40 lines.
 - **C21. `withEnv` is duplicated** in `launcher/launcher.go:227` and `vercheck/project.go:203`. Keep one, for example `envir.WithEnv` next to `MapToPairs`. ~15 lines.
 - **C22. Stack-trace walk.** `debug.EarliestStackTrace` and `telemetry.newSentryException` (`sentry.go:66-103`) declare the same tracer interfaces and walk the same unwrap chain. Have telemetry call `debug`.
 - **C23. `telemetry.Event`** (`telemetry.go:169-190`). Three `switch` cases differ only by name; use a name map. `log.go:31-45` in boxcli has the same pattern.
