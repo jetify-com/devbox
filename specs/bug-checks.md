@@ -13,7 +13,7 @@ Severity is **High / Medium / Low**. Line numbers refer to the commit this file 
 |---|---|
 | `go build ./...` | Passes |
 | `go vet ./...` | Clean, no findings |
-| `golangci-lint run` | **Could not run.** The installed binary was built with go1.25, but `go.mod` targets go1.27, so it refused to load the config. CI needs a golangci-lint built with go ≥ 1.27, or lint is silently skipped (see T1). |
+| `go tool golangci-lint run` (v2.15.0, pinned in `go.mod`; the same command as `devbox run lint`) | Clean, 0 issues |
 | `go test -race ./...` | No data races were reported. Failures are listed below. |
 
 ### Test failures
@@ -29,7 +29,7 @@ Most failures came from the audit sandbox: it runs as root and its network proxy
 
 ### Test and tooling issues
 
-- **T1 (Low): golangci-lint version drift.** The lint config can only be loaded by a golangci-lint built with Go ≥ 1.27. Pin the lint version in `devbox.json` or CI, so that a stale local binary fails loudly instead of skipping lint.
+- **T1 (Info): a stale standalone `golangci-lint` cannot load the config.** A golangci-lint built with go1.25 refuses to load it, because `go.mod` targets go1.27. CI is not affected: it runs `devbox run lint`, which uses the version pinned in `go.mod` through `go tool`. Locally, use `devbox run lint` or `go tool golangci-lint run`.
 - **T2 (Low): network errors are labelled "internal error".**
   - **Problem:** A 403 or offline failure while nix fetches nixpkgs is wrapped as an internal error with a "please report this bug" message.
   - **Fix:** Nix fetch and download failures (`unable to download`, `HTTP error`) should be classified as user or environment errors.
@@ -114,9 +114,7 @@ Most failures came from the audit sandbox: it runs as root and its network proxy
 #### 6. Medium: `HashFromNixPkgsURL` returns the commit plus a query string
 - **Where:** `internal/nix/nixpkgs.go:127-131`.
 - **Cause:** The regex `([^#]+)` captures `?lastModified=…&narHash=…` as part of the hash.
-- **Impact:**
-  - `EnsureNixpkgsPrefetched` caches under a key that never matches, so it prefetches again.
-  - It prefetches `github:…/<rev>?narHash=…` without `FixInstallableArg`. That combination is known to break on Nix < 2.25.
+- **Impact:** `EnsureNixpkgsPrefetched` runs `nix flake prefetch github:…/<rev>?narHash=…` without `FixInstallableArg`. That combination (narHash without lastModified) is known to break on Nix < 2.25. The local prefetch cache still works, because the same key is used for the lookup and the save.
 - **Fix:** Capture `[^#?]+`, or use `installable.Ref.Rev`.
 
 #### 7. Medium: A missing lockfile output is a hard error
