@@ -15,13 +15,11 @@ import (
 	"sort"
 	"strings"
 	"text/template"
-	"time"
 
 	"al.essio.dev/pkg/shellescape"
 	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/shellgen"
-	"go.jetify.com/devbox/internal/telemetry"
 
 	"go.jetify.com/devbox/internal/envir"
 	"go.jetify.com/devbox/internal/nix"
@@ -63,9 +61,6 @@ type DevboxShell struct {
 	userShellrcPath string
 
 	historyFile string
-
-	// shellStartTime is the unix timestamp for when the command was invoked
-	shellStartTime time.Time
 }
 
 type ShellOption func(*DevboxShell)
@@ -197,12 +192,6 @@ func WithProjectDir(projectDir string) ShellOption {
 	}
 }
 
-func WithShellStartTime(t time.Time) ShellOption {
-	return func(s *DevboxShell) {
-		s.shellStartTime = t
-	}
-}
-
 // rcfilePath returns the absolute path for an rcfile, which is usually in the
 // user's home directory. It doesn't guarantee that the file exists.
 func rcfilePath(basename string) string {
@@ -323,7 +312,6 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		OriginalInit     string
 		OriginalInitPath string
 		HooksFilePath    string
-		ShellStartTime   string
 		HistoryFile      string
 		ExportEnv        string
 		ShellName        string
@@ -338,7 +326,6 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		OriginalInit:       string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath:   s.userShellrcPath,
 		HooksFilePath:      shellgen.ScriptPath(s.projectDir, shellgen.HooksFilename),
-		ShellStartTime:     telemetry.FormatShellStart(s.shellStartTime),
 		HistoryFile:        strings.TrimSpace(s.historyFile),
 		ExportEnv:          exportify(s.devbox.stderr, s.env),
 		ShellName:          string(s.name),
