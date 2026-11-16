@@ -1,8 +1,11 @@
 package devbox
 
 import (
+	"errors"
+	"sync"
 	"testing"
 
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
@@ -383,4 +386,111 @@ func TestDescribeFlakeUpdateFormats(t *testing.T) {
 	oldNoDate := &lock.Package{Resolved: "github:numtide/flake-utils/" + oldRev + "#pkg"}
 	newNoDate := &lock.Package{Resolved: "github:numtide/flake-utils/" + newRev + "#pkg"}
 	require.Equal(t, "abc1234 -> f456789", describeFlakeUpdate(oldNoDate, newNoDate))
+}
+
+func TestResolveAndMergePackages(t *testing.T) {
+	devbox := devboxForTesting(t)
+
+	sys := currentSystem(t)
+	sysInfo := map[string]*lock.SystemInfo{
+		sys: {Outputs: []lock.Output{{Name: "out", Path: "/nix/store/x-hello", Default: true}}},
+	}
+	devbox.lockfile.Packages = map[string]*lock.Package{
+		"hello@latest": {Version: "1.0", Resolved: "a", Systems: sysInfo},
+		"curl@latest":  {Version: "8.0", Resolved: "b", Systems: sysInfo},
+	}
+	unchanged := devbox.lockfile.Packages["curl@latest"]
+
+	pkgs := []*devpkg.Package{
+		devpkg.PackageFromStringWithDefaults("hello@latest", devbox.lockfile),
+		devpkg.PackageFromStringWithDefaults("curl@latest", devbox.lockfile),
+		devpkg.PackageFromStringWithDefaults("github:foo/bar", devbox.lockfile),
+		devpkg.PackageFromStringWithDefaults("git@latest", devbox.lockfile),
+	}
+
+	var mu sync.Mutex
+	var fetched []string
+	fetch := func(pkg *devpkg.Package) (*lock.Package, error) {
+		mu.Lock()
+		fetched = append(fetched, pkg.Raw)
+		mu.Unlock()
+		switch pkg.Raw {
+		case "hello@latest":
+			return &lock.Package{Version: "2.0", Resolved: "a2", Systems: sysInfo}, nil
+		case "curl@latest":
+			return &lock.Package{Version: "8.0", Resolved: "b", Systems: sysInfo}, nil
+		case "github:foo/bar":
+			// Flake failures warn and continue.
+			return nil, errors.New("flake failed")
+		case "git@latest":
+			return &lock.Package{Version: "2.40", Resolved: "c"}, nil
+		}
+		return nil, errors.New("unexpected package")
+	}
+
+	changed, err := devbox.resolveAndMergePackages(pkgs, fetch)
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{"hello@latest", "curl@latest", "github:foo/bar", "git@latest"}, fetched)
+
+	changedNames := lo.Map(changed, func(p *devpkg.Package, _ int) string { return p.Raw })
+	require.Equal(t, []string{"hello@latest", "git@latest"}, changedNames)
+	require.Equal(t, "2.0", devbox.lockfile.Packages["hello@latest"].Version)
+	require.Same(t, unchanged, devbox.lockfile.Packages["curl@latest"])
+	require.Equal(t, "2.40", devbox.lockfile.Packages["git@latest"].Version)
+}
+
+func TestResolveAndMergePackagesVersionedErrorAborts(t *testing.T) {
+	devbox := devboxForTesting(t)
+	devbox.lockfile.Packages = map[string]*lock.Package{}
+
+	pkgs := []*devpkg.Package{
+		devpkg.PackageFromStringWithDefaults("hello@latest", devbox.lockfile),
+		devpkg.PackageFromStringWithDefaults("curl@latest", devbox.lockfile),
+	}
+	wantErr := errors.New("search failed")
+	fetch := func(pkg *devpkg.Package) (*lock.Package, error) {
+		if pkg.Raw == "curl@latest" {
+			return nil, wantErr
+		}
+		return &lock.Package{Version: "1.0", Resolved: "a"}, nil
+	}
+
+	_, err := devbox.resolveAndMergePackages(pkgs, fetch)
+	require.ErrorIs(t, err, wantErr)
+}
+
+func TestResolveAndMergePackagesSkipsUnversioned(t *testing.T) {
+	devbox := devboxForTesting(t)
+	devbox.lockfile.Packages = map[string]*lock.Package{}
+
+	pkgs := []*devpkg.Package{
+		devpkg.PackageFromStringWithDefaults("hello", devbox.lockfile),
+	}
+	fetch := func(pkg *devpkg.Package) (*lock.Package, error) {
+		t.Fatalf("unexpected fetch for %s", pkg.Raw)
+		return nil, nil
+	}
+
+	changed, err := devbox.resolveAndMergePackages(pkgs, fetch)
+	require.NoError(t, err)
+	require.Empty(t, changed)
+}
+
+func TestRemoveFromConfigKeepsLockEntry(t *testing.T) {
+	devbox := devboxForTesting(t)
+	devbox.cfg.PackageMutator().Add("hello@latest")
+	entry := &lock.Package{Resolved: "github:NixOS/nixpkgs/oldrev#hello", Version: "2.10"}
+	devbox.lockfile.Packages = map[string]*lock.Package{"hello@latest": entry}
+
+	require.NoError(t, devbox.removeFromConfig("hello@latest"))
+
+	_, err := devbox.findPackageByName("hello@latest")
+	require.Error(t, err, "package should be removed from config")
+	// Plain removal leaves the entry for lock.File.Tidy, which keeps it if an
+	// include still needs the package, so its pin isn't lost.
+	require.Same(t, entry, devbox.lockfile.Packages["hello@latest"])
+
+	// A same-name replacement forgets it so the package resolves fresh.
+	devbox.forgetLockEntry("hello@latest")
+	require.NotContains(t, devbox.lockfile.Packages, "hello@latest")
 }
