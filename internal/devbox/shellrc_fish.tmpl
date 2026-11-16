@@ -47,11 +47,6 @@ if not set -q devbox_no_prompt
     end
 end
 
-{{- if .ShellStartTime }}
-# log that the shell is ready now!
-devbox log shell-ready {{ .ShellStartTime }}
-{{ end }}
-
 # End Devbox Post-init Hook
 
 # Switch to the directory where devbox.json config is
@@ -70,11 +65,6 @@ cd "$workingDir" || exit
 {{ range .ShellAliases }}{{ . }}
 {{ end -}}
 {{- end }}
-
-{{- if .ShellStartTime }}
-# log that the shell is interactive now!
-devbox log shell-interactive {{ .ShellStartTime }}
-{{ end }}
 
 # Add refresh alias (only if it doesn't already exist)
 if not type {{ .RefreshAliasName }} >/dev/null 2>&1

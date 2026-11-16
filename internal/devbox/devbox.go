@@ -44,7 +44,6 @@ import (
 	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/services"
 	"go.jetify.com/devbox/internal/shellgen"
-	"go.jetify.com/devbox/internal/telemetry"
 	"go.jetify.com/devbox/internal/ux"
 	"go.jetify.com/devbox/internal/vercheck"
 	"go.jetify.com/devbox/nix/flake"
@@ -293,7 +292,6 @@ func (d *Devbox) Shell(ctx context.Context, envOpts devopt.EnvOptions) error {
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
 		WithEnvVariables(envs),
-		WithShellStartTime(telemetry.ShellStart()),
 	}
 
 	shell, err := d.newShell(envOpts, opts...)
@@ -774,14 +772,6 @@ func (d *Devbox) computeEnv(
 		return nil, err
 	}
 
-	// check if contents of .envrc is old and print warning
-	if !usePrintDevEnvCache {
-		err := d.checkOldEnvrc()
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	slog.Debug("current environment PATH", "path", env["PATH"])
 
 	originalEnv := make(map[string]string, len(env))
@@ -1060,35 +1050,6 @@ func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
 		)
 	}
 	return lo.Keys(results)[0], nil
-}
-
-func (d *Devbox) checkOldEnvrc() error {
-	envrcPath := filepath.Join(d.ProjectDir(), ".envrc")
-	noUpdate, err := strconv.ParseBool(os.Getenv("DEVBOX_NO_ENVRC_UPDATE"))
-	if err != nil {
-		// DEVBOX_NO_ENVRC_UPDATE is either not set or invalid
-		// so we consider it the same as false
-		noUpdate = false
-	}
-	// check if user has an old version of envrc
-	if fileutil.Exists(envrcPath) && !noUpdate {
-		isNewEnvrc, err := fileutil.FileContains(
-			envrcPath,
-			"eval \"$(devbox generate direnv --print-envrc)\"",
-		)
-		if err != nil {
-			return err
-		}
-		if !isNewEnvrc {
-			ux.Fwarningf(
-				d.stderr,
-				"Your .envrc file seems to be out of date. "+
-					"Run `devbox generate direnv --force` to update it.\n"+
-					"Or silence this warning by setting DEVBOX_NO_ENVRC_UPDATE=1 env variable.\n",
-			)
-		}
-	}
-	return nil
 }
 
 // configEnvs takes the existing environment (nix + plugin) and adds env

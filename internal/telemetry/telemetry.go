@@ -40,8 +40,6 @@ type EventName int
 
 const (
 	EventCommandSuccess EventName = iota
-	EventShellInteractive
-	EventShellReady
 	EventNixBuildSuccess
 )
 
@@ -174,14 +172,6 @@ func Event(e EventName, meta Metadata) {
 	switch e {
 	case EventCommandSuccess:
 		bufferSegmentMessage(commandEvent(meta))
-	case EventShellInteractive:
-		name := fmt.Sprintf("[%s] Shell Event: interactive", appName)
-		msg := newTrackMessage(name, meta)
-		bufferSegmentMessage(msg.MessageId, msg)
-	case EventShellReady:
-		name := fmt.Sprintf("[%s] Shell Event: ready", appName)
-		msg := newTrackMessage(name, meta)
-		bufferSegmentMessage(msg.MessageId, msg)
 	case EventNixBuildSuccess:
 		name := fmt.Sprintf("[%s] Nix Build Event: success", appName)
 		msg := newTrackMessage(name, meta)
@@ -430,26 +420,4 @@ func newEventID() string {
 	id[8] &= 0x3F
 	id[8] |= 0x80
 	return hex.EncodeToString(id)
-}
-
-func ShellStart() time.Time {
-	return ParseShellStart(os.Getenv(envir.DevboxShellStartTime))
-}
-
-func FormatShellStart(t time.Time) string {
-	if t.IsZero() {
-		return ""
-	}
-	return strconv.FormatInt(t.Unix(), 10)
-}
-
-func ParseShellStart(s string) time.Time {
-	if s == "" {
-		return time.Time{}
-	}
-	unix, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		return time.Time{}
-	}
-	return time.Unix(unix, 0)
 }
