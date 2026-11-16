@@ -114,6 +114,13 @@ func WriteScriptFile(devbox devboxer, name, body string) error {
 // scripts, so writing in place could let one of them execute an empty,
 // partial, or not yet executable file.
 func writeScriptFileAtomic(path, body string) error {
+	// Scripts rarely change between runs, so skip the write when the file is
+	// already up to date. This deliberately doesn't use
+	// overwriteFileIfChanged: that writes in place, and another devbox
+	// process may be executing the file (see writeTempFile).
+	if scriptFileIsUpToDate(path, body) {
+		return nil
+	}
 	tmp, err := writeTempFile(filepath.Dir(path), "."+filepath.Base(path)+"-*", body)
 	if tmp != "" {
 		defer os.Remove(tmp) // no-op after a successful rename
@@ -125,6 +132,18 @@ func writeScriptFileAtomic(path, body string) error {
 		return errors.WithStack(err)
 	}
 	return errors.WithStack(os.Rename(tmp, path))
+}
+
+// scriptFileIsUpToDate reports whether path is a regular file with mode 0755
+// and contents body.
+func scriptFileIsUpToDate(path, body string) bool {
+	fi, err := os.Lstat(path)
+	if err != nil || !fi.Mode().IsRegular() || fi.Mode().Perm() != 0o755 ||
+		fi.Size() != int64(len(body)) {
+		return false
+	}
+	data, err := os.ReadFile(path)
+	return err == nil && string(data) == body
 }
 
 // writeTempFile creates a temp file in dir, writes body to it, and closes it.
