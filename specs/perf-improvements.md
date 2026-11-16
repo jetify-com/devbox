@@ -206,7 +206,7 @@ Fall back to the command for unknown manifest versions.
 
 ## Tier 3: `install` / `add` / `update`
 
-### 12. Resolve packages in parallel in `devbox update`
+### 12. Resolve packages in parallel in `devbox update` (done in #3055)
 
 **Effort:** ~30–50 LOC.
 
@@ -225,7 +225,7 @@ concurrency-safe. Fix: make lockfile resolution safe to call concurrently
 (lock around lockfile mutation, do the search request outside the lock), then
 resolve in parallel. Also speeds up `devbox add a b c`.
 
-### 14. Don't `--refresh` unchanged packages on update
+### 14. Don't `--refresh` unchanged packages on update (done in #3055)
 
 **Effort:** ~20–40 LOC.
 
@@ -243,7 +243,7 @@ installables across packages and run a single `nix path-info` call, then map
 results back. Keep the per-package error handler for the failure case (retry
 individually to attribute the error).
 
-### 16. Avoid repeated full recomputes in `Add` / `Update`
+### 16. Avoid repeated full recomputes in `Add` / `Update` (done in #3055)
 
 **Effort:** ~30–60 LOC.
 
@@ -256,20 +256,25 @@ config-only remove/add, and run a single `ensureStateIsUpToDate` at the end.
 ### 17. Smaller cleanups
 
 Each ~5–20 LOC:
-- Remove the `nix.FlakeUpdate` call in `internal/devbox/update.go:100`; its
-  own comment says it probably isn't needed.
-- Run `nix flake prefetch` once instead of twice
+- (done in #3055) Remove the `nix.FlakeUpdate` call in
+  `internal/devbox/update.go:100`; its own comment says it probably isn't
+  needed.
+- (done in #3053) Run `nix flake prefetch` once instead of twice
   (`internal/nix/nixpkgs.go:39-78`): use `--json` on the first call and save
-  the location from its output. (done in #3053)
-- `RunXPaths` (`internal/devbox/devbox.go:1196`) deletes and recreates
-  `.devbox/virtenv/runx/bin` on every env compute. Skip it when there are no
-  runx packages, and otherwise only rewrite changed links.
-- `WriteScriptsToFiles` (`internal/shellgen/scripts.go:41`) rewrites all
-  scripts on every `devbox run`. Use the existing `overwriteFileIfChanged`
-  (`internal/shellgen/generate.go:106`).
-- `IsUpToDateAndInstalled` runs 2–3 times per shellenv
-  (`internal/devbox/packages.go:310`, `internal/devbox/devbox.go:877`).
-  Memoize it per `Devbox` instance.
+  the location from its output.
+- (done in #3056) `RunXPaths` (`internal/devbox/devbox.go`) deleted and
+  recreated `.devbox/virtenv/runx/bin` on every env compute. #3019 already made
+  it rewrite only changed links; it now also skips the filesystem entirely
+  when there are no runx packages and no leftover links.
+- (done in #3056) `WriteScriptsToFiles` (`internal/shellgen/scripts.go`)
+  rewrote all scripts on every `devbox run`. It now skips scripts whose
+  contents and mode already match. It doesn't use `overwriteFileIfChanged`,
+  because that writes in place and would bring back the races fixed in #3032
+  and #3037.
+- (done in #3056) `StateStatus` (formerly `IsUpToDateAndInstalled`) ran twice
+  per shellenv (`ensureStateIsUpToDateAndComputeEnv` and
+  `ensureStateIsUpToDate`). It's now memoized on the `Devbox` for the duration
+  of one such call and dropped when the call returns or changes state.
 
 ---
 
