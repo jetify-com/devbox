@@ -786,6 +786,9 @@ func (d *Devbox) computeEnv(
 		for k, v := range nixEnv {
 			env[k] = v
 		}
+
+		// Let user-set passthrough vars win over Nix fallbacks.
+		preservePassthroughEnvVars(env, originalEnv)
 	}
 	slog.Debug("nix environment PATH", "path", env["PATH"])
 
@@ -1161,6 +1164,21 @@ var ignoreDevEnvVar = map[string]bool{
 	"TMPDIR":  true,
 	"TZ":      true,
 	"UID":     true,
+}
+
+// passthroughEnvVars are vars that Nix setup hooks only set as a fallback
+// (e.g. cacert's `${NIX_SSL_CERT_FILE:-...}`). print-dev-env can't see the
+// user's value, so we restore it ourselves. See #2604.
+var passthroughEnvVars = []string{"NIX_SSL_CERT_FILE", "SSL_CERT_FILE"}
+
+// preservePassthroughEnvVars copies non-empty passthroughEnvVars from userEnv
+// into env.
+func preservePassthroughEnvVars(env, userEnv map[string]string) {
+	for _, key := range passthroughEnvVars {
+		if val := userEnv[key]; val != "" {
+			env[key] = val
+		}
+	}
 }
 
 func (d *Devbox) ProjectDirHash() string {
