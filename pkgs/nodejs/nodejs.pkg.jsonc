@@ -1,0 +1,43 @@
+// Package definition for Node.js, installed from the official builds on
+// nodejs.org. npm ships with every release; add pnpm or yarn as their own
+// packages.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "nodejs",
+  "description": "JavaScript runtime built on Chrome's V8 engine, with npm",
+  "homepage": "https://nodejs.org",
+  "license": "MIT",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+  "arch_map": { "x86_64": "x64", "aarch64": "arm64" },
+
+  // index.json lists every release, newest first, as "v22.11.0".
+  "versions": {
+    "type": "http_json",
+    "url": "https://nodejs.org/dist/index.json",
+    "select": ".[].version | ltrimstr(\"v\")"
+  },
+
+  // Releases that predate a platform (no darwin-arm64 before 16) have no
+  // entry in SHASUMS256.txt and are skipped for that platform.
+  "install": {
+    "type": "archive",
+    "url": "https://nodejs.org/dist/v{{.Version}}/node-v{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz",
+    "checksum": {
+      "type": "sha256_url",
+      "url": "https://nodejs.org/dist/v{{.Version}}/SHASUMS256.txt"
+    },
+    "strip_components": 1
+  },
+
+  "bin": ["bin"],
+  "binaries": ["node", "npm", "npx"],
+
+  // `npm install --global` writes into the project instead of the shared
+  // install, which every project using this version sees.
+  "env": {
+    "NPM_CONFIG_PREFIX": "{{ .Virtenv }}/npm-global",
+    "PATH": "{{ .Virtenv }}/npm-global/bin:$PATH"
+  }
+}

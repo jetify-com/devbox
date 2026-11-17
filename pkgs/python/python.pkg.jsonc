@@ -1,0 +1,50 @@
+// Package definition for CPython, installed from python-build-standalone,
+// the relocatable builds that uv and mise install. The index of builds
+// (URL and sha256 per version and platform) is the one uv maintains.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "python",
+  "description": "CPython. Devbox creates a virtual environment in $VENV_DIR (default .venv) and activates it, so pip installs stay out of the shared install. Switching versions recreates a virtual environment that Devbox created.",
+  "homepage": "https://www.python.org",
+  "license": "PSF-2.0",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+  "arch_map": { "x86_64": "x86_64", "aarch64": "aarch64" },
+
+  // Versions are "3.13.1", or "3.14.0a1" for pre-releases.
+  "versions": {
+    "type": "http_json",
+    "url": "https://raw.githubusercontent.com/astral-sh/uv/main/crates/uv-python-managed/download-metadata.json",
+    "select": ".[] | select(.name == \"cpython\" and .variant == null) | \"\\(.major).\\(.minor).\\(.patch)\\(.prerelease)\""
+  },
+
+  // The default build for a platform: no free-threading or debug variant,
+  // the baseline CPU level, glibc on Linux.
+  "install": {
+    "type": "archive",
+    "lookup": {
+      "url": "https://raw.githubusercontent.com/astral-sh/uv/main/crates/uv-python-managed/download-metadata.json",
+      "select": ".[] | select(.name == \"cpython\" and .variant == null and .arch.variant == null and .os == \"{{.OS}}\" and .arch.family == \"{{.Arch}}\" and (.libc == \"gnu\" or .libc == \"none\") and \"\\(.major).\\(.minor).\\(.patch)\\(.prerelease)\" == \"{{.Version}}\") | {url, checksum: .sha256}"
+    },
+    "strip_components": 1
+  },
+
+  "bin": ["bin"],
+  "binaries": ["python3", "pip3"],
+
+  "env": {
+    "VENV_DIR": "{{ .DevboxProjectDir }}/.venv"
+  },
+  "shell": {
+    "init_hook": [
+      // Create the virtual environment, or recreate it when it was made
+      // by another version installed by Devbox. Leave any other one alone.
+      // Hooks run with `set -e`, hence `|| true` when there is no venv yet.
+      "_devbox_venv_home=\"$(sed -n 's/^home = //p' \"$VENV_DIR/pyvenv.cfg\" 2>/dev/null || true)\"",
+      "case \"$_devbox_venv_home\" in \"{{ .InstallDir }}/bin\") ;; \"{{ .CacheDir }}/python/\"*) \"{{ .InstallDir }}/bin/python3\" -m venv --clear \"$VENV_DIR\" ;; *) [ -e \"$VENV_DIR\" ] || \"{{ .InstallDir }}/bin/python3\" -m venv \"$VENV_DIR\" ;; esac",
+      "if [ \"$(sed -n 's/^home = //p' \"$VENV_DIR/pyvenv.cfg\" 2>/dev/null)\" = \"{{ .InstallDir }}/bin\" ]; then . \"$VENV_DIR/bin/activate\"; else echo \"devbox: not activating $VENV_DIR because it was not created from python {{ .Version }}; remove it to have Devbox recreate it\" >&2; fi",
+      "unset _devbox_venv_home"
+    ]
+  }
+}
