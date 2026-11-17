@@ -1,0 +1,33 @@
+# Yarn from npm: 1.x is the yarn package, 4.x is @yarnpkg/cli-dist. Yarn
+# runs on Node.js, which is installed from its own definition.
+#
+# Installs yarn@1 from devbox.json, switches to 4 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/nodejs/nodejs.pkg.jsonc nodejs.pkg.jsonc
+cp $PKGS/yarn/yarn.pkg.jsonc yarn.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./yarn.pkg.jsonc@1
+exec devbox run -- yarn --version
+stdout '^1\.22\.'
+
+exec devbox add pkg:./yarn.pkg.jsonc@4
+! devboxjson.packages.contains devbox.json pkg:./yarn.pkg.jsonc@1
+! devboxlock.packages.contains devbox.lock pkg:./yarn.pkg.jsonc@1
+exec devbox run -- yarn --version
+stdout '^4\.'
+
+# 1 is still installed, so switching back needs no download.
+cp devbox.1.json devbox.json
+exec devbox run -- yarn --version
+stdout '^1\.22\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./nodejs.pkg.jsonc@22", "pkg:./yarn.pkg.jsonc@1"]
+}
+-- devbox.1.json --
+{
+  "packages": ["pkg:./nodejs.pkg.jsonc@22", "pkg:./yarn.pkg.jsonc@1"]
+}

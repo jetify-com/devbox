@@ -1,0 +1,31 @@
+# Terraform from releases.hashicorp.com.
+#
+# Installs terraform@1.5 from devbox.json, switches to 1.9 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/terraform/terraform.pkg.jsonc terraform.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./terraform.pkg.jsonc@1.5
+exec devbox run -- terraform version
+stdout '^Terraform v1\.5\.'
+
+exec devbox add pkg:./terraform.pkg.jsonc@1.9
+! devboxjson.packages.contains devbox.json pkg:./terraform.pkg.jsonc@1.5
+! devboxlock.packages.contains devbox.lock pkg:./terraform.pkg.jsonc@1.5
+exec devbox run -- terraform version
+stdout '^Terraform v1\.9\.'
+
+# 1.5 is still installed, so switching back needs no download.
+cp devbox.1.5.json devbox.json
+exec devbox run -- terraform version
+stdout '^Terraform v1\.5\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./terraform.pkg.jsonc@1.5"]
+}
+-- devbox.1.5.json --
+{
+  "packages": ["pkg:./terraform.pkg.jsonc@1.5"]
+}

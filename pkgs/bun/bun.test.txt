@@ -1,0 +1,33 @@
+# Bun from its GitHub releases.
+#
+# Installs bun@1.1 from devbox.json, switches to 1.2 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/bun/bun.pkg.jsonc bun.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./bun.pkg.jsonc@1.1
+exec devbox run -- bun --version
+stdout '^1\.1\.'
+exec devbox run -- bunx --version
+stdout '^1\.1\.'
+
+exec devbox add pkg:./bun.pkg.jsonc@1.2
+! devboxjson.packages.contains devbox.json pkg:./bun.pkg.jsonc@1.1
+! devboxlock.packages.contains devbox.lock pkg:./bun.pkg.jsonc@1.1
+exec devbox run -- bun --version
+stdout '^1\.2\.'
+
+# 1.1 is still installed, so switching back needs no download.
+cp devbox.1.1.json devbox.json
+exec devbox run -- bun --version
+stdout '^1\.1\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./bun.pkg.jsonc@1.1"]
+}
+-- devbox.1.1.json --
+{
+  "packages": ["pkg:./bun.pkg.jsonc@1.1"]
+}
