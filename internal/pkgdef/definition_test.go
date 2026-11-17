@@ -4,6 +4,7 @@
 package pkgdef
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +29,7 @@ func TestParseGoExample(t *testing.T) {
 	def, err := Parse(content)
 	require.NoError(t, err)
 	assert.Equal(t, "go", def.Name)
-	assert.Equal(t, VersionsHTTPJSON, def.Versions.Type)
+	assert.Equal(t, VersionsHTTPJSON, def.Versions[0].Type)
 	assert.Equal(t, InstallArchive, def.Install.Type)
 	assert.Equal(t, ChecksumHTTPJSON, def.Install.ChecksumType())
 	assert.Equal(t, []string{"bin"}, def.BinDirs())
@@ -106,7 +107,7 @@ func TestParseErrors(t *testing.T) {
 		{
 			name: "install url missing",
 			json: `{"schema": 1, "name": "x", "platforms": ["x86_64-linux"], "versions": {"type": "static", "versions": ["1"]}, "install": {"type": "binary"}}`,
-			want: "install.url is required for type binary",
+			want: "install.url or .lookup is required for type binary",
 		},
 		{
 			name: "unknown install type",
@@ -165,13 +166,13 @@ func TestInstallFor(t *testing.T) {
 	}`))
 	require.NoError(t, err)
 
-	linux := def.InstallFor("x86_64-linux")
+	linux := def.InstallFor("x86_64-linux", "1.0.0")
 	assert.Equal(t, InstallArchive, linux.Type)
 	assert.Equal(t, "default", linux.URL)
 	assert.Equal(t, ChecksumSHA256URL, linux.ChecksumType())
 	assert.Nil(t, linux.Overrides)
 
-	mac := def.InstallFor("aarch64-darwin")
+	mac := def.InstallFor("aarch64-darwin", "1.0.0")
 	assert.Equal(t, InstallBinary, mac.Type)
 	assert.Equal(t, "mac", mac.URL)
 	assert.Equal(t, ChecksumNone, mac.ChecksumType())
@@ -188,5 +189,169 @@ func TestUsesScripts(t *testing.T) {
 	assert.False(t, def.UsesScripts())
 
 	def.Hooks.PostInstall = []string{"true"}
+	assert.True(t, def.UsesScripts())
+}
+
+func TestVersionSourcesJSON(t *testing.T) {
+	def, err := Parse([]byte(minimalDef))
+	require.NoError(t, err)
+	require.Len(t, def.Versions, 1)
+
+	// A list of sources is their union.
+	def, err = Parse([]byte(`{
+	  "schema": 1, "name": "x", "platforms": ["x86_64-linux"],
+	  "versions": [
+	    {"type": "static", "versions": ["2.0.0"]},
+	    {"type": "static", "versions": ["1.0.0"]}
+	  ],
+	  "install": {"type": "binary", "url": "https://example.com/x"}
+	}`))
+	require.NoError(t, err)
+	require.Len(t, def.Versions, 2)
+
+	// A single source round-trips as an object, a list as an array.
+	single, err := json.Marshal(VersionSources{{Type: VersionsStatic, Versions: []string{"1"}}})
+	require.NoError(t, err)
+	assert.JSONEq(t, `{"type": "static", "versions": ["1"]}`, string(single))
+	list, err := json.Marshal(def.Versions)
+	require.NoError(t, err)
+	assert.JSONEq(t, `[{"type": "static", "versions": ["2.0.0"]}, {"type": "static", "versions": ["1.0.0"]}]`, string(list))
+
+	// Each source in a list is validated, with its index in the error.
+	_, err = Parse([]byte(`{
+	  "schema": 1, "name": "x", "platforms": ["x86_64-linux"],
+	  "versions": [{"type": "static", "versions": ["1"]}, {"type": "github_releases"}],
+	  "install": {"type": "binary", "url": "https://example.com/x"}
+	}`))
+	require.ErrorContains(t, err, "versions[1].repo must be of the form owner/name")
+
+	_, err = Parse([]byte(`{
+	  "schema": 1, "name": "x", "platforms": ["x86_64-linux"],
+	  "versions": [],
+	  "install": {"type": "binary", "url": "https://example.com/x"}
+	}`))
+	require.ErrorContains(t, err, "versions is required")
+}
+
+func TestInstallForVersionOverrides(t *testing.T) {
+	def, err := Parse([]byte(`{
+	  "schema": 1, "name": "x", "platforms": ["x86_64-linux", "aarch64-darwin"],
+	  "versions": {"type": "static", "versions": ["1"]},
+	  "install": {
+	    "type": "archive", "url": "new", "strip_components": 1,
+	    "checksum": {"type": "github_release", "repo": "acme/x"},
+	    "overrides": {"aarch64-darwin": {"url": "new-mac"}},
+	    "version_overrides": [
+	      {"versions": "<2", "type": "binary", "url": "old", "checksum": {"type": "none"},
+	       "overrides": {"aarch64-darwin": {"url": "old-mac"}}},
+	      {"versions": "<3", "lookup": {"url": "https://example.com/index.json", "select": ".x"}}
+	    ]
+	  }
+	}`))
+	require.NoError(t, err)
+
+	tests := []struct {
+		system, version string
+		wantType        string
+		wantURL         string
+		wantLookup      bool
+		wantChecksum    string
+	}{
+		{"x86_64-linux", "3.0.0", InstallArchive, "new", false, ChecksumGitHubRelease},
+		{"aarch64-darwin", "3.0.0", InstallArchive, "new-mac", false, ChecksumGitHubRelease},
+		// The first matching version override wins.
+		{"x86_64-linux", "1.9.0", InstallBinary, "old", false, ChecksumNone},
+		// The version override's own system override applies last.
+		{"aarch64-darwin", "1.9.0", InstallBinary, "old-mac", false, ChecksumNone},
+		// A lookup replaces url and checksum.
+		{"x86_64-linux", "2.5.0", InstallArchive, "", true, ChecksumNone},
+		// The definition's system override sets url, which replaces the lookup.
+		{"aarch64-darwin", "2.5.0", InstallArchive, "new-mac", false, ChecksumNone},
+	}
+	for _, tt := range tests {
+		t.Run(tt.system+"@"+tt.version, func(t *testing.T) {
+			got := def.InstallFor(tt.system, tt.version)
+			assert.Equal(t, tt.wantType, got.Type)
+			assert.Equal(t, tt.wantURL, got.URL)
+			assert.Equal(t, tt.wantLookup, got.Lookup != nil)
+			assert.Equal(t, tt.wantChecksum, got.ChecksumType())
+			assert.Nil(t, got.Overrides)
+			assert.Nil(t, got.VersionOverrides)
+		})
+	}
+
+	assert.NotEqual(t, def.InstallFingerprint("x86_64-linux", "1.9.0"), def.InstallFingerprint("x86_64-linux", "3.0.0"),
+		"versions installed by different recipes have different fingerprints")
+	assert.Equal(t, def.InstallFingerprint("x86_64-linux", "3.0.0"), def.InstallFingerprint("x86_64-linux", "3.1.0"))
+}
+
+func TestParseInstallErrors(t *testing.T) {
+	tests := []struct {
+		name    string
+		install string
+		wantErr string
+	}{
+		{
+			name:    "url and lookup",
+			install: `{"type": "archive", "url": "u", "lookup": {"url": "i", "select": ".x"}}`,
+			wantErr: "install.url and .lookup are mutually exclusive",
+		},
+		{
+			name:    "lookup without select",
+			install: `{"type": "archive", "lookup": {"url": "i"}}`,
+			wantErr: "install.lookup.url and .lookup.select are required",
+		},
+		{
+			name:    "lookup with checksum",
+			install: `{"type": "archive", "lookup": {"url": "i", "select": ".x"}, "checksum": {"type": "none"}}`,
+			wantErr: "install.checksum is not used with .lookup",
+		},
+		{
+			name:    "lookup select does not compile",
+			install: `{"type": "archive", "lookup": {"url": "i", "select": ".[[["}}`,
+			wantErr: "install.lookup.select: invalid jq expression",
+		},
+		{
+			name:    "github_release checksum without repo",
+			install: `{"type": "archive", "url": "u", "checksum": {"type": "github_release"}}`,
+			wantErr: "install.checksum.repo must be of the form owner/name",
+		},
+		{
+			name:    "bad version constraint",
+			install: `{"type": "archive", "url": "u", "version_overrides": [{"versions": "<<1", "url": "v"}]}`,
+			wantErr: "install.version_overrides[0].versions: invalid term",
+		},
+		{
+			name:    "nested version overrides",
+			install: `{"type": "archive", "url": "u", "version_overrides": [{"versions": "<1", "version_overrides": [{"versions": "<1"}]}]}`,
+			wantErr: "install.version_overrides[0] may not contain version_overrides",
+		},
+		{
+			name:    "version override is validated merged",
+			install: `{"type": "archive", "url": "u", "version_overrides": [{"versions": "<1", "type": "script"}]}`,
+			wantErr: "install.version_overrides[0].run is required for type script",
+		},
+		{
+			name:    "version override system override for unknown platform",
+			install: `{"type": "archive", "url": "u", "version_overrides": [{"versions": "<1", "overrides": {"aarch64-darwin": {"url": "m"}}}]}`,
+			wantErr: `install.version_overrides[0].overrides: "aarch64-darwin" is not in platforms`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := Parse([]byte(`{
+			  "schema": 1, "name": "x", "platforms": ["x86_64-linux"],
+			  "versions": {"type": "static", "versions": ["1"]},
+			  "install": ` + tt.install + `
+			}`))
+			require.ErrorContains(t, err, tt.wantErr)
+		})
+	}
+}
+
+func TestUsesScriptsInVersionOverrides(t *testing.T) {
+	def, err := Parse([]byte(minimalDef))
+	require.NoError(t, err)
+	def.Install.VersionOverrides = []*VersionOverride{{Versions: "<1", Install: Install{Type: InstallScript, Run: "true"}}}
 	assert.True(t, def.UsesScripts())
 }

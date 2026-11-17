@@ -33,11 +33,12 @@ type Package struct {
 type SystemInfo struct {
 	Outputs []Output `json:"outputs,omitempty"`
 
-	// URL and Sha256 locate and verify the vendor artifact for packages
-	// with Source "pkg-def". Sha256 may be empty until the first install
-	// records it.
+	// URL and Sha256 or Sha512 locate and verify the vendor artifact for
+	// packages with Source "pkg-def". Both digests may be empty until the
+	// first install records a sha256.
 	URL    string `json:"url,omitempty"`
 	Sha256 string `json:"sha256,omitempty"`
+	Sha512 string `json:"sha512,omitempty"`
 
 	// Legacy Format
 	StorePath             string `json:"store_path,omitempty"`
@@ -125,7 +126,8 @@ func (i *SystemInfo) Equals(other *SystemInfo) bool {
 
 	return slices.Equal(i.Outputs, other.Outputs) &&
 		i.URL == other.URL &&
-		i.Sha256 == other.Sha256
+		i.Sha256 == other.Sha256 &&
+		i.Sha512 == other.Sha512
 }
 
 // If we have a StorePath and no Outputs, we need to convert to the new format.

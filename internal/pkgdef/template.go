@@ -24,6 +24,10 @@ type Vars struct {
 
 	InstallDir string
 	CacheDir   string
+
+	// Page is the 0-based page number when listing versions from a
+	// paginated http_json source.
+	Page int
 }
 
 var defaultOSMap = map[string]string{
@@ -37,13 +41,15 @@ var defaultArchMap = map[string]string{
 }
 
 // templateFuncs follow the sprig argument order (the string comes last) so
-// that pipelines read naturally: {{ .Version | trimPrefix "v" }}.
+// that pipelines read naturally: {{ .Version | trimPrefix "v" }}. The
+// text/template builtins (eq, index, urlquery, ...) are available too.
 var templateFuncs = template.FuncMap{
 	"trimPrefix": func(prefix, s string) string { return strings.TrimPrefix(s, prefix) },
 	"trimSuffix": func(suffix, s string) string { return strings.TrimSuffix(s, suffix) },
 	"replace":    func(old, replacement, s string) string { return strings.ReplaceAll(s, old, replacement) },
 	"lower":      strings.ToLower,
 	"upper":      strings.ToUpper,
+	"splitList":  func(sep, s string) []string { return strings.Split(s, sep) },
 }
 
 // TemplateVars returns the template variables for installing version on

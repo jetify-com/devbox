@@ -6,6 +6,7 @@ package pkgdef
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/itchyny/gojq"
@@ -51,6 +53,12 @@ type Client struct {
 	// Stderr receives the output of post_install hooks. Defaults to
 	// io.Discard.
 	Stderr io.Writer
+
+	// responses memoizes successful GETs (indexes, checksum files, API
+	// responses) for the lifetime of the client, so that locking every
+	// system of a version fetches a shared index once.
+	responsesMu sync.Mutex
+	responses   map[string][]byte
 }
 
 // NewClient returns a client that caches under $XDG_CACHE_HOME/devbox/pkgs
@@ -87,21 +95,27 @@ func (c *Client) userAgent() string {
 // tests and local mirrors work without a server. No credentials are ever
 // attached: definitions are untrusted input and may point anywhere.
 func (c *Client) get(ctx context.Context, rawURL string) ([]byte, error) {
-	return c.getWithAuth(ctx, rawURL, "")
+	return c.getWithAuth(ctx, rawURL, "", false)
+}
+
+// getCached is get for vendor metadata (version indexes, checksum files):
+// a successful response is reused for the lifetime of the client.
+func (c *Client) getCached(ctx context.Context, rawURL string) ([]byte, error) {
+	return c.getWithAuth(ctx, rawURL, "", true)
 }
 
 // getGitHubAPI fetches a GitHub REST API path (relative to GitHubAPIURL)
-// with the configured token, if any.
+// with the configured token, if any. Responses are cached like getCached.
 func (c *Client) getGitHubAPI(ctx context.Context, apiPath string) ([]byte, error) {
 	endpoint := strings.TrimSuffix(c.GitHubAPIURL, "/") + "/" + strings.TrimPrefix(apiPath, "/")
 	auth := ""
 	if c.GitHubToken != "" {
 		auth = "Bearer " + c.GitHubToken
 	}
-	return c.getWithAuth(ctx, endpoint, auth)
+	return c.getWithAuth(ctx, endpoint, auth, true)
 }
 
-func (c *Client) getWithAuth(ctx context.Context, rawURL, authorization string) ([]byte, error) {
+func (c *Client) getWithAuth(ctx context.Context, rawURL, authorization string, cache bool) ([]byte, error) {
 	if p, ok := strings.CutPrefix(rawURL, "file://"); ok {
 		b, err := os.ReadFile(p)
 		if errors.Is(err, os.ErrNotExist) {
@@ -110,12 +124,52 @@ func (c *Client) getWithAuth(ctx context.Context, rawURL, authorization string) 
 		return b, err
 	}
 
+	if cache {
+		c.responsesMu.Lock()
+		cached, ok := c.responses[rawURL]
+		c.responsesMu.Unlock()
+		if ok {
+			return cached, nil
+		}
+	}
+
 	body, err := c.open(ctx, rawURL, authorization)
 	if err != nil {
 		return nil, err
 	}
 	defer body.Close()
-	return io.ReadAll(body)
+	data, err := io.ReadAll(body)
+	if err != nil {
+		return nil, err
+	}
+
+	if cache {
+		c.responsesMu.Lock()
+		if c.responses == nil {
+			c.responses = map[string][]byte{}
+		}
+		c.responses[rawURL] = data
+		c.responsesMu.Unlock()
+	}
+	return data, nil
+}
+
+// queryJSON fetches rawURL and evaluates the jq expression against it,
+// returning every value it emits.
+func (c *Client) queryJSON(ctx context.Context, rawURL, expr string) ([]any, error) {
+	code, err := compileJQ(expr)
+	if err != nil {
+		return nil, err
+	}
+	body, err := c.getCached(ctx, rawURL)
+	if err != nil {
+		return nil, err
+	}
+	var input any
+	if err := json.Unmarshal(body, &input); err != nil {
+		return nil, fmt.Errorf("%s: response is not JSON: %w", rawURL, err)
+	}
+	return runJQValues(code, expr, input)
 }
 
 // open starts a GET request and returns the response body. The caller must
@@ -170,11 +224,10 @@ func compileJQ(expr string) (*gojq.Code, error) {
 	return code, nil
 }
 
-// runJQ evaluates a compiled jq expression against input and returns every
-// string it emits. Numbers are formatted as strings; arrays are flattened
-// one level so that ".[].version" and "[.[].version]" both work.
-func runJQ(code *gojq.Code, expr string, input any) ([]string, error) {
-	var out []string
+// runJQValues evaluates a compiled jq expression against input and returns
+// every value it emits.
+func runJQValues(code *gojq.Code, expr string, input any) ([]any, error) {
+	var out []any
 	iter := code.Run(input)
 	for {
 		value, ok := iter.Next()
@@ -184,6 +237,21 @@ func runJQ(code *gojq.Code, expr string, input any) ([]string, error) {
 		if err, isErr := value.(error); isErr {
 			return nil, fmt.Errorf("jq expression %q: %w", expr, err)
 		}
+		out = append(out, value)
+	}
+	return out, nil
+}
+
+// runJQ evaluates a compiled jq expression against input and returns every
+// string it emits. Numbers are formatted as strings; arrays are flattened
+// one level so that ".[].version" and "[.[].version]" both work.
+func runJQ(code *gojq.Code, expr string, input any) ([]string, error) {
+	values, err := runJQValues(code, expr, input)
+	if err != nil {
+		return nil, err
+	}
+	var out []string
+	for _, value := range values {
 		if arr, isArr := value.([]any); isArr {
 			for _, elem := range arr {
 				out = appendJQValue(out, elem)

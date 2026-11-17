@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -39,6 +40,7 @@ type marker struct {
 	System  string `json:"system"`
 	URL     string `json:"url,omitempty"`
 	Sha256  string `json:"sha256,omitempty"`
+	Sha512  string `json:"sha512,omitempty"`
 
 	// InstallHash is Definition.InstallFingerprint at install time. When
 	// the definition's install recipe changes, the install is redone.
@@ -70,8 +72,9 @@ type Installed struct {
 // with a file lock.
 //
 // artifact.URL may be empty, in which case the URL is rendered from the
-// definition. Relative file:// URLs are resolved against the definition's
-// directory. When artifact.Sha256 is set the download must match it.
+// definition (or looked up in its index). Relative file:// URLs are
+// resolved against the definition's directory. When the artifact has a
+// digest the download must match it.
 func (c *Client) Install(ctx context.Context, def *Definition, version, system string, artifact Artifact) (*Installed, error) {
 	if !def.SupportsSystem(system) {
 		return nil, fmt.Errorf("%s@%s: %w (%s; supported: %s)",
@@ -79,7 +82,7 @@ func (c *Client) Install(ctx context.Context, def *Definition, version, system s
 	}
 	dir := c.InstallDir(def.Name, version, system)
 
-	fingerprint := def.InstallFingerprint(system)
+	fingerprint := def.InstallFingerprint(system, version)
 
 	// Fast path: no lock needed to read a finished install.
 	if m, ok := readMarker(dir); ok && m.InstallHash == fingerprint {
@@ -100,15 +103,20 @@ func (c *Client) Install(ctx context.Context, def *Definition, version, system s
 }
 
 func (c *Client) installedFromMarker(def *Definition, version, dir string, m marker, artifact Artifact) (*Installed, error) {
-	if artifact.Sha256 != "" && m.Sha256 != "" && !strings.EqualFold(artifact.Sha256, m.Sha256) {
-		return nil, fmt.Errorf("%s@%s: %w: %s was installed from an artifact with sha256 %s but the lockfile expects %s; remove the directory to reinstall",
-			def.Name, version, ErrChecksumMismatch, dir, m.Sha256, artifact.Sha256)
+	for _, d := range []struct{ algo, want, got string }{
+		{algoSHA256, artifact.Sha256, m.Sha256},
+		{algoSHA512, artifact.Sha512, m.Sha512},
+	} {
+		if d.want != "" && d.got != "" && !strings.EqualFold(d.want, d.got) {
+			return nil, fmt.Errorf("%s@%s: %w: %s was installed from an artifact with %s %s but the lockfile expects %s; remove the directory to reinstall",
+				def.Name, version, ErrChecksumMismatch, dir, d.algo, d.got, d.want)
+		}
 	}
 	return c.installed(def, dir, m.URL, m.Sha256), nil
 }
 
 func (c *Client) install(ctx context.Context, def *Definition, version, system, dir, fingerprint string, artifact Artifact) (*Installed, error) {
-	install := def.InstallFor(system)
+	install := def.InstallFor(system, version)
 	vars, err := def.TemplateVars(system, version)
 	if err != nil {
 		return nil, err
@@ -124,7 +132,18 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 		return nil, fmt.Errorf("%s: install.type %q is not supported", def.Name, install.Type)
 	}
 
-	if artifact.URL == "" {
+	switch {
+	case artifact.URL != "":
+	case install.Lookup != nil:
+		found, err := c.lookupArtifact(ctx, def, install.Lookup, vars)
+		if err != nil {
+			return nil, fmt.Errorf("%s@%s: %w", def.Name, version, err)
+		}
+		artifact.URL = found.URL
+		if !artifact.HasDigest() {
+			artifact.Sha256, artifact.Sha512 = found.Sha256, found.Sha512
+		}
+	default:
 		artifact.URL, err = Render(install.URL, vars)
 		if err != nil {
 			return nil, err
@@ -137,14 +156,13 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 	// one filesystem.
 	downloadDir := filepath.Join(c.CacheDir, ".downloads", def.Name, version, system)
 	archivePath := filepath.Join(downloadDir, vars.Filename)
-	sha, err := c.download(ctx, fetchURL, archivePath)
+	sums, err := c.download(ctx, fetchURL, archivePath)
 	if err != nil {
 		return nil, fmt.Errorf("%s@%s: %w", def.Name, version, err)
 	}
-	if artifact.Sha256 != "" && !strings.EqualFold(sha, artifact.Sha256) {
+	if err := sums.verify(artifact); err != nil {
 		_ = os.Remove(archivePath)
-		return nil, fmt.Errorf("%s@%s: %w: %s has sha256 %s, lockfile expects %s",
-			def.Name, version, ErrChecksumMismatch, fetchURL, sha, artifact.Sha256)
+		return nil, fmt.Errorf("%s@%s: %w: %s %w", def.Name, version, ErrChecksumMismatch, fetchURL, err)
 	}
 
 	// Unpack into a staging directory and rename it into place so that a
@@ -180,6 +198,9 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 		return nil, fmt.Errorf("%s@%s: unpacking %s: %w", def.Name, version, vars.Filename, err)
 	}
 	_ = os.Remove(archivePath)
+	if err := makeBinariesExecutable(staging, def.BinDirs(), def.Binaries); err != nil {
+		return nil, err
+	}
 
 	if err := os.Rename(staging, dir); err != nil {
 		return nil, err
@@ -190,19 +211,64 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 		// so the next install retries.
 		return nil, fmt.Errorf("%s@%s: %w", def.Name, version, err)
 	}
+	if missing := missingBinaries(dir, def.BinDirs(), def.Binaries); len(missing) > 0 {
+		return nil, fmt.Errorf("%s@%s: installed, but %s not found in %s (bin: %s)",
+			def.Name, version, strings.Join(missing, ", "), dir, strings.Join(def.BinDirs(), ", "))
+	}
 
-	m := marker{Name: def.Name, Version: version, System: system, URL: artifact.URL, Sha256: sha, InstallHash: fingerprint}
+	m := marker{
+		Name: def.Name, Version: version, System: system, URL: artifact.URL,
+		Sha256: sums.sha256, Sha512: sums.sha512, InstallHash: fingerprint,
+	}
 	if err := writeMarker(dir, m); err != nil {
 		return nil, err
 	}
-	return c.installed(def, dir, artifact.URL, sha), nil
+	return c.installed(def, dir, artifact.URL, sums.sha256), nil
+}
+
+// makeBinariesExecutable sets the executable bits on every file named in
+// binaries that exists in one of binDirs. Archives built by tools that do
+// not preserve modes (npm tarballs, for example) ship scripts without them.
+func makeBinariesExecutable(root string, binDirs, binaries []string) error {
+	for _, dir := range binDirs {
+		for _, name := range binaries {
+			p := filepath.Join(root, dir, name)
+			info, err := os.Stat(p)
+			if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0o111 == 0o111 {
+				continue
+			}
+			if err := os.Chmod(p, info.Mode().Perm()|0o111); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// missingBinaries returns the names in binaries that are not present in
+// any of binDirs.
+func missingBinaries(root string, binDirs, binaries []string) []string {
+	var missing []string
+	for _, name := range binaries {
+		found := false
+		for _, dir := range binDirs {
+			if _, err := os.Stat(filepath.Join(root, dir, name)); err == nil {
+				found = true
+				break
+			}
+		}
+		if !found {
+			missing = append(missing, name)
+		}
+	}
+	return missing
 }
 
 // IsInstalled reports whether version of def is fully installed on system
 // from the definition's current install recipe.
 func (c *Client) IsInstalled(def *Definition, version, system string) bool {
 	m, ok := readMarker(c.InstallDir(def.Name, version, system))
-	return ok && m.InstallHash == def.InstallFingerprint(system)
+	return ok && m.InstallHash == def.InstallFingerprint(system, version)
 }
 
 func (c *Client) installed(def *Definition, dir, url, sha string) *Installed {
@@ -233,53 +299,71 @@ func lockDir(dir string) (func(), error) {
 	}, nil
 }
 
+// fileDigests are the digests of a downloaded file in every algorithm a
+// lockfile may record.
+type fileDigests struct {
+	sha256 string
+	sha512 string
+}
+
+// verify checks the digests against those recorded for the artifact.
+func (f fileDigests) verify(artifact Artifact) error {
+	if artifact.Sha256 != "" && !strings.EqualFold(f.sha256, artifact.Sha256) {
+		return fmt.Errorf("has sha256 %s, lockfile expects %s", f.sha256, artifact.Sha256)
+	}
+	if artifact.Sha512 != "" && !strings.EqualFold(f.sha512, artifact.Sha512) {
+		return fmt.Errorf("has sha512 %s, lockfile expects %s", f.sha512, artifact.Sha512)
+	}
+	return nil
+}
+
 // download fetches rawURL to dest (unless dest already exists) and returns
-// the hex sha256 of the file.
-func (c *Client) download(ctx context.Context, rawURL, dest string) (string, error) {
-	if sha, err := fileSHA256(dest); err == nil {
-		return sha, nil
+// the digests of the file.
+func (c *Client) download(ctx context.Context, rawURL, dest string) (fileDigests, error) {
+	if sums, err := digestFile(dest); err == nil {
+		return sums, nil
 	}
 	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
-		return "", err
+		return fileDigests{}, err
 	}
 
 	body, err := c.open(ctx, rawURL, "")
 	if err != nil {
-		return "", err
+		return fileDigests{}, err
 	}
 	defer body.Close()
 
 	tmp, err := os.CreateTemp(filepath.Dir(dest), filepath.Base(dest)+".part-")
 	if err != nil {
-		return "", err
+		return fileDigests{}, err
 	}
 	defer os.Remove(tmp.Name())
 
-	hasher := sha256.New()
-	if _, err := io.Copy(io.MultiWriter(tmp, hasher), body); err != nil {
+	h256, h512 := sha256.New(), sha512.New()
+	if _, err := io.Copy(io.MultiWriter(tmp, h256, h512), body); err != nil {
 		tmp.Close()
-		return "", fmt.Errorf("downloading %s: %w", rawURL, err)
+		return fileDigests{}, fmt.Errorf("downloading %s: %w", rawURL, err)
 	}
 	if err := tmp.Close(); err != nil {
-		return "", err
+		return fileDigests{}, err
 	}
 	if err := os.Rename(tmp.Name(), dest); err != nil {
-		return "", err
+		return fileDigests{}, err
 	}
-	return hex.EncodeToString(hasher.Sum(nil)), nil
+	return fileDigests{hex.EncodeToString(h256.Sum(nil)), hex.EncodeToString(h512.Sum(nil))}, nil
 }
 
-func fileSHA256(path string) (string, error) {
+func digestFile(path string) (fileDigests, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return "", err
+		return fileDigests{}, err
 	}
 	defer f.Close()
-	hasher := sha256.New()
-	if _, err := io.Copy(hasher, f); err != nil {
-		return "", err
+	h256, h512 := sha256.New(), sha512.New()
+	if _, err := io.Copy(io.MultiWriter(h256, h512), f); err != nil {
+		return fileDigests{}, err
 	}
-	return hex.EncodeToString(hasher.Sum(nil)), nil
+	return fileDigests{hex.EncodeToString(h256.Sum(nil)), hex.EncodeToString(h512.Sum(nil))}, nil
 }
 
 func placeBinary(src, dest string) error {
@@ -316,7 +400,9 @@ func (c *Client) runPostInstall(ctx context.Context, def *Definition, dir string
 		tail := &tailBuffer{limit: hookOutputLimit}
 		output := io.MultiWriter(c.Stderr, tail)
 
-		cmd := exec.CommandContext(ctx, "sh", "-c", script)
+		// /bin/sh rather than a PATH lookup: the hook must run even when
+		// devbox itself was started with a minimal PATH.
+		cmd := exec.CommandContext(ctx, "/bin/sh", "-c", script)
 		cmd.Dir = dir
 		cmd.Stdout = output
 		cmd.Stderr = output
@@ -324,6 +410,9 @@ func (c *Client) runPostInstall(ctx context.Context, def *Definition, dir string
 			"DEVBOX_PKG_INSTALL_DIR="+dir,
 			"DEVBOX_PKG_VERSION="+vars.Version,
 			"DEVBOX_PKG_SYSTEM="+vars.System,
+			// Hooks may use basic utilities (ln, chmod, ...) even when
+			// devbox was started with a minimal PATH.
+			"PATH="+hookPath(os.Getenv("PATH")),
 		)
 		if err := cmd.Run(); err != nil {
 			if out := strings.TrimSpace(tail.String()); out != "" {
@@ -333,6 +422,14 @@ func (c *Client) runPostInstall(ctx context.Context, def *Definition, dir string
 		}
 	}
 	return nil
+}
+
+// hookPath returns path with the standard system directories appended.
+func hookPath(path string) string {
+	if path == "" {
+		return "/usr/bin:/bin"
+	}
+	return path + ":/usr/bin:/bin"
 }
 
 // tailBuffer keeps the last limit bytes written to it.
