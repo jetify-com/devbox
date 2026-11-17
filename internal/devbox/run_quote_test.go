@@ -33,20 +33,20 @@ func TestRunArgsKeepNewlinesAndTabs(t *testing.T) {
 			want: "expanded",
 		},
 	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			envCommand := strings.Join([]string{"printf '%s'", quoteRunArg(tc.arg)}, " ")
+	for _, tcase := range cases {
+		t.Run(tcase.name, func(t *testing.T) {
+			envCommand := strings.Join([]string{"printf '%s'", quoteRunArg(tcase.arg)}, " ")
 			cmd := exec.Command("sh", "-c", runCmdEval)
 			cmd.Env = append(os.Environ(), "DEVBOX_RUN_CMD="+envCommand)
-			if tc.env != "" {
-				cmd.Env = append(cmd.Env, tc.env)
+			if tcase.env != "" {
+				cmd.Env = append(cmd.Env, tcase.env)
 			}
 			got, err := cmd.CombinedOutput()
 			if err != nil {
 				t.Fatalf("sh: %v\n%s", err, got)
 			}
-			if string(got) != tc.want {
-				t.Fatalf("got %q want %q", got, tc.want)
+			if string(got) != tcase.want {
+				t.Fatalf("got %q want %q", got, tcase.want)
 			}
 		})
 	}

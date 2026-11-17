@@ -305,18 +305,18 @@ func (d *Devbox) Shell(ctx context.Context, envOpts devopt.EnvOptions) error {
 // encoding here: sh does not treat \n and \t as newline and tab inside
 // double quotes.
 func quoteRunArg(arg string) string {
-	var b strings.Builder
-	b.Grow(len(arg) + 2)
-	b.WriteByte('"')
+	var quoted strings.Builder
+	quoted.Grow(len(arg) + 2)
+	quoted.WriteByte('"')
 	for i := 0; i < len(arg); i++ {
 		switch arg[i] {
 		case '\\', '"':
-			b.WriteByte('\\')
+			quoted.WriteByte('\\')
 		}
-		b.WriteByte(arg[i])
+		quoted.WriteByte(arg[i])
 	}
-	b.WriteByte('"')
-	return b.String()
+	quoted.WriteByte('"')
+	return quoted.String()
 }
 
 // runCmdEval is the body of the generated script for an arbitrary command.
