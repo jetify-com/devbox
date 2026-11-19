@@ -831,3 +831,30 @@ func TestEnvDefaultsEndToEnd(t *testing.T) {
 		t.Errorf("env mismatch (-want +got):\n%s", diff)
 	}
 }
+
+// Values substituted from plugins into a default must not change where the
+// default ends, even if they contain unbalanced braces.
+func TestEnvDefaultsWithBracesInPluginValue(t *testing.T) {
+	pluginEnv := map[string]string{"BASE": "a}b", "OPEN": "x{y"}
+	rootEnv := map[string]string{
+		"OVERRIDDEN":   "${OVERRIDE:-$BASE}",
+		"OVERRIDDEN2":  "${OVERRIDE:-$OPEN}",
+		"BALANCED":     "${OVERRIDE:-${BASE2:-{ok}}}",
+		"PLAIN_BRACES": "$BASE",
+	}
+	merged := OSExpandIfPossible(pluginEnv, map[string]string{})
+	maps.Copy(merged, OSExpandIfPossible(rootEnv, merged))
+
+	got := conf.OSExpandEnvMap(merged, map[string]string{"OVERRIDE": "chosen"}, "/project")
+	want := map[string]string{
+		"BASE":         "a}b",
+		"OPEN":         "x{y",
+		"OVERRIDDEN":   "chosen",
+		"OVERRIDDEN2":  "chosen",
+		"BALANCED":     "chosen",
+		"PLAIN_BRACES": "a}b",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("env mismatch (-want +got):\n%s", diff)
+	}
+}

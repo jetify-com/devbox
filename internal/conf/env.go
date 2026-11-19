@@ -88,6 +88,25 @@ func getShellName(str string) (string, int) {
 	return str[:i], i
 }
 
+// BracesBalanced reports whether every '{' in str has a matching '}' and vice
+// versa. A string with balanced braces can be embedded in a ${...} reference
+// without changing where Expand ends that reference.
+func BracesBalanced(str string) bool {
+	depth := 0
+	for i := 0; i < len(str); i++ {
+		switch str[i] {
+		case '{':
+			depth++
+		case '}':
+			depth--
+			if depth < 0 {
+				return false
+			}
+		}
+	}
+	return depth == 0
+}
+
 // isShellSpecialVar reports whether the character identifies a special shell
 // variable such as $*.
 func isShellSpecialVar(c uint8) bool {

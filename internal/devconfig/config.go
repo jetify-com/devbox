@@ -476,8 +476,14 @@ func OSExpandIfPossible(env, existingEnv map[string]string) map[string]string {
 		// ${...} so it can be resolved later against the user's environment.
 		if hasDefault {
 			// Resolve what we can inside the default (e.g. variables set by
-			// plugins) but keep the outer default for later.
-			return fmt.Sprintf("${%s:-%s}", name, conf.Expand(def, mapping))
+			// plugins) but keep the outer default for later. The result is
+			// parsed again, so only do this if the substituted values don't
+			// unbalance the braces (e.g. a plugin value of "a}b" would end
+			// the outer reference early).
+			if expanded := conf.Expand(def, mapping); conf.BracesBalanced(expanded) {
+				def = expanded
+			}
+			return fmt.Sprintf("${%s:-%s}", name, def)
 		}
 		return fmt.Sprintf("${%s}", value)
 	}

@@ -40,6 +40,18 @@ func TestExpandNestedBraces(t *testing.T) {
 	}
 }
 
+func TestBracesBalanced(t *testing.T) {
+	tests := map[string]bool{
+		"": true, "abc": true, "{}": true, "a{b}c": true, "${A:-${B}}": true,
+		"}": false, "{": false, "a}b": false, "}{": false, "{{}": false,
+	}
+	for in, want := range tests {
+		if got := BracesBalanced(in); got != want {
+			t.Errorf("BracesBalanced(%q) = %v, want %v", in, got, want)
+		}
+	}
+}
+
 func TestSplitDefault(t *testing.T) {
 	tests := []struct {
 		ref, name, def string
