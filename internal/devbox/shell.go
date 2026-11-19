@@ -158,7 +158,7 @@ func initShellBinaryFields(path string) *DevboxShell {
 	case "fish":
 		shell.name = shFish
 		shell.userShellrcPath = fishConfig()
-	case "dash", "ash", "shell":
+	case "dash", "ash", "sh":
 		shell.name = shPosix
 		shell.userShellrcPath = os.Getenv(envir.Env)
 
