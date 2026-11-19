@@ -302,6 +302,33 @@ func (d *Devbox) Shell(ctx context.Context, envOpts devopt.EnvOptions) error {
 	return shell.Run()
 }
 
+// quoteRunArg quotes one devbox run argument for the shell script that
+// evaluates DEVBOX_RUN_CMD. Double quotes keep newlines, tabs and spaces.
+// $ and backticks are left for the shell to expand, matching
+// testscripts/run/quote_escaping.test.txt. strconv.Quote is the wrong
+// encoding here: sh does not treat \n and \t as newline and tab inside
+// double quotes.
+func quoteRunArg(arg string) string {
+	var quoted strings.Builder
+	quoted.Grow(len(arg) + 2)
+	quoted.WriteByte('"')
+	for i := 0; i < len(arg); i++ {
+		switch arg[i] {
+		case '\\', '"':
+			quoted.WriteByte('\\')
+		}
+		quoted.WriteByte(arg[i])
+	}
+	quoted.WriteByte('"')
+	return quoted.String()
+}
+
+// runCmdEval is the body of the generated script for an arbitrary command.
+// DEVBOX_RUN_CMD holds the command and its quoted arguments. The expansion is
+// quoted so the shell does not split it on IFS before eval: a newline or tab
+// inside an argument would otherwise be discarded even after quoteRunArg.
+const runCmdEval = "eval \"$DEVBOX_RUN_CMD\"\n"
+
 func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdName string, cmdArgs []string) error {
 	ctx, task := trace.NewTask(ctx, "devboxRun")
 	defer task.End()
@@ -335,7 +362,8 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 	// better alternative since devbox run and devbox shell are not the same.
 	env["DEVBOX_SHELL_ENABLED"] = "1"
 
-	// wrap the arg in double-quotes, and escape any double-quotes inside it.
+	// Wrap each argument in double quotes and escape any double quotes inside
+	// it. Newlines and tabs stay as themselves; see quoteRunArg.
 	//
 	// TODO(gcurtis): this breaks quote-removal in parameter expansion,
 	// command substitution, and arithmetic expansion:
@@ -346,7 +374,7 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 	//	$ devbox run -- echo '${x:-"my file"}'
 	//	"my file"
 	for idx, arg := range cmdArgs {
-		cmdArgs[idx] = strconv.Quote(arg)
+		cmdArgs[idx] = quoteRunArg(arg)
 	}
 
 	var cmdWithArgs []string
@@ -369,7 +397,7 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		if alias, ok := d.cfg.Aliases()[cmdName]; ok {
 			runCmd = alias
 		}
-		scriptBody, err := shellgen.ScriptBody(d, "eval $DEVBOX_RUN_CMD\n")
+		scriptBody, err := shellgen.ScriptBody(d, runCmdEval)
 		if err != nil {
 			return err
 		}
