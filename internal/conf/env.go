@@ -5,21 +5,36 @@ package conf
 
 import (
 	"os"
+	"strings"
 )
 
+// SplitDefault splits a variable reference as passed to an os.Expand mapping
+// function into its name and default value. It supports the shell-style
+// "NAME:-default" syntax (as in ${NAME:-default}), where default is used if
+// NAME is unset or empty. ok is false if the reference has no default.
+func SplitDefault(ref string) (name, def string, ok bool) {
+	return strings.Cut(ref, ":-")
+}
+
 func OSExpandEnvMap(env, existingEnv map[string]string, projectDir string) map[string]string {
-	mapperfunc := func(value string) string {
+	var mapperfunc func(value string) string
+	mapperfunc = func(value string) string {
+		name, def, hasDefault := SplitDefault(value)
+
 		// Special variables that should return correct value
-		switch value {
-		case "PWD":
-			return projectDir
+		var v string
+		if name == "PWD" {
+			v = projectDir
+		} else if existingEnv != nil {
+			v = existingEnv[name]
 		}
 
-		// in case existingEnv is nil
-		if existingEnv == nil {
-			return ""
+		if v == "" && hasDefault {
+			// Allow the default to reference other variables,
+			// e.g. ${FOO:-$BAR}.
+			return os.Expand(def, mapperfunc)
 		}
-		return existingEnv[value]
+		return v
 	}
 
 	res := map[string]string{}

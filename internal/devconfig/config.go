@@ -17,6 +17,7 @@ import (
 	"github.com/samber/lo/mutable"
 	"go.jetify.com/devbox/internal/build"
 	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/internal/conf"
 	"go.jetify.com/devbox/internal/devbox/shellcmd"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/lock"
@@ -465,11 +466,15 @@ func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {
 
 func OSExpandIfPossible(env, existingEnv map[string]string) map[string]string {
 	mapping := func(value string) string {
-		// If the value is not set in existingEnv, return the value wrapped in ${...}
-		if existingEnv == nil || existingEnv[value] == "" {
+		// Strip any ":-default" suffix so ${FOO:-bar} looks up FOO.
+		name, _, _ := conf.SplitDefault(value)
+		// If the value is not set in existingEnv, return the value wrapped in
+		// ${...} (including any default) so it can be resolved later against
+		// the user's environment.
+		if existingEnv == nil || existingEnv[name] == "" {
 			return fmt.Sprintf("${%s}", value)
 		}
-		return existingEnv[value]
+		return existingEnv[name]
 	}
 
 	res := map[string]string{}

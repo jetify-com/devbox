@@ -661,6 +661,42 @@ func TestOSExpandIfPossible(t *testing.T) {
 				"FOO": "/my/config:/my/plugin:$FOO",
 			},
 		},
+		{
+			name: "default ignored when value is set",
+			env: map[string]string{
+				"FOO": "${BAR:-default}",
+			},
+			existingEnv: map[string]string{
+				"BAR": "bar_value",
+			},
+			want: map[string]string{
+				"FOO": "bar_value",
+			},
+		},
+		{
+			name: "default kept as template when value is missing",
+			env: map[string]string{
+				"FOO": "${BAR:-default}",
+				"BAZ": "prefix_${QUX:-}_suffix",
+			},
+			existingEnv: map[string]string{},
+			want: map[string]string{
+				"FOO": "${BAR:-default}",
+				"BAZ": "prefix_${QUX:-}_suffix",
+			},
+		},
+		{
+			name: "plugin value overrides config default",
+			env: map[string]string{
+				"PORT": "${PORT:-8080}",
+			},
+			existingEnv: map[string]string{
+				"PORT": "9000",
+			},
+			want: map[string]string{
+				"PORT": "9000",
+			},
+		},
 	}
 
 	for _, tt := range tests {
