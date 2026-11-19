@@ -3,6 +3,7 @@ package devconfig
 import (
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/pkg/errors"
 	"github.com/tailscale/hujson"
+	"go.jetify.com/devbox/internal/conf"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/nix/flake"
@@ -686,6 +688,34 @@ func TestOSExpandIfPossible(t *testing.T) {
 			},
 		},
 		{
+			name: "references in default resolved when possible",
+			env: map[string]string{
+				"FOO": "${MISSING:-$BASE}",
+				"BAR": "${MISSING:-${BASE}/x}",
+				"BAZ": "${MISSING:-$UNKNOWN}",
+			},
+			existingEnv: map[string]string{
+				"BASE": "base_value",
+			},
+			want: map[string]string{
+				"FOO": "${MISSING:-base_value}",
+				"BAR": "${MISSING:-base_value/x}",
+				"BAZ": "${MISSING:-${UNKNOWN}}",
+			},
+		},
+		{
+			name: "nested braced default with value set",
+			env: map[string]string{
+				"FOO": "${BAR:-${BAZ}}",
+			},
+			existingEnv: map[string]string{
+				"BAR": "bar_value",
+			},
+			want: map[string]string{
+				"FOO": "bar_value",
+			},
+		},
+		{
 			name: "plugin value overrides config default",
 			env: map[string]string{
 				"PORT": "${PORT:-8080}",
@@ -770,5 +800,34 @@ func TestInitRefusesWhenJSONCExists(t *testing.T) {
 	// Init must not have created a devbox.json that would shadow the jsonc.
 	if _, err := os.Stat(filepath.Join(dir, configfile.DefaultName)); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("Init() created %s next to an existing %s", configfile.DefaultName, configfile.AltName)
+	}
+}
+
+// TestEnvDefaultsEndToEnd runs both expansion stages: merging plugin/config
+// env (OSExpandIfPossible) and then resolving against the inherited
+// environment (conf.OSExpandEnvMap).
+func TestEnvDefaultsEndToEnd(t *testing.T) {
+	pluginEnv := map[string]string{"BASE": "plugin_base"}
+	rootEnv := map[string]string{
+		"FROM_PLUGIN":  "${MISSING:-$BASE}",
+		"FROM_SHELL":   "${SHELL_VAR:-default}",
+		"NESTED":       "${MISSING:-${ALSO_MISSING:-deep}}",
+		"BRACED":       "${SHELL_VAR:-${BASE}}",
+		"SHELL_IN_DEF": "${MISSING:-$SHELL_VAR}",
+	}
+	merged := OSExpandIfPossible(pluginEnv, map[string]string{})
+	maps.Copy(merged, OSExpandIfPossible(rootEnv, merged))
+
+	got := conf.OSExpandEnvMap(merged, map[string]string{"SHELL_VAR": "from_shell"}, "/project")
+	want := map[string]string{
+		"BASE":         "plugin_base",
+		"FROM_PLUGIN":  "plugin_base",
+		"FROM_SHELL":   "from_shell",
+		"NESTED":       "deep",
+		"BRACED":       "from_shell",
+		"SHELL_IN_DEF": "from_shell",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("env mismatch (-want +got):\n%s", diff)
 	}
 }

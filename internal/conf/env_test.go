@@ -5,8 +5,40 @@ package conf
 
 import (
 	"maps"
+	"os"
+	"strings"
 	"testing"
 )
+
+func TestExpandMatchesOSExpand(t *testing.T) {
+	mapping := func(name string) string { return "<" + name + ">" }
+	inputs := []string{
+		"", "plain", "$", "$$", "a$", "$FOO", "${FOO}", "$FOO/bar", "${FOO}bar",
+		"$1", "${1}", "$@", "${}", "${FOO", "$-x", "a$FOO$BAR${BAZ}b", "${FOO:-bar}",
+		"${FOO:-$BAR}", "/my/path:$PATH", "$ space",
+	}
+	for _, in := range inputs {
+		if got, want := Expand(in, mapping), os.Expand(in, mapping); got != want {
+			t.Errorf("Expand(%q) = %q, os.Expand = %q", in, got, want)
+		}
+	}
+}
+
+func TestExpandNestedBraces(t *testing.T) {
+	var refs []string
+	mapping := func(name string) string {
+		refs = append(refs, name)
+		return "X"
+	}
+	got := Expand("a${FOO:-${BAR}}b${BAZ:-{x}}c", mapping)
+	if got != "aXbXc" {
+		t.Errorf("Expand() = %q, want %q", got, "aXbXc")
+	}
+	want := []string{"FOO:-${BAR}", "BAZ:-{x}"}
+	if strings.Join(refs, "|") != strings.Join(want, "|") {
+		t.Errorf("mapping got %q, want %q", refs, want)
+	}
+}
 
 func TestSplitDefault(t *testing.T) {
 	tests := []struct {
@@ -70,6 +102,12 @@ func TestOSExpandEnvMap(t *testing.T) {
 			env:         map[string]string{"A": "${MISSING:-$FOO}", "B": "${MISSING:-$ALSO_MISSING}"},
 			existingEnv: map[string]string{"FOO": "foo"},
 			want:        map[string]string{"A": "foo", "B": ""},
+		},
+		{
+			name:        "default with braced reference",
+			env:         map[string]string{"A": "${MISSING:-${FOO}}", "B": "${FOO:-${BAR}}", "C": "${MISSING:-${ALSO:-deep}}/x"},
+			existingEnv: map[string]string{"FOO": "foo", "BAR": "bar"},
+			want:        map[string]string{"A": "foo", "B": "foo", "C": "deep/x"},
 		},
 		{
 			name:        "default within larger string",

@@ -465,21 +465,26 @@ func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {
 }
 
 func OSExpandIfPossible(env, existingEnv map[string]string) map[string]string {
-	mapping := func(value string) string {
+	var mapping func(value string) string
+	mapping = func(value string) string {
 		// Strip any ":-default" suffix so ${FOO:-bar} looks up FOO.
-		name, _, _ := conf.SplitDefault(value)
-		// If the value is not set in existingEnv, return the value wrapped in
-		// ${...} (including any default) so it can be resolved later against
-		// the user's environment.
-		if existingEnv == nil || existingEnv[name] == "" {
-			return fmt.Sprintf("${%s}", value)
+		name, def, hasDefault := conf.SplitDefault(value)
+		if existingEnv != nil && existingEnv[name] != "" {
+			return existingEnv[name]
 		}
-		return existingEnv[name]
+		// If the value is not set in existingEnv, return the value wrapped in
+		// ${...} so it can be resolved later against the user's environment.
+		if hasDefault {
+			// Resolve what we can inside the default (e.g. variables set by
+			// plugins) but keep the outer default for later.
+			return fmt.Sprintf("${%s:-%s}", name, conf.Expand(def, mapping))
+		}
+		return fmt.Sprintf("${%s}", value)
 	}
 
 	res := map[string]string{}
 	for k, v := range env {
-		res[k] = os.Expand(v, mapping)
+		res[k] = conf.Expand(v, mapping)
 	}
 	return res
 }
