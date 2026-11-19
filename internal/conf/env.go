@@ -22,19 +22,19 @@ func OSExpandEnvMap(env, existingEnv map[string]string, projectDir string) map[s
 		name, def, hasDefault := SplitDefault(value)
 
 		// Special variables that should return correct value
-		var v string
+		var val string
 		if name == "PWD" {
-			v = projectDir
+			val = projectDir
 		} else if existingEnv != nil {
-			v = existingEnv[name]
+			val = existingEnv[name]
 		}
 
-		if v == "" && hasDefault {
+		if val == "" && hasDefault {
 			// Allow the default to reference other variables,
 			// e.g. ${FOO:-$BAR}.
 			return os.Expand(def, mapperfunc)
 		}
-		return v
+		return val
 	}
 
 	res := map[string]string{}
