@@ -4,6 +4,7 @@
 package devpkg
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -353,5 +354,62 @@ func TestFetchNarInfoStatusRetriesTransientStatuses(t *testing.T) {
 				t.Errorf("got %d requests, want %d", got, tc.requests)
 			}
 		})
+	}
+}
+
+func TestRunNarInfoFetchesBoundsConcurrency(t *testing.T) {
+	const total = maxConcurrentNarInfoFetches*2 + 5
+	var active, peak, done atomic.Int32
+	started := make(chan struct{}, total)
+	release := make(chan struct{})
+	unblock := sync.OnceFunc(func() { close(release) })
+	// Don't leave fetches blocked if the test fails early.
+	t.Cleanup(unblock)
+
+	fetches := make([]func() error, total)
+	for i := range fetches {
+		fetches[i] = func() error {
+			n := active.Add(1)
+			for {
+				old := peak.Load()
+				if n <= old || peak.CompareAndSwap(old, n) {
+					break
+				}
+			}
+			started <- struct{}{}
+			<-release
+			active.Add(-1)
+			done.Add(1)
+			return nil
+		}
+	}
+
+	result := make(chan error, 1)
+	go func() { result <- runNarInfoFetches(context.Background(), fetches) }()
+
+	// The limit's worth of fetches must start; with no limit, all would.
+	timeout := time.After(10 * time.Second)
+	for range maxConcurrentNarInfoFetches {
+		select {
+		case <-started:
+		case <-timeout:
+			t.Fatal("fetches did not start concurrently")
+		}
+	}
+	// Give any fetch past the limit a chance to start before checking.
+	time.Sleep(50 * time.Millisecond)
+	if got := peak.Load(); got != maxConcurrentNarInfoFetches {
+		t.Fatalf("got %d fetches in flight, want %d", got, maxConcurrentNarInfoFetches)
+	}
+
+	unblock()
+	if err := <-result; err != nil {
+		t.Fatal(err)
+	}
+	if got := done.Load(); got != total {
+		t.Errorf("got %d fetches done, want %d", got, total)
+	}
+	if got := peak.Load(); got > maxConcurrentNarInfoFetches {
+		t.Errorf("got %d fetches in flight at once, want at most %d", got, maxConcurrentNarInfoFetches)
 	}
 }

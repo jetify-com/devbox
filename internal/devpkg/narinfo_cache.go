@@ -59,9 +59,7 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 		return nil
 	}
 
-	group, _ := errgroup.WithContext(ctx)
-	// One request per output to a single host invites rate limiting.
-	group.SetLimit(maxConcurrentNarInfoFetches)
+	var fetches []func() error
 	for _, p := range eligiblePackages {
 		pkg := p // copy the loop variable since its used in a closure below
 		outputNames, err := pkg.GetOutputNames()
@@ -71,18 +69,29 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 
 		for _, outputName := range outputNames {
 			name := outputName
-			group.Go(func() error {
+			fetches = append(fetches, func() error {
 				_, err := pkg.fetchNarInfoStatusOnce(name)
 				return err
 			})
 		}
 	}
-	return group.Wait()
+	return runNarInfoFetches(ctx, fetches)
 }
 
 // maxConcurrentNarInfoFetches bounds how many narinfo requests
 // FillNarInfoCache makes at once.
 const maxConcurrentNarInfoFetches = 16
+
+// runNarInfoFetches runs the fetches with at most maxConcurrentNarInfoFetches
+// in flight. One request per output to a single host invites rate limiting.
+func runNarInfoFetches(ctx context.Context, fetches []func() error) error {
+	group, _ := errgroup.WithContext(ctx)
+	group.SetLimit(maxConcurrentNarInfoFetches)
+	for _, fetch := range fetches {
+		group.Go(fetch)
+	}
+	return group.Wait()
+}
 
 // maxConcurrentResolves bounds how many packages are resolved at once. Each
 // resolve can make a search API request or run `nix flake prefetch`.
