@@ -60,6 +60,8 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	}
 
 	group, _ := errgroup.WithContext(ctx)
+	// One request per output to a single host invites rate limiting.
+	group.SetLimit(maxConcurrentNarInfoFetches)
 	for _, p := range eligiblePackages {
 		pkg := p // copy the loop variable since its used in a closure below
 		outputNames, err := pkg.GetOutputNames()
@@ -77,6 +79,10 @@ func FillNarInfoCache(ctx context.Context, packages ...*Package) error {
 	}
 	return group.Wait()
 }
+
+// maxConcurrentNarInfoFetches bounds how many narinfo requests
+// FillNarInfoCache makes at once.
+const maxConcurrentNarInfoFetches = 16
 
 // maxConcurrentResolves bounds how many packages are resolved at once. Each
 // resolve can make a search API request or run `nix flake prefetch`.
@@ -288,21 +294,58 @@ func fetchNarInfoStatusFromHTTP(
 	return fetch.(func() (bool, error))()
 }
 
+// narInfoRetries is how many more times a narinfo request is made after a
+// transient status (429 or 5xx), and narInfoRetryDelay is the wait before the
+// first retry, doubled before each next one.
+var (
+	narInfoRetries    = 2
+	narInfoRetryDelay = 250 * time.Millisecond
+)
+
 // headNarInfo makes a HEAD request for the narinfo of hash in the binary cache
-// at uri.
+// at uri. A 429 or 5xx says nothing about the path, so it is retried; any
+// other status but 200 is a miss, as is a transient status that
+// outlasts the retries.
 func headNarInfo(ctx context.Context, uri, hash string) (bool, error) {
+	delay := narInfoRetryDelay
+	for attempt := 0; ; attempt++ {
+		status, err := headNarInfoOnce(ctx, uri, hash)
+		if err != nil {
+			return false, err
+		}
+		if !isTransientStatus(status) || attempt == narInfoRetries {
+			return status == http.StatusOK, nil
+		}
+		slog.Debug("binary cache narinfo check got a transient status, retrying", "status", status, "hash", hash)
+		select {
+		case <-ctx.Done():
+			return false, nil
+		case <-time.After(delay):
+		}
+		delay *= 2
+	}
+}
+
+// headNarInfoOnce makes one HEAD request and returns its status, or 0 when the
+// request failed in transport.
+func headNarInfoOnce(ctx context.Context, uri, hash string) (int, error) {
 	ctx, cancel := context.WithTimeout(ctx, narInfoHTTPTimeout)
 	defer cancel()
 	url := fmt.Sprintf("%s/%s.narinfo", uri, hash)
 	req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		slog.Debug("binary cache narinfo check failed, assuming not cached", "url", url, "err", err)
-		return false, nil
+		return 0, nil
 	}
 	defer res.Body.Close()
-	return res.StatusCode == http.StatusOK, nil
+	return res.StatusCode, nil
+}
+
+// isTransientStatus reports whether status may change on a retry.
+func isTransientStatus(status int) bool {
+	return status == http.StatusTooManyRequests || status >= http.StatusInternalServerError
 }

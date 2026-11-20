@@ -314,3 +314,44 @@ func TestEligibleForBinaryCacheResolvesConcurrently(t *testing.T) {
 		t.Errorf("got eligible packages %v, want %v", gotRaws, want)
 	}
 }
+
+// narInfoSequenceServer starts a binary cache that answers the nth narinfo
+// request with statuses[n], and the last status after that.
+func narInfoSequenceServer(t *testing.T, statuses ...int) (*httptest.Server, *atomic.Int32) {
+	t.Helper()
+	var requests atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n := int(requests.Add(1)) - 1
+		w.WriteHeader(statuses[min(n, len(statuses)-1)])
+	}))
+	t.Cleanup(srv.Close)
+	return srv, &requests
+}
+
+func TestFetchNarInfoStatusRetriesTransientStatuses(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		statuses []int
+		inCache  bool
+		requests int32
+	}{
+		{"5xx then 200 is a hit", []int{http.StatusServiceUnavailable, http.StatusServiceUnavailable, http.StatusOK}, true, 3},
+		{"429 then 200 is a hit", []int{http.StatusTooManyRequests, http.StatusOK}, true, 2},
+		{"404 is a miss at once", []int{http.StatusNotFound}, false, 1},
+		{"403 is a miss at once", []int{http.StatusForbidden}, false, 1},
+		{"429 every time is a miss after the retries", []int{http.StatusTooManyRequests}, false, 3},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("XDG_CACHE_HOME", t.TempDir())
+			clearNarInfoMemoryCache(t)
+			srv, requests := narInfoSequenceServer(t, tc.statuses...)
+
+			if got := fetchNarInfo(t, srv.URL, "abc"); got != tc.inCache {
+				t.Errorf("inCache = %v, want %v", got, tc.inCache)
+			}
+			if got := requests.Load(); got != tc.requests {
+				t.Errorf("got %d requests, want %d", got, tc.requests)
+			}
+		})
+	}
+}
