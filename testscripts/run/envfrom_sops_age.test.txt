@@ -1,5 +1,5 @@
-# Tests env_from with sops: against real age-encrypted files, decrypted with
-# the sops installed in the project.
+# Tests env_from with an exec: sops command against real age-encrypted files,
+# decrypted with the sops installed in the project.
 
 exec devbox run show_pass
 stdout '^pa\$\$word$'
@@ -28,7 +28,7 @@ stdout '^it''s "quoted" # not a comment$'
       "show_multi": "echo \"$MULTI\""
     }
   },
-  "env_from": "sops:secrets.yaml"
+  "env_from": "exec:sops decrypt --output-type json secrets.yaml"
 }
 
 -- devbox.json.dotenv --
@@ -42,7 +42,7 @@ stdout '^it''s "quoted" # not a comment$'
       "show_token": "echo \"$TOKEN\""
     }
   },
-  "env_from": "sops:secrets.env"
+  "env_from": "exec:sops decrypt --output-type json secrets.env"
 }
 
 -- key.txt --

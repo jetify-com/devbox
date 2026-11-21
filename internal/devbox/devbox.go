@@ -33,6 +33,7 @@ import (
 	"go.jetify.com/devbox/internal/devbox/envpath"
 	"go.jetify.com/devbox/internal/devbox/generate"
 	"go.jetify.com/devbox/internal/devconfig"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/devpkg/pkgtype"
 	"go.jetify.com/devbox/internal/envir"
@@ -78,9 +79,9 @@ type Devbox struct {
 	// profile) more than once. See stateStatus.
 	cachedStateStatus *lock.StateStatus
 
-	sopsCache *sopsResult
-	// secretEnvKeys are the env variables holding SOPS secrets. They must not
-	// be written to disk.
+	execCache map[string]map[string]string
+	// secretEnvKeys hold values from env_from commands and must not be
+	// written to disk.
 	secretEnvKeys []string
 }
 
@@ -813,7 +814,7 @@ func (d *Devbox) computeEnv(
 	env["DEVBOX_CONFIG_DIR"] = d.projectDir + "/devbox.d"
 	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/" + nix.ProfilePath
 
-	// Synced before configEnvs because sops may need runx binaries.
+	// Synced before configEnvs because env_from commands may need runx binaries.
 	runXPaths, err := d.RunXPaths(ctx)
 	if err != nil {
 		return nil, err
@@ -1074,68 +1075,75 @@ func (d *Devbox) configEnvs(
 	existingEnv map[string]string,
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
-	env := map[string]string{}
-	var secrets *sopsResult
 	if d.cfg.IsJetifyCloudEnvFrom() {
 		ux.Fwarningf(
 			d.stderr,
-			"Ignoring env_from = %q. Jetify Cloud secrets are no longer "+
+			"Ignoring Jetify Cloud env_from. Jetify Cloud secrets are no longer "+
 				"supported by Devbox.\n",
-			d.cfg.Root.EnvFrom,
 		)
-	} else if d.cfg.Root.IsSopsEnabled() {
-		var err error
-		secrets, err = d.sopsEnv(ctx, d.sopsProcessEnv(existingEnv))
-		if err != nil {
-			return nil, err
-		}
-	} else if d.cfg.Root.IsdotEnvEnabled() {
-		// if env_from points to a .env file, parse and add it
-		parsedEnvs, err := d.cfg.Root.ParseEnvsFromDotEnv()
-		if errors.Is(err, os.ErrNotExist) {
-			// A missing env_from file should not stop Devbox from enabling the
-			// environment. The referenced file is often untracked and may be
-			// created by a command in init_hook (e.g. `cp -n .env.example
-			// .env`). Warn and continue instead of erroring out. See #2504.
-			ux.Fwarningf(
-				d.stderr,
-				"Ignoring env_from directive: file %q does not exist.\n",
-				d.cfg.Root.EnvFrom,
-			)
-		} else if err != nil {
-			// it's fine to include the error ParseEnvsFromDotEnv here because
-			// the error message is relevant to the user
-			return nil, usererr.New(
-				"failed parsing %s file. Error: %v",
-				d.cfg.Root.EnvFrom,
-				err,
-			)
-		}
-		for k, v := range parsedEnvs {
-			env[k] = v
-		}
-	} else if d.cfg.Root.EnvFrom != "" {
-		return nil, usererr.New(
-			"unknown env_from value: %s. It must be a path to a file ending in \".env\" or \"sops:<path>\" for SOPS-encrypted files",
-			d.cfg.Root.EnvFrom,
-		)
-	}
-	cfgEnv := d.cfg.Env()
-	for k, v := range cfgEnv {
-		env[k] = v
-	}
-	if secrets == nil {
-		return conf.OSExpandEnvMap(env, existingEnv, d.ProjectDir()), nil
 	}
 
-	d.secretEnvKeys = collectSecretEnvKeys(secrets.keys, cfgEnv)
-	lookupEnv := make(map[string]string, len(existingEnv)+len(secrets.env))
+	// Sources are merged in order, so a later source overrides an earlier one.
+	// Values from exec commands are secrets, unless a later .env file
+	// overrides them.
+	env := map[string]string{}
+	secrets := map[string]string{}
+	for _, source := range d.cfg.Root.EnvFrom {
+		if source == "" {
+			continue
+		}
+		if command, ok := configfile.ExecCommand(source); ok {
+			if command == "" {
+				return nil, usererr.New("env_from %q is missing the command to run", source)
+			}
+			sourcesEnv := maps.Clone(env)
+			maps.Copy(sourcesEnv, secrets)
+			for k, v := range d.execEnv(ctx, command, d.execProcessEnv(existingEnv, sourcesEnv)) {
+				secrets[k] = v
+				delete(env, k)
+			}
+		} else if configfile.IsDotEnvSource(source) {
+			parsedEnvs, err := d.cfg.Root.ParseEnvsFromDotEnv(source)
+			if errors.Is(err, os.ErrNotExist) {
+				// A missing env_from file should not stop Devbox from enabling the
+				// environment. The referenced file is often untracked and may be
+				// created by a command in init_hook (e.g. `cp -n .env.example
+				// .env`). Warn and continue instead of erroring out. See #2504.
+				ux.Fwarningf(
+					d.stderr,
+					"Ignoring env_from directive: file %q does not exist.\n",
+					source,
+				)
+			} else if err != nil {
+				// it's fine to include the error ParseEnvsFromDotEnv here because
+				// the error message is relevant to the user
+				return nil, usererr.New(
+					"failed parsing %s file. Error: %v",
+					source,
+					err,
+				)
+			}
+			for k, v := range parsedEnvs {
+				env[k] = v
+				delete(secrets, k)
+			}
+		} else if !configfile.IsJetifyCloudSource(source) {
+			return nil, usererr.New(
+				"unknown env_from value: %s. It must be a path to a file ending in \".env\" or \"exec:<command>\"",
+				source,
+			)
+		}
+	}
+	maps.Copy(env, d.cfg.Env())
+
+	d.secretEnvKeys = collectSecretEnvKeys(slices.Collect(maps.Keys(secrets)), env)
+	lookupEnv := make(map[string]string, len(existingEnv)+len(secrets))
 	maps.Copy(lookupEnv, existingEnv)
-	maps.Copy(lookupEnv, secrets.env)
+	maps.Copy(lookupEnv, secrets)
 	expanded := conf.OSExpandEnvMap(env, lookupEnv, d.ProjectDir())
 	// Secrets are used verbatim: expanding them would mangle any value
 	// containing a $.
-	for k, v := range secrets.env {
+	for k, v := range secrets {
 		if _, ok := expanded[k]; !ok {
 			expanded[k] = v
 		}
@@ -1279,6 +1287,10 @@ func (d *Devbox) PluginManager() *plugin.Manager {
 
 func (d *Devbox) Lockfile() *lock.File {
 	return d.lockfile
+}
+
+func runxBinPath(projectDir string) string {
+	return filepath.Join(projectDir, ".devbox", "virtenv", "runx", "bin")
 }
 
 func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {

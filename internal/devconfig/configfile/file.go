@@ -54,9 +54,9 @@ type ConfigFile struct {
 	// Env allows specifying env variables
 	Env map[string]string `json:"env,omitempty"`
 
-	// EnvFrom is the path to a .env file to load env variables from, or
-	// "sops:<path>" for a SOPS-encrypted file.
-	EnvFrom string `json:"env_from,omitempty"`
+	// EnvFrom is a .env file path or an "exec:<command>" printing a flat JSON
+	// object, or an array of them merged in order.
+	EnvFrom EnvFrom `json:"env_from,omitempty"`
 
 	// Shell configures the devbox shell environment.
 	Shell *shellConfig `json:"shell,omitempty"`
@@ -146,7 +146,7 @@ func (c *ConfigFile) NixHash() (string, error) {
 		nixOnly.Description = ""
 		nixOnly.DevboxVersion = nil
 		nixOnly.Env = nil
-		nixOnly.EnvFrom = ""
+		nixOnly.EnvFrom = nil
 		nixOnly.Shell = nil
 		nixOnly.Aliases = nil
 		return cachehash.JSON(&nixOnly)

@@ -383,8 +383,7 @@ func (s *DevboxShell) secretKeys() []string {
 func (s *DevboxShell) exportEnv() string {
 	env := maps.Clone(s.env)
 	for _, k := range s.devbox.secretEnvKeys {
-		// Other invalid names are left to exportify, which skips them with a
-		// warning.
+		// exportify warns about the other invalid names.
 		if isValidEnvName(k) || isBashFunc(k) {
 			delete(env, k)
 		}
@@ -397,7 +396,8 @@ func (s *DevboxShell) exportEnv() string {
 	for _, k := range s.secretKeys() {
 		ref := secretEnvPrefix + k
 		if s.name == shFish {
-			fmt.Fprintf(&refs, "\nset -gx %s \"$%s\"; set -e %s", k, ref, ref)
+			// fish's export splits PATH-like variables on colons.
+			fmt.Fprintf(&refs, "\nexport %s=\"$%s\"; set -e %s", k, ref, ref)
 		} else {
 			fmt.Fprintf(&refs, "\nexport %s=\"${%s}\"; unset %s;", k, ref, ref)
 		}
