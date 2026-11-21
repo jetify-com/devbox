@@ -15,10 +15,19 @@
         postBuild = ''
 
           wrapProgram $out/bin/mysqld \
-            --add-flags '--basedir=''$MYSQL_BASEDIR --datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
+            --add-flags '--defaults-file=''$MYSQL_CONF --basedir=''$MYSQL_BASEDIR --datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
 
           wrapProgram $out/bin/mysqld_safe \
-            --add-flags '--basedir=''$MYSQL_BASEDIR --datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
+            --add-flags '--defaults-file=''$MYSQL_CONF --basedir=''$MYSQL_BASEDIR --datadir=''$MYSQL_DATADIR --pid-file=''$MYSQL_PID_FILE --socket=''$MYSQL_UNIX_PORT';
+
+          wrapProgram $out/bin/mysqladmin \
+            --add-flags '--defaults-file=''$MYSQL_CONF --socket=''$MYSQL_UNIX_PORT';
+
+          wrapProgram $out/bin/mysql \
+            --add-flags '--defaults-file=''$MYSQL_CONF --socket=''$MYSQL_UNIX_PORT';
+
+          wrapProgram $out/bin/mysqldump \
+            --add-flags '--defaults-file=''$MYSQL_CONF --socket=''$MYSQL_UNIX_PORT';
         '';
       };
     in{
