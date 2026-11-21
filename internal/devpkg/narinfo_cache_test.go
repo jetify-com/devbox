@@ -330,7 +330,7 @@ func narInfoSequenceServer(t *testing.T, statuses ...int) (*httptest.Server, *at
 }
 
 func TestFetchNarInfoStatusRetriesTransientStatuses(t *testing.T) {
-	for _, tc := range []struct {
+	for _, testCase := range []struct {
 		name     string
 		statuses []int
 		inCache  bool
@@ -342,16 +342,16 @@ func TestFetchNarInfoStatusRetriesTransientStatuses(t *testing.T) {
 		{"403 is a miss at once", []int{http.StatusForbidden}, false, 1},
 		{"429 every time is a miss after the retries", []int{http.StatusTooManyRequests}, false, 3},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(testCase.name, func(t *testing.T) {
 			t.Setenv("XDG_CACHE_HOME", t.TempDir())
 			clearNarInfoMemoryCache(t)
-			srv, requests := narInfoSequenceServer(t, tc.statuses...)
+			srv, requests := narInfoSequenceServer(t, testCase.statuses...)
 
-			if got := fetchNarInfo(t, srv.URL, "abc"); got != tc.inCache {
-				t.Errorf("inCache = %v, want %v", got, tc.inCache)
+			if got := fetchNarInfo(t, srv.URL, "abc"); got != testCase.inCache {
+				t.Errorf("inCache = %v, want %v", got, testCase.inCache)
 			}
-			if got := requests.Load(); got != tc.requests {
-				t.Errorf("got %d requests, want %d", got, tc.requests)
+			if got := requests.Load(); got != testCase.requests {
+				t.Errorf("got %d requests, want %d", got, testCase.requests)
 			}
 		})
 	}
