@@ -67,6 +67,7 @@ func TestParseSearchResults(t *testing.T) {
 		name           string
 		input          []byte
 		expectedResult map[string]*PkgInfo
+		expectedErr    bool
 	}{
 		{
 			name: "Valid JSON input",
@@ -98,14 +99,62 @@ func TestParseSearchResults(t *testing.T) {
 			input:          []byte(`{}`),
 			expectedResult: map[string]*PkgInfo{},
 		},
+		{
+			name:        "Malformed JSON input",
+			input:       []byte(`{invalid json`),
+			expectedErr: true,
+		},
+		{
+			name: "Missing or non-string fields",
+			input: []byte(`{
+				"pkg1": {
+					"pname": "pkg1"
+				},
+				"pkg2": {
+					"version": "1.0.0"
+				},
+				"pkg3": {
+					"pname": 123,
+					"version": null
+				},
+				"pkg4": null
+			}`),
+			expectedResult: map[string]*PkgInfo{
+				"pkg1": {
+					AttributeKey: "pkg1",
+					PName:        "pkg1",
+					Version:      "",
+				},
+				"pkg2": {
+					AttributeKey: "pkg2",
+					PName:        "",
+					Version:      "1.0.0",
+				},
+				"pkg3": {
+					AttributeKey: "pkg3",
+					PName:        "",
+					Version:      "",
+				},
+			},
+		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			result := parseSearchResults(tc.input)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result, err := parseSearchResults(testCase.input)
 
-			if !reflect.DeepEqual(result, tc.expectedResult) {
-				t.Errorf("Expected result %v, got %v", tc.expectedResult, result)
+			if testCase.expectedErr {
+				if err == nil {
+					t.Errorf("Expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+				return
+			}
+			if !reflect.DeepEqual(result, testCase.expectedResult) {
+				t.Errorf("Expected result %v, got %v", testCase.expectedResult, result)
 			}
 		})
 	}
