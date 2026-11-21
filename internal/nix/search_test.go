@@ -139,11 +139,11 @@ func TestParseSearchResults(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			result, err := parseSearchResults(tc.input)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result, err := parseSearchResults(testCase.input)
 
-			if tc.expectedErr {
+			if testCase.expectedErr {
 				if err == nil {
 					t.Errorf("Expected error, got nil")
 				}
@@ -153,8 +153,8 @@ func TestParseSearchResults(t *testing.T) {
 				t.Errorf("Unexpected error: %v", err)
 				return
 			}
-			if !reflect.DeepEqual(result, tc.expectedResult) {
-				t.Errorf("Expected result %v, got %v", tc.expectedResult, result)
+			if !reflect.DeepEqual(result, testCase.expectedResult) {
+				t.Errorf("Expected result %v, got %v", testCase.expectedResult, result)
 			}
 		})
 	}
