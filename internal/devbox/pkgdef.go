@@ -6,11 +6,13 @@ package devbox
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/samber/lo"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/internal/pkgdef"
 	"go.jetify.com/devbox/internal/plugin"
@@ -125,19 +127,26 @@ func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordD
 // pkgDefInfo is `devbox info` for a package definition. It loads the
 // definition and resolves the version with the definition's own version
 // source; it never contacts the search service.
-func (d *Devbox) pkgDefInfo(ctx context.Context, raw string, markdown bool) (string, error) {
+func pkgDefInfo(
+	ctx context.Context,
+	raw string,
+	markdown bool,
+	projectDir string,
+	locker lock.Locker,
+	stderr io.Writer,
+) (string, error) {
 	ref, err := pkgdef.ParseRef(raw)
 	if err != nil {
 		return "", usererr.WithUserMessage(err, "Invalid package %q", raw)
 	}
 
 	client := pkgdef.NewClient()
-	client.Stderr = d.stderr
+	client.Stderr = stderr
 	pinned := ""
-	if locked := d.lockfile.Packages[raw]; locked != nil {
+	if locked := locker.Get(raw); locked != nil {
 		pinned = locked.DefinitionHash
 	}
-	loaded, err := client.Load(ctx, ref, d.projectDir, pinned)
+	loaded, err := client.Load(ctx, ref, projectDir, pinned)
 	if err != nil {
 		return "", err
 	}
@@ -157,7 +166,7 @@ func (d *Devbox) pkgDefInfo(ctx context.Context, raw string, markdown bool) (str
 	}
 	fmt.Fprintf(&b, "Platforms: %s\n", strings.Join(def.Platforms, ", "))
 
-	readme, err := plugin.Readme(ctx, devpkg.PackageFromStringWithDefaults(raw, d.lockfile), d.projectDir, markdown)
+	readme, err := plugin.Readme(ctx, devpkg.PackageFromStringWithDefaults(raw, locker), projectDir, markdown)
 	if err != nil {
 		return "", err
 	}

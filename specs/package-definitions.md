@@ -156,7 +156,7 @@ Matching a requested version against the list:
 |---|---|
 | `latest` | The highest non-pre-release version. |
 | `1.22` | The highest version equal to `1.22` or starting with `1.22.`. |
-| `1.22.3` | That version exactly (also by the prefix rule, so `1.22.3` matches `1.22.3.1`-style versions if the exact one is absent). |
+| `1.22.3` | The highest version equal to `1.22.3` or starting with `1.22.3.`, even when `1.22.3` exists (so `1.22.3.1` wins over `1.22.3`). A full version is not an exact pin. |
 
 ### Install strategies (`install`)
 

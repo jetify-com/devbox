@@ -193,10 +193,19 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 		if binName == "" {
 			binName = def.Name
 		}
+		if !isPlainFileName(binName) {
+			err = fmt.Errorf("bin_name %q must be a plain file name", binName)
+			break
+		}
 		err = placeBinary(archivePath, filepath.Join(staging, "bin", binName))
 	}
 	if err != nil {
 		return nil, fmt.Errorf("%s@%s: unpacking %s: %w", def.Name, version, vars.Filename, err)
+	}
+	// The marker is ours to write once the install is complete. One that
+	// came from the archive would make a failed install look finished.
+	if err := os.RemoveAll(filepath.Join(staging, markerFile)); err != nil {
+		return nil, err
 	}
 
 	if err := os.Rename(staging, dir); err != nil {
@@ -205,7 +214,8 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 
 	if err := c.runPostInstall(ctx, def, dir, vars); err != nil {
 		// Leave the directory in place for debugging, but without a marker
-		// so the next install retries.
+		// so the next install retries. A hook may have written one.
+		_ = os.RemoveAll(filepath.Join(dir, markerFile))
 		return nil, fmt.Errorf("%s@%s: %w", def.Name, version, err)
 	}
 
@@ -279,10 +289,11 @@ func (c *Client) installTarget(def *Definition, version, system string, artifact
 }
 
 // downloadDir is where the install in installDir downloads rawURL to:
-// .downloads/<sha256(url)[:12]>-<install key>.
+// .downloads/<sha256(url)[:12]>-<sha256(installDir)[:12]>. It is keyed by
+// the whole install directory (name, version, system and install key), so
+// two installs that hold different locks never share a download.
 func (c *Client) downloadDir(installDir, rawURL string) string {
-	key := installDir[strings.LastIndex(installDir, "-")+1:]
-	return filepath.Join(c.CacheDir, ".downloads", shortHash(rawURL)+"-"+key)
+	return filepath.Join(c.CacheDir, ".downloads", shortHash(rawURL)+"-"+shortHash(installDir))
 }
 
 // shortHash returns the first 12 hex digits of the sha256 of s.
