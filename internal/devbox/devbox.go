@@ -1096,7 +1096,11 @@ func (d *Devbox) configEnvs(
 			if command == "" {
 				return nil, usererr.New("env_from %q is missing the command to run", source)
 			}
-			sourcesEnv := maps.Clone(env)
+			// .env values are expanded as in the final environment, secrets
+			// are used verbatim.
+			lookupEnv := maps.Clone(existingEnv)
+			maps.Copy(lookupEnv, secrets)
+			sourcesEnv := conf.OSExpandEnvMap(env, lookupEnv, d.ProjectDir())
 			maps.Copy(sourcesEnv, secrets)
 			for k, v := range d.execEnv(ctx, command, d.execProcessEnv(existingEnv, sourcesEnv)) {
 				secrets[k] = v

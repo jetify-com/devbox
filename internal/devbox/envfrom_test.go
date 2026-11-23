@@ -256,12 +256,14 @@ func TestConfigEnvs_ExecFailureKeepsOtherSources(t *testing.T) {
 func TestConfigEnvs_ExecSeesEarlierSources(t *testing.T) {
 	box, _ := envFromDevboxForTesting(t, "keys.env", "exec:secrets", "")
 	box.cfg.Root.Env = map[string]string{"KEY_PATH": "$KEY_DIR/key.txt"}
-	writeProjectFile(t, box, "keys.env", "KEY_DIR=/keys\n")
-	writeMockCommand(t, box, "echo \"{\\\"GOT\\\":\\\"$KEY_PATH\\\"}\"\n")
+	writeProjectFile(t, box, "keys.env", "KEY_DIR=/keys\nKEY_FILE=$PWD/key.txt\n")
+	writeMockCommand(t, box,
+		"echo \"{\\\"GOT\\\":\\\"$KEY_PATH\\\",\\\"FILE\\\":\\\"$KEY_FILE\\\"}\"\n")
 
 	env, err := box.configEnvs(t.Context(), profileEnv(box))
 	require.NoError(t, err)
 	assert.Equal(t, "/keys/key.txt", env["GOT"])
+	assert.Equal(t, filepath.Join(box.projectDir, "key.txt"), env["FILE"])
 }
 
 func TestExecEnv_SkipsInvalidKeysAndValues(t *testing.T) {
