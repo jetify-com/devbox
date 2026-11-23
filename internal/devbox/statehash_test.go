@@ -162,3 +162,30 @@ func TestStateStatusNixChanges(t *testing.T) {
 		})
 	}
 }
+
+func TestStateStatusCacheDoesNotOutliveCall(t *testing.T) {
+	dir := t.TempDir()
+	box := openStateTestProject(t, dir, stateTestConfig)
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, ".devbox"), 0o755))
+	require.NoError(t, box.saveStateHashFile())
+
+	box = openStateTestProject(t, dir, `{
+  "packages": ["github:NixOS/nixpkgs/nixpkgs-unstable#hello"],
+  "env": {"MY_VAR": "new"}
+}`)
+	box.nix = &cacheOnlyNix{}
+
+	_, err := box.ensureStateIsUpToDateAndComputeEnv(t.Context(), devopt.EnvOptions{})
+	require.NoError(t, err)
+	assert.Nil(t, box.cachedStateStatus, "cached status must be dropped when the call returns")
+	status, err := box.stateStatus()
+	require.NoError(t, err)
+	assert.Equal(t, lock.StateUpToDate, status)
+	box.invalidateStateStatus()
+
+	// A stale cached value must not survive a config-changing call.
+	stale := lock.StateUpToDate
+	box.cachedStateStatus = &stale
+	require.NoError(t, box.ensureStateIsUpToDate(t.Context(), noInstall))
+	assert.Nil(t, box.cachedStateStatus)
+}

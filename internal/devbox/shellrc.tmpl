@@ -53,11 +53,6 @@ if [ -z "$DEVBOX_NO_PROMPT" ]; then
   export PS1="(devbox) $PS1"
 fi
 
-{{- if .ShellStartTime }}
-# log that the shell is ready now!
-devbox log shell-ready {{ .ShellStartTime }}
-{{ end }}
-
 # End Devbox Post-init Hook
 
 # Run plugin and user init hooks from the devbox.json directory.
@@ -76,11 +71,6 @@ cd "$working_dir" || exit
 {{ range .ShellAliases }}{{ . }}
 {{ end -}}
 {{- end }}
-
-{{- if .ShellStartTime }}
-# log that the shell is interactive now!
-devbox log shell-interactive {{ .ShellStartTime }}
-{{ end }}
 
 # Add refresh alias (only if it doesn't already exist)
 if ! type {{ .RefreshAliasName }} >/dev/null 2>&1; then

@@ -17,7 +17,7 @@ The easiest way to develop Devbox is with Devbox!
 
 1. Install Devbox:
 
-       curl -fsSL https://get.jetify.com/devbox | bash
+       curl -fsSL https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh | bash
 
 2. Clone this repository:
 
