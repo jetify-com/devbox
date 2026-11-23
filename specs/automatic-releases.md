@@ -123,6 +123,17 @@ issues, so the gate is just **native auto-merge plus a ruleset on `main`**:
   workflows normally.
 - If Greptile requests changes or never approves, the PR just stays open.
 
+**Fallback if Greptile only comments instead of approving:** approve in CI.
+Add a small `release-approve.yml` that runs on `pull_request_review` and
+`issue_comment` events from `greptile-apps[bot]`. It is limited to
+`auto-release` PRs authored by the App. When Greptile's verdict passes
+(confidence ≥ 4/5 and no P0/P1 findings) and the reviewed commit is still the
+PR head, it runs `gh pr review --approve` with `GITHUB_TOKEN`. That needs the
+repo setting "Allow GitHub Actions to create and approve pull requests". The
+`github-actions[bot]` approval counts toward the ruleset, because the PR's
+author is the App, not Actions. Auto-merge then fires as above, and
+`cli-tests` is still required, so no bypass rules are needed.
+
 Things to confirm when setting this up:
 
 - **Greptile reviews App-authored PRs.** Some configurations skip bot authors.
