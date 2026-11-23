@@ -164,7 +164,7 @@ on one platform).
 | `type` | Fields | Behaviour |
 |---|---|---|
 | `archive` | `url`, `checksum`, `strip_components` (default `0`) | Download the archive, verify it, extract it into the install root. Supports `.tar.gz`, `.tgz`, `.tar.xz`, `.tar.bz2`, `.tar.zst` and `.zip`. |
-| `binary` | `url`, `checksum`, `bin_name` (default: `name`) | Download a single executable to `<root>/bin/<bin_name>` and mark it executable. `bin_name` must be a plain file name (no `/`, `.` or `..`). |
+| `binary` | `url`, `checksum`, `bin_name` (default: `name`) | Download a single executable to `<root>/bin/<bin_name>` and mark it executable. `bin_name` must be a plain file name: not empty, `.` or `..`, and without `/` or `\`. |
 | `manager` | `requires`, `env`, `install`, `locate` | Planned. Delegate to another definition that owns version management (see below). |
 | `script` | `run` | Planned. Escape hatch: run `run` with the install root as `$DEVBOX_PKG_INSTALL_DIR`. |
 
