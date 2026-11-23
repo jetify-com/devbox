@@ -496,7 +496,6 @@ func packageInfo(
 	projectDir string,
 	locker lock.Locker,
 ) (string, error) {
-
 	name, version, isVersioned := searcher.ParseVersionedPackage(pkg)
 	if !isVersioned {
 		name = pkg
