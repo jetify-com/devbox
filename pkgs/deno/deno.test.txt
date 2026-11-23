@@ -1,0 +1,33 @@
+# Deno from its GitHub releases. Deno 1.x published no checksums, so the
+# first install records one (trust on first use).
+#
+# Installs deno@1.46 from devbox.json, switches to 2 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/deno/deno.pkg.jsonc deno.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./deno.pkg.jsonc@1.46
+exec devbox run -- deno --version
+stdout '^deno 1\.46\.'
+grep '"sha256": "' devbox.lock
+
+exec devbox add pkg:./deno.pkg.jsonc@2
+! devboxjson.packages.contains devbox.json pkg:./deno.pkg.jsonc@1.46
+! devboxlock.packages.contains devbox.lock pkg:./deno.pkg.jsonc@1.46
+exec devbox run -- deno --version
+stdout '^deno 2\.'
+
+# 1.46 is still installed, so switching back needs no download.
+cp devbox.1.46.json devbox.json
+exec devbox run -- deno --version
+stdout '^deno 1\.46\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./deno.pkg.jsonc@1.46"]
+}
+-- devbox.1.46.json --
+{
+  "packages": ["pkg:./deno.pkg.jsonc@1.46"]
+}

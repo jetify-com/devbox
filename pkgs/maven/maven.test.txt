@@ -1,0 +1,33 @@
+# Maven from Maven Central (sha512 checksums), running on the Temurin JDK.
+#
+# Installs maven@3.8 from devbox.json, switches to 3.9 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/java/java.pkg.jsonc java.pkg.jsonc
+cp $PKGS/maven/maven.pkg.jsonc maven.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./maven.pkg.jsonc@3.8
+exec devbox run -- mvn --version
+stdout '^Apache Maven 3\.8\.'
+grep '"sha512": "' devbox.lock
+
+exec devbox add pkg:./maven.pkg.jsonc@3.9
+! devboxjson.packages.contains devbox.json pkg:./maven.pkg.jsonc@3.8
+! devboxlock.packages.contains devbox.lock pkg:./maven.pkg.jsonc@3.8
+exec devbox run -- mvn --version
+stdout '^Apache Maven 3\.9\.'
+
+# 3.8 is still installed, so switching back needs no download.
+cp devbox.3.8.json devbox.json
+exec devbox run -- mvn --version
+stdout '^Apache Maven 3\.8\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./java.pkg.jsonc@21", "pkg:./maven.pkg.jsonc@3.8"]
+}
+-- devbox.3.8.json --
+{
+  "packages": ["pkg:./java.pkg.jsonc@21", "pkg:./maven.pkg.jsonc@3.8"]
+}

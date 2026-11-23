@@ -1,0 +1,38 @@
+# Node.js from nodejs.org, with npm.
+#
+# Installs nodejs@20 from devbox.json, switches to 22 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/nodejs/nodejs.pkg.jsonc nodejs.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./nodejs.pkg.jsonc@20
+exec devbox run -- node --version
+stdout '^v20\.'
+exec devbox run -- npm --version
+stdout '^10\.'
+# Global npm installs go to the project, not the shared install.
+exec devbox run -- sh -c 'echo $NPM_CONFIG_PREFIX'
+stdout '\.devbox/virtenv/pkgdef-nodejs/npm-global$'
+
+exec devbox add pkg:./nodejs.pkg.jsonc@22
+! devboxjson.packages.contains devbox.json pkg:./nodejs.pkg.jsonc@20
+! devboxlock.packages.contains devbox.lock pkg:./nodejs.pkg.jsonc@20
+exec devbox run -- node --version
+stdout '^v22\.'
+
+# 20 is still installed, so switching back needs no download.
+cp devbox.20.json devbox.json
+exec devbox run -- node --version
+stdout '^v20\.'
+exec devbox run -- sh -c 'echo $NPM_CONFIG_PREFIX'
+stdout 'npm-global$'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./nodejs.pkg.jsonc@20"]
+}
+-- devbox.20.json --
+{
+  "packages": ["pkg:./nodejs.pkg.jsonc@20"]
+}

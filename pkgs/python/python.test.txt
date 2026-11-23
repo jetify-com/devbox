@@ -1,0 +1,41 @@
+# CPython from python-build-standalone.
+#
+# Installs python@3.12 from devbox.json, switches to 3.13 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/python/python.pkg.jsonc python.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./python.pkg.jsonc@3.12
+exec devbox run -- python --version
+stdout '^Python 3\.12\.'
+# python and pip come from a virtual environment in the project.
+exec devbox run -- python -c 'import sys; print(sys.prefix)'
+stdout '/\.venv$'
+exec devbox run -- pip --version
+stdout 'python 3\.12'
+
+exec devbox add pkg:./python.pkg.jsonc@3.13
+! devboxjson.packages.contains devbox.json pkg:./python.pkg.jsonc@3.12
+! devboxlock.packages.contains devbox.lock pkg:./python.pkg.jsonc@3.12
+exec devbox run -- python --version
+stdout '^Python 3\.13\.'
+# Switching versions recreates the virtual environment.
+exec devbox run -- pip --version
+stdout 'python 3\.13'
+
+# 3.12 is still installed, so switching back needs no download.
+cp devbox.3.12.json devbox.json
+exec devbox run -- python --version
+stdout '^Python 3\.12\.'
+exec devbox run -- pip --version
+stdout 'python 3\.12'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./python.pkg.jsonc@3.12"]
+}
+-- devbox.3.12.json --
+{
+  "packages": ["pkg:./python.pkg.jsonc@3.12"]
+}

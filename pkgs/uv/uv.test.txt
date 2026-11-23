@@ -1,0 +1,33 @@
+# uv from its GitHub releases.
+#
+# Installs uv@0.8 from devbox.json, switches to 0.9 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/uv/uv.pkg.jsonc uv.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./uv.pkg.jsonc@0.8
+exec devbox run -- uv --version
+stdout '^uv 0\.8\.'
+exec devbox run -- uvx --version
+stdout '^uvx 0\.8\.'
+
+exec devbox add pkg:./uv.pkg.jsonc@0.9
+! devboxjson.packages.contains devbox.json pkg:./uv.pkg.jsonc@0.8
+! devboxlock.packages.contains devbox.lock pkg:./uv.pkg.jsonc@0.8
+exec devbox run -- uv --version
+stdout '^uv 0\.9\.'
+
+# 0.8 is still installed, so switching back needs no download.
+cp devbox.0.8.json devbox.json
+exec devbox run -- uv --version
+stdout '^uv 0\.8\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./uv.pkg.jsonc@0.8"]
+}
+-- devbox.0.8.json --
+{
+  "packages": ["pkg:./uv.pkg.jsonc@0.8"]
+}

@@ -1,0 +1,32 @@
+# Zig from ziglang.org. Tarball names changed in 0.14; the download index
+# has the URL for each.
+#
+# Installs zig@0.13 from devbox.json, switches to 0.14 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/zig/zig.pkg.jsonc zig.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./zig.pkg.jsonc@0.13
+exec devbox run -- zig version
+stdout '^0\.13\.'
+
+exec devbox add pkg:./zig.pkg.jsonc@0.14
+! devboxjson.packages.contains devbox.json pkg:./zig.pkg.jsonc@0.13
+! devboxlock.packages.contains devbox.lock pkg:./zig.pkg.jsonc@0.13
+exec devbox run -- zig version
+stdout '^0\.14\.'
+
+# 0.13 is still installed, so switching back needs no download.
+cp devbox.0.13.json devbox.json
+exec devbox run -- zig version
+stdout '^0\.13\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./zig.pkg.jsonc@0.13"]
+}
+-- devbox.0.13.json --
+{
+  "packages": ["pkg:./zig.pkg.jsonc@0.13"]
+}

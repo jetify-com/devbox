@@ -1,0 +1,37 @@
+# Java: the Eclipse Temurin JDK from Adoptium.
+#
+# Installs java@17 from devbox.json, switches to 21 with `devbox add`, and
+# switches back by editing devbox.json. Runs only when DEVBOX_RUN_PKGDEF_TESTS=1.
+
+cp $PKGS/java/java.pkg.jsonc java.pkg.jsonc
+
+exec devbox install
+devboxlock.packages.contains devbox.lock pkg:./java.pkg.jsonc@17
+exec devbox run -- java -version
+stderr 'openjdk version "17\.'
+exec devbox run -- javac -version
+stdout '^javac 17\.'
+exec devbox run -- sh -c '"$JAVA_HOME/bin/java" -version'
+stderr 'openjdk version "17\.'
+
+exec devbox add pkg:./java.pkg.jsonc@21
+! devboxjson.packages.contains devbox.json pkg:./java.pkg.jsonc@17
+! devboxlock.packages.contains devbox.lock pkg:./java.pkg.jsonc@17
+exec devbox run -- java -version
+stderr 'openjdk version "21\.'
+
+# 17 is still installed, so switching back needs no download.
+cp devbox.17.json devbox.json
+exec devbox run -- java -version
+stderr 'openjdk version "17\.'
+exec devbox run -- sh -c 'echo $JAVA_HOME'
+stdout '/java/17\.'
+
+-- devbox.json --
+{
+  "packages": ["pkg:./java.pkg.jsonc@17"]
+}
+-- devbox.17.json --
+{
+  "packages": ["pkg:./java.pkg.jsonc@17"]
+}

@@ -15,6 +15,10 @@ import (
 // found in examples/.. and testscripts/..
 const runProjectTests = "DEVBOX_RUN_PROJECT_TESTS"
 
+// When true, runs the testscripts next to the package definitions in pkgs/,
+// which install real toolchains from their vendors.
+const runPkgDefTests = "DEVBOX_RUN_PKGDEF_TESTS"
+
 func TestScripts(t *testing.T) {
 	// To run a specific test, say, testscripts/foo/bar.test.text, then run
 	// go test ./testscripts -run TestScripts/bar
@@ -45,6 +49,27 @@ func TestScriptsWithProjects(t *testing.T) {
 	}
 
 	testrunner.RunDevboxTestscripts(t, ".")
+}
+
+// TestPackageDefinitions installs every package definition in pkgs/ and
+// switches between two of its versions. It downloads several gigabytes, so
+// it only runs when DEVBOX_RUN_PKGDEF_TESTS is set.
+//
+// To run one package, say pkgs/nodejs, run
+// go test ./testscripts -run TestPackageDefinitions/nodejs
+func TestPackageDefinitions(t *testing.T) {
+	isOn, err := strconv.ParseBool(os.Getenv(runPkgDefTests))
+	if err != nil || !isOn {
+		t.Skipf("Skipping TestPackageDefinitions. To enable, set %s=1.", runPkgDefTests)
+	}
+	testrunner.RunPackageDefinitionTestscripts(t, "../pkgs")
+}
+
+// TestPackageDefinitionScriptsExist runs on every test run (unlike
+// TestPackageDefinitions) and fails when a package definition in pkgs/ has
+// no testscript.
+func TestPackageDefinitionScriptsExist(t *testing.T) {
+	testrunner.CheckPackageDefinitionTestscripts(t, "../pkgs")
 }
 
 // TestScriptFileNames fails when a file looks like a testscript but doesn't end
