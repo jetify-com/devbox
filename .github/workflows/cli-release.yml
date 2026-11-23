@@ -78,6 +78,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      # Install the archive that's about to be published with install.sh and
+      # check it reports the edge tag. This is the exact artifact users download;
+      # cli-tests only smoke-tests a goreleaser build of the same commit.
+      - name: Smoke test the release archive
+        env:
+          # This build has the real telemetry keys; don't report CI runs.
+          DO_NOT_TRACK: "1"
+        run: |
+          for platform in linux_amd64 linux_arm64 linux_386 linux_armv7l darwin_amd64 darwin_arm64; do
+            archive="devbox_${EDGE_TAG}_${platform}.tar.gz"
+            if ! grep -q " ${archive}$" dist/checksums.txt; then
+              echo "::error::dist/checksums.txt has no ${archive}, which install.sh and the launcher download"
+              exit 1
+            fi
+          done
+          scripts/smoke-test.sh dist "${EDGE_TAG}"
       # Sign a SLSA build provenance attestation (keyless, via Sigstore) for
       # every archive listed in checksums.txt, so downloads can be verified as
       # built by this workflow:
@@ -164,6 +180,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      # Install the archive that's about to be published with install.sh and
+      # check it reports the tag. This is the exact artifact users download;
+      # cli-tests only smoke-tests a goreleaser build of the same commit.
+      - name: Smoke test the release archive
+        env:
+          # This build has the real telemetry keys; don't report CI runs.
+          DO_NOT_TRACK: "1"
+        run: |
+          for platform in linux_amd64 linux_arm64 linux_386 linux_armv7l darwin_amd64 darwin_arm64; do
+            archive="devbox_${GITHUB_REF_NAME#v}_${platform}.tar.gz"
+            if ! grep -q " ${archive}$" dist/checksums.txt; then
+              echo "::error::dist/checksums.txt has no ${archive}, which install.sh and the launcher download"
+              exit 1
+            fi
+          done
+          scripts/smoke-test.sh dist "${GITHUB_REF_NAME#v}"
       # Sign a SLSA build provenance attestation (keyless, via Sigstore) for
       # every archive listed in checksums.txt, so downloads can be verified as
       # built by this workflow:
