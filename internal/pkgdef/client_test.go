@@ -869,3 +869,27 @@ func TestInstallRedoneWhenRecipeChanges(t *testing.T) {
 	assert.True(t, cli.IsInstalled(def, "1.2.0", testSystem, art))
 	assert.Equal(t, 2, vendor.hitCount("/dl/hello-1.2.0-linux-amd64.tar.gz"))
 }
+
+// TestRelativeFileURLInstallDirsDependOnDefinitionDir checks that the same
+// relative file:// URL in definitions from different directories installs
+// into different directories, since it names different files.
+func TestRelativeFileURLInstallDirsDependOnDefinitionDir(t *testing.T) {
+	cli := NewClient()
+	cli.CacheDir = t.TempDir()
+	def := func(dir string) *Definition {
+		d, err := Parse([]byte(`{
+		  "schema": 1, "name": "tool", "platforms": ["x86_64-linux"],
+		  "versions": {"type": "static", "versions": ["1.0.0"]},
+		  "install": {"type": "binary", "url": "file://vendor/tool"}
+		}`))
+		require.NoError(t, err)
+		d.baseDir = dir
+		return d
+	}
+	art := Artifact{URL: "file://vendor/tool"}
+	a, err := cli.InstallDir(def("/project-a"), "1.0.0", testSystem, art)
+	require.NoError(t, err)
+	b, err := cli.InstallDir(def("/project-b"), "1.0.0", testSystem, art)
+	require.NoError(t, err)
+	assert.NotEqual(t, a, b)
+}

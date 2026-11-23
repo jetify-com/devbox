@@ -20,8 +20,20 @@ import (
 // installPkgDefPackages installs every package-definition package
 // ("pkg:<ref>@<version>") that is not installed yet.
 func (d *Devbox) installPkgDefPackages(ctx context.Context) error {
-	_, err := d.pkgDefBinPaths(ctx, true /*recordDigest*/)
-	return err
+	// A "pkg:" entry added by editing devbox.json is locked by the install
+	// below. The config was loaded before that, without the definition's
+	// env, init hook and create_files, so reload it once the entries exist.
+	unlocked := lo.ContainsBy(
+		lo.Filter(d.InstallablePackages(), devpkg.IsPkgDef),
+		func(pkg *devpkg.Package) bool { return pkg.Locked() == nil },
+	)
+	if _, err := d.pkgDefBinPaths(ctx, true /*recordDigest*/); err != nil {
+		return err
+	}
+	if unlocked {
+		return d.cfg.LoadRecursive(d.lockfile)
+	}
+	return nil
 }
 
 // pkgDefBinPaths returns the bin directories of every package-definition
@@ -59,6 +71,15 @@ func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordD
 	loaded, err := client.Load(ctx, ref, d.projectDir, locked.DefinitionHash)
 	if err != nil {
 		return nil, err
+	}
+	// A local definition is not pinned by its hash: edits are picked up
+	// directly. If the install recipe changed, the locked URL and sha256
+	// may belong to the old recipe, so re-lock the entry first (only on
+	// the install path; computing the environment never writes the lock).
+	if recordDigest && ref.IsLocal() && loaded.Hash != locked.DefinitionHash {
+		if locked, err = d.lockfile.RelockPkgDef(ctx, pkg.Raw); err != nil {
+			return nil, err
+		}
 	}
 	def := loaded.Definition
 

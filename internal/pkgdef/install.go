@@ -263,10 +263,13 @@ func (c *Client) installTarget(def *Definition, version, system string, artifact
 	if err := def.checkURL("install.url", artifact.URL); err != nil {
 		return "", artifact, fmt.Errorf("%s@%s: %w", def.Name, version, err)
 	}
+	// The key uses the resolved URL: a relative file:// URL names a
+	// different file for definitions in different directories, and those
+	// must not share an install.
 	key := shortHash(strings.Join([]string{
 		def.InstallFingerprint(system),
 		system,
-		artifact.URL,
+		def.ResolveURL(artifact.URL),
 	}, "\x00"))
 	dir := filepath.Join(c.CacheDir, def.Name, version, system+"-"+key)
 	if !isStrictlyInside(c.CacheDir, dir) || filepath.Dir(filepath.Dir(filepath.Dir(dir))) != filepath.Clean(c.CacheDir) {
