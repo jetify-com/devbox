@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 )
 
 // ErrUnsupportedSystem is returned when a definition does not list the
@@ -81,7 +82,7 @@ func (c *Client) Install(ctx context.Context, def *Definition, version, system s
 		return c.installedFromMarker(def, version, dir, m, artifact)
 	}
 
-	unlock, err := lockDir(dir)
+	unlock, err := lockDir(ctx, dir)
 	if err != nil {
 		return nil, err
 	}
@@ -313,9 +314,15 @@ func (c *Client) installed(def *Definition, dir, url, sha string) *Installed {
 	return &Installed{Dir: dir, URL: url, Sha256: sha, BinDirs: bins}
 }
 
+// lockPollInterval is how often lockDir retries a lock held by another
+// process.
+const lockPollInterval = 100 * time.Millisecond
+
 // lockDir takes an exclusive advisory lock on <dir>.lock so that only one
 // process installs into dir at a time. The returned function releases it.
-func lockDir(dir string) (func(), error) {
+// While another process holds the lock it keeps retrying until ctx is
+// done.
+func lockDir(ctx context.Context, dir string) (func(), error) {
 	if err := os.MkdirAll(filepath.Dir(dir), 0o755); err != nil {
 		return nil, err
 	}
@@ -323,9 +330,21 @@ func lockDir(dir string) (func(), error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := syscall.Flock(int(lockFile.Fd()), syscall.LOCK_EX); err != nil {
-		lockFile.Close()
-		return nil, fmt.Errorf("locking %s: %w", dir, err)
+	for {
+		err := syscall.Flock(int(lockFile.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+		if err == nil {
+			break
+		}
+		if !errors.Is(err, syscall.EWOULDBLOCK) && !errors.Is(err, syscall.EINTR) {
+			lockFile.Close()
+			return nil, fmt.Errorf("locking %s: %w", dir, err)
+		}
+		select {
+		case <-ctx.Done():
+			lockFile.Close()
+			return nil, fmt.Errorf("waiting for the lock on %s: %w", dir, ctx.Err())
+		case <-time.After(lockPollInterval):
+		}
 	}
 	return func() {
 		_ = syscall.Flock(int(lockFile.Fd()), syscall.LOCK_UN)

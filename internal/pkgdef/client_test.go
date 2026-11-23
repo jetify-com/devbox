@@ -21,6 +21,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -842,4 +843,63 @@ func TestRunJQStopsOnCancel(t *testing.T) {
 
 	_, err = runJQ(t.Context(), code, "repeat(1)", nil)
 	require.ErrorContains(t, err, "more than")
+}
+
+func TestHTTPSRedirectToHTTPIsRejected(t *testing.T) {
+	plain := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, `{"schema": 1}`)
+	}))
+	t.Cleanup(plain.Close)
+	secure := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/same" {
+			_, _ = io.WriteString(w, "ok")
+			return
+		}
+		if r.URL.Path == "/hop" {
+			http.Redirect(w, r, "/same", http.StatusFound)
+			return
+		}
+		http.Redirect(w, r, plain.URL+"/x.pkg.json", http.StatusFound)
+	}))
+	t.Cleanup(secure.Close)
+
+	cli := NewClient()
+	cli.HTTPClient = secure.Client()
+	_, err := cli.get(t.Context(), secure.URL+"/x.pkg.json")
+	require.ErrorIs(t, err, errInsecureRedirect)
+
+	// https to https redirects still work.
+	got, err := cli.get(t.Context(), secure.URL+"/hop")
+	require.NoError(t, err)
+	assert.Equal(t, "ok", string(got))
+}
+
+func TestGetRejectsOversizedResponses(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.Copy(w, io.LimitReader(zeroReader{}, maxMetadataSize+1))
+	}))
+	t.Cleanup(srv.Close)
+	cli := NewClient()
+	cli.HTTPClient = srv.Client()
+	_, err := cli.get(t.Context(), srv.URL)
+	require.ErrorContains(t, err, "larger than")
+}
+
+type zeroReader struct{}
+
+func (zeroReader) Read(p []byte) (int, error) {
+	clear(p)
+	return len(p), nil
+}
+
+func TestLockDirStopsOnCancel(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "pkg")
+	unlock, err := lockDir(t.Context(), dir)
+	require.NoError(t, err)
+	defer unlock()
+
+	ctx, cancel := context.WithTimeout(t.Context(), 300*time.Millisecond)
+	defer cancel()
+	_, err = lockDir(ctx, dir)
+	require.ErrorIs(t, err, context.DeadlineExceeded)
 }

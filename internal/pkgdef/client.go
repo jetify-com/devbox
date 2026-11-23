@@ -109,7 +109,44 @@ func (c *Client) getWithAuth(ctx context.Context, rawURL, authorization string) 
 		return nil, err
 	}
 	defer body.Close()
-	return io.ReadAll(body)
+	b, err := io.ReadAll(io.LimitReader(body, maxMetadataSize+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(b) > maxMetadataSize {
+		return nil, fmt.Errorf("GET %s: response is larger than %d MiB", rawURL, maxMetadataSize>>20)
+	}
+	return b, nil
+}
+
+// maxMetadataSize bounds responses read into memory: definitions, version
+// lists and checksums. Artifacts are streamed to disk instead.
+const maxMetadataSize = 64 << 20
+
+// errInsecureRedirect is returned when an https:// request is redirected
+// to a URL that is not https://.
+var errInsecureRedirect = errors.New("refusing to follow a redirect from https to a non-https URL")
+
+// httpClient returns c.HTTPClient with a redirect policy that never leaves
+// https once a request started there, so a network attacker cannot swap
+// a definition, version list, checksum or artifact through a downgrade.
+// Any CheckRedirect the caller configured still applies.
+func (c *Client) httpClient() *http.Client {
+	client := *c.HTTPClient
+	next := client.CheckRedirect
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if len(via) > 0 && via[0].URL.Scheme == "https" && req.URL.Scheme != "https" {
+			return fmt.Errorf("%s -> %s: %w", via[0].URL, req.URL, errInsecureRedirect)
+		}
+		if next != nil {
+			return next(req, via)
+		}
+		if len(via) >= 10 {
+			return errors.New("stopped after 10 redirects")
+		}
+		return nil
+	}
+	return &client
 }
 
 // open starts a GET request and returns the response body. The caller must
@@ -132,7 +169,7 @@ func (c *Client) open(ctx context.Context, rawURL, authorization string) (io.Rea
 	if authorization != "" {
 		req.Header.Set("Authorization", authorization)
 	}
-	res, err := c.HTTPClient.Do(req)
+	res, err := c.httpClient().Do(req)
 	if err != nil {
 		return nil, err
 	}
