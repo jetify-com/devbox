@@ -71,6 +71,8 @@
       //
       // draft-release   builds the release and leaves it as a draft
       // publish-release builds and publishes, or finishes an existing draft
+      // emergency-release is publish-release without any tests or flake bump,
+      //                   for when a fix must ship and the tests can't pass
       // release-changes shows what would ship and the recommended version bump
       // release-status  shows where a release currently stands
       //
@@ -78,6 +80,7 @@
       // be picked back up with e.g. `devbox run publish-release --version 0.18.2`.
       "draft-release":   "node scripts/release.ts --draft \"$@\"",
       "publish-release": "node scripts/release.ts --publish \"$@\"",
+      "emergency-release": "node scripts/release.ts --publish --emergency \"$@\"",
       "release-changes": "node scripts/release.ts --changes \"$@\"",
       "release-status":  "node scripts/release.ts --status \"$@\"",
       "tidy": ["go mod tidy", "devbox run update-hash"],

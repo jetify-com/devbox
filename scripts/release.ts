@@ -33,10 +33,13 @@
 //      bump has to merge into main, which re-runs cli-tests there, so any
 //      result read before the bump is about a commit that won't be released.
 //
-//   4. Publishing happens here, from your own credentials, not from CI. GitHub
-//      does not trigger workflows from events raised by GITHUB_TOKEN, so a
-//      release published by a workflow would never reach cli-post-release or
-//      docker-image-release.
+//   4. Publishing happens here, from your own credentials, not with CI's
+//      GITHUB_TOKEN. GitHub does not trigger workflows from events raised by
+//      GITHUB_TOKEN, so a release published that way would never reach
+//      cli-post-release or docker-image-release. The automatic weekly release
+//      (release-weekly.yml -> release-tag.yml -> cli-release.yml) publishes
+//      from CI with a GitHub App token instead, which does trigger them. It
+//      uses --next-version and --bump-flake from this script.
 //
 // Every step is idempotent, so re-running after a failure partway through
 // resumes rather than duplicating work.
@@ -258,7 +261,7 @@ function validateVersion(raw: string): string {
 
 const isPrerelease = (version: string) => version.includes("-");
 
-// Edge tags (0.0.0-edge.*) are weekly snapshots, not release points, so they
+// Edge tags (0.0.0-edge.*, no longer made but still in history) are snapshots, not release points, so they
 // never count as "the previous release".
 const isEdge = (tag: string) => tag.includes("-edge.");
 
@@ -296,39 +299,128 @@ function commitsSince(tag: string): Commit[] {
     .filter(Boolean)
     .map((chunk) => {
       const [subject = "", body = "", author = ""] = chunk.split("\x1f");
-      const conventional = /^(\w+)(\([^)]*\))?(!)?:/.exec(subject);
-      return {
-        subject,
-        body,
-        author,
-        type: conventional?.[1] ?? "other",
-        breaking: Boolean(conventional?.[3]) || body.includes("BREAKING CHANGE"),
-      };
+      return parseCommit(subject, body, author);
     });
+}
+
+// PRs are squash-merged, so the subject is the PR title: `feat(scope)!: …`.
+function parseCommit(subject: string, body: string, author: string): Commit {
+  const conventional = /^(\w+)(\([^)]*\))?(!)?:/.exec(subject);
+  return {
+    subject,
+    body,
+    author,
+    type: conventional?.[1] ?? "other",
+    breaking: Boolean(conventional?.[3]) || body.includes("BREAKING CHANGE"),
+  };
 }
 
 type Recommendation = { version: string; bump: "minor" | "patch"; reason: string };
 
-// Devbox is pre-1.0, so the convention in its history is: breaking changes take
-// a minor bump (0.17.5 -> 0.18.0), everything else takes a patch bump — 0.17.4
-// shipped new features as a patch.
+// Devbox is pre-1.0, so there's no automatic major bump. Any `feat` commit or
+// any breaking change (`type!:` or `BREAKING CHANGE` in the body) takes a minor
+// bump (0.22.3 -> 0.23.0); everything else takes a patch bump.
 function recommendVersion(prev: string, commits: Commit[]): Recommendation {
   const version = parseVersion(prev);
   if (!version) fail(`previous tag "${prev}" is not parseable semver`);
 
-  const breaking = commits.filter((c) => c.breaking);
-  if (breaking.length > 0) {
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  const features = commits.filter((c) => c.type === "feat").length;
+  const breaking = commits.filter((c) => c.breaking).length;
+  if (features > 0 || breaking > 0) {
+    const why = [
+      features > 0 ? plural(features, "feat commit") : "",
+      breaking > 0 ? plural(breaking, "breaking change") : "",
+    ].filter(Boolean).join(" and ");
     return {
       version: `${version.major}.${version.minor + 1}.0`,
       bump: "minor",
-      reason: `${breaking.length} breaking change${breaking.length === 1 ? "" : "s"} since ${prev}`,
+      reason: `${why} since ${prev}`,
     };
   }
   return {
     version: `${version.major}.${version.minor}.${version.patch + 1}`,
     bump: "patch",
-    reason: `no breaking changes since ${prev}`,
+    reason: `no feat commits or breaking changes since ${prev}`,
   };
+}
+
+// Synthetic commits run through parseCommit and recommendVersion, so the bump
+// rule can be checked without a test runner: `node scripts/release.ts --self-check`.
+function selfCheck(): void {
+  const cases: { subjects: string[]; body?: string; want: string }[] = [
+    { subjects: ["fix: a bug", "chore: deps"], want: "0.22.4" },
+    { subjects: ["docs: typo", "refactor(shell): tidy", "ci: cache"], want: "0.22.4" },
+    { subjects: ["fix: a bug", "feat: new thing"], want: "0.23.0" },
+    { subjects: ["feat(add): scoped feature"], want: "0.23.0" },
+    { subjects: ["feat!: breaking feature"], want: "0.23.0" },
+    { subjects: ["fix!: breaking fix"], want: "0.23.0" },
+    { subjects: ["refactor(x)!: breaking refactor"], want: "0.23.0" },
+    { subjects: ["fix: quiet"], body: "BREAKING CHANGE: removes --foo", want: "0.23.0" },
+    { subjects: ["feature: not a conventional feat type"], want: "0.22.4" },
+    { subjects: ["Add a feat: in the middle"], want: "0.22.4" },
+  ];
+  let failed = 0;
+  for (const tc of cases) {
+    const commits = tc.subjects.map((s) => parseCommit(s, tc.body ?? "", "test"));
+    const rec = recommendVersion("0.22.3", commits);
+    const pass = rec.version === tc.want;
+    if (!pass) failed++;
+    console.log(`${pass ? green("ok  ") : red("FAIL")} ${tc.subjects.join(" | ")}${tc.body ? ` [body: ${tc.body}]` : ""}`);
+    console.log(dim(`       -> ${rec.version} (${rec.bump} bump — ${rec.reason})${pass ? "" : `, want ${tc.want}`}`));
+  }
+  if (failed > 0) fail(`${failed} of ${cases.length} self-check cases failed`);
+  ok(`all ${cases.length} self-check cases passed`);
+}
+
+// Paths whose changes alone never justify a release: they don't change the
+// devbox binary or what users install. Weeks with only these changes skip the
+// automatic release; they ship with the next real one.
+const NON_SHIPPING_PATHS = [/^examples\//, /^docs\//, /\.md$/i];
+
+const RELEASE_BUMP_RE = /^chore\(release\): bump flake lastTag to /;
+
+type ShippableCommit = { sha: string; subject: string; files: string[] };
+
+// Commits since tag that warrant a release: anything except flake bumps,
+// `docs:` commits, and commits that only touch NON_SHIPPING_PATHS.
+function shippableCommits(tag: string): ShippableCommit[] {
+  const raw = git("log", "--no-merges", "--format=%x1e%H%x1f%s", "--name-only", `${tag}..HEAD`);
+  if (!raw) return [];
+  return raw
+    .split("\x1e")
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .map((chunk) => {
+      const [header = "", ...files] = chunk.split("\n");
+      const [sha = "", subject = ""] = header.split("\x1f");
+      return { sha, subject, files: files.map((f) => f.trim()).filter(Boolean) };
+    })
+    .filter((c) => {
+      if (RELEASE_BUMP_RE.test(c.subject)) return false;
+      if (/^docs(\([^)]*\))?!?:/.test(c.subject)) return false;
+      if (c.files.length === 0) return false;
+      return !c.files.every((f) => NON_SHIPPING_PATHS.some((re) => re.test(f)));
+    });
+}
+
+// Machine-readable answer to "should this week release, and as what?", for
+// the release-weekly workflow.
+function nextVersionReport(): void {
+  const prev = previousTag();
+  const commits = commitsSince(prev);
+  const shippable = shippableCommits(prev);
+  const rec = commits.length > 0 ? recommendVersion(prev, commits) : null;
+  console.log(JSON.stringify({
+    prev,
+    version: rec?.version ?? null,
+    bump: rec?.bump ?? null,
+    reason: rec?.reason ?? `no commits since ${prev}`,
+    commits: commits.length,
+    shippableCommits: shippable.length,
+    shippable: shippable.length > 0 && rec !== null,
+    flakeLastTag: flakeLastTag(),
+  }, null, 2));
 }
 
 function summarizeChanges(prev: string, commits: Commit[]): void {
@@ -576,11 +668,19 @@ function openBumpPR(version: string): { url: string } | null {
   return prs[0] ?? null;
 }
 
-async function stepFlakeBump(version: string, mode: Mode, autoYes: boolean): Promise<void> {
+async function stepFlakeBump(version: string, mode: Mode, autoYes: boolean, emergency = false): Promise<void> {
   step("Sync flake.nix");
   const current = flakeLastTag();
   if (current === version) {
     ok(`flake.nix lastTag is already ${version}`);
+    return;
+  }
+  if (emergency) {
+    // The bump PR can't merge without green tests, so an emergency release
+    // ships without it. Only `nix build`/flake users see the stale version
+    // string. The goreleaser binaries get theirs from the tag.
+    warn(`Skipped (--emergency): flake.nix lastTag stays ${current}, so flake builds of ${version} report ${current}.`);
+    info(`Follow up after the release: the next weekly release bumps it, or run release-weekly by hand.`);
     return;
   }
 
@@ -607,19 +707,7 @@ async function stepFlakeBump(version: string, mode: Mode, autoYes: boolean): Pro
     fail(`flake.nix is out of date — bump lastTag to ${version} and merge before releasing`);
   }
 
-  const flakePath = path.join(ROOT, "flake.nix");
-  const flake = fs.readFileSync(flakePath, "utf8");
-  const updated = flake.replace(`lastTag = "${current}";`, `lastTag = "${version}";`);
-  if (updated === flake) fail("failed to rewrite lastTag in flake.nix");
-  fs.writeFileSync(flakePath, updated);
-  ok(`flake.nix lastTag ${current} -> ${version}`);
-
-  info("Refreshing vendor-hash (devbox run update-hash)...");
-  if (stream("devbox", ["run", "update-hash"]) !== 0) fail("devbox run update-hash failed");
-  ok("vendor-hash refreshed");
-
-  info("Updating flake.lock...");
-  if (stream("nix", ["flake", "update"]) !== 0) warn("nix flake update failed — leaving flake.lock as is");
+  bumpFlakeFiles(version);
 
   console.log();
   console.log(git("--no-pager", "diff", "--stat", "--", "flake.nix", "flake.lock", "vendor-hash"));
@@ -636,6 +724,29 @@ async function stepFlakeBump(version: string, mode: Mode, autoYes: boolean): Pro
   }
 
   openFlakeBumpPR(version, current, mode);
+}
+
+// Rewrites flake.nix lastTag to version and refreshes vendor-hash and
+// flake.lock to match, in the working tree only. Shared by the interactive
+// flow and `--bump-flake`, which the release-weekly workflow runs.
+function bumpFlakeFiles(version: string): void {
+  const current = flakeLastTag();
+  if (current !== version) {
+    const flakePath = path.join(ROOT, "flake.nix");
+    const flake = fs.readFileSync(flakePath, "utf8");
+    const updated = flake.replace(`lastTag = "${current}";`, `lastTag = "${version}";`);
+    if (updated === flake) fail("failed to rewrite lastTag in flake.nix");
+    fs.writeFileSync(flakePath, updated);
+    ok(`flake.nix lastTag ${current} -> ${version}`);
+  }
+
+  info("Refreshing vendor-hash (devbox run update-hash)...");
+  if (stream("devbox", ["run", "update-hash"]) !== 0) fail("devbox run update-hash failed");
+  ok("vendor-hash refreshed");
+
+  // This bumps nixpkgs along with every release, on purpose.
+  info("Updating flake.lock...");
+  if (stream("nix", ["flake", "update"]) !== 0) warn("nix flake update failed — leaving flake.lock as is");
 }
 
 // Commits the working-tree bump onto its own branch, pushes it and opens the
@@ -816,15 +927,28 @@ function stepDraft(version: string, title: string, notes: string): void {
   ok(`Draft ready: ${release?.url ?? version}`);
 }
 
-function stepTag(version: string): void {
+// The line in an annotated tag's message that tells cli-release to skip the
+// test suite for that tag. Only --emergency writes it. Keep it in sync with
+// the `plan` job in .github/workflows/cli-release.yml.
+const SKIP_TESTS_TRAILER = "Release-Skip-Tests: true";
+
+function stepTag(version: string, emergency = false): void {
   step("Push the tag");
   if (!getRelease(version)) fail(`no draft release for ${version} — the draft step must run first`);
 
   if (gitStatus("rev-parse", "--verify", "--quiet", `refs/tags/${version}`) !== 0) {
-    git("tag", "-a", version, "-m", `Release ${version}`);
-    ok(`Tagged ${git("rev-parse", "--short", "HEAD")} as ${version}`);
+    const message = emergency
+      ? `Release ${version}\n\nEmergency release: cli-release skips the test suite.\n\n${SKIP_TESTS_TRAILER}`
+      : `Release ${version}`;
+    git("tag", "-a", version, "-m", message);
+    ok(`Tagged ${git("rev-parse", "--short", "HEAD")} as ${version}${emergency ? " (emergency: tests skipped)" : ""}`);
   } else {
     ok(`Tag ${version} already exists locally`);
+    const existing = git("for-each-ref", "--format=%(contents)", `refs/tags/${version}`);
+    if (emergency && !existing.includes(SKIP_TESTS_TRAILER)) {
+      warn(`The existing tag has no "${SKIP_TESTS_TRAILER}" line, so cli-release will still run the tests.`);
+      info(`If it isn't pushed yet, delete it (git tag -d ${version}) and re-run to tag it as an emergency release.`);
+    }
   }
 
   if (tagPushed(version)) {
@@ -922,6 +1046,7 @@ type Options = {
   notesFile?: string;
   autoYes: boolean;
   skipCliTests: boolean;
+  emergency: boolean;
 };
 
 // Resuming an existing draft skips straight to the tail of the pipeline: the
@@ -949,11 +1074,11 @@ async function resumeDraft(version: string, opts: Options): Promise<void> {
 
   // A draft that already has its artifacts doesn't care what main has done
   // since, so the CI check only matters when a build still has to happen.
-  if (needsBuild) stepCheckMainCI(opts.skipCliTests);
+  if (needsBuild) stepCheckMainCI(opts.skipCliTests || opts.emergency);
 
   if (needsTag) {
     warn(`Tag ${version} is not pushed yet — the build has not run`);
-    stepTag(version);
+    stepTag(version, opts.emergency);
   } else if (needsBuild) {
     warn("Tag is pushed but no assets are attached — waiting on the build");
   } else {
@@ -972,13 +1097,13 @@ async function fullFlow(opts: Options): Promise<void> {
 
   stepPreflight({ requireCleanMain: true });
   const version = await stepChooseVersion(opts.version);
-  await stepFlakeBump(version, opts.mode, opts.autoYes);
-  stepCheckMainCI(opts.skipCliTests);
+  await stepFlakeBump(version, opts.mode, opts.autoYes, opts.emergency);
+  stepCheckMainCI(opts.skipCliTests || opts.emergency);
   const title = await stepTitle(version, opts.title);
   const notes = await stepNotes(version, opts.notesFile);
   await stepConfirm(version, title, notes, opts.mode, opts.autoYes);
   stepDraft(version, title, notes);
-  stepTag(version);
+  stepTag(version, opts.emergency);
   await stepWait(version);
 
   if (publishing) {
@@ -1034,6 +1159,8 @@ ${bold("Devbox release")}
   ${bold("devbox run draft-release")}     Build a release and leave it as a draft
   ${bold("devbox run publish-release")}   Build a release and take it live, or
                                  publish a draft that already exists
+  ${bold("devbox run emergency-release")} Same as publish-release, but skips all
+                                 tests and the flake bump. Emergencies only.
 
 Both walk every step in order and prompt for the tag, title and description.
 
@@ -1044,6 +1171,15 @@ ${bold("Direct invocation")}
   node scripts/release.ts --changes            What would ship, and the
                                                recommended version bump
   node scripts/release.ts --status  [version]  Where a release currently stands
+  node scripts/release.ts --next-version       JSON: next version and whether
+                                               anything shippable changed
+                                               (used by release-weekly)
+  node scripts/release.ts --self-check         Check the version-bump rule
+                                               against synthetic commits
+  node scripts/release.ts --bump-flake --version <x.y.z>
+                                               Rewrite flake.nix lastTag and
+                                               refresh vendor-hash/flake.lock
+                                               in the working tree only
 
 ${bold("Flags")}   (each one skips the prompt it answers)
 
@@ -1051,6 +1187,10 @@ ${bold("Flags")}   (each one skips the prompt it answers)
   --title <string>     Release title
   --notes-file <path>  Release notes, instead of opening \$EDITOR
   --yes                Skip confirmations (for scripted runs)
+  --emergency          With --publish only (devbox run emergency-release).
+                       Skips the cli-tests check, the flake.nix bump, and the
+                       test suite in cli-release itself (via a line in the
+                       tag). For shipping a fix when tests are broken.
   --skip-cli-tests     Release even if the latest cli-tests run on ${MAIN_BRANCH} is
                        red. cli-release still runs the suite and will fail
                        the build if it isn't green.
@@ -1121,6 +1261,23 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (argv[0] === "--self-check") {
+    selfCheck();
+    return;
+  }
+
+  if (argv[0] === "--next-version") {
+    nextVersionReport();
+    return;
+  }
+
+  if (argv[0] === "--bump-flake") {
+    const version = flag("version");
+    if (!version) fail("--bump-flake requires --version");
+    bumpFlakeFiles(validateVersion(version));
+    return;
+  }
+
   const draft = argv.includes("--draft");
   const publish = argv.includes("--publish");
   if (draft && publish) fail("pass either --draft or --publish, not both");
@@ -1136,12 +1293,17 @@ async function main(): Promise<void> {
     notesFile: flag("notes-file"),
     autoYes: argv.includes("--yes"),
     skipCliTests: argv.includes("--skip-cli-tests"),
+    emergency: argv.includes("--emergency"),
   };
 
   if (opts.version) validateVersion(opts.version);
+  if (opts.emergency && opts.mode !== "publish") fail("--emergency only works with --publish (devbox run emergency-release)");
   if (opts.notesFile && !fs.existsSync(opts.notesFile)) fail(`no such file: ${opts.notesFile}`);
 
   console.log(bold(`\nDevbox release — ${opts.mode === "publish" ? "publish" : "draft"} mode`));
+  if (opts.emergency) {
+    console.log(red(bold("EMERGENCY RELEASE: cli-release skips the test suite, and the flake bump is skipped.")));
+  }
 
   if (opts.mode === "publish") await publishFlow(opts);
   else await fullFlow(opts);

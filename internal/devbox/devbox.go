@@ -472,7 +472,30 @@ func (d *Devbox) shellEnvHashKey() string {
 func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxInfo")
 	defer task.End()
+	return packageInfo(ctx, pkg, markdown, d.projectDir, d.lockfile)
+}
 
+// PackageInfo returns the same information as [Devbox.Info] without
+// requiring a devbox project. Plugin paths shown in the output are relative
+// to the current directory.
+func PackageInfo(ctx context.Context, pkg string, markdown bool) (string, error) {
+	ctx, task := trace.NewTask(ctx, "devboxPackageInfo")
+	defer task.End()
+
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return packageInfo(ctx, pkg, markdown, dir, noProjectLocker{dir: dir})
+}
+
+func packageInfo(
+	ctx context.Context,
+	pkg string,
+	markdown bool,
+	projectDir string,
+	locker lock.Locker,
+) (string, error) {
 	name, version, isVersioned := searcher.ParseVersionedPackage(pkg)
 	if !isVersioned {
 		name = pkg
@@ -503,8 +526,8 @@ func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) (string, e
 	)
 	readme, err := plugin.Readme(
 		ctx,
-		devpkg.PackageFromStringWithDefaults(pkg, d.lockfile),
-		d.projectDir,
+		devpkg.PackageFromStringWithDefaults(pkg, locker),
+		projectDir,
 		markdown,
 	)
 	if err != nil {

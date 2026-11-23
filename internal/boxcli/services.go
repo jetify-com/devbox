@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.jetify.com/devbox/internal/devbox"
 	"go.jetify.com/devbox/internal/devbox/devopt"
+	"go.jetify.com/devbox/internal/services"
 )
 
 type servicesCmdFlags struct {
@@ -196,10 +197,19 @@ func startServices(cmd *cobra.Command, services []string, flags servicesCmdFlags
 
 func stopServices(
 	cmd *cobra.Command,
-	services []string,
+	serviceNames []string,
 	servicesFlags servicesCmdFlags,
 	flags serviceStopFlags,
 ) error {
+	if len(serviceNames) > 0 && flags.allProjects {
+		return errors.New("cannot use both services and --all-projects arguments simultaneously")
+	}
+	// --all-projects stops every running process manager, which is tracked
+	// globally, so it doesn't need a project.
+	if flags.allProjects && !hasProjectConfig(servicesFlags.config.path) {
+		return services.StopAllProcessManagers(cmd.Context(), cmd.ErrOrStderr())
+	}
+
 	env, err := servicesFlags.Env(servicesFlags.config.path)
 	if err != nil {
 		return err
@@ -214,11 +224,8 @@ func stopServices(
 		return errors.WithStack(err)
 	}
 
-	if len(services) > 0 && flags.allProjects {
-		return errors.New("cannot use both services and --all-projects arguments simultaneously")
-	}
 	return box.StopServices(
-		cmd.Context(), servicesFlags.runInCurrentShell, flags.allProjects, services...,
+		cmd.Context(), servicesFlags.runInCurrentShell, flags.allProjects, serviceNames...,
 	)
 }
 
