@@ -491,6 +491,17 @@ func TestRemoteDefinitionRejectsFileURLs(t *testing.T) {
 		})
 	}
 
+	// A lookup index may not hand a remote definition a file:// URL.
+	served = fmt.Sprintf(`{
+	  "schema": 1, "name": "x", "platforms": ["x86_64-linux"],
+	  "versions": {"type": "static", "versions": ["1.0.0"]},
+	  "install": {"type": "binary", "lookup": {"url": "%s/index.json", "select": "{url: \"file://%s\"}"}}
+	}`, srv.URL, secret)
+	loaded, err := cli.Load(t.Context(), ref, "", "")
+	require.NoError(t, err)
+	_, err = cli.Lock(t.Context(), loaded.Definition, "1.0.0")
+	require.ErrorIs(t, err, ErrFileURLInRemoteDefinition)
+
 	// A file:// URL assembled by a template is caught after rendering.
 	served = fmt.Sprintf(`{
 	  "schema": 1, "name": "x", "platforms": ["x86_64-linux"], "os_map": {"linux": "file"},
@@ -498,7 +509,7 @@ func TestRemoteDefinitionRejectsFileURLs(t *testing.T) {
 	  "install": {"type": "binary", "url": "{{.OS}}://%s",
 	    "checksum": {"type": "sha256_url", "url": "{{.OS}}://%s"}}
 	}`, secret, secret)
-	loaded, err := cli.Load(t.Context(), ref, "", "")
+	loaded, err = cli.Load(t.Context(), ref, "", "")
 	require.NoError(t, err)
 	_, err = cli.Lock(t.Context(), loaded.Definition, "1.0.0")
 	require.ErrorIs(t, err, ErrFileURLInRemoteDefinition)

@@ -150,8 +150,16 @@ func MatchesConstraint(version, constraint string) bool {
 }
 
 func validateConstraint(constraint string) error {
-	_, err := parseConstraint(constraint)
-	return err
+	terms, err := parseConstraint(constraint)
+	if err != nil {
+		return err
+	}
+	for _, term := range terms {
+		if !versionRegexp.MatchString(term.version) {
+			return fmt.Errorf("invalid version %q in version constraint %q", term.version, constraint)
+		}
+	}
+	return nil
 }
 
 type constraintTerm struct {

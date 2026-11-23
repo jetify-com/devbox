@@ -209,6 +209,22 @@ func TestLookupIndexNotFound(t *testing.T) {
 	assert.Equal(t, 1, srv.hitCount("/feature/8.json"))
 }
 
+// TestLookupNull checks that a select that yields null (a missing key
+// without "// empty") means the system has no artifact.
+func TestLookupNull(t *testing.T) {
+	srv := newVendorServer(t)
+	srv.mux.HandleFunc("/index.json", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `{"1.0.0": {}}`)
+	})
+	def := parseDef(t, `{
+	  "schema": 1, "name": "x", "platforms": ["x86_64-linux"],
+	  "versions": {"type": "static", "versions": ["1.0.0"]},
+	  "install": {"type": "archive", "lookup": {"url": "%s/index.json", "select": ".[\"{{.Version}}\"][\"{{.System}}\"]"}}
+	}`, srv.URL)
+	_, err := srv.client(t).Lock(t.Context(), def, "1.0.0")
+	require.ErrorIs(t, err, ErrNoArtifact)
+}
+
 func TestChecksumGitHubRelease(t *testing.T) {
 	srv := newVendorServer(t)
 	sha := strings.Repeat("ef", 32)

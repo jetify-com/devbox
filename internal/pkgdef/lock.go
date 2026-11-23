@@ -143,6 +143,8 @@ func (c *Client) lookupArtifact(ctx context.Context, def *Definition, lookup *Lo
 	if err != nil {
 		return Artifact{}, fmt.Errorf("lookup: %w", err)
 	}
+	// A null result (a missing key without "// empty") also means no entry.
+	results = slices.DeleteFunc(results, func(v any) bool { return v == nil })
 	if len(results) == 0 {
 		return Artifact{}, fmt.Errorf("lookup: %w: %s has no entry for %s on %s", ErrNoArtifact, rawURL, vars.Version, vars.System)
 	}
@@ -154,6 +156,9 @@ func (c *Client) lookupArtifact(ctx context.Context, def *Definition, lookup *Lo
 	artifactURL, _ := obj["url"].(string)
 	if artifactURL == "" {
 		return Artifact{}, fmt.Errorf("lookup: %s: jq expression %q produced an object without \"url\"", rawURL, expr)
+	}
+	if err := def.checkURL("install.lookup result url", artifactURL); err != nil {
+		return Artifact{}, err
 	}
 	artifact := Artifact{URL: artifactURL}
 	if checksum, _ := obj["checksum"].(string); checksum != "" {

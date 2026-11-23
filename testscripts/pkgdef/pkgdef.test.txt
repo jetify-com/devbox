@@ -49,6 +49,16 @@ exec devbox update pkg:./latest.pkg.json
 grep '"version": "2.0.0"' devbox.lock
 exec devbox rm pkg:./latest.pkg.json
 
+# A definition without a checksum source gets a notice on its first
+# install, and the observed digest is recorded in devbox.lock (trust on
+# first use). Once installed, there is no notice.
+exec devbox add pkg:./tofu.pkg.json@1
+stderr 'tofu.pkg.json has no checksum for'
+grep '"sha256": "066b305a08797c899572e0ad5ade421e2959d48d7858d6294f6ae81d03650590"' devbox.lock
+exec devbox install
+! stderr 'has no checksum'
+exec devbox rm pkg:./tofu.pkg.json@1
+
 # With the feature flag off, pkg: packages fail early with a clear error.
 env DEVBOX_FEATURE_PKG_DEFS=0
 ! exec devbox add pkg:./other.pkg.jsonc
@@ -154,6 +164,14 @@ echo hello 2.0.0
 -- shadow/hello --
 #!/bin/sh
 echo shadowed
+-- tofu.pkg.json --
+{
+  "schema": 1,
+  "name": "tofu",
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+  "versions": {"type": "static", "versions": ["1.0.0"]},
+  "install": {"type": "binary", "url": "file://vendor/hello-1.2.0.sh", "checksum": {"type": "none"}}
+}
 -- latest.pkg.json --
 {
   "schema": 1,
