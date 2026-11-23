@@ -142,7 +142,14 @@ func getPkgDefConfig(pkg *devpkg.Package, projectDir string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	vars.InstallDir = client.InstallDir(def.Name, locked.Version, system)
+	artifact := pkgdef.Artifact{}
+	if info := locked.Systems[system]; info != nil {
+		artifact = pkgdef.Artifact{URL: info.URL, Sha256: info.Sha256}
+	}
+	vars.InstallDir, err = client.InstallDir(def, locked.Version, system, artifact)
+	if err != nil {
+		return nil, err
+	}
 	vars.CacheDir = client.CacheDir
 
 	includable := &pkgDefPlugin{

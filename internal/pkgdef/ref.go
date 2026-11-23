@@ -26,19 +26,26 @@ func IsRef(s string) bool {
 }
 
 // ParseRef parses a "pkg:<source>@<version>" string. The version is split
-// at the last "@" so that sources may themselves contain "@".
+// at the last "@", and only when that "@" comes after the last "/", so that
+// sources may themselves contain "@" ("https://cdn/npm/@acme/x.pkg.json").
 func ParseRef(raw string) (Ref, error) {
 	if !IsRef(raw) {
 		return Ref{}, fmt.Errorf("package %q: missing %q scheme", raw, Prefix)
 	}
 	rest := strings.TrimPrefix(raw, Prefix)
 	ref := Ref{Source: rest}
-	if i := strings.LastIndex(rest, "@"); i >= 0 {
+	if i := strings.LastIndex(rest, "@"); i >= 0 && i > strings.LastIndex(rest, "/") {
 		ref.Source = rest[:i]
 		ref.Version = rest[i+1:]
+		if !IsValidVersion(ref.Version) {
+			return Ref{}, fmt.Errorf("package %q: invalid version %q", raw, ref.Version)
+		}
 	}
 	if ref.Source == "" {
 		return Ref{}, fmt.Errorf("package %q: missing definition path or URL", raw)
+	}
+	if hasPrefixFold(ref.Source, "http://") {
+		return Ref{}, fmt.Errorf("package %q: remote package definitions must use https://", raw)
 	}
 	if !ref.IsRemote() && !strings.HasPrefix(ref.Source, "file://") {
 		// Guard against schemes we don't support (github:, ssh:, ...) being
@@ -66,9 +73,14 @@ func (r Ref) WithVersion(version string) Ref {
 	return r
 }
 
-// IsRemote reports whether the source is fetched over HTTP(S).
+// IsRemote reports whether the source is fetched over HTTPS. Plain http://
+// definitions are not supported.
 func (r Ref) IsRemote() bool {
-	return strings.HasPrefix(r.Source, "https://") || strings.HasPrefix(r.Source, "http://")
+	return strings.HasPrefix(r.Source, "https://")
+}
+
+func hasPrefixFold(s, prefix string) bool {
+	return len(s) >= len(prefix) && strings.EqualFold(s[:len(prefix)], prefix)
 }
 
 // IsLocal reports whether the source is read from the local filesystem,

@@ -76,7 +76,7 @@ func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordD
 		artifact = pkgdef.Artifact{URL: info.URL, Sha256: info.Sha256}
 	}
 
-	if !client.IsInstalled(def, locked.Version, system) {
+	if !client.IsInstalled(def, locked.Version, system, artifact) {
 		ux.Finfof(d.stderr, "Installing %s@%s from %s\n", def.Name, locked.Version, lo.Ternary(artifact.URL != "", artifact.URL, ref.Source))
 		if def.UsesScripts() {
 			ux.Fwarningf(d.stderr, "Package definition %s runs shell commands while installing.\n", ref.Source)
