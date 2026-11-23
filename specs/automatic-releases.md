@@ -116,6 +116,9 @@ Reuse its logic rather than re-implementing it in YAML:
   "superseded by" comment → bump → commit `chore(release): bump flake lastTag to <v>`
   on `bump-flake-<v>` → push with the App token → `gh pr create --label auto-release`
   → `gh pr merge --auto --squash`.
+- An open PR for the *same* version isn't skipped. Its branch is rebuilt from
+  current `main` and force-pushed. A PR stuck on failing checks then picks up
+  whatever fixed `main`, CI reruns, and Greptile reviews the new commit.
 - If Greptile only reviews when mentioned, also post `@greptileai review`.
 
 ### 4. Gate the merge on Greptile + tests
@@ -134,9 +137,12 @@ issues, so the gate is just **native auto-merge plus a ruleset on `main`**:
 **Fallback if Greptile only comments instead of approving:** approve in CI.
 Add a small `release-approve.yml` that runs on `pull_request_review` and
 `issue_comment` events from `greptile-apps[bot]`. It is limited to
-`auto-release` PRs authored by the App. When Greptile's verdict passes
-(confidence ≥ 4/5 and no P0/P1 findings) and the reviewed commit is still the
-PR head, it runs `gh pr review --approve` with `GITHUB_TOKEN`. That needs the
+`auto-release` PRs authored by the App. "For the PR head" is checked by SHA:
+Greptile's latest PR review must have `commit_id` equal to the head, and its
+summary comment must have been updated since that review. Timestamps alone
+can't tell, because a review of an older commit can finish after a newer push.
+When Greptile's verdict passes
+(confidence ≥ 4/5 and no P0/P1 findings) and was given for the PR head, it runs `gh pr review --approve` with `GITHUB_TOKEN`. That needs the
 repo setting "Allow GitHub Actions to create and approve pull requests". The
 `github-actions[bot]` approval counts toward the ruleset, because the PR's
 author is the App, not Actions. Auto-merge then fires as above, and

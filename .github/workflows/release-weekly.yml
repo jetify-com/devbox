@@ -89,9 +89,11 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "prev=$prev" >> "$GITHUB_OUTPUT"
 
-      # One release PR at a time. A PR for this version from an earlier run is
-      # still the answer, so just make sure auto-merge is on. Older ones (a
-      # previous week that never merged) are superseded by this one.
+      # One release PR at a time. Older versions' PRs (a previous week that never
+      # merged) are closed as superseded. A PR for this same version is kept, but
+      # its branch is rebuilt from current main below and force-pushed. If it
+      # was stuck on failing checks, it then picks up whatever fixed main, CI
+      # reruns, and Greptile reviews the new commit.
       - name: Reconcile open release PRs
         id: existing
         if: steps.next.outputs.skip != 'true'
@@ -105,9 +107,8 @@ jobs:
           while read -r number head; do
             [ -z "$number" ] && continue
             if [ "$head" = "$branch" ]; then
-              echo "Release PR #$number for $VERSION is already open; re-enabling auto-merge."
-              gh pr merge "$number" --repo "$GITHUB_REPOSITORY" --auto --squash
-              echo "already_open=true" >> "$GITHUB_OUTPUT"
+              echo "Release PR #$number for $VERSION is already open; refreshing it from current main."
+              echo "pr_number=$number" >> "$GITHUB_OUTPUT"
             else
               echo "Closing stale release PR #$number ($head)."
               gh pr close "$number" --repo "$GITHUB_REPOSITORY" --delete-branch \
@@ -116,20 +117,21 @@ jobs:
           done < <(jq -r '.[] | "\(.number) \(.headRefName)"' "$RUNNER_TEMP/open.json")
 
       - name: Install devbox
-        if: steps.next.outputs.skip != 'true' && steps.existing.outputs.already_open != 'true'
+        if: steps.next.outputs.skip != 'true'
         uses: jetify-com/devbox-install-action@v0.16.0
         with:
           enable-cache: true
 
       - name: Bump flake.nix, vendor-hash and flake.lock
-        if: steps.next.outputs.skip != 'true' && steps.existing.outputs.already_open != 'true'
+        if: steps.next.outputs.skip != 'true'
         env:
           VERSION: ${{ steps.next.outputs.version }}
         run: node scripts/release.ts --bump-flake --version "$VERSION"
 
-      - name: Open the release PR
-        if: steps.next.outputs.skip != 'true' && steps.existing.outputs.already_open != 'true'
+      - name: Open or refresh the release PR
+        if: steps.next.outputs.skip != 'true'
         env:
+          EXISTING_PR: ${{ steps.existing.outputs.pr_number }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
           VERSION: ${{ steps.next.outputs.version }}
@@ -148,8 +150,15 @@ jobs:
             exit 1
           fi
           git commit -a -m "$title"
-          # Force: the branch is ours, and a leftover from a failed run is stale.
+          # Force: the branch is ours. It's always one bump commit on top of
+          # current main, replacing whatever an earlier run pushed.
           git push --force -u origin "$branch"
+
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr merge "$EXISTING_PR" --repo "$GITHUB_REPOSITORY" --auto --squash
+            echo "### Refreshed release PR #$EXISTING_PR for $VERSION from current main" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
 
           gh label create auto-release --repo "$GITHUB_REPOSITORY" --force \
             --color 0E8A16 --description "Automatic weekly release PR"
