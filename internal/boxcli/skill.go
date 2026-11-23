@@ -214,7 +214,7 @@ func promptInstallSkill(cmd *cobra.Command, projectDir string) error {
 	}, &answer)
 	if err != nil {
 		// Treat Ctrl-C or a broken prompt as "no" so init itself still succeeds.
-		return nil
+		answer = optNo
 	}
 
 	var scopes []skill.Scope

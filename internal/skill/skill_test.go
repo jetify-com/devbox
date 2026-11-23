@@ -12,11 +12,11 @@ import (
 )
 
 func TestContentFrontmatter(t *testing.T) {
-	c := Content()
-	if strings.Contains(c, "{{DEVBOX_VERSION}}") {
+	content := Content()
+	if strings.Contains(content, "{{DEVBOX_VERSION}}") {
 		t.Error("version placeholder was not replaced")
 	}
-	parts := strings.SplitN(c, "---\n", 3)
+	parts := strings.SplitN(content, "---\n", 3)
 	if len(parts) != 3 || parts[0] != "" {
 		t.Fatal("SKILL.md must start with YAML frontmatter")
 	}
@@ -33,7 +33,7 @@ func TestContentFrontmatter(t *testing.T) {
 	}
 	// Agent Skills recommends keeping SKILL.md under 500 lines. Ours should
 	// stay much leaner than that.
-	if n := strings.Count(c, "\n"); n > 200 {
+	if n := strings.Count(content, "\n"); n > 200 {
 		t.Errorf("SKILL.md has %d lines, keep it under 200", n)
 	}
 }
