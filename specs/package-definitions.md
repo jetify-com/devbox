@@ -164,7 +164,7 @@ on one platform).
 | `type` | Fields | Behaviour |
 |---|---|---|
 | `archive` | `url`, `checksum`, `strip_components` (default `0`) | Download the archive, verify it, extract it into the install root. Supports `.tar.gz`, `.tgz`, `.tar.xz`, `.tar.bz2`, `.tar.zst` and `.zip`. |
-| `binary` | `url`, `checksum`, `bin_name` (default: `name`) | Download a single executable to `<root>/bin/<bin_name>` and mark it executable. |
+| `binary` | `url`, `checksum`, `bin_name` (default: `name`) | Download a single executable to `<root>/bin/<bin_name>` and mark it executable. `bin_name` must be a plain file name (no `/`, `.` or `..`). |
 | `manager` | `requires`, `env`, `install`, `locate` | Planned. Delegate to another definition that owns version management (see below). |
 | `script` | `run` | Planned. Escape hatch: run `run` with the install root as `$DEVBOX_PKG_INSTALL_DIR`. |
 
@@ -604,8 +604,8 @@ Design:
   `.devbox-pkgdef.json` is never deleted or replaced by install, only by GC.
 - **Locks** (done in PR 2). `<install>.lock` serializes install and GC
   (flock). Lock files are never deleted.
-- **Downloads** (done in PR 2) go to `.downloads/<sha256(url)>-<key>/`, one
-  directory per install so concurrent installs of the same URL never share
+- **Downloads** (done in PR 2) go to `.downloads/<sha256(url)>-<sha256(install dir)>/`,
+  one directory per install (the install dir includes the version) so concurrent installs of the same URL never share
   a file, and are deleted after unpacking, on success or failure.
 - **Reserved names.** Names starting with `.` are reserved for Devbox. State
   shared across installs lives only under `.shared/`, behind its own lock.
