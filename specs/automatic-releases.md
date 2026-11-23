@@ -204,6 +204,31 @@ Things to confirm when setting this up:
 - Slack notification: report each stage (test failure, build failure,
   published).
 
+### 6b. macOS in the automated release
+
+- Release PRs (`bump-flake-*`) always run the macOS legs of `cli-tests`
+  (`cli-tests.yaml`'s matrix exclude also checks `github.head_ref`). A macOS
+  failure blocks the merge before anything is tagged, instead of failing after
+  the tag and leaving an orphan tag and draft.
+- `cli-release` runs them again on the tag (see above), because the tagged
+  merge commit isn't the PR head.
+
+### 6c. Emergency release (manual, skips tests)
+
+`devbox run emergency-release --version <v>` (`release.ts --publish
+--emergency`) is the manual release with every test gate removed. It skips the
+`cli-tests` check on `main` and the flake bump (whose PR can't merge without
+green tests), and tags with an annotated message containing
+`Release-Skip-Tests: true`.
+
+A new `plan` job in `cli-release.yml` reads the tag annotation. When the line
+is there, `tests` is skipped and `release` builds anyway (`needs.tests.result
+== 'skipped'` is accepted only together with `plan`'s `skip_tests`). It warns in
+the run summary. Publishing is `release.ts`'s job, as with any manual release,
+because the `publish` job only handles App-pushed tags. Only someone with tag
+push rights can do this, and the App never writes the line. The runbook is in
+the `release-devbox` skill.
+
 ### 7. Failure modes and how they resolve
 
 | Situation | Behaviour |

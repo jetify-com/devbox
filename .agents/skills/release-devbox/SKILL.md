@@ -13,11 +13,12 @@ commits is skipped. Otherwise:
 
 1. `release-weekly` opens `bump-flake-<version>` as the release App (label
    `auto-release`) with auto-merge on.
-2. Greptile approves it and `cli-tests` passes, so GitHub merges it.
+2. Greptile approves it and `cli-tests` passes, macOS included (release PRs
+   always run the macOS tests), so GitHub merges it.
    (`release-approve.yml` approves in CI if Greptile only comments.)
 3. `release-tag` creates the draft with generated notes and tags the merge
    commit.
-4. `cli-release` runs the tests (including macOS), builds, smoke-checks
+4. `cli-release` runs the tests again (including macOS), builds, smoke-checks
    `devbox version`, and publishes the release as latest.
 
 Nobody has to do anything unless something fails. Slack gets a message for
@@ -30,6 +31,41 @@ each stage. Use this skill when:
   only publishes tags that the release App pushed.
 - **Someone wants hand-written notes.** Edit the published release on GitHub
   afterwards, in the house style below.
+
+## Emergency release (skips tests)
+
+For when a fix has to ship *now* and the tests can't pass, e.g. a broken test,
+a flaky macOS runner, or an outage in a service the tests use. It's the manual
+release with every test gate removed:
+
+```bash
+devbox run emergency-release --version 0.22.2
+```
+
+That is `node scripts/release.ts --publish --emergency`, and it takes the same
+flags (`--title`, `--notes-file`, `--yes`). Compared to `publish-release`, it:
+
+- **Skips the `cli-tests` check on `main`.**
+- **Skips the `flake.nix` bump.** The bump PR can't merge without green tests.
+  Only `nix build` / flake users see the stale version string; the release
+  binaries get their version from the tag. The next weekly release bumps it.
+- **Skips the test suite in `cli-release`.** The annotated tag's message gets a
+  `Release-Skip-Tests: true` line. `cli-release`'s `plan` job reads it, skips
+  `tests`, and lets `release` build anyway. The run summary shows a warning.
+
+Everything else is the same: draft before tag, build, wait for assets,
+publish. It releases whatever `main` is at, so merge the fix first.
+
+Rules:
+
+- **Get explicit sign-off from the user before running it,** and say plainly
+  that it skips all tests. Never pick it yourself to get past a red `main`
+  that should be fixed.
+- Only someone who can push tags can trigger it. The release App never writes
+  the line, so automatic releases always run the tests.
+- A tag that already exists without the line can't become an emergency
+  release. If it isn't pushed yet, delete it locally (`git tag -d <v>`) and
+  re-run. If it is pushed, release the next version instead.
 
 ## Manual release
 

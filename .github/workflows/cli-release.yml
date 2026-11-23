@@ -20,7 +20,37 @@ permissions:
   attestations: write # Needed for actions/attest-build-provenance
 
 jobs:
+  # Decides whether this run tests. Always yes, except for an emergency release:
+  # `devbox run emergency-release` pushes an annotated tag whose message has a
+  # `Release-Skip-Tests: true` line (scripts/release.ts SKIP_TESTS_TRAILER).
+  # Only a person with tag push rights can do that. The release App never
+  # writes it.
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      skip_tests: ${{ steps.plan.outputs.skip_tests }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+      - name: Check for an emergency release
+        id: plan
+        run: |
+          skip=false
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            # Re-fetch the tag itself so its annotation is here, not just the commit.
+            git fetch --quiet --force --no-tags origin "+$GITHUB_REF:$GITHUB_REF"
+            if [ "$(git cat-file -t "$GITHUB_REF")" = tag ] &&
+               git for-each-ref --format='%(contents)' "$GITHUB_REF" | grep -qx 'Release-Skip-Tests: true'; then
+              skip=true
+              echo "::warning::EMERGENCY RELEASE: $GITHUB_REF_NAME was tagged with 'Release-Skip-Tests: true', so the test suite is skipped."
+              echo "### ⚠️ Emergency release: tests skipped for $GITHUB_REF_NAME" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          echo "skip_tests=$skip" >> "$GITHUB_OUTPUT"
+
   tests:
+    needs: plan
+    if: needs.plan.outputs.skip_tests != 'true'
     uses: ./.github/workflows/cli-tests.yaml
     with:
       # Stable releases ship to macOS with nobody looking, so gate them on the
@@ -48,9 +78,16 @@ jobs:
   release:
     runs-on: ubuntu-latest
     environment: release
-    needs: tests
-    # Only release when there's a tag for the release.
-    if: startsWith(github.ref, 'refs/tags/')
+    needs: [plan, tests]
+    # Only release when there's a tag for the release, and only once the tests
+    # pass. The one exception is an emergency release (see `plan`), whose tests
+    # are skipped on purpose.
+    if: >-
+      !cancelled() &&
+      startsWith(github.ref, 'refs/tags/') &&
+      needs.plan.result == 'success' &&
+      (needs.tests.result == 'success' ||
+       (needs.tests.result == 'skipped' && needs.plan.outputs.skip_tests == 'true'))
     steps:
       - name: Checkout source code
         uses: actions/checkout@v7
@@ -158,6 +195,8 @@ jobs:
     environment: release
     needs: release
     if: >-
+      !cancelled() &&
+      needs.release.result == 'success' &&
       startsWith(github.ref, 'refs/tags/') &&
       github.actor == format('{0}[bot]', vars.RELEASE_APP_SLUG)
     timeout-minutes: 10

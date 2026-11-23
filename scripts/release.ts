@@ -629,11 +629,19 @@ function openBumpPR(version: string): { url: string } | null {
   return prs[0] ?? null;
 }
 
-async function stepFlakeBump(version: string, mode: Mode, autoYes: boolean): Promise<void> {
+async function stepFlakeBump(version: string, mode: Mode, autoYes: boolean, emergency = false): Promise<void> {
   step("Sync flake.nix");
   const current = flakeLastTag();
   if (current === version) {
     ok(`flake.nix lastTag is already ${version}`);
+    return;
+  }
+  if (emergency) {
+    // The bump PR can't merge without green tests, so an emergency release
+    // ships without it. Only `nix build`/flake users see the stale version
+    // string. The goreleaser binaries get theirs from the tag.
+    warn(`Skipped (--emergency): flake.nix lastTag stays ${current}, so flake builds of ${version} report ${current}.`);
+    info(`Follow up after the release: the next weekly release bumps it, or run release-weekly by hand.`);
     return;
   }
 
@@ -880,15 +888,28 @@ function stepDraft(version: string, title: string, notes: string): void {
   ok(`Draft ready: ${release?.url ?? version}`);
 }
 
-function stepTag(version: string): void {
+// The line in an annotated tag's message that tells cli-release to skip the
+// test suite for that tag. Only --emergency writes it. Keep it in sync with
+// the `plan` job in .github/workflows/cli-release.yml.
+const SKIP_TESTS_TRAILER = "Release-Skip-Tests: true";
+
+function stepTag(version: string, emergency = false): void {
   step("Push the tag");
   if (!getRelease(version)) fail(`no draft release for ${version} — the draft step must run first`);
 
   if (gitStatus("rev-parse", "--verify", "--quiet", `refs/tags/${version}`) !== 0) {
-    git("tag", "-a", version, "-m", `Release ${version}`);
-    ok(`Tagged ${git("rev-parse", "--short", "HEAD")} as ${version}`);
+    const message = emergency
+      ? `Release ${version}\n\nEmergency release: cli-release skips the test suite.\n\n${SKIP_TESTS_TRAILER}`
+      : `Release ${version}`;
+    git("tag", "-a", version, "-m", message);
+    ok(`Tagged ${git("rev-parse", "--short", "HEAD")} as ${version}${emergency ? " (emergency: tests skipped)" : ""}`);
   } else {
     ok(`Tag ${version} already exists locally`);
+    const existing = git("for-each-ref", "--format=%(contents)", `refs/tags/${version}`);
+    if (emergency && !existing.includes(SKIP_TESTS_TRAILER)) {
+      warn(`The existing tag has no "${SKIP_TESTS_TRAILER}" line, so cli-release will still run the tests.`);
+      info(`If it isn't pushed yet, delete it (git tag -d ${version}) and re-run to tag it as an emergency release.`);
+    }
   }
 
   if (tagPushed(version)) {
@@ -986,6 +1007,7 @@ type Options = {
   notesFile?: string;
   autoYes: boolean;
   skipCliTests: boolean;
+  emergency: boolean;
 };
 
 // Resuming an existing draft skips straight to the tail of the pipeline: the
@@ -1013,11 +1035,11 @@ async function resumeDraft(version: string, opts: Options): Promise<void> {
 
   // A draft that already has its artifacts doesn't care what main has done
   // since, so the CI check only matters when a build still has to happen.
-  if (needsBuild) stepCheckMainCI(opts.skipCliTests);
+  if (needsBuild) stepCheckMainCI(opts.skipCliTests || opts.emergency);
 
   if (needsTag) {
     warn(`Tag ${version} is not pushed yet — the build has not run`);
-    stepTag(version);
+    stepTag(version, opts.emergency);
   } else if (needsBuild) {
     warn("Tag is pushed but no assets are attached — waiting on the build");
   } else {
@@ -1036,13 +1058,13 @@ async function fullFlow(opts: Options): Promise<void> {
 
   stepPreflight({ requireCleanMain: true });
   const version = await stepChooseVersion(opts.version);
-  await stepFlakeBump(version, opts.mode, opts.autoYes);
-  stepCheckMainCI(opts.skipCliTests);
+  await stepFlakeBump(version, opts.mode, opts.autoYes, opts.emergency);
+  stepCheckMainCI(opts.skipCliTests || opts.emergency);
   const title = await stepTitle(version, opts.title);
   const notes = await stepNotes(version, opts.notesFile);
   await stepConfirm(version, title, notes, opts.mode, opts.autoYes);
   stepDraft(version, title, notes);
-  stepTag(version);
+  stepTag(version, opts.emergency);
   await stepWait(version);
 
   if (publishing) {
@@ -1098,6 +1120,8 @@ ${bold("Devbox release")}
   ${bold("devbox run draft-release")}     Build a release and leave it as a draft
   ${bold("devbox run publish-release")}   Build a release and take it live, or
                                  publish a draft that already exists
+  ${bold("devbox run emergency-release")} Same as publish-release, but skips all
+                                 tests and the flake bump. Emergencies only.
 
 Both walk every step in order and prompt for the tag, title and description.
 
@@ -1122,6 +1146,10 @@ ${bold("Flags")}   (each one skips the prompt it answers)
   --title <string>     Release title
   --notes-file <path>  Release notes, instead of opening \$EDITOR
   --yes                Skip confirmations (for scripted runs)
+  --emergency          With --publish only (devbox run emergency-release).
+                       Skips the cli-tests check, the flake.nix bump, and the
+                       test suite in cli-release itself (via a line in the
+                       tag). For shipping a fix when tests are broken.
   --skip-cli-tests     Release even if the latest cli-tests run on ${MAIN_BRANCH} is
                        red. cli-release still runs the suite and will fail
                        the build if it isn't green.
@@ -1219,12 +1247,17 @@ async function main(): Promise<void> {
     notesFile: flag("notes-file"),
     autoYes: argv.includes("--yes"),
     skipCliTests: argv.includes("--skip-cli-tests"),
+    emergency: argv.includes("--emergency"),
   };
 
   if (opts.version) validateVersion(opts.version);
+  if (opts.emergency && opts.mode !== "publish") fail("--emergency only works with --publish (devbox run emergency-release)");
   if (opts.notesFile && !fs.existsSync(opts.notesFile)) fail(`no such file: ${opts.notesFile}`);
 
   console.log(bold(`\nDevbox release — ${opts.mode === "publish" ? "publish" : "draft"} mode`));
+  if (opts.emergency) {
+    console.log(red(bold("EMERGENCY RELEASE: cli-release skips the test suite, and the flake bump is skipped.")));
+  }
 
   if (opts.mode === "publish") await publishFlow(opts);
   else await fullFlow(opts);

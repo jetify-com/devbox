@@ -155,8 +155,10 @@ jobs:
         # specifying a Nix version, re-add the matrix here and wire it into the
         # "Install devbox" step.
         exclude:
-          # Only runs tests on macos if explicitly requested, or on a schedule
-          - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-latest' }}"
+          # Only runs tests on macos if explicitly requested, on a schedule, or
+          # on an automatic release PR (release-weekly.yml). Release PRs gate on
+          # macOS so a macOS failure blocks the merge before anything is tagged.
+          - os: "${{ (inputs.run-mac-tests || github.event.schedule != '' || startsWith(github.head_ref, 'bump-flake-')) && 'dummy' || 'macos-latest' }}"
 
 
     runs-on: ${{ matrix.os }}
