@@ -210,7 +210,7 @@ func TestInstallArchive(t *testing.T) {
 	assert.Equal(t, "installed 1.2.0\n", string(hook))
 
 	// The download is removed after a successful install.
-	_, err = os.Stat(filepath.Join(cli.CacheDir, ".downloads", shortHash(art.URL)))
+	_, err = os.Stat(cli.downloadDir(got.Dir, art.URL))
 	assert.True(t, os.IsNotExist(err))
 
 	// A second install is served from disk without touching the network.
@@ -238,7 +238,7 @@ func TestInstallChecksumMismatch(t *testing.T) {
 	assert.False(t, cli.IsInstalled(def, "1.2.0", testSystem, art))
 	_, statErr := os.Stat(installDir(t, cli, def, "1.2.0", art))
 	assert.True(t, os.IsNotExist(statErr), "nothing should be installed")
-	_, statErr = os.Stat(filepath.Join(cli.CacheDir, ".downloads", shortHash(art.URL)))
+	_, statErr = os.Stat(cli.downloadDir(installDir(t, cli, def, "1.2.0", art), art.URL))
 	assert.True(t, os.IsNotExist(statErr), "the rejected download is removed")
 
 	// An existing install from a different artifact is also rejected.
@@ -595,6 +595,28 @@ func TestInstallsAreImmutable(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, got1, again)
 	assert.Equal(t, 2, vendor.hitCount("/dl/hello-1.2.0-linux-amd64.tar.gz"))
+
+	// Each install downloads into its own directory, so concurrent
+	// installs of the same URL under different keys never remove each
+	// other's download.
+	assert.NotEqual(t, cli.downloadDir(got1.Dir, got1.URL), cli.downloadDir(got2.Dir, got2.URL))
+	cli2 := vendor.client(t)
+	defs := []*Definition{def1, def2, vendor.archiveDef(t), vendor.archiveDef(t)}
+	defs[2].Hooks.PostInstall = []string{"true"}
+	defs[3].Hooks.PostInstall = []string{"true", "true"}
+	results := make(chan error, len(defs))
+	for _, def := range defs {
+		go func() {
+			_, err := cli2.Install(t.Context(), def, "1.2.0", testSystem, art)
+			results <- err
+		}()
+	}
+	for range defs {
+		require.NoError(t, <-results)
+	}
+	entries, err := os.ReadDir(filepath.Join(cli2.CacheDir, ".downloads"))
+	require.NoError(t, err)
+	assert.Empty(t, entries)
 
 	// The lock file sits next to the install.
 	_, err = os.Stat(got1.Dir + ".lock")

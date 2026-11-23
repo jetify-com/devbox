@@ -131,9 +131,12 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 
 	// Download into the cache so that it stays on one filesystem with the
 	// install. The directory is keyed by URL so that a file of the same
-	// name from another URL is never reused, and the archive is removed
-	// once it has been unpacked or rejected.
-	downloadDir := filepath.Join(c.CacheDir, ".downloads", shortHash(artifact.URL))
+	// name from another URL is never reused, and by install key so that it
+	// belongs to this install alone: it is only used under the install's
+	// lock, and an install of the same URL under another key (which may
+	// run concurrently) never removes it. The archive is removed once it
+	// has been unpacked or rejected.
+	downloadDir := c.downloadDir(dir, artifact.URL)
 	archivePath := filepath.Join(downloadDir, downloadName(vars.Filename))
 	defer os.Remove(downloadDir) // only succeeds once empty
 	defer os.Remove(archivePath)
@@ -263,6 +266,13 @@ func (c *Client) installTarget(def *Definition, version, system string, artifact
 		return "", artifact, fmt.Errorf("%s@%s: install directory %s is outside the cache %s", def.Name, version, dir, c.CacheDir)
 	}
 	return dir, artifact, nil
+}
+
+// downloadDir is where the install in installDir downloads rawURL to:
+// .downloads/<sha256(url)[:12]>-<install key>.
+func (c *Client) downloadDir(installDir, rawURL string) string {
+	key := installDir[strings.LastIndex(installDir, "-")+1:]
+	return filepath.Join(c.CacheDir, ".downloads", shortHash(rawURL)+"-"+key)
 }
 
 // shortHash returns the first 12 hex digits of the sha256 of s.
