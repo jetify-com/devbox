@@ -392,10 +392,11 @@ for every install strategy.
   current binary while `DEVBOX_FEATURE_PKG_DEFS` is off. Projects that adopt
   package definitions should set `devbox_version` in `devbox.json`.
 
-Install location: `$XDG_CACHE_HOME/devbox/pkgs/<name>/<version>/<system>/`,
-shared across projects. Nothing is copied per project; `PATH` points at the
-cache. Garbage collection of unused versions is a follow-up
-(`devbox cache gc`).
+Install location: `$XDG_CACHE_HOME/devbox/pkgs/<name>/<version>/<system>-<key>/`,
+shared across projects that would install the same artifact the same way
+(see Cache layout and garbage collection below). Nothing is copied per
+project; `PATH` points at the cache. Garbage collection of unused versions is
+a follow-up (`devbox cache gc`).
 
 Each install directory carries a marker with the *install fingerprint* of
 the definition: a hash of the install strategy that applies to the version
@@ -522,7 +523,8 @@ Design:
   `/usr/bin:/bin`. The shell is `$SHELL`, falling back to `/bin/bash`.
 - **System detection** comes from `GOOS`/`GOARCH` (the mapping already exists
   in `internal/nix/install.go`), never from `nix`. This fixes the silent loss
-  of definition env on machines without Nix and should land first.
+  of definition env on machines without Nix. Done for package definitions in
+  PR 3 (`nix.SystemOrHost`); `IsEnabledOnPlatform` still calls `nix`.
 - **Lazy install.** Nix is installed the first time a Nix package is needed:
   - `devbox add <nix package>` validates the package.
   - Or `ensureStateIsUpToDate` finds the project has entered Nix mode (a
@@ -541,11 +543,14 @@ Design:
   `--omit-nix-env` flag already do. This lets a project keep a nixpkgs tool
   that has no definition yet (e.g. `ccache`) without the toolchain env. An
   alternative is generating the flake with `mkShellNoCC`.
-- **PATH order.** Definition `bin` dirs are currently appended after the Nix
-  `PATH` and after `env.PATH` from `devbox.json`. A project that sets
-  `"PATH": "/usr/bin:..."` gets Apple's `/usr/bin/java` stub instead of
-  `pkg:java`. Definition dirs should sit where nix profile entries sit
-  today, ahead of the inherited `PATH`.
+- **PATH order** (done in PR 3). Definition `bin` dirs used to be appended
+  after the Nix `PATH` and after `env.PATH` from `devbox.json`, so they lost
+  to a nix package or a system binary of the same name. They now come
+  first, ahead of the nix profile and the inherited `PATH`. `env.PATH` in
+  `devbox.json` still applies on top: a project that prepends `/usr/bin` on
+  purpose (as the iOS project above does to escape the stdenv) still gets
+  `/usr/bin/java` first, and should drop that override once it no longer
+  uses the stdenv.
 - **Switching modes.** Leaving Nix mode leaves `.devbox/gen/flake` and the
   profile stale. Delete them or ignore them.
 
@@ -729,21 +734,25 @@ Devbox has no GC command today. Nix packages rely on each project's
 
 Design:
 
-- **Layout.** Installs go to
+- **Layout** (done in PR 2). Installs go to
   `$XDG_CACHE_HOME/devbox/pkgs/<name>/<version>/<system>-<key>/`, where
   `<key>` is the first 12 hex digits of sha256 over:
   - the install fingerprint;
   - the system;
-  - the lockfile's `url`, `sha256` and `sha512` for that system.
+  - the lockfile's `url` for that system.
 
   It is computed from the lockfile before downloading. Two projects share
-  an install only when they would install the same bytes.
-- **Immutable installs.** A directory with `.devbox-pkgdef.json` is never
-  deleted or replaced by install, only by GC.
-- **Locks.** `<install>.lock` serializes install and GC (flock). Lock files
-  are never deleted.
-- **Downloads** go to `.downloads/<sha256(url)>/` and are deleted after
-  unpacking, on success or failure.
+  an install only when they would install the same artifact the same way.
+  The digest is not part of the key: trust on first use records it after
+  installing, and the directory must not move when it does. A locked digest
+  that differs from the one an install was made from is a checksum error.
+- **Immutable installs** (done in PR 2). A directory with
+  `.devbox-pkgdef.json` is never deleted or replaced by install, only by GC.
+- **Locks** (done in PR 2). `<install>.lock` serializes install and GC
+  (flock). Lock files are never deleted.
+- **Downloads** (done in PR 2) go to `.downloads/<sha256(url)>-<key>/`, one
+  directory per install so concurrent installs of the same URL never share
+  a file, and are deleted after unpacking, on success or failure.
 - **Reserved names.** Names starting with `.` are reserved for Devbox. State
   shared across installs lives only under `.shared/`, behind its own lock.
   A definition otherwise keeps manager state inside `{{ .InstallDir }}`:
@@ -770,17 +779,17 @@ Design:
 - Project-local state (`.venv`, `.devbox/virtenv/pkgdef-*`) belongs to the
   project and is never collected.
 
-Work: the keyed layout, immutable installs and download fixes (this also
-resolves the shared-path review comment on PR 1); per-install
+Done: the keyed layout, immutable installs and download fixes (PR 2; this
+resolves the shared-path review comment on PR 1). Work: per-install
 `RUSTUP_HOME`; roots and used-stamps; `devbox cache gc`.
 
 ### Audit findings across the stack
 
 This is a correctness audit of PRs 1–6, merged with `main`, done in November 2026. It is ranked by
-severity. Each entry names the PR to fix it in. The first four should be
-fixed before the stack merges.
+severity. Each entry names the PR it was fixed in. All twelve are fixed,
+with tests.
 
-1. **Extraction escapes the destination through chained symlinks** (PR 2,
+1. **Extraction escapes the destination through chained symlinks** *Fixed in PR 2.* (PR 2,
    `extract.go`).
    - The symlink target is checked only as a string. `MkdirAll` and
      `OpenFile` then follow links already on disk.
@@ -788,7 +797,7 @@ fixed before the stack merges.
      the staging dir. Each extra level climbs one more directory.
    - Fix: resolve the parent with `EvalSymlinks` and require it inside
      `dest`, or extract through `os.Root`.
-2. **Vendor version strings are not validated** (PR 2, made reachable by
+2. **Vendor version strings are not validated** *Fixed in PR 2; `+build` versions in PR 5.* (PR 2, made reachable by
    PR 5's `+build` rule).
    - `99+/../../../tmp/evil` is not a pre-release, so `latest` picks it.
      `InstallDir` then leaves the cache, and install `RemoveAll`s it.
@@ -796,7 +805,7 @@ fixed before the stack merges.
      `--default-toolchain {{.Version}}`).
    - Fix: ignore versions not matching `^[0-9A-Za-z][0-9A-Za-z.+_-]*$`, and
      check that `InstallDir` stays under the cache.
-3. **Remote definitions can read local files** (PR 2).
+3. **Remote definitions can read local files** *Fixed in PR 2; lookup and version override URLs in PR 5.* (PR 2).
    - `http://` definition URLs are accepted.
    - A remote definition may use `file://` in `versions`, `lookup` or
      `checksum` URLs. With a jq `select` it can send, for example,
@@ -804,7 +813,7 @@ fixed before the stack merges.
      warning.
    - Fix: accept only `https://` definitions. Reject every `file://` URL in
      a remote definition. (The spec already says they must be absolute.)
-4. **Activation templates fail silently** (PR 3, `plugin/pkgdef.go`).
+4. **Activation templates fail silently** *Fixed in PR 3.* (PR 3, `plugin/pkgdef.go`).
    - The definition is JSON-marshalled before templating, so
      `{{ if eq .OS "darwin" }}` becomes `\"darwin\"` and fails to parse.
    - The template funcs (`trimPrefix`, ...) are not registered there.
@@ -812,26 +821,26 @@ fixed before the stack merges.
      `create_files` just disappear.
    - Fix: render each string field with `pkgdef.Render` before marshalling,
      and surface load and template errors as warnings.
-5. **Install dirs are shared across different definitions.** See *Cache
+5. **Install dirs are shared across different definitions.** *Fixed in PR 2, wiring in PR 3.* See *Cache
    layout* above.
    - With trust on first use, `installedFromMarker` also accepts another
      definition's install, and its URL and digest are written into this
      project's lockfile.
-   - Fix: the keyed layout. Record a TOFU digest only when the marker URL
-     equals the locked URL.
-6. **Tar hard links extract as empty files** (PR 2). Fix: link or copy the
+   - Fix: the keyed layout. An install is only reused, and its digest only
+     recorded, when the marker URL equals the locked URL.
+6. **Tar hard links extract as empty files** *Fixed in PR 2.* (PR 2). Fix: link or copy the
    earlier entry, with the same containment check.
-7. **`@1.20` resolves to `1.20`, not `1.20.14`** (PR 2, hits `pkgs/go`).
+7. **`@1.20` resolves to `1.20`, not `1.20.14`** *Fixed in PR 2.* (PR 2, hits `pkgs/go`).
    go.dev names `.0` releases `1.20`, `1.19`, ..., and an exact match wins.
    Fix: put the exact match in the candidate set and take the highest
    prefix match.
-8. **Unversioned `pkg:` entries never update** (PR 3, `update.go`).
+8. **Unversioned `pkg:` entries never update** *Fixed in PR 3.* (PR 3, `update.go`).
    `shouldUpdateLockEntry` skips them, yet `ErrDefinitionChanged` tells the
    user to run `devbox update`. Fix: always update `pkg:` entries.
-9. **`@` in a ref without a version** (PR 2, `ref.go`). For example
+9. **`@` in a ref without a version** *Fixed in PR 2.* (PR 2, `ref.go`). For example
    `pkg:https://cdn/npm/@acme/tool.pkg.json`. See *`devbox add go`* above.
    Fix: split only when the last `@` comes after the last `/`.
-10. **`pkg:` reaches nix code paths** (PR 3).
+10. **`pkg:` reaches nix code paths** *Fixed in PR 3.* (PR 3).
     - `devbox info` and `devbox search` send it to the search service.
     - With the flag off, `devbox add pkg:./x.pkg.jsonc` falls into the slow
       `nix.Search` fallback, because the canonical name contains `.`.
@@ -839,9 +848,11 @@ fixed before the stack merges.
       URL scheme: pkg`.
     - Fix: with the flag off, fail early with "set
       DEVBOX_FEATURE_PKG_DEFS=1".
-11. **PATH order** (PR 3). See *Nix is opt-in* above. Decide the order and
-    document it.
-12. **CI path filter** (PR 6). `pkgdef-tests.yaml` misses the wiring files:
+11. **PATH order** *Fixed in PR 3.* (PR 3). See *Nix is opt-in* above. The
+    order is now: definition `bin` dirs, the nix profile, then the
+    `print-dev-env` and inherited `PATH`. `env.PATH` from `devbox.json` is
+    applied on top, and runx is still appended last.
+12. **CI path filter** *Fixed in PR 6.* (PR 6). `pkgdef-tests.yaml` misses the wiring files:
     `devbox/packages.go`, `devbox.go`, `update.go`, `lock/`, `devpkg/` and
     `devconfig/`.
 
