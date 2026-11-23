@@ -41,21 +41,26 @@ func Search(url string) (map[string]*PkgInfo, error) {
 	return searchSystem(url, "" /* system */)
 }
 
-func parseSearchResults(data []byte) map[string]*PkgInfo {
+func parseSearchResults(data []byte) (map[string]*PkgInfo, error) {
 	var results map[string]map[string]any
 	err := json.Unmarshal(data, &results)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	infos := map[string]*PkgInfo{}
 	for key, result := range results {
+		if result == nil {
+			continue
+		}
+		pname, _ := result["pname"].(string)
+		version, _ := result["version"].(string)
 		infos[key] = &PkgInfo{
 			AttributeKey: key,
-			PName:        result["pname"].(string),
-			Version:      result["version"].(string),
+			PName:        pname,
+			Version:      version,
 		}
 	}
-	return infos
+	return infos, nil
 }
 
 // PkgExistsForAnySystem is a bit slow (~600ms). Only use it if there's already
@@ -109,7 +114,10 @@ func searchSystem(url, system string) (map[string]*PkgInfo, error) {
 		// return ErrPackageNotFound only for that case.
 		return nil, fmt.Errorf("error searching for pkg %s: %w", url, err)
 	}
-	parsed := parseSearchResults(out)
+	parsed, err := parseSearchResults(out)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing search results for pkg %s: %w", url, err)
+	}
 	if len(parsed) == 0 {
 		return nil, fmt.Errorf("package not found: %s", url)
 	}
