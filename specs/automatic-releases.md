@@ -84,8 +84,10 @@ release: published / released  ── existing ──
 - Tag ruleset: only the App, plus admins as a manual fallback, may create
   tags.
 - Edge releases are gone. The scheduled weekly edge build and the manual
-  `create_edge_release` option were removed from `cli-release.yml`, along with
-  goreleaser's snapshot config. Weekly stable releases replace them.
+  `create_edge_release` option were removed from `cli-release.yml`. Weekly
+  stable releases replace them. goreleaser's snapshot config stays, renamed
+  from `EDGE_TAG` to `SNAPSHOT_VERSION`, because the "Release smoke test" job
+  in `cli-tests` builds snapshots.
 
 ### 2. Make `release.ts` usable in CI (non-interactive)
 
