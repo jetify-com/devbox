@@ -22,7 +22,6 @@ func TestBuiltInMap(t *testing.T) {
 		"mariadb-embedded":                       "mariadb",
 		"mysql":                                  "mariadb",
 		"mysql80":                                "mysql",
-		"python3Packages.pip":                    "pip",
 		"python":                                 "python",
 		"python3":                                "python",
 		"python3Full":                            "python",
@@ -54,6 +53,17 @@ func TestBuiltInMap(t *testing.T) {
 		}
 		if !matched && expected != "" {
 			t.Errorf("Regex match failed for input: %s. Expected: %s, Got: %s", input, expected, "")
+		}
+	}
+}
+
+// TestBuiltInMapTargetsExist ensures every plugin name referenced by
+// builtInMap has an embedded <name>.json, so removing a plugin can't
+// leave behind a dead mapping.
+func TestBuiltInMapTargetsExist(t *testing.T) {
+	for re, name := range builtInMap {
+		if _, err := builtIn.ReadFile(name + ".json"); err != nil {
+			t.Errorf("builtInMap entry %q maps to %q, but %s.json is not embedded: %v", re.String(), name, name, err)
 		}
 	}
 }
