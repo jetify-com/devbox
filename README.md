@@ -44,8 +44,14 @@ interactive shell in it with `devbox shell`:
 Use the following install script to get the latest version of Devbox:
 
 ```sh
-curl -fsSL https://get.jetify.com/devbox | bash
+curl -fsSL https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh | bash
 ```
+
+The script ([install.sh](install.sh)) downloads the latest stable
+[GitHub release](https://github.com/jetify-com/devbox/releases/latest), checks
+its SHA-256 checksum, and installs it to `/usr/local/bin/devbox`. Pass `-f` to
+skip the confirmation prompt. After that, devbox keeps itself up to date from
+GitHub releases (`devbox version update`).
 
 Read more on the
 [Devbox docs](https://www.jetify.com/docs/devbox/installing-devbox/).

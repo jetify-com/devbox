@@ -1,5 +1,6 @@
 name: Package Request
 description: Request a new package to be added to Devbox and Nixhub
+type: Feature
 labels:
   - package
   - triage

@@ -1,8 +1,11 @@
 package testrunner
 
 import (
+	"io/fs"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 
 	"go.jetify.com/devbox/testscripts/testrunner"
@@ -60,4 +63,28 @@ func TestPackageDefinitions(t *testing.T) {
 		t.Skipf("Skipping TestPackageDefinitions. To enable, set %s=1.", runPkgDefTests)
 	}
 	testrunner.RunPackageDefinitionTestscripts(t, "../pkgs")
+}
+
+// TestScriptFileNames fails when a file looks like a testscript but doesn't end
+// in .test.txt, which is the only suffix RunTestscripts picks up. Such a file
+// never runs, so a typo in its name silently drops its coverage (this happened
+// to lockfile/nopaths.txt and add/add_insecure.tst.txt).
+func TestScriptFileNames(t *testing.T) {
+	err := filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || filepath.Ext(path) != ".txt" || strings.HasSuffix(path, ".test.txt") {
+			return nil
+		}
+		// testrunner/ holds the script that runs example projects.
+		if strings.HasPrefix(filepath.ToSlash(path), "testrunner/") {
+			return nil
+		}
+		t.Errorf("%s isn't run by the test suite: rename it to end in .test.txt", path)
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 }

@@ -56,7 +56,7 @@ func SyncLockfiles(pkgs []string) error {
 		}
 
 		if changed {
-			if err = cuecfg.WriteFile(lockfilePath, lockFile); err != nil {
+			if err = cuecfg.WriteFile(lockfilePath, &lockFile); err != nil {
 				return err
 			}
 			fmt.Printf("Updated: %s\n", lockfilePath)

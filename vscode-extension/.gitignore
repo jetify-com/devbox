@@ -2,3 +2,8 @@ node_modules
 out
 .vscode
 .DS_Store
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+*.vsix

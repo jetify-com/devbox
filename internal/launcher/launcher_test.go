@@ -29,7 +29,7 @@ const (
 	latestVersion = "0.19.0"
 )
 
-// fakeReleases serves the stable channel and release archives that hold a
+// fakeReleases serves GitHub-style release checksums and archives that hold a
 // devbox binary whose contents name the version.
 type fakeReleases struct {
 	t        *testing.T
@@ -41,16 +41,10 @@ type fakeReleases struct {
 
 func (f *fakeReleases) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f.requests = append(f.requests, r.URL.Path)
-	if r.URL.Path == "/releases/stable/version" {
-		if f.latest == "" {
-			http.NotFound(w, r)
-			return
-		}
-		fmt.Fprintln(w, f.latest)
-		return
-	}
 	var version, file string
-	if _, err := fmt.Sscanf(strings.ReplaceAll(strings.TrimPrefix(r.URL.Path, "/download/"), "/", " "), "%s %s", &version, &file); err != nil {
+	if r.URL.Path == "/latest/download/checksums.txt" {
+		version, file = f.latest, "checksums.txt"
+	} else if _, err := fmt.Sscanf(strings.ReplaceAll(strings.TrimPrefix(r.URL.Path, "/download/"), "/", " "), "%s %s", &version, &file); err != nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -127,8 +121,7 @@ func setup(t *testing.T) *testEnv {
 	env.releases.addVersion(latestVersion)
 	server := httptest.NewServer(env.releases)
 	t.Cleanup(server.Close)
-	setVar(t, &releasesURL, server.URL+"/releases")
-	setVar(t, &downloadURL, server.URL+"/download")
+	setVar(t, &releasesURL, server.URL)
 
 	setVar(t, &execFunc, func(argv0 string, argv, envv []string) error {
 		call := execCall{argv0: argv0, argv: argv, env: map[string]string{}}
@@ -497,5 +490,36 @@ func TestValidVersion(t *testing.T) {
 		if validVersion(v) {
 			t.Errorf("validVersion(%q) = true, want false", v)
 		}
+	}
+}
+
+func TestParseLatestVersion(t *testing.T) {
+	sum := strings.Repeat("0", 64)
+	tests := []struct {
+		name, data, want string
+	}{
+		{"bare version", "0.0.0-edge.2026-10-25\n", "0.0.0-edge.2026-10-25"},
+		{"bare version with v", "v0.20.0", "v0.20.0"},
+		{
+			"checksums",
+			fmt.Sprintf("%s  devbox_0.20.0_other_os.tar.gz\n%s  devbox_0.20.0_%s.tar.gz\n", sum, sum, platform()),
+			"0.20.0",
+		},
+		{"no archive for this platform", fmt.Sprintf("%s  devbox_0.20.0_other_os.tar.gz\n", sum), ""},
+		{"garbage", "<html>not found</html>", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseLatestVersion([]byte(tt.data))
+			if tt.want == "" {
+				if err == nil {
+					t.Errorf("got %q, want an error", got)
+				}
+				return
+			}
+			if err != nil || got != tt.want {
+				t.Errorf("got %q, %v, want %q", got, err, tt.want)
+			}
+		})
 	}
 }

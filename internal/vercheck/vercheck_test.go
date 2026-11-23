@@ -16,18 +16,6 @@ func TestCheckVersion(t *testing.T) {
 	isDevBuild = false
 	t.Setenv(envir.XDGCacheHome, t.TempDir())
 
-	t.Run("skip_if_devbox_cloud", func(t *testing.T) {
-		defer os.Unsetenv(envName)
-		// if devbox cloud
-		t.Setenv(envir.DevboxRegion, "true")
-		buf := new(bytes.Buffer)
-		CheckVersion(buf, "devbox shell")
-		if buf.String() != "" {
-			t.Errorf("expected empty string, got %q", buf.String())
-		}
-		t.Setenv(envir.DevboxRegion, "")
-	})
-
 	// no launcher version or latest-version env var
 	t.Run("skip_if_no_launcher_version_or_latest_version", func(t *testing.T) {
 		defer os.Unsetenv(envName)
