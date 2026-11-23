@@ -126,6 +126,16 @@ Things to check before building this:
   authored by the App. When Greptile reports no blocking issues (for example,
   confidence ≥ 4/5), it merges with the App token. The App can't approve a PR
   it authored, so this workflow merges directly rather than approving.
+  Because nothing approves the PR in this fallback, a single approval rule on
+  `main` would keep it blocked. Split `main`'s protection into two rulesets:
+  - **Approval ruleset** (1 approving review). The App is on its bypass list,
+    so it can merge without an approval.
+  - **Status-check ruleset** (`cli-tests` required). Nobody can bypass it, so
+    the App still can't merge until the tests pass.
+
+  The workflow also checks that the commit Greptile reviewed is still the PR's
+  head commit, and that the required checks passed on that commit, before it
+  calls `gh pr merge --squash --match-head-commit <sha>`.
 - **Does Greptile review bot-authored PRs?** Some configurations skip them.
   Allow the App's author in Greptile's settings.
 - Requiring 1 approval on `main` applies to human PRs as well. Confirm it
@@ -171,6 +181,14 @@ Things to check before building this:
   - Add a smoke check before publishing. Download the linux/amd64 archive from
     the draft and assert that `devbox version` equals the tag. This catches a
     stale `lastTag` or broken ldflags (the child audit below expands on this).
+    Release archives are built with `build.Launcher=true`. Run outside the
+    launcher's install directory on a clean runner, the binary looks up the
+    latest *published* release and runs that (`internal/launcher/launcher.go`,
+    `selectVersion`), so a plain `devbox version` would check the previous
+    release. Run it as `DEVBOX_USE_VERSION=<v> ./devbox version`. If the binary
+    really is `<v>`, the launcher runs it directly. If it reports another
+    version, the launcher tries to download `<v>`, which isn't published yet,
+    so the check fails.
 - Slack notification: report each stage (test failure, build failure,
   published).
 
