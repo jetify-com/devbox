@@ -1,0 +1,38 @@
+# devbox skill install writes the skill for the project and the user.
+
+exec devbox init --skill none
+! exists .agents/skills/devbox/SKILL.md
+
+exec devbox skill install
+stderr 'created .agents/skills/devbox/SKILL.md'
+stderr 'created .claude/skills/devbox/SKILL.md'
+exists .agents/skills/devbox/SKILL.md
+exists .claude/skills/devbox/SKILL.md
+exists $HOME/.agents/skills/devbox/SKILL.md
+grep '^name: devbox$' .agents/skills/devbox/SKILL.md
+
+# A second install is a no-op.
+exec devbox skill install --scope project
+stderr 'unchanged .agents/skills/devbox/SKILL.md'
+
+exec devbox skill show
+stdout '^name: devbox$'
+
+exec devbox skill uninstall
+! exists .agents/skills/devbox
+! exists .claude/skills/devbox
+! exists $HOME/.agents/skills/devbox/SKILL.md
+
+# devbox init can install the project skill directly.
+mkdir proj
+cd proj
+exec devbox init --skill project
+exists .agents/skills/devbox/SKILL.md
+exists .claude/skills/devbox/SKILL.md
+
+# An invalid --skill value fails before creating devbox.json.
+mkdir ../bad
+cd ../bad
+! exec devbox init --skill bogus
+stderr 'invalid --skill'
+! exists devbox.json
