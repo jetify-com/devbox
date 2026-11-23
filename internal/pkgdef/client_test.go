@@ -551,10 +551,12 @@ func TestInstallDirKey(t *testing.T) {
 	assert.Equal(t, dir, installDir(t, cli, def, "1.2.0", Artifact{Sha256: vendor.tarSHA}))
 	assert.Equal(t, dir, installDir(t, cli, def, "1.2.0", Artifact{URL: url, Sha256: strings.ToUpper(vendor.tarSHA)}))
 
-	// Anything that changes the installed bytes changes the key.
+	// The digest is not part of the key, so recording it (trust on first
+	// use) does not move the install.
+	assert.Equal(t, dir, installDir(t, cli, def, "1.2.0", Artifact{URL: url}))
+
+	// Anything else that changes the installed bytes changes the key.
 	others := map[string]string{
-		"no digest":  installDir(t, cli, def, "1.2.0", Artifact{URL: url}),
-		"digest":     installDir(t, cli, def, "1.2.0", Artifact{URL: url, Sha256: strings.Repeat("00", 32)}),
 		"url":        installDir(t, cli, def, "1.2.0", Artifact{URL: url + "?mirror", Sha256: vendor.tarSHA}),
 		"version":    filepath.Base(installDir(t, cli, def, "1.2.1", art)),
 		"definition": "",
@@ -634,9 +636,9 @@ func TestInstallTrustOnFirstUseRequiresMatchingURL(t *testing.T) {
 	assert.Equal(t, art.URL, got.URL)
 	assert.Equal(t, vendor.binSHA, got.Sha256)
 
-	// Recording the digest moves the install to a new key.
+	// Recording the digest keeps the install where it is.
 	locked := Artifact{URL: art.URL, Sha256: got.Sha256}
-	assert.NotEqual(t, got.Dir, installDir(t, cli, def, "1.2.0", locked))
+	assert.Equal(t, got.Dir, installDir(t, cli, def, "1.2.0", locked))
 
 	// A marker from another URL (another definition's install) is never
 	// accepted, so its digest is never reported for this URL.

@@ -225,12 +225,11 @@ func (c *Client) IsInstalled(def *Definition, version, system string, artifact A
 //
 // The layout is <CacheDir>/<name>/<version>/<system>-<key>, where key
 // covers the definition's InstallFingerprint, the system and the
-// artifact's URL and digest, so two projects share an install only when
-// they would install the same bytes the same way. With trust on first use
-// the key is computed with the empty digest; once the observed digest is
-// recorded in the lockfile the key changes and the next install creates a
-// new directory. That costs one extra install and keeps installs
-// immutable.
+// artifact's URL, so two projects share an install only when they would
+// install the same artifact the same way. The digest is deliberately not
+// part of the key: trust on first use records it after the install, and
+// the directory must not move when it does. A locked digest that differs
+// from the one the install was made from is a checksum error.
 func (c *Client) InstallDir(def *Definition, version, system string, artifact Artifact) (string, error) {
 	dir, _, err := c.installTarget(def, version, system, artifact)
 	return dir, err
@@ -259,7 +258,6 @@ func (c *Client) installTarget(def *Definition, version, system string, artifact
 		def.InstallFingerprint(system),
 		system,
 		artifact.URL,
-		strings.ToLower(artifact.Sha256),
 	}, "\x00"))
 	dir := filepath.Join(c.CacheDir, def.Name, version, system+"-"+key)
 	if !isStrictlyInside(c.CacheDir, dir) || filepath.Dir(filepath.Dir(filepath.Dir(dir))) != filepath.Clean(c.CacheDir) {
