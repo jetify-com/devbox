@@ -1,0 +1,174 @@
+// Copyright 2024 Jetify Inc. and contributors. All rights reserved.
+// Use of this source code is governed by the license in the LICENSE file.
+
+package devbox
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"strings"
+
+	"github.com/samber/lo"
+	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
+	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/pkgdef"
+	"go.jetify.com/devbox/internal/plugin"
+	"go.jetify.com/devbox/internal/ux"
+)
+
+// installPkgDefPackages installs every package-definition package
+// ("pkg:<ref>@<version>") that is not installed yet.
+func (d *Devbox) installPkgDefPackages(ctx context.Context) error {
+	// A "pkg:" entry added by editing devbox.json is locked by the install
+	// below. The config was loaded before that, without the definition's
+	// env, init hook and create_files, so reload it once the entries exist.
+	unlocked := lo.ContainsBy(
+		lo.Filter(d.InstallablePackages(), devpkg.IsPkgDef),
+		func(pkg *devpkg.Package) bool { return pkg.Locked() == nil },
+	)
+	if _, err := d.pkgDefBinPaths(ctx, true /*recordDigest*/); err != nil {
+		return err
+	}
+	if unlocked {
+		return d.cfg.LoadRecursive(d.lockfile)
+	}
+	return nil
+}
+
+// pkgDefBinPaths returns the bin directories of every package-definition
+// package, installing those that are missing. Installs are idempotent, so
+// this is cheap once everything is in place and safe to call whenever the
+// environment is computed.
+//
+// recordDigest controls whether a digest observed for a definition without
+// a checksum source is written to devbox.lock. Only the install path does
+// that; computing the environment must never modify the lockfile.
+func (d *Devbox) pkgDefBinPaths(ctx context.Context, recordDigest bool) ([]string, error) {
+	paths := []string{}
+	for _, pkg := range lo.Filter(d.InstallablePackages(), devpkg.IsPkgDef) {
+		installed, err := d.installPkgDef(ctx, pkg, recordDigest)
+		if err != nil {
+			return nil, err
+		}
+		paths = append(paths, installed.BinDirs...)
+	}
+	return paths, nil
+}
+
+func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordDigest bool) (*pkgdef.Installed, error) {
+	locked, err := d.lockfile.Resolve(pkg.Raw)
+	if err != nil {
+		return nil, err
+	}
+	ref, err := pkgdef.ParseRef(pkg.Raw)
+	if err != nil {
+		return nil, err
+	}
+
+	client := pkgdef.NewClient()
+	client.Stderr = d.stderr
+	loaded, err := client.Load(ctx, ref, d.projectDir, locked.DefinitionHash)
+	if err != nil {
+		return nil, err
+	}
+	// A local definition is not pinned by its hash: edits are picked up
+	// directly. If the install recipe changed, the locked URL and sha256
+	// may belong to the old recipe, so re-lock the entry first (only on
+	// the install path; computing the environment never writes the lock).
+	if recordDigest && ref.IsLocal() && loaded.Hash != locked.DefinitionHash {
+		if locked, err = d.lockfile.RelockPkgDef(ctx, pkg.Raw); err != nil {
+			return nil, err
+		}
+	}
+	def := loaded.Definition
+
+	system := nix.SystemOrHost()
+	if !def.SupportsSystem(system) {
+		return nil, usererr.New(
+			"Package %s does not support %s (it supports %s). "+
+				"Run `devbox add %s --exclude-platform %s` to skip it on this machine.",
+			pkg.Raw, system, strings.Join(def.Platforms, ", "), pkg.Raw, system,
+		)
+	}
+
+	artifact := pkgdef.Artifact{}
+	if info := locked.Systems[system]; info != nil {
+		artifact = pkgdef.Artifact{URL: info.URL, Sha256: info.Sha256}
+	}
+
+	if !client.IsInstalled(def, locked.Version, system, artifact) {
+		ux.Finfof(d.stderr, "Installing %s@%s from %s\n", def.Name, locked.Version, lo.Ternary(artifact.URL != "", artifact.URL, ref.Source))
+		if def.UsesScripts() {
+			ux.Fwarningf(d.stderr, "Package definition %s runs shell commands while installing.\n", ref.Source)
+		}
+		if artifact.Sha256 == "" {
+			ux.Fwarningf(d.stderr, "Package definition %s has no checksum for %s; the digest of this download will be recorded in devbox.lock.\n", ref.Source, system)
+		}
+	}
+
+	installed, err := client.Install(ctx, def, locked.Version, system, artifact)
+	if err != nil {
+		return nil, err
+	}
+
+	// Trust on first use: record the digest we observed so every other
+	// machine verifies against it.
+	if recordDigest && artifact.Sha256 == "" && installed.Sha256 != "" {
+		if err := d.lockfile.SetArtifactForPackage(pkg.Raw, system, installed.URL, installed.Sha256); err != nil {
+			return nil, err
+		}
+	}
+	return installed, nil
+}
+
+// pkgDefInfo is `devbox info` for a package definition. It loads the
+// definition and resolves the version with the definition's own version
+// source; it never contacts the search service.
+func pkgDefInfo(
+	ctx context.Context,
+	raw string,
+	markdown bool,
+	projectDir string,
+	locker lock.Locker,
+	stderr io.Writer,
+) (string, error) {
+	ref, err := pkgdef.ParseRef(raw)
+	if err != nil {
+		return "", usererr.WithUserMessage(err, "Invalid package %q", raw)
+	}
+
+	client := pkgdef.NewClient()
+	client.Stderr = stderr
+	pinned := ""
+	if locked := locker.Get(raw); locked != nil {
+		pinned = locked.DefinitionHash
+	}
+	loaded, err := client.Load(ctx, ref, projectDir, pinned)
+	if err != nil {
+		return "", err
+	}
+	def := loaded.Definition
+	version, err := client.ResolveVersion(ctx, def, ref.Version)
+	if err != nil {
+		return "", usererr.WithUserMessage(err, "Package %s not found", raw)
+	}
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "%s%s %s\n", lo.Ternary(markdown, "## ", ""), def.Name, version)
+	if def.Description != "" {
+		fmt.Fprintln(&b, def.Description)
+	}
+	if def.Homepage != "" {
+		fmt.Fprintf(&b, "Homepage: %s\n", def.Homepage)
+	}
+	fmt.Fprintf(&b, "Platforms: %s\n", strings.Join(def.Platforms, ", "))
+
+	readme, err := plugin.Readme(ctx, devpkg.PackageFromStringWithDefaults(raw, locker), projectDir, markdown)
+	if err != nil {
+		return "", err
+	}
+	return b.String() + readme, nil
+}

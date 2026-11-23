@@ -120,6 +120,14 @@ func (d *Devbox) addToConfig(
 	pkgsNames []string,
 	opts devopt.AddOpts,
 ) (*addedPackages, error) {
+	for _, name := range pkgsNames {
+		// Don't send "pkg:" strings to the nixpkgs search (or its slow
+		// fallback) when package definitions are disabled.
+		if err := pkgtype.CheckPkgDefEnabled(name); err != nil {
+			return nil, err
+		}
+	}
+
 	// Track which packages had no changes so we can report that to the user.
 	unchangedPackageNames := []string{}
 
@@ -158,6 +166,10 @@ func (d *Devbox) addToConfig(
 			// about not building on the current system, since user's can continue
 			// via --exclude-platform flag.
 			packageNameForConfig = pkg.Versioned()
+		} else if versionedPkg.IsPkgDef() {
+			// Package definitions never fall back to nixpkgs; surface the
+			// definition's own error.
+			return nil, err
 		} else if errors.Is(err, searcher.ErrUnavailable) {
 			// Search kept failing even after retries, so we don't know whether the
 			// package exists. Don't silently fall back to nixpkgs (which would drop
@@ -355,7 +367,14 @@ func (d *Devbox) removeFromConfig(pkgs ...string) error {
 	for _, pkg := range lo.Uniq(pkgs) {
 		found, _ := d.findPackageByName(pkg)
 		if found != nil {
-			removed = append(removed, found.Raw)
+			if found.IsPkgDef() {
+				// A package definition's plugin files live under its
+				// plugin name (pkgdef-<name>), not under the raw
+				// package string.
+				removed = append(removed, d.pkgDefPluginNames(found.Raw)...)
+			} else {
+				removed = append(removed, found.Raw)
+			}
 			d.cfg.PackageMutator().Remove(found.Raw)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
@@ -371,6 +390,18 @@ func (d *Devbox) removeFromConfig(pkgs ...string) error {
 	}
 
 	return plugin.Remove(d.projectDir, removed)
+}
+
+// pkgDefPluginNames returns the plugin directory names of the package
+// definition raw (normally one).
+func (d *Devbox) pkgDefPluginNames(raw string) []string {
+	names := []string{}
+	for _, cfg := range d.cfg.IncludedPluginConfigs() {
+		if cfg.Source != nil && cfg.Source.LockfileKey() == raw {
+			names = append(names, cfg.Source.CanonicalName())
+		}
+	}
+	return names
 }
 
 // forgetLockEntry drops pkg's lockfile entry so that a package removed and
@@ -638,7 +669,10 @@ func (d *Devbox) installPackages(ctx context.Context, mode installMode) error {
 		return err
 	}
 
-	return d.InstallRunXPackages(ctx)
+	if err := d.InstallRunXPackages(ctx); err != nil {
+		return err
+	}
+	return d.installPkgDefPackages(ctx)
 }
 
 func (d *Devbox) InstallRunXPackages(ctx context.Context) error {
@@ -819,7 +853,7 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 func (d *Devbox) FixMissingStorePaths(ctx context.Context) error {
 	packages := d.InstallablePackages()
 	for _, pkg := range packages {
-		if !pkg.IsDevboxPackage || pkg.IsRunX() {
+		if !pkg.IsDevboxPackage || !pkg.IsNix() {
 			continue
 		}
 		existingStorePaths, err := pkg.GetResolvedStorePaths()

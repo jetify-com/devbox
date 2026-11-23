@@ -49,6 +49,7 @@ func SyncLockfiles(pkgs []string) error {
 					lockFile.Packages[key].Source = latestPkg.Source
 					lockFile.Packages[key].Version = latestPkg.Version
 					lockFile.Packages[key].Systems = latestPkg.Systems
+					lockFile.Packages[key].DefinitionHash = latestPkg.DefinitionHash
 					changed = true
 				}
 			}

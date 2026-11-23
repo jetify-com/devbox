@@ -69,6 +69,9 @@ func (c *Client) lockSystem(ctx context.Context, def *Definition, version, syste
 	if err != nil {
 		return Artifact{}, err
 	}
+	// The URL is recorded as rendered (a relative file:// URL stays
+	// relative) so that devbox.lock is portable; it is resolved against the
+	// definition's directory when fetching.
 	rawURL, err := Render(install.URL, vars)
 	if err != nil {
 		return Artifact{}, err

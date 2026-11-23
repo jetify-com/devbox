@@ -7,6 +7,7 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
+	"go.jetify.com/devbox/internal/boxcli/featureflag"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
@@ -386,6 +387,53 @@ func TestDescribeFlakeUpdateFormats(t *testing.T) {
 	oldNoDate := &lock.Package{Resolved: "github:numtide/flake-utils/" + oldRev + "#pkg"}
 	newNoDate := &lock.Package{Resolved: "github:numtide/flake-utils/" + newRev + "#pkg"}
 	require.Equal(t, "abc1234 -> f456789", describeFlakeUpdate(oldNoDate, newNoDate))
+}
+
+func TestUpdateRecordsChangedDefinitionHash(t *testing.T) {
+	devbox := devboxForTesting(t)
+
+	raw := "pkg:./hello.pkg.json@1"
+	devPkg := devpkg.PackageFromStringWithDefaults(raw, nil)
+	existing := &lock.Package{
+		Resolved:       "pkg:./hello.pkg.json@1.2.0",
+		Version:        "1.2.0",
+		Source:         "pkg-def",
+		DefinitionHash: "old",
+		Systems: map[string]*lock.SystemInfo{
+			"x86_64-linux": {URL: "file://vendor/hello-1.2.0.sh", Sha256: "abc"},
+		},
+	}
+	resolved := &lock.Package{
+		Resolved:       "pkg:./hello.pkg.json@1.2.0",
+		Version:        "1.2.0",
+		Source:         "pkg-def",
+		DefinitionHash: "new",
+		Systems: map[string]*lock.SystemInfo{
+			"x86_64-linux": {URL: "file://vendor/hello-1.2.0.sh", Sha256: "abc"},
+		},
+	}
+	lockfile := &lock.File{
+		Packages: map[string]*lock.Package{raw: existing},
+	}
+
+	err := devbox.mergeResolvedPackageToLockfile(devPkg, resolved, lockfile)
+	require.NoError(t, err, "update failed")
+	require.Equal(t, "new", lockfile.Packages[raw].DefinitionHash)
+}
+
+func TestShouldUpdateLockEntry(t *testing.T) {
+	featureflag.PkgDefs.EnableForTest(t)
+	cases := map[string]bool{
+		"hello@1.2.3":                         true,
+		"hello":                               false,
+		"pkg:./go.pkg.jsonc@1.22":             true,
+		"pkg:./go.pkg.jsonc":                  true,
+		"pkg:https://example.com/go.pkg.json": true,
+	}
+	for raw, want := range cases {
+		pkg := devpkg.PackageFromStringWithDefaults(raw, nil)
+		require.Equal(t, want, shouldUpdateLockEntry(pkg), raw)
+	}
 }
 
 func TestResolveAndMergePackages(t *testing.T) {

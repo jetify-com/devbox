@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
@@ -89,9 +90,24 @@ type Definition struct {
 
 	Hooks Hooks `json:"hooks,omitempty"`
 
+	// baseDir is the directory of the definition file for local
+	// definitions. Relative file:// URLs are resolved against it.
+	baseDir string
+
 	// remote is set for definitions loaded over https. They may not read
 	// local files, so every file:// URL is rejected (see checkURL).
 	remote bool
+}
+
+// ResolveURL makes a relative file:// URL ("file://artifacts/x.tar.gz")
+// absolute by resolving it against the directory of a local definition.
+// Every other URL is returned unchanged.
+func (d *Definition) ResolveURL(rawURL string) string {
+	p, ok := strings.CutPrefix(rawURL, "file://")
+	if !ok || filepath.IsAbs(p) || d.baseDir == "" {
+		return rawURL
+	}
+	return "file://" + filepath.Join(d.baseDir, p)
 }
 
 // VersionSource describes how to list the available versions of a package.
