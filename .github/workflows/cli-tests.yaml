@@ -95,7 +95,84 @@ jobs:
             echo "::warning::If this fails, you probably have to run 'devbox run update-hash'"
             exit 1
           fi
-      - run: ./result/bin/devbox version
+      - name: Check the flake's version
+        run: |
+          version="$(./result/bin/devbox version)"
+          last_tag="$(sed -n 's/^ *lastTag = "\(.*\)";/\1/p' flake.nix)"
+          echo "flake devbox version: ${version}, flake.nix lastTag: ${last_tag}"
+          if [ "${version}" != "${last_tag}" ]; then
+            echo "::error::The flake build reports ${version}, but flake.nix lastTag is ${last_tag}. Are the -X ldflags in flake.nix still right?"
+            exit 1
+          fi
+          # A release tag must build a flake that reports that tag, or nixpkgs
+          # and `nix run github:jetify-com/devbox/<tag>` get the old version.
+          # Edge tags are snapshots of main and don't bump lastTag.
+          if [[ "${GITHUB_REF}" == refs/tags/* && "${GITHUB_REF_NAME}" != *edge* ]]; then
+            tag="${GITHUB_REF_NAME#v}"
+            if [ "${version}" != "${tag}" ]; then
+              echo "::error::Tag ${GITHUB_REF_NAME} builds a flake that reports ${version}. Merge the flake bump PR (lastTag = \"${tag}\") before tagging."
+              exit 1
+            fi
+          fi
+
+  # Builds devbox with goreleaser (the same config, ldflags and launcher as an
+  # official release), installs it with install.sh, and runs it through
+  # init/add/run. Everything else in this workflow tests a plain `go build`, so
+  # this is the only check that the binary users download actually works. It
+  # doesn't depend on build-devbox so that it can start right away: macOS runner
+  # slots are what bound this workflow's wall-clock time.
+  smoke:
+    name: Release smoke test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: ./go.mod
+      - name: Pick the version to stamp
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="0.0.0-smoke.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "SMOKE_VERSION=${version}" >> "${GITHUB_ENV}"
+      - name: Build with goreleaser (this platform only)
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: latest
+          args: build --snapshot --single-target --clean
+        env:
+          # .goreleaser.yaml names snapshots after EDGE_TAG.
+          EDGE_TAG: ${{ env.SMOKE_VERSION }}
+          # Leave telemetry off in test builds.
+          SENTRY_DSN: ""
+          TELEMETRY_KEY: ""
+      - name: Package it like a release
+        run: |
+          bin="$(find dist -type f -name devbox | head -n 1)"
+          if [ -z "${bin}" ]; then
+            echo "::error::goreleaser didn't build a devbox binary"
+            exit 1
+          fi
+          archive="devbox_${SMOKE_VERSION}_$(go env GOOS)_$(go env GOARCH).tar.gz"
+          mkdir smoke-dist
+          tar -C "$(dirname "${bin}")" -czf "smoke-dist/${archive}" devbox
+          (cd smoke-dist && shasum -a 256 "${archive}" > checksums.txt && cat checksums.txt)
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v23
+        with:
+          determinate: false
+          extra-conf: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+      - name: Smoke test
+        run: scripts/smoke-test.sh --project smoke-dist "${SMOKE_VERSION}"
 
   golangci-lint:
     strategy:
@@ -254,10 +331,13 @@ jobs:
   # "test (not-main, ubuntu-latest, project-tests-off, 0)"), branch protection
   # should require this stable `test-result` check instead of the individual
   # matrix jobs.
+  #
+  # It also requires the release smoke test, which exercises the binary as
+  # it's shipped rather than a plain `go build`.
   test-result:
     name: test-result
     if: always()
-    needs: test
+    needs: [test, smoke]
     runs-on: ubuntu-latest
     steps:
       - name: Check that all test shards passed
@@ -266,6 +346,14 @@ jobs:
           echo "Aggregate result of the test matrix: $result"
           if [ "$result" != "success" ]; then
             echo "::error::One or more test shards did not succeed ($result)."
+            exit 1
+          fi
+      - name: Check that the release smoke test passed
+        run: |
+          result="${{ needs.smoke.result }}"
+          echo "Result of the release smoke test: $result"
+          if [ "$result" != "success" ]; then
+            echo "::error::The release smoke test did not succeed ($result)."
             exit 1
           fi
 
