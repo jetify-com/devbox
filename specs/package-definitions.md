@@ -121,7 +121,7 @@ hatch.
 |---|---|---|
 | `schema` | yes | Format version. Currently `1`. Devbox rejects unknown values. |
 | `name` | yes | Package name. `^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`. Used for the cache directory and the plugin virtenv directory. |
-| `description`, `homepage`, `license` | no | Informational. `devbox info` showing `homepage` is planned. |
+| `description`, `homepage`, `license` | no | Informational. `devbox info` shows `description` and `homepage`. |
 | `platforms` | yes | Non-empty list of nix system names the definition supports: `aarch64-darwin`, `x86_64-darwin`, `aarch64-linux`, `x86_64-linux`. |
 | `os_map`, `arch_map` | no | Overrides for the `{{.OS}}` and `{{.Arch}}` template variables. Keys are the nix OS (`darwin`, `linux`) and nix arch (`x86_64`, `aarch64`). |
 | `versions` | yes | A version source. See below. |
@@ -236,8 +236,8 @@ variables:
 | `{{.System}}` | everywhere | Nix system, e.g. `aarch64-darwin`. |
 | `{{.OS}}`, `{{.Arch}}` | everywhere | Vendor spelling after `os_map`/`arch_map`. |
 | `{{.URL}}`, `{{.Filename}}` | `checksum`, `hooks` | The rendered artifact URL and its last path segment. |
-| `{{.InstallDir}}` | `env`, `shell`, `create_files`, `hooks` | Install root for this version and system. |
-| `{{.CacheDir}}` | `env`, `shell`, `hooks`, `install.env` | `$XDG_CACHE_HOME/devbox/pkgs`. |
+| `{{.InstallDir}}` | `env`, `shell`, `create_files` (paths and content), `hooks` | Install root for this version and system. |
+| `{{.CacheDir}}` | `env`, `shell`, `create_files` (paths and content), `hooks`, `install.env` | `$XDG_CACHE_HOME/devbox/pkgs`. |
 
 Functions: `trimPrefix`, `trimSuffix`, `replace`, `lower`, `upper`.
 
@@ -346,6 +346,7 @@ needs Nix:
   - `installPkgDef` failed with "does not support".
   - `GetPkgDefConfigsForPackages` logged the plugin error at debug level and
     dropped the definition, so its env and init hook were silently lost.
+    (It now prints a warning when a definition's activation is skipped.)
 
   PR 3 moved both to `nix.SystemOrHost`. `IsEnabledOnPlatform` still calls
   `nix.System()`.
@@ -420,13 +421,15 @@ Gaps in the stack today:
   `host/x.pkg.json`, and `Versioned()` then never appended `@latest`.
   `ParseRef` now splits only when the last `@` comes after the last `/`.
 - Path sources are not normalized. `pkg:go.pkg.jsonc` and
-  `pkg:./go.pkg.jsonc` are different packages, so both are installed, and
-  both map to the same `pkgdef-<name>` virtenv.
+  `pkg:./go.pkg.jsonc` are different packages, so both are installed. They
+  would map to the same `pkgdef-<name>` virtenv, so since PR 3 the second
+  one's activation is skipped with a warning.
 - `devbox rm go` does not match `pkg:./go.pkg.jsonc@1.22`, and adding a
   `pkg:` package never replaces a nixpkgs `go@x`.
 - `devbox add` stores `--outputs`, `--allow-insecure` and `--patch` for
-  `pkg:` packages, where they do nothing. `--disable-plugin` is stored but
-  ignored.
+  `pkg:` packages, where they do nothing. (`--disable-plugin` is honored
+  since PR 3: it skips the definition's `env`, init hook and
+  `create_files`.)
 
 Design:
 
@@ -479,14 +482,12 @@ Design:
     full string.
   - Path and URL refs still match only by ref.
 - **Flags.** For `pkg:` packages, `devbox add` errors on `--outputs`,
-  `--allow-insecure`, `--patch`, `--patch-glibc` and `--disable-plugin`. A
-  definition's activation is part of the package. `--platform` and
-  `--exclude-platform` stay.
+  `--allow-insecure`, `--patch` and `--patch-glibc`. `--disable-plugin`,
+  `--platform` and `--exclude-platform` stay; `--disable-plugin` turns off
+  the definition's activation as it does for a plugin.
 - **Commands.**
-  - `devbox info` loads the definition and prints name, resolved version,
-    description, homepage and platforms. Since PR 3 it loads the
-    definition locally instead of sending the `pkg:` string to the search
-    service.
+  - `devbox info` loads the definition locally and prints name, resolved
+    version, description, homepage and platforms (done in PR 3).
   - `devbox list` marks native packages.
   - `devbox.schema.json` documents `pkg:` and `package_source`.
   - Builtin plugins match on canonical name, so none fire for `pkg:`
@@ -512,8 +513,9 @@ Gaps:
 - `devbox list --outdated` resolves package definitions with
   `FetchResolvedPackage`, which runs `Lock`. That fetches checksums for
   every platform just to compare a version, and spends GitHub API quota.
-- Multi-project lock sync (`boxcli/multi/sync.go`) only compares
-  `last_modified`, which `pkg-def` entries never set.
+- (Fixed in PR 3.) Multi-project lock sync (`boxcli/multi/sync.go`) only
+  compares `last_modified`, which `pkg-def` entries used to leave unset. PR 3
+  sets it whenever the version, artifacts or `definition_hash` change.
 
 Options considered:
 
@@ -549,10 +551,11 @@ Recommendation: (c) feeding (a).
   service (done in PR 3). `info` loads the definition and resolves the
   version locally.
 - `devbox list --outdated` uses `ResolveVersion` (no `Lock`) for
-  definitions. Multi-project sync compares `version` and `definition_hash`.
+  definitions. Multi-project sync keeps using `last_modified`, which PR 3
+  sets on `pkg-def` entries.
 
 Work: the index generator in CI; `Source`/`Ref` on the searcher types;
-`devbox search` output; cheaper outdated; the sync fix. Server: ingest the index and add the fields.
+`devbox search` output; cheaper outdated. Server: ingest the index and add the fields.
 
 ### Cache layout and garbage collection
 
