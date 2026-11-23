@@ -7,6 +7,7 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
+	"go.jetify.com/devbox/internal/boxcli/featureflag"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
@@ -418,6 +419,21 @@ func TestUpdateRecordsChangedDefinitionHash(t *testing.T) {
 	err := devbox.mergeResolvedPackageToLockfile(devPkg, resolved, lockfile)
 	require.NoError(t, err, "update failed")
 	require.Equal(t, "new", lockfile.Packages[raw].DefinitionHash)
+}
+
+func TestShouldUpdateLockEntry(t *testing.T) {
+	featureflag.PkgDefs.EnableForTest(t)
+	cases := map[string]bool{
+		"hello@1.2.3":                         true,
+		"hello":                               false,
+		"pkg:./go.pkg.jsonc@1.22":             true,
+		"pkg:./go.pkg.jsonc":                  true,
+		"pkg:https://example.com/go.pkg.json": true,
+	}
+	for raw, want := range cases {
+		pkg := devpkg.PackageFromStringWithDefaults(raw, nil)
+		require.Equal(t, want, shouldUpdateLockEntry(pkg), raw)
+	}
 }
 
 func TestResolveAndMergePackages(t *testing.T) {

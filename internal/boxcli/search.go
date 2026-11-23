@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"go.jetify.com/devbox/internal/boxcli/usererr"
+	"go.jetify.com/devbox/internal/pkgdef"
 	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/ux"
 )
@@ -34,6 +35,17 @@ func searchCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			query := args[0]
+			if pkgdef.IsRef(query) {
+				// Never send a package definition (possibly a local
+				// path) to the search service.
+				fmt.Fprintf(
+					cmd.OutOrStdout(),
+					"%s is a package definition. Package definitions are not searchable; "+
+						"run `devbox info %[1]s` to see its resolved version.\n",
+					query,
+				)
+				return nil
+			}
 			name, version, isVersioned := searcher.ParseVersionedPackage(query)
 			if !isVersioned {
 				client := searcher.Client()

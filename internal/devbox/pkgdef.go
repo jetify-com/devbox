@@ -5,6 +5,7 @@ package devbox
 
 import (
 	"context"
+	"fmt"
 	"maps"
 	"slices"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/internal/pkgdef"
+	"go.jetify.com/devbox/internal/plugin"
 	"go.jetify.com/devbox/internal/ux"
 )
 
@@ -62,7 +64,7 @@ func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordD
 	}
 	def := loaded.Definition
 
-	system := nix.System()
+	system := nix.SystemOrHost()
 	if !def.SupportsSystem(system) {
 		return nil, usererr.New(
 			"Package %s does not support %s (it supports %s). "+
@@ -87,7 +89,7 @@ func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordD
 		artifact = pkgdef.Artifact{URL: info.URL, Sha256: info.Sha256, Sha512: info.Sha512}
 	}
 
-	if !client.IsInstalled(def, locked.Version, system) {
+	if !client.IsInstalled(def, locked.Version, system, artifact) {
 		ux.Finfof(d.stderr, "Installing %s@%s from %s\n", def.Name, locked.Version, lo.Ternary(artifact.URL != "", artifact.URL, ref.Source))
 		if def.UsesScripts() {
 			ux.Fwarningf(d.stderr, "Package definition %s runs shell commands while installing.\n", ref.Source)
@@ -110,4 +112,46 @@ func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordD
 		}
 	}
 	return installed, nil
+}
+
+// pkgDefInfo is `devbox info` for a package definition. It loads the
+// definition and resolves the version with the definition's own version
+// source; it never contacts the search service.
+func (d *Devbox) pkgDefInfo(ctx context.Context, raw string, markdown bool) (string, error) {
+	ref, err := pkgdef.ParseRef(raw)
+	if err != nil {
+		return "", usererr.WithUserMessage(err, "Invalid package %q", raw)
+	}
+
+	client := pkgdef.NewClient()
+	client.Stderr = d.stderr
+	pinned := ""
+	if locked := d.lockfile.Packages[raw]; locked != nil {
+		pinned = locked.DefinitionHash
+	}
+	loaded, err := client.Load(ctx, ref, d.projectDir, pinned)
+	if err != nil {
+		return "", err
+	}
+	def := loaded.Definition
+	version, err := client.ResolveVersion(ctx, def, ref.Version)
+	if err != nil {
+		return "", usererr.WithUserMessage(err, "Package %s not found", raw)
+	}
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "%s%s %s\n", lo.Ternary(markdown, "## ", ""), def.Name, version)
+	if def.Description != "" {
+		fmt.Fprintln(&b, def.Description)
+	}
+	if def.Homepage != "" {
+		fmt.Fprintf(&b, "Homepage: %s\n", def.Homepage)
+	}
+	fmt.Fprintf(&b, "Platforms: %s\n", strings.Join(def.Platforms, ", "))
+
+	readme, err := plugin.Readme(ctx, devpkg.PackageFromStringWithDefaults(raw, d.lockfile), d.projectDir, markdown)
+	if err != nil {
+		return "", err
+	}
+	return b.String() + readme, nil
 }

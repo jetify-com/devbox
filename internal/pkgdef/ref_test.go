@@ -30,7 +30,22 @@ func TestParseRef(t *testing.T) {
 			raw:  "pkg:https://user@example.com/go.pkg.json@1",
 			want: Ref{Source: "https://user@example.com/go.pkg.json", Version: "1"},
 		},
+		{
+			// An "@" before the last "/" is part of the source.
+			raw:  "pkg:https://cdn.example.com/npm/@acme/tool.pkg.json",
+			want: Ref{Source: "https://cdn.example.com/npm/@acme/tool.pkg.json"},
+		},
+		{
+			raw:  "pkg:https://cdn.example.com/npm/@acme/tool.pkg.json@2.1.0",
+			want: Ref{Source: "https://cdn.example.com/npm/@acme/tool.pkg.json", Version: "2.1.0"},
+		},
+		{raw: "pkg:./@scope/go.pkg.json", want: Ref{Source: "./@scope/go.pkg.json"}, local: true},
+		{raw: "pkg:./go.pkg.json@1.22.0+build.1", want: Ref{Source: "./go.pkg.json", Version: "1.22.0+build.1"}, local: true},
 		{raw: "go@1.22", wantErr: "missing \"pkg:\" scheme"},
+		{raw: "pkg:http://example.com/go.pkg.json@1", wantErr: "must use https://"},
+		{raw: "pkg:HTTP://example.com/go.pkg.json", wantErr: "must use https://"},
+		{raw: "pkg:./go.pkg.json@1.0+$(touch x)", wantErr: "invalid version"},
+		{raw: "pkg:./go.pkg.json@", wantErr: "invalid version"},
 		{raw: "pkg:", wantErr: "missing definition path or URL"},
 		{raw: "pkg:@1.22", wantErr: "missing definition path or URL"},
 		{raw: "pkg:github:owner/repo@1", wantErr: "unsupported definition source scheme \"github\""},

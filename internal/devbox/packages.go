@@ -120,6 +120,14 @@ func (d *Devbox) addToConfig(
 	pkgsNames []string,
 	opts devopt.AddOpts,
 ) (*addedPackages, error) {
+	for _, name := range pkgsNames {
+		// Don't send "pkg:" strings to the nixpkgs search (or its slow
+		// fallback) when package definitions are disabled.
+		if err := pkgtype.CheckPkgDefEnabled(name); err != nil {
+			return nil, err
+		}
+	}
+
 	// Track which packages had no changes so we can report that to the user.
 	unchangedPackageNames := []string{}
 

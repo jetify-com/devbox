@@ -37,6 +37,9 @@ func writeTar(t *testing.T, path string, entries []tarEntry) {
 			hdr.Typeflag = tar.TypeDir
 		case entry.linkTo != "":
 			hdr.Typeflag = tar.TypeSymlink
+			if entry.typeflag != 0 {
+				hdr.Typeflag = entry.typeflag // tar.TypeLink
+			}
 			hdr.Linkname = entry.linkTo
 		case entry.typeflag != 0:
 			hdr.Typeflag = entry.typeflag
@@ -161,6 +164,138 @@ func TestExtractRejectsEscapes(t *testing.T) {
 	content, err := os.ReadFile(outside)
 	require.NoError(t, err)
 	assert.Equal(t, "untouched", string(content))
+}
+
+func TestExtractChainedSymlinksStayInside(t *testing.T) {
+	dir := t.TempDir()
+	// dir/a/b/out is the destination; anything written to dir/a/evil or
+	// dir/evil escaped it.
+	base := filepath.Join(dir, "a", "b")
+
+	tests := []struct {
+		name    string
+		entries []tarEntry
+	}{
+		{
+			// s1 -> . makes s1/s2 resolve to dest/s2, so s1/s2 -> .. points
+			// at dest's parent even though it looks one level deep.
+			name: "chained",
+			entries: []tarEntry{
+				{name: "s1", linkTo: "."},
+				{name: "s1/s2", linkTo: ".."},
+				{name: "s1/s2/evil", content: "x"},
+			},
+		},
+		{
+			// ".." after a name is resolved from wherever the name points.
+			name: "dotdot-after-link",
+			entries: []tarEntry{
+				{name: "a", linkTo: "."},
+				{name: "l", linkTo: "a/../evil"},
+			},
+		},
+		{
+			// The same, with the link created before the one it climbs
+			// through.
+			name: "dotdot-before-link",
+			entries: []tarEntry{
+				{name: "l", linkTo: "a/../evil"},
+				{name: "a", linkTo: "."},
+			},
+		},
+		{
+			name: "dir-through-link",
+			entries: []tarEntry{
+				{name: "s1", linkTo: "."},
+				{name: "s1/s2", linkTo: ".."},
+				{name: "s1/s2/evil/", dir: true},
+			},
+		},
+		{
+			name: "hardlink-through-link",
+			entries: []tarEntry{
+				{name: "f", content: "x"},
+				{name: "s1", linkTo: "."},
+				{name: "s1/s2", linkTo: ".."},
+				{name: "s1/s2/evil", linkTo: "f", typeflag: tar.TypeLink},
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			out := filepath.Join(base, test.name)
+			archivePath := filepath.Join(dir, test.name+".tar.gz")
+			writeTar(t, archivePath, test.entries)
+			err := extractArchive(t.Context(), archivePath, out, nil)
+			require.Error(t, err)
+			for _, p := range []string{filepath.Join(base, "evil"), filepath.Join(dir, "a", "evil"), filepath.Join(dir, "evil")} {
+				_, statErr := os.Lstat(p)
+				assert.True(t, os.IsNotExist(statErr), "%s must not exist", p)
+			}
+		})
+	}
+
+	// A symlink already on disk that points outside is not followed either.
+	out := filepath.Join(base, "planted")
+	require.NoError(t, os.MkdirAll(out, 0o755))
+	require.NoError(t, os.Symlink(dir, filepath.Join(out, "up")))
+	archivePath := filepath.Join(dir, "planted.tar.gz")
+	writeTar(t, archivePath, []tarEntry{{name: "up/evil", content: "x"}})
+	err := extractArchive(t.Context(), archivePath, out, nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "escapes the destination")
+	_, statErr := os.Lstat(filepath.Join(dir, "evil"))
+	assert.True(t, os.IsNotExist(statErr))
+
+	// Links that stay inside keep working, in any order.
+	out = filepath.Join(base, "ok")
+	archivePath = filepath.Join(dir, "ok.tar.gz")
+	writeTar(t, archivePath, []tarEntry{
+		{name: "lib", linkTo: "real"},
+		{name: "real/", dir: true},
+		{name: "lib/x", content: "x"},
+		{name: "self", linkTo: "."},
+		{name: "self/y", content: "y"},
+	})
+	require.NoError(t, extractArchive(t.Context(), archivePath, out, nil))
+	content, err := os.ReadFile(filepath.Join(out, "real", "x"))
+	require.NoError(t, err)
+	assert.Equal(t, "x", string(content))
+	content, err = os.ReadFile(filepath.Join(out, "y"))
+	require.NoError(t, err)
+	assert.Equal(t, "y", string(content))
+}
+
+func TestExtractHardLinks(t *testing.T) {
+	dir := t.TempDir()
+	archivePath := filepath.Join(dir, "hard.tar.gz")
+	writeTar(t, archivePath, []tarEntry{
+		{name: "pkg/bin/tool", content: "#!/bin/sh\necho tool\n", mode: 0o755},
+		{name: "pkg/bin/tool-alias", linkTo: "pkg/bin/tool", typeflag: tar.TypeLink},
+		{name: "pkg/libexec/tool", linkTo: "./pkg/bin/tool", typeflag: tar.TypeLink},
+	})
+	dest := filepath.Join(dir, "out")
+	strip := 1
+	require.NoError(t, extractArchive(t.Context(), archivePath, dest, &strip))
+	for _, p := range []string{"bin/tool-alias", "libexec/tool"} {
+		content, err := os.ReadFile(filepath.Join(dest, filepath.FromSlash(p)))
+		require.NoError(t, err, p)
+		assert.Equal(t, "#!/bin/sh\necho tool\n", string(content), p)
+		info, err := os.Stat(filepath.Join(dest, filepath.FromSlash(p)))
+		require.NoError(t, err)
+		assert.NotZero(t, info.Mode()&0o111, "%s keeps the executable bit", p)
+	}
+
+	// A hard link to something outside the destination, missing, or
+	// stripped away is refused.
+	for i, linkTo := range []string{"../../../../etc/passwd", "pkg/missing", "pkg"} {
+		archivePath := filepath.Join(dir, "bad-hard.tar.gz")
+		writeTar(t, archivePath, []tarEntry{
+			{name: "pkg/x", linkTo: linkTo, typeflag: tar.TypeLink},
+		})
+		err := extractArchive(t.Context(), archivePath, filepath.Join(dir, "bad", string(rune('a'+i))), &strip)
+		require.Error(t, err, linkTo)
+	}
 }
 
 func TestStripPath(t *testing.T) {
