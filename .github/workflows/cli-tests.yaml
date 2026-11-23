@@ -149,14 +149,14 @@ jobs:
           # Pinned so an unreviewed goreleaser release can't change the dist/
           # layout or archive names (devbox_<version>_<os>_<arch>.tar.gz,
           # checksums.txt) that install.sh and internal/launcher rely on.
-          # To bump: change every pin (cli-release.yml edge + release,
+          # To bump: change every pin (cli-release.yml release,
           # cli-tests.yaml smoke) in one PR so the "Release smoke test" job
           # exercises the new version before a release uses it.
           version: v2.20.2
           args: build --snapshot --single-target --clean
         env:
-          # .goreleaser.yaml names snapshots after EDGE_TAG.
-          EDGE_TAG: ${{ env.SMOKE_VERSION }}
+          # .goreleaser.yaml stamps snapshots with SNAPSHOT_VERSION.
+          SNAPSHOT_VERSION: ${{ env.SMOKE_VERSION }}
           # Leave telemetry off in test builds.
           SENTRY_DSN: ""
           TELEMETRY_KEY: ""
@@ -238,8 +238,10 @@ jobs:
         # specifying a Nix version, re-add the matrix here and wire it into the
         # "Install devbox" step.
         exclude:
-          # Only runs tests on macos if explicitly requested, or on a schedule
-          - os: "${{ (inputs.run-mac-tests || github.event.schedule != '') && 'dummy' || 'macos-latest' }}"
+          # Only runs tests on macos if explicitly requested, on a schedule, or
+          # on an automatic release PR (release-weekly.yml). Release PRs gate on
+          # macOS so a macOS failure blocks the merge before anything is tagged.
+          - os: "${{ (inputs.run-mac-tests || github.event.schedule != '' || startsWith(github.head_ref, 'bump-flake-')) && 'dummy' || 'macos-latest' }}"
 
 
     runs-on: ${{ matrix.os }}
