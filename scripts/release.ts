@@ -358,6 +358,9 @@ type ReleaseInfo = {
   isDraft: boolean;
   isPrerelease: boolean;
   assetCount: number;
+  // checksums.txt is uploaded last, and it's what the installer and launcher
+  // read to find the latest version, so a release without it isn't installable.
+  hasChecksums: boolean;
   url: string;
 };
 
@@ -368,13 +371,14 @@ function getRelease(version: string): ReleaseInfo | null {
   ]);
   if (res.status !== 0) return null;
   const parsed = JSON.parse(res.stdout) as {
-    tagName: string; isDraft: boolean; isPrerelease: boolean; assets: unknown[]; url: string;
+    tagName: string; isDraft: boolean; isPrerelease: boolean; assets: { name: string }[]; url: string;
   };
   return {
     tagName: parsed.tagName,
     isDraft: parsed.isDraft,
     isPrerelease: parsed.isPrerelease,
     assetCount: parsed.assets.length,
+    hasChecksums: parsed.assets.some((a) => a.name === "checksums.txt"),
     url: parsed.url,
   };
 }
@@ -880,6 +884,10 @@ async function stepPublish(version: string, autoYes: boolean): Promise<void> {
     ok(`${version} is already published`);
   } else {
     if (release.assetCount === 0) fail(`${version} has no assets — do not publish; the Docker build would fail`);
+    // Publishing a non-prerelease as "latest" is what makes it the stable
+    // version: the installer and launcher download
+    // releases/latest/download/checksums.txt from GitHub.
+    if (!release.hasChecksums) fail(`${version} has no checksums.txt — do not publish; installs would fail`);
     if (!autoYes && !(await confirm(`Publish ${version} live now?`, false))) fail("aborted before publishing");
 
     const latestFlag = isPrerelease(version) ? ["--latest=false"] : ["--latest"];
@@ -895,9 +903,10 @@ async function stepPublish(version: string, autoYes: boolean): Promise<void> {
   console.log(`    ${dim("gh run list --repo " + REPO + " --workflow=cli-post-release.yml --limit 3")}`);
   console.log(`    ${dim("gh run list --repo " + REPO + " --workflow=docker-image-release.yml --limit 3")}`);
   console.log();
-  console.log(`  cli-post-release promotes s3://releases.jetpack.io/devbox/stable/version,`);
-  console.log(`  which is what the installer reads. Until it finishes, get.jetify.com still`);
-  console.log(`  serves the previous version.`);
+  if (!isPrerelease(version)) {
+    console.log(`  ${version} is now GitHub's latest release, so the installer and the launcher's`);
+    console.log(`  update check pick it up right away.`);
+  }
 }
 
 // ---------------------------------------------------------------------------

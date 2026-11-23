@@ -30,6 +30,16 @@ cp package-esm.json package.json
 exec devbox run -- node -e 'console.log("case3-ok")'
 stdout 'case3-ok'
 
+# Case 3b: the corepack-bin directory is missing while devbox's state is up to
+# date, e.g. a .devbox copied into a new git worktree without its empty
+# directories. Devbox skips create_files in that case, so the init_hook must
+# create the directory itself instead of failing `corepack enable` with ENOENT.
+rm .devbox/virtenv/nodejs/corepack-bin
+exec devbox run -- node -e 'console.log("case3b-ok")'
+stdout 'case3b-ok'
+! stderr 'ENOENT'
+exists .devbox/virtenv/nodejs/corepack-bin/pnpm
+
 # Case 4: a Node package that does not bundle Corepack, e.g. nodejs-slim
 # (issue #2791). Shell init must still succeed, and the plugin must print an
 # actionable warning instead of failing later with a cryptic

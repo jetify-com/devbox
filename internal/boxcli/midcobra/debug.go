@@ -52,6 +52,12 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	if runErr == nil {
 		return
 	}
+	// The user pressed Ctrl-C and the command has exited. The exit code (130)
+	// is all there is to report.
+	var execErr *usererr.ExitError
+	if errors.As(runErr, &execErr) && execErr.Interrupted() {
+		return
+	}
 	if userErr, hasUserErr := usererr.Extract(runErr); hasUserErr {
 		if usererr.IsWarning(userErr) {
 			ux.Fwarning(cmd.ErrOrStderr(), runErr.Error())

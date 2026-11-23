@@ -336,6 +336,18 @@ func TestInitShellBinaryFields(t *testing.T) {
 			expectedRcPath: ".shinit",
 		},
 		{
+			name:           "sh shell",
+			path:           "/bin/sh",
+			expectedName:   shPosix,
+			expectedRcPath: ".shinit",
+		},
+		{
+			name:           "sh login shell",
+			path:           "-sh",
+			expectedName:   shPosix,
+			expectedRcPath: ".shinit",
+		},
+		{
 			name:               "unknown shell",
 			path:               "/usr/bin/unknown",
 			expectedName:       shUnknown,
