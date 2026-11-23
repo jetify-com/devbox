@@ -261,7 +261,7 @@ function validateVersion(raw: string): string {
 
 const isPrerelease = (version: string) => version.includes("-");
 
-// Edge tags (0.0.0-edge.*) are weekly snapshots, not release points, so they
+// Edge tags (0.0.0-edge.*) are on-demand snapshots, not release points, so they
 // never count as "the previous release".
 const isEdge = (tag: string) => tag.includes("-edge.");
 

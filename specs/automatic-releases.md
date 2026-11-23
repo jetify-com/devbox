@@ -104,8 +104,7 @@ Reuse its logic rather than re-implementing it in YAML:
 ### 3. `release-weekly.yml` (new)
 
 - Triggers: `schedule: '17 16 * * 2'`, which is Tuesday 08:17 PST. It's off
-  the hour and away from the Thursday edge build and the 08:30 UTC nightly
-  tests. GitHub cron is UTC, so it runs at 09:17 during PDT. Plus `workflow_dispatch`
+  the hour and away from the 08:30 UTC nightly tests. GitHub cron is UTC, so it runs at 09:17 during PDT. Plus `workflow_dispatch`
   with an optional `version` override.
 - `concurrency: release-weekly`.
 - Steps: checkout `fetch-depth: 0` → Node 24 →
@@ -174,7 +173,7 @@ Things to confirm when setting this up:
 ### 6. `cli-release.yml` changes
 
 - `tests: uses: ./.github/workflows/cli-tests.yaml` with
-  `run-mac-tests: true` for tag pushes (the weekly edge build is unchanged). Today the release gate skips macOS: the
+  `run-mac-tests: true` for tag pushes. Today the release gate skips macOS: the
   `workflow_call` path excludes `macos-latest` unless that input is set. "All
   tests pass" should include macOS before we ship to macOS users without a
   human looking.

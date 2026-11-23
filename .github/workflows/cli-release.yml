@@ -12,8 +12,6 @@ on:
         required: false
         default: false
         type: boolean
-  schedule:
-    - cron: "45 8 * * 4" # Create edge weekly on Thursdays.
   push:
     tags:
       - "*" # Tags that trigger a new release version
@@ -54,7 +52,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     needs: tests
-    if: ${{ inputs.create_edge_release || github.event.schedule }}
+    # Manual only. The weekly scheduled edge build was dropped once stable
+    # releases became automatic and weekly (release-weekly.yml).
+    if: ${{ inputs.create_edge_release }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v7
