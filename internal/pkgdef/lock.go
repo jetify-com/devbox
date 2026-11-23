@@ -105,6 +105,9 @@ func (c *Client) lockSystem(ctx context.Context, def *Definition, version, syste
 	if err != nil {
 		return Artifact{}, err
 	}
+	if err := def.checkURL("install.url", rawURL); err != nil {
+		return Artifact{}, err
+	}
 	vars = vars.withURL(rawURL)
 
 	d, err := c.fetchChecksum(ctx, def, install.Checksum, vars)
@@ -123,6 +126,9 @@ func (c *Client) lockSystem(ctx context.Context, def *Definition, version, syste
 func (c *Client) lookupArtifact(ctx context.Context, def *Definition, lookup *Lookup, vars Vars) (Artifact, error) {
 	rawURL, err := Render(lookup.URL, vars)
 	if err != nil {
+		return Artifact{}, err
+	}
+	if err := def.checkURL("install.lookup.url", rawURL); err != nil {
 		return Artifact{}, err
 	}
 	rawURL = def.ResolveURL(rawURL)

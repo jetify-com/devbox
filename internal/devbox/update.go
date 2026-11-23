@@ -235,9 +235,12 @@ func (d *Devbox) resolveAndMergePackages(
 }
 
 // shouldUpdateLockEntry reports whether `devbox update` re-resolves pkg's
-// lockfile entry: flake refs and versioned packages.
+// lockfile entry: flake refs, package definitions and versioned packages.
+// Package definitions are always eligible, with or without a version: an
+// unversioned "pkg:" entry tracks the definition's latest version, and
+// `devbox update` is what records a changed remote definition.
 func shouldUpdateLockEntry(pkg *devpkg.Package) bool {
-	if pkgtype.IsFlake(pkg.Raw) {
+	if pkgtype.IsFlake(pkg.Raw) || pkgtype.IsPkgDef(pkg.Raw) {
 		return true
 	}
 	_, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw)

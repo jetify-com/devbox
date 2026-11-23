@@ -21,7 +21,7 @@ const githubPerPage = 100
 
 // ListVersions returns every version the definition's version sources
 // know about, unsorted and including pre-releases. Paginated sources are
-// read up to maxPages.
+// read up to maxPages. Versions that are not IsValidVersion are dropped.
 func (c *Client) ListVersions(ctx context.Context, def *Definition) ([]string, error) {
 	return c.listVersions(ctx, def, nil)
 }
@@ -36,7 +36,7 @@ func (c *Client) listVersions(ctx context.Context, def *Definition, enough func(
 		if err != nil {
 			return nil, err
 		}
-		all = append(all, versions...)
+		all = append(all, slices.DeleteFunc(versions, func(v string) bool { return !IsValidVersion(v) })...)
 	}
 	return all, nil
 }
@@ -46,12 +46,18 @@ func (c *Client) listSource(ctx context.Context, def *Definition, src VersionSou
 	case VersionsStatic:
 		return slices.Clone(src.Versions), nil
 	case VersionsHTTPJSON:
+		if err := def.checkURL("versions.url", src.URL); err != nil {
+			return nil, err
+		}
 		if !strings.Contains(src.URL, ".Page") {
 			return c.listVersionsHTTPJSON(ctx, def.ResolveURL(src.URL), src.Select)
 		}
 		return readPages(enough, 0, func(page int) ([]string, bool, error) {
 			rawURL, err := Render(src.URL, Vars{Page: page})
 			if err != nil {
+				return nil, false, err
+			}
+			if err := def.checkURL("versions.url", rawURL); err != nil {
 				return nil, false, err
 			}
 			versions, err := c.listVersionsHTTPJSON(ctx, def.ResolveURL(rawURL), src.Select)
