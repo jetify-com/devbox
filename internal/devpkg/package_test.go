@@ -218,6 +218,10 @@ func TestCanonicalName(t *testing.T) {
 		{"runx:golangci/golangci-lint@latest", "runx:golangci/golangci-lint"},
 		{"runx:golangci/golangci-lint@v0.0.2", "runx:golangci/golangci-lint"},
 		{"runx:golangci/golangci-lint", "runx:golangci/golangci-lint"},
+		{"pkg:./go.pkg.json@1.22", "pkg:./go.pkg.json"},
+		{"pkg:./go.pkg.json", "pkg:./go.pkg.json"},
+		{"pkg:./go.pkg.jsonc@1.22", "pkg:./go.pkg.jsonc"},
+		{"pkg:https://cdn.example.com/@acme/tool.pkg.json@latest", "pkg:https://cdn.example.com/@acme/tool.pkg.json"},
 		{"github:NixOS/nixpkgs/12345", ""},
 		{"path:/to/my/file", ""},
 	}

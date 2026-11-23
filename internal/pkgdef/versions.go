@@ -31,7 +31,7 @@ func (c *Client) listSource(ctx context.Context, def *Definition) ([]string, err
 		if err := def.checkURL("versions.url", src.URL); err != nil {
 			return nil, err
 		}
-		return c.listVersionsHTTPJSON(ctx, src)
+		return c.listVersionsHTTPJSON(ctx, def.ResolveURL(src.URL), src.Select)
 	case VersionsGitHubReleases:
 		return c.listVersionsGitHub(ctx, src)
 	case VersionsScript:
@@ -55,20 +55,20 @@ func (c *Client) ResolveVersion(ctx context.Context, def *Definition, requested 
 	return version, nil
 }
 
-func (c *Client) listVersionsHTTPJSON(ctx context.Context, src VersionSource) ([]string, error) {
-	code, err := compileJQ(src.Select)
+func (c *Client) listVersionsHTTPJSON(ctx context.Context, rawURL, selectExpr string) ([]string, error) {
+	code, err := compileJQ(selectExpr)
 	if err != nil {
 		return nil, err
 	}
-	body, err := c.get(ctx, src.URL)
+	body, err := c.get(ctx, rawURL)
 	if err != nil {
 		return nil, err
 	}
 	var input any
 	if err := json.Unmarshal(body, &input); err != nil {
-		return nil, fmt.Errorf("%s: response is not JSON: %w", src.URL, err)
+		return nil, fmt.Errorf("%s: response is not JSON: %w", rawURL, err)
 	}
-	return runJQ(ctx, code, src.Select, input)
+	return runJQ(ctx, code, selectExpr, input)
 }
 
 // githubRelease is the subset of the GitHub releases API response we need.

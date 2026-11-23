@@ -24,6 +24,7 @@ func (c *Client) fetchChecksum(ctx context.Context, def *Definition, src *Checks
 	if err := def.checkURL("checksum.url", rawURL); err != nil {
 		return "", err
 	}
+	rawURL = def.ResolveURL(rawURL)
 	switch src.Type {
 	case ChecksumHTTPJSON:
 		return c.fetchChecksumHTTPJSON(ctx, src, rawURL, vars)

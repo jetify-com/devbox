@@ -39,6 +39,7 @@ import (
 	"go.jetify.com/devbox/internal/fileutil"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/pkgdef"
 	"go.jetify.com/devbox/internal/plugin"
 	"go.jetify.com/devbox/internal/redact"
 	"go.jetify.com/devbox/internal/searcher"
@@ -472,7 +473,7 @@ func (d *Devbox) shellEnvHashKey() string {
 func (d *Devbox) Info(ctx context.Context, pkg string, markdown bool) (string, error) {
 	ctx, task := trace.NewTask(ctx, "devboxInfo")
 	defer task.End()
-	return packageInfo(ctx, pkg, markdown, d.projectDir, d.lockfile)
+	return packageInfo(ctx, pkg, markdown, d.projectDir, d.lockfile, d.stderr)
 }
 
 // PackageInfo returns the same information as [Devbox.Info] without
@@ -486,7 +487,7 @@ func PackageInfo(ctx context.Context, pkg string, markdown bool) (string, error)
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	return packageInfo(ctx, pkg, markdown, dir, noProjectLocker{dir: dir})
+	return packageInfo(ctx, pkg, markdown, dir, noProjectLocker{dir: dir}, os.Stderr)
 }
 
 func packageInfo(
@@ -495,7 +496,17 @@ func packageInfo(
 	markdown bool,
 	projectDir string,
 	locker lock.Locker,
+	stderr io.Writer,
 ) (string, error) {
+	// Package definitions are never sent to the search service (a local
+	// definition's path is not something to share).
+	if pkgdef.IsRef(pkg) {
+		if err := pkgtype.CheckPkgDefEnabled(pkg); err != nil {
+			return "", err
+		}
+		return pkgDefInfo(ctx, pkg, markdown, projectDir, locker, stderr)
+	}
+
 	name, version, isVersioned := searcher.ParseVersionedPackage(pkg)
 	if !isVersioned {
 		name = pkg
@@ -815,10 +826,28 @@ func (d *Devbox) computeEnv(
 	}
 	slog.Debug("nix environment PATH", "path", env["PATH"])
 
-	env["PATH"] = envpath.JoinPathLists(
+	// PATH order of the Devbox environment, highest priority first:
+	//
+	//  1. bin dirs of package-definition ("pkg:") packages, in devbox.json
+	//     order
+	//  2. the nix profile bin dir (nixpkgs and flake packages)
+	//  3. the PATH from print-dev-env (the nix stdenv), then the inherited
+	//     PATH
+	//
+	// Package definitions sit with the other devbox-managed packages, ahead
+	// of the stdenv and the inherited PATH, so that pkg:java wins over
+	// /usr/bin/java and over a nix package with the same binary. env.PATH
+	// in devbox.json is applied on top of this (so "$PATH" in it refers to
+	// this list), and runx packages are appended after it below.
+	pkgDefPaths, err := d.pkgDefBinPaths(ctx, false /*recordDigest*/)
+	if err != nil {
+		return nil, err
+	}
+	env["PATH"] = envpath.JoinPathLists(append(
+		pkgDefPaths,
 		nix.ProfileBinPath(d.projectDir),
 		env["PATH"],
-	)
+	)...)
 
 	wd, err := os.Getwd()
 	if err != nil {

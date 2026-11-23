@@ -33,6 +33,12 @@ import (
 // `--refresh`. This should only be set on the `devbox update` path; other
 // callers (Add, install, outdated checks) prefer the cache.
 func (f *File) FetchResolvedPackage(pkg string, refresh bool) (*Package, error) {
+	if err := pkgtype.CheckPkgDefEnabled(pkg); err != nil {
+		return nil, err
+	}
+	if pkgtype.IsPkgDef(pkg) {
+		return f.resolvePkgDef(context.TODO(), pkg, refresh)
+	}
 	if pkgtype.IsFlake(pkg) {
 		installable, err := flake.ParseInstallable(pkg)
 		if err != nil {

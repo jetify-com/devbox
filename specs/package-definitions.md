@@ -49,6 +49,12 @@ paths keep working. `<ref>` is one of:
 | `file://` URL | `file:///tmp/go.pkg.jsonc` | Mainly for tests. |
 | `github:` | `github:jetify-com/devbox/pkgs/go/go.pkg.jsonc` | Planned. Sugar for the raw.githubusercontent.com URL. |
 
+Inside a definition, a relative `file://` URL (`file://vendor/x.tar.gz`) is
+resolved against the directory of a local definition file when fetching.
+The lockfile records the URL as rendered, so a project that ships artifacts
+next to its definition stays portable. Remote definitions must use absolute
+URLs.
+
 If no `@version` is given, `devbox add` appends `@latest`.
 
 Adding a `pkg:` package whose `<ref>` matches one already in `devbox.json`
@@ -256,7 +262,19 @@ follow the sprig order with the string last, so pipelines read naturally:
 is the definition, so init hooks and created files work through the existing
 plugin manager with no new machinery. `create_files` sources are resolved
 relative to the definition file; they are only supported for local
-definitions.
+definitions. The plugin's `{{ .Virtenv }}` and `{{ .DevboxDir }}` are
+namespaced as `pkgdef-<name>` so they never collide with a built-in plugin
+or nix package of the same name. If two definitions in one project have the
+same `name`, only the first one's activation applies; the other is skipped
+with a warning so the two never write into the same directory. Its binaries
+are still installed. Editing a `create_files` source of a local definition
+re-creates the file, as for local plugins. `disable_plugin` in
+`devbox.json` turns off a definition's activation.
+
+A definition that cannot be loaded (deleted file, unreachable URL, changed
+remote content) does not prevent `devbox.json` from loading, so
+`devbox update` and `devbox rm` can always run; the install step reports
+the error.
 
 No deactivate hook exists on purpose: Devbox never mutates the parent shell.
 Every `devbox shell` and `devbox run` recomputes `PATH` and env from the
@@ -294,6 +312,23 @@ shared across projects that would install the same artifact the same way
 (see Cache layout and garbage collection below). Nothing is copied per
 project; `PATH` points at the cache. Garbage collection of unused versions is
 a follow-up (`devbox cache gc`).
+
+Each install directory carries a marker with the *install fingerprint* of
+the definition: a hash of the install strategy, `bin`, `hooks`, `os_map`
+and `arch_map`. When a definition's install recipe changes for a version
+that is already installed, the next install redoes it. Activation-only
+edits (`env`, `shell`, `create_files`) do not trigger a reinstall; they are
+applied at shell time. When a local definition file no longer matches its
+`definition_hash`, the install step re-locks the entry at the locked version
+first, so `url` and `sha256` follow an edited install recipe.
+
+`pkg-def` entries also set `last_modified` (the time the entry was
+resolved, unchanged when re-resolving yields the same entry) so that
+multi-project lockfile sync can pick the newest one.
+
+Trust-on-first-use digests are written to `devbox.lock` only by the install
+step (`devbox add`, `devbox install`, `devbox update`), never while
+computing the environment for `devbox shell` or `devbox shellenv`.
 
 ## Security
 
@@ -751,7 +786,8 @@ A leaf package with no dependency on `devpkg`, `lock` or `plugin`.
 
 ### PR 3: wiring, lockfile, env, plugins, testscripts
 
-Behind the `DEVBOX_FEATURE_PKG_DEFS` flag (on in dev builds).
+Behind the `DEVBOX_FEATURE_PKG_DEFS` flag (on in dev builds). While the
+flag is off, `pkg:` strings fail with an error that says to set it.
 
 - `pkgtype.IsPkgDef`; excluded from flake detection like runx.
 - `devpkg.Package`: `IsPkgDef`, `IsNix` false so shellgen skips it,
@@ -761,11 +797,24 @@ Behind the `DEVBOX_FEATURE_PKG_DEFS` flag (on in dev builds).
 - `Devbox.installPackages` installs package definitions next to runx;
   `computeEnv` adds their `bin` directories to `PATH`.
 - `devconfig.loadRecursive` creates a plugin config per package definition so
-  `env`, `shell.init_hook` and `create_files` apply.
-- Local definition file hashes feed the config hash so edits trigger
-  reinstall.
-- `devbox update` re-resolves through the same lockfile branch.
-- Testscripts under `testscripts/pkgdef/` using `file://` artifacts.
+  `env`, `shell.init_hook` and `create_files` apply, with the definition's
+  template variables available in both. The plugin's virtenv directory is
+  `pkgdef-<name>`. Definitions excluded on the current platform get no
+  plugin config.
+- Local definition file hashes feed the config hash so edits re-run the
+  install step, which re-locks the entry and reinstalls when the install
+  recipe changed.
+- `devbox update` re-resolves through the same lockfile branch and records
+  a changed `definition_hash` even when the version and artifacts are the
+  same.
+- Testscripts under `testscripts/pkgdef/` using relative `file://`
+  artifacts next to the definition.
+- `devbox add` fails with the definition's own error (unknown version,
+  unsupported system, bad checksum) instead of falling back to nixpkgs.
+- A definition whose `platforms` exclude the current system fails at
+  install time with a hint to use `--exclude-platform`.
+- `devbox info` and `devbox search` handle `pkg:` locally and never
+  contact the search service.
 
 ### Later
 
@@ -798,6 +847,9 @@ Behind the `DEVBOX_FEATURE_PKG_DEFS` flag (on in dev builds).
 | Spec and Go example | in review (PR 1) |
 | `internal/pkgdef` library | in review (PR 2) |
 | Wiring behind feature flag | in review (PR 3) |
+| Lockfile fields `definition_hash`, `systems.*.url`, `systems.*.sha256` | in review (PR 3) |
+| Activation through the plugin manager (`env`, `shell`, `create_files`) | in review (PR 3) |
+| Trust-on-first-use checksum recording | in review (PR 3) |
 | `manager` strategy | not started |
 | `script` strategy | not started |
 | `github:` refs | not started |

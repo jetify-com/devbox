@@ -23,6 +23,7 @@ import (
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/pkgdef"
 	"go.jetify.com/devbox/internal/services"
 )
 
@@ -74,8 +75,18 @@ func (c *Config) Hash() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	local, ok := c.Source.(*LocalPlugin)
-	if !ok || len(c.CreateFiles) == 0 {
+	// Package definitions read create_files sources from the directory of
+	// a local definition file, so they are handled like local plugins.
+	var local interface {
+		FileContent(subpath string) ([]byte, error)
+	}
+	switch src := c.Source.(type) {
+	case *LocalPlugin:
+		local = src
+	case *pkgDefPlugin:
+		local = src
+	}
+	if local == nil || len(c.CreateFiles) == 0 {
 		return h, nil
 	}
 
@@ -199,7 +210,13 @@ func (m *Manager) createFile(
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	tmpl, err := template.New(filePath + "-template").Parse(string(content))
+	tmpl := template.New(filePath + "-template")
+	if _, ok := pkg.(*pkgDefPlugin); ok {
+		// Package definitions get the same template functions as the
+		// rest of the definition (trimPrefix, replace, ...).
+		tmpl = tmpl.Funcs(pkgdef.TemplateFuncs())
+	}
+	tmpl, err = tmpl.Parse(string(content))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -214,8 +231,7 @@ func (m *Manager) createFile(
 		urlForInput = pkg.URLForFlakeInput()
 	}
 
-	var buf bytes.Buffer
-	if err = tmpl.Execute(&buf, map[string]any{
+	data := map[string]any{
 		"DevboxProjectDir":     m.ProjectDir(),
 		"DevboxDir":            filepath.Join(m.ProjectDir(), devboxDirName, name),
 		"DevboxDirRoot":        filepath.Join(m.ProjectDir(), devboxDirName),
@@ -225,7 +241,14 @@ func (m *Manager) createFile(
 		"System":               nix.System(),
 		"URLForInput":          urlForInput,
 		"Virtenv":              filepath.Join(virtenvPath, name),
-	}); err != nil {
+	}
+	if pkgDef, ok := pkg.(*pkgDefPlugin); ok {
+		for k, v := range pkgDef.vars {
+			data[k] = v
+		}
+	}
+	var buf bytes.Buffer
+	if err = tmpl.Execute(&buf, data); err != nil {
 		return errors.WithStack(err)
 	}
 	var fileMode fs.FileMode = 0o644
@@ -246,20 +269,24 @@ func (m *Manager) createFile(
 
 // buildConfig returns a plugin.Config
 func buildConfig(pkg Includable, projectDir, content string) (*Config, error) {
+	return buildConfigWithVars(pkg, projectDir, content, nil)
+}
+
+// buildConfigWithVars is buildConfig with additional template variables,
+// which package definitions use to expose their install location.
+func buildConfigWithVars(pkg Includable, projectDir, content string, extraVars map[string]string) (*Config, error) {
 	cfg := &Config{PluginOnlyData: PluginOnlyData{Source: pkg}}
 	name := pkg.CanonicalName()
-	t, err := template.New(name + "-template").Parse(content)
+	tmpl, err := template.New(name + "-template").Parse(content)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	vars := pluginTemplateVars(name, projectDir)
+	for k, v := range extraVars {
+		vars[k] = v
+	}
 	var buf bytes.Buffer
-	if err = t.Execute(&buf, map[string]string{
-		"DevboxProjectDir":     projectDir,
-		"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
-		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
-		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(projectDir, VirtenvPath, name),
-	}); err != nil {
+	if err = tmpl.Execute(&buf, vars); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
@@ -269,6 +296,17 @@ func buildConfig(pkg Includable, projectDir, content string) (*Config, error) {
 	}
 
 	return cfg, errors.WithStack(json.Unmarshal(jsonb, cfg))
+}
+
+// pluginTemplateVars are the template variables every plugin.json can use.
+func pluginTemplateVars(name, projectDir string) map[string]string {
+	return map[string]string{
+		"DevboxProjectDir":     projectDir,
+		"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
+		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
+		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
+		"Virtenv":              filepath.Join(projectDir, VirtenvPath, name),
+	}
 }
 
 func jsonPurifyPluginContent(content []byte) ([]byte, error) {
