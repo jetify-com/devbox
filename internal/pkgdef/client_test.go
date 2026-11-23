@@ -295,32 +295,37 @@ func TestChecksumSHA256URL(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, vendor.binSHA, artifacts[testSystem].Sha256)
 
-	// Missing checksum file is an error.
+	// A missing checksum file means there is no artifact for any system.
 	def = vendor.binaryDef(t, fmt.Sprintf(`"checksum": {"type": "sha256_url", "url": "%s/dl/missing.txt"}`, vendor.srv.URL))
 	_, err = cli.Lock(t.Context(), def, "1.2.0")
-	require.ErrorIs(t, err, ErrNotFound)
+	require.ErrorIs(t, err, ErrNoArtifact)
 }
 
-func TestParseSHA256Body(t *testing.T) {
-	digest := strings.Repeat("0a", 32)
-	got, err := parseSHA256Body(digest+"\n", "x", "src")
+func TestParseChecksumFile(t *testing.T) {
+	hexDigest := strings.Repeat("0a", 32)
+	want := digest{algo: algoSHA256, hex: hexDigest}
+	got, err := parseChecksumFile(hexDigest+"\n", "x", "src", algoSHA256)
 	require.NoError(t, err)
-	assert.Equal(t, digest, got)
+	assert.Equal(t, want, got)
 
-	got, err = parseSHA256Body("sha256:"+strings.ToUpper(digest), "x", "src")
+	got, err = parseChecksumFile("sha256:"+strings.ToUpper(hexDigest), "x", "src", algoSHA256)
 	require.NoError(t, err)
-	assert.Equal(t, digest, got)
+	assert.Equal(t, want, got)
 
-	body := strings.Repeat("11", 32) + "  other.tar.gz\n" + digest + "  dist/x.tar.gz\n"
-	got, err = parseSHA256Body(body, "x.tar.gz", "src")
+	body := strings.Repeat("11", 32) + "  other.tar.gz\n" + hexDigest + "  dist/x.tar.gz\n"
+	got, err = parseChecksumFile(body, "x.tar.gz", "src", algoSHA256)
 	require.NoError(t, err)
-	assert.Equal(t, digest, got)
+	assert.Equal(t, want, got)
 
-	_, err = parseSHA256Body(body, "nope.tar.gz", "src")
+	_, err = parseChecksumFile(body, "nope.tar.gz", "src", algoSHA256)
+	require.ErrorIs(t, err, ErrNoArtifact)
+
+	_, err = parseChecksumFile("nothex", "x", "src", algoSHA256)
 	require.Error(t, err)
 
-	_, err = parseSHA256Body("nothex", "x", "src")
-	require.Error(t, err)
+	// A sha512 file must hold a sha512 digest.
+	_, err = parseChecksumFile(hexDigest, "x", "src", algoSHA512)
+	require.ErrorContains(t, err, "expected a sha512 digest")
 }
 
 func TestListVersionsGitHub(t *testing.T) {
@@ -343,7 +348,7 @@ func TestListVersionsGitHub(t *testing.T) {
 
 	// An empty strip_prefix keeps every tag.
 	empty := ""
-	def.Versions.StripPrefix = &empty
+	def.Versions[0].StripPrefix = &empty
 	versions, err = cli.ListVersions(t.Context(), def)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"v1.4.2", "v1.4.1", "nightly"}, versions)
@@ -472,6 +477,31 @@ func TestRemoteDefinitionRejectsFileURLs(t *testing.T) {
 		})
 	}
 
+	// Lookup indexes and version overrides are covered too.
+	for name, install := range map[string]string{
+		"lookup": `{"type": "archive", "lookup": {"url": "file:///etc/passwd", "select": "."}}`,
+		"version override": `{"type": "archive", "url": "https://example.com/x",
+		  "version_overrides": [{"versions": "<2", "url": "file:///etc/passwd"}]}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			served = `{"schema": 1, "name": "x", "platforms": ["x86_64-linux"],
+			  "versions": {"type": "static", "versions": ["1.0.0"]}, "install": ` + install + `}`
+			_, err := cli.Load(t.Context(), ref, "", "")
+			require.ErrorIs(t, err, ErrFileURLInRemoteDefinition)
+		})
+	}
+
+	// A lookup index may not hand a remote definition a file:// URL.
+	served = fmt.Sprintf(`{
+	  "schema": 1, "name": "x", "platforms": ["x86_64-linux"],
+	  "versions": {"type": "static", "versions": ["1.0.0"]},
+	  "install": {"type": "binary", "lookup": {"url": "%s/index.json", "select": "{url: \"file://%s\"}"}}
+	}`, srv.URL, secret)
+	loaded, err := cli.Load(t.Context(), ref, "", "")
+	require.NoError(t, err)
+	_, err = cli.Lock(t.Context(), loaded.Definition, "1.0.0")
+	require.ErrorIs(t, err, ErrFileURLInRemoteDefinition)
+
 	// A file:// URL assembled by a template is caught after rendering.
 	served = fmt.Sprintf(`{
 	  "schema": 1, "name": "x", "platforms": ["x86_64-linux"], "os_map": {"linux": "file"},
@@ -479,7 +509,7 @@ func TestRemoteDefinitionRejectsFileURLs(t *testing.T) {
 	  "install": {"type": "binary", "url": "{{.OS}}://%s",
 	    "checksum": {"type": "sha256_url", "url": "{{.OS}}://%s"}}
 	}`, secret, secret)
-	loaded, err := cli.Load(t.Context(), ref, "", "")
+	loaded, err = cli.Load(t.Context(), ref, "", "")
 	require.NoError(t, err)
 	_, err = cli.Lock(t.Context(), loaded.Definition, "1.0.0")
 	require.ErrorIs(t, err, ErrFileURLInRemoteDefinition)
@@ -516,9 +546,9 @@ func TestListVersionsDropsInvalidVersions(t *testing.T) {
 	assert.Equal(t, []string{"1.0.0", "1.1.0+build_2"}, versions)
 	latest, err := cli.ResolveVersion(t.Context(), def, Latest)
 	require.NoError(t, err)
-	assert.Equal(t, "1.0.0", latest, "never the escaping version; 1.1.0+build_2 has letters, so it is a pre-release")
+	assert.Equal(t, "1.1.0+build_2", latest, "never the escaping version; build metadata is not a pre-release")
 
-	def.Versions = VersionSource{Type: VersionsStatic, Versions: []string{"1.0.0", "../evil"}}
+	def.Versions = VersionSources{{Type: VersionsStatic, Versions: []string{"1.0.0", "../evil"}}}
 	versions, err = cli.ListVersions(t.Context(), def)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"1.0.0"}, versions)
@@ -568,7 +598,7 @@ func TestInstallDirKey(t *testing.T) {
 	for name, got := range others {
 		assert.NotEqual(t, dir, got, name)
 	}
-	assert.NotEqual(t, def.InstallFingerprint(testSystem), other.InstallFingerprint(testSystem))
+	assert.NotEqual(t, def.InstallFingerprint(testSystem, "1.2.0"), other.InstallFingerprint(testSystem, "1.2.0"))
 }
 
 func TestInstallsAreImmutable(t *testing.T) {
@@ -731,7 +761,7 @@ func TestGitHubTokenOnlyForGitHubAPI(t *testing.T) {
 	_, err = cli.ListVersions(t.Context(), def)
 	require.NoError(t, err)
 
-	def.Versions = VersionSource{Type: VersionsGitHubReleases, Repo: "acme/x"}
+	def.Versions = VersionSources{{Type: VersionsGitHubReleases, Repo: "acme/x"}}
 	_, err = cli.ListVersions(t.Context(), def)
 	require.NoError(t, err)
 

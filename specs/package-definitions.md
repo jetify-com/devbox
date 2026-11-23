@@ -111,8 +111,8 @@ hatch.
   },
 
   // Directories (relative to the install root) to put on PATH, and the
-  // executables expected after install. "binaries" is used by validation
-  // tooling and post-install smoke tests.
+  // executables expected after install. Install fails if one of
+  // "binaries" is missing once post_install has run.
   "bin": ["bin"],
   "binaries": ["go", "gofmt"],
 
@@ -140,7 +140,7 @@ hatch.
 | `versions` | yes | A version source, or a list of them. See below. |
 | `install` | yes | An install strategy. See below. |
 | `bin` | no | Directories relative to the install root that go on `PATH`. Default `["bin"]`. |
-| `binaries` | no | Executable names expected in a `bin` directory after install. Install marks them executable (npm tarballs drop the bit) and fails if one is missing. |
+| `binaries` | no | Executable names expected in a `bin` directory after install. Install marks them executable (npm tarballs drop the bit) and fails if one is missing. The check runs after `post_install`, so a hook may create a listed binary. Each entry must be a plain file name. |
 | `env`, `shell`, `create_files` | no | Plugin-compatible activation. See Activation. |
 | `hooks.post_install` | no | Shell commands run once per installed version by `/bin/sh` in the install root, with `DEVBOX_PKG_INSTALL_DIR`, `DEVBOX_PKG_VERSION` and `DEVBOX_PKG_SYSTEM` set and `/usr/bin:/bin` appended to `PATH`. |
 
@@ -149,8 +149,8 @@ hatch.
 | `type` | Fields | Behaviour |
 |---|---|---|
 | `static` | `versions: [string]` | The list is the universe of versions. |
-| `http_json` | `url`, `select` | GET `url`, parse JSON, evaluate the jq expression in `select`. Every string (or number) it emits is a version. When `url` contains `{{.Page}}`, pages 0, 1, ... are fetched until one returns 404 or no versions. |
-| `github_releases` | `repo` (`owner/name`), `strip_prefix` (default `"v"`) | List releases through the GitHub API, 100 per page, skip drafts and pre-releases, strip the prefix from tag names. Honors `GITHUB_TOKEN`. |
+| `http_json` | `url`, `select` | GET `url`, parse JSON, evaluate the jq expression in `select`. Every string (or number) it emits is a version. When `url` contains `{{.Page}}` (detected by `.Page` appearing in the URL template), pages 0, 1, ... are fetched until one returns 404 or no versions; a 404 on page 0 is an error. |
+| `github_releases` | `repo` (`owner/name`), `strip_prefix` (default `"v"`) | List releases through the GitHub API, 100 per page, skip drafts and pre-releases, strip the prefix from tag names; tags that do not start with the prefix are skipped. Honors `GITHUB_TOKEN`. |
 | `script` | `run` | Planned. Run `run` with `sh -c`; one version per output line. |
 
 `versions` may also be a list of sources, whose versions are combined. Yarn
@@ -197,7 +197,8 @@ Some vendors' download names can't be derived from the version:
 python-build-standalone puts a build date in every file name, Temurin renames
 respins (`21.0.12+101` ships as `..._21.0.12.1_1.tar.gz`), and zig renamed
 its tarballs in 0.14. Their indexes list the exact URL and checksum instead.
-`lookup` replaces `url` and `checksum`:
+`lookup` replaces `url` and `checksum`; setting `checksum` next to it is a
+validation error:
 
 ```jsonc
 "install": {
@@ -211,8 +212,9 @@ its tarballs in 0.14. Their indexes list the exact URL and checksum instead.
 
 `url` and `select` are templates. `select` is a jq expression that must
 produce an object with `url` and, optionally, `checksum` (any digest format
-below). If it produces nothing, or `url` returns 404, the vendor has no
-artifact of that version for that system.
+below). If it produces nothing (or only `null`), or `url` returns 404, the
+vendor has no artifact of that version for that system. A remote definition's
+index may not return a `file://` URL.
 
 #### Overrides
 
@@ -223,7 +225,8 @@ fields replace the defaults for that system (for example a different
 `install.version_overrides` is a list of partial `install` objects for vendors
 that changed how they ship artifacts. Each has a `versions` constraint: one or
 more comparisons with `<`, `<=`, `>`, `>=`, `=` or `!=`, separated by spaces
-or commas, that must all hold (`"<11"`, `">=2, <4"`). A bare version matches
+or commas, that must all hold (`"<11"`, `">=2, <4"`). Each version in a
+constraint must be a valid version string. A bare version matches
 itself and every more specific version. The first entry that matches applies.
 An entry may have its own `overrides` per system but no nested
 `version_overrides`.
@@ -247,7 +250,10 @@ An entry may have its own `overrides` per system but no nested
 Overrides apply in this order: the matching version override, the
 definition's override for the system, then the version override's own
 override for the system. `url` and `lookup` are alternatives, so an override
-that sets one clears the other.
+that sets one clears the other; an override that sets `lookup` also clears an
+inherited `checksum`. Validation checks every combination this order can
+produce, so a version override's `lookup` with a system override's `checksum`
+is an error rather than a silently ignored checksum.
 
 Why two real strategies: `archive` covers more than it first appears. Go,
 nodejs, deno, bun, zig, Temurin JDK and python (via python-build-standalone,
@@ -299,8 +305,8 @@ verification through sum.golang.org, so it stays an alternate definition.
 
 | `type` | Fields | Behaviour |
 |---|---|---|
-| `http_json` | `url`, `select` | GET `url`, evaluate the jq expression; the first string result is the digest. Covers JSON indexes and the npm registry's `dist.integrity`. |
-| `sha256_url` | `url` | GET `url`. The body is either a bare hex digest or a `sha256sum`-style list (`<hex>  <filename>` per line) matched by `{{.Filename}}`. Covers nodejs `SHASUMS256.txt` and the common `<asset>.sha256` convention. |
+| `http_json` | `url`, `select` | GET `url`, evaluate the jq expression; the first non-empty string result is the digest (an array result is flattened one level, so `[... | .sha256]` works). Covers JSON indexes and the npm registry's `dist.integrity`. |
+| `sha256_url` | `url` | GET `url`. The body is either a bare hex digest or a `sha256sum`-style list (`<hex>  <filename>` per line) matched by `{{.Filename}}`; a leading `*` on the name (binary mode) is ignored, and an entry like `dir/<filename>` matches too. Covers nodejs `SHASUMS256.txt` and the common `<asset>.sha256` convention. |
 | `sha512_url` | `url` | Like `sha256_url` for sha512 digests (Apache's `.sha512` files). |
 | `github_release` | `repo`, `tag` (default `v{{.Version}}`) | The digest GitHub computes for every release asset, read through the GitHub API (honors `GITHUB_TOKEN`). Assets uploaded before GitHub started computing digests (mid 2025) have none, which is treated like `none`. |
 | `none` | | No vendor-published checksum. `devbox add` records the digest it observes for the current system (trust on first use). Other systems are filled in lazily when a machine of that system installs, matching how nix store paths are backfilled today. |
