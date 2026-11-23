@@ -21,17 +21,21 @@ jobs:
           node-version: 24
       - name: Install dependencies
         run: |
-          npm install -g yarn
-          npm install -g vsce
-          npm install -g ovsx
-          yarn install
+          corepack enable
+          npm install -g @vscode/vsce ovsx
+          yarn install --immutable
         working-directory: vscode-extension
+      # vsce/ovsx --yarn run `yarn list`, which Yarn 4 doesn't have, so we
+      # package with --no-yarn (npm list over the node_modules tree that Yarn
+      # created with nodeLinker: node-modules) and publish the built .vsix.
       - name: publish-vs
         run: |
-          vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }} --yarn --skip-duplicate
+          vsce package --no-yarn -o devbox-vs.vsix
+          vsce publish -p ${{ secrets.VS_MARKETPLACE_TOKEN }} --packagePath devbox-vs.vsix --skip-duplicate
         working-directory: vscode-extension
       - name: publish-ovsx
         run: |
           sed -i 's/"publisher": "jetpack-io"/"publisher": "Jetify"/g' package.json
-          ovsx publish --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --yarn --skip-duplicate
+          vsce package --no-yarn -o devbox-ovsx.vsix
+          ovsx publish devbox-ovsx.vsix --pat ${{ secrets.OVSX_MARKETPLACE_TOKEN }} --skip-duplicate
         working-directory: vscode-extension

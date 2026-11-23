@@ -42,6 +42,10 @@ func (c *configAST) setStringField(key, val string) {
 	rootObject := c.root.Value.(*hujson.Object)
 	i := c.memberIndex(rootObject, key)
 	if i == -1 {
+		if val == "" {
+			// Nothing to remove and nothing to add.
+			return
+		}
 		rootObject.Members = append(rootObject.Members, hujson.ObjectMember{
 			Name:  hujson.Value{Value: hujson.String(key)},
 			Value: hujson.Value{Value: hujson.String(val)},

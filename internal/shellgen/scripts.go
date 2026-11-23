@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -26,6 +27,11 @@ var scriptWrapperTmpl = template.Must(template.New("script-wrapper").Parse(scrip
 const scriptsDir = ".devbox/gen/scripts"
 
 const HooksFilename = ".hooks"
+
+// ArbitraryCmdFilename is the script `devbox run` uses to run a command that
+// isn't a devbox.json script. Every invocation writes the same contents, so it
+// is shared, and WriteScriptsToFiles must not clean it up.
+const ArbitraryCmdFilename = ".cmd"
 
 type devboxer interface {
 	Config() *devconfig.Config
@@ -59,6 +65,8 @@ func WriteScriptsToFiles(devbox devboxer) error {
 		return errors.WithStack(err)
 	}
 	written[HooksFilename] = struct{}{}
+	// Another `devbox run` in this project may be about to execute it.
+	written[ArbitraryCmdFilename] = struct{}{}
 
 	// Write scripts to files.
 	for name, body := range devbox.Config().Scripts() {
@@ -74,9 +82,11 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	}
 
 	// Delete any files that weren't written just now.
+	// Only look at .sh files, so that we skip the temp files of concurrent
+	// writers.
 	for _, entry := range entries {
-		scriptName := strings.TrimSuffix(entry.Name(), ".sh")
-		if _, ok := written[scriptName]; !ok && !entry.IsDir() {
+		scriptName, isScript := strings.CutSuffix(entry.Name(), ".sh")
+		if _, ok := written[scriptName]; !ok && isScript && !entry.IsDir() {
 			err := os.Remove(ScriptPath(devbox.ProjectDir(), scriptName))
 			if err != nil {
 				slog.Debug("failed to clean up script file", "file", entry.Name(), "err", err) // no need to fail run
@@ -87,49 +97,76 @@ func WriteScriptsToFiles(devbox devboxer) error {
 	return nil
 }
 
-func writeRawInitHookFile(devbox devboxer, body string) (err error) {
-	script, err := createScriptFile(devbox, HooksFilename)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	defer script.Close() // best effort: close file
-
-	_, err = script.WriteString(body)
-	return errors.WithStack(err)
+func writeRawInitHookFile(devbox devboxer, body string) error {
+	return writeScriptFileAtomic(ScriptPath(devbox.ProjectDir(), HooksFilename), body)
 }
 
-func WriteScriptFile(devbox devboxer, name, body string) (err error) {
-	script, err := createScriptFile(devbox, name)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	defer script.Close() // best effort: close file
-
+func WriteScriptFile(devbox devboxer, name, body string) error {
 	if featureflag.ScriptExitOnError.Enabled() {
 		// NOTE: Devbox scripts run using `sh` for consistency.
 		body = fmt.Sprintf("set -e\n\n%s", body)
 	}
-	_, err = script.WriteString(body)
-	return errors.WithStack(err)
+	return writeScriptFileAtomic(ScriptPath(devbox.ProjectDir(), name), body)
 }
 
-func createScriptFile(devbox devboxer, name string) (script *os.File, err error) {
-	script, err = os.Create(ScriptPath(devbox.ProjectDir(), name))
-	if err != nil {
-		return nil, errors.WithStack(err)
+// writeScriptFileAtomic writes an executable script to path atomically.
+// Concurrent `devbox run` invocations in the same project rewrite the same
+// scripts, so writing in place could let one of them execute an empty,
+// partial, or not yet executable file.
+func writeScriptFileAtomic(path, body string) error {
+	// Scripts rarely change between runs, so skip the write when the file is
+	// already up to date. This deliberately doesn't use
+	// overwriteFileIfChanged: that writes in place, and another devbox
+	// process may be executing the file (see writeTempFile).
+	if scriptFileIsUpToDate(path, body) {
+		return nil
 	}
-	defer func() {
-		// best effort: close file if there was some subsequent error
-		if err != nil {
-			_ = script.Close()
-		}
-	}()
+	tmp, err := writeTempFile(filepath.Dir(path), "."+filepath.Base(path)+"-*", body)
+	if tmp != "" {
+		defer os.Remove(tmp) // no-op after a successful rename
+	}
+	if err != nil {
+		return err
+	}
+	if err := os.Chmod(tmp, 0o755); err != nil {
+		return errors.WithStack(err)
+	}
+	return errors.WithStack(os.Rename(tmp, path))
+}
 
-	err = script.Chmod(0o755)
-	if err != nil {
-		return nil, errors.WithStack(err)
+// scriptFileIsUpToDate reports whether path is a regular file with mode 0755
+// and contents body.
+func scriptFileIsUpToDate(path, body string) bool {
+	fi, err := os.Lstat(path)
+	if err != nil || !fi.Mode().IsRegular() || fi.Mode().Perm() != 0o755 ||
+		fi.Size() != int64(len(body)) {
+		return false
 	}
-	return script, nil
+	data, err := os.ReadFile(path)
+	return err == nil && string(data) == body
+}
+
+// writeTempFile creates a temp file in dir, writes body to it, and closes it.
+// It returns the file's name whenever the file was created, even on error.
+//
+// It holds syscall.ForkLock for reading while the file is open, so that no
+// other goroutine forks in that window. A forked child inherits the writable
+// fd until it execs, and on Linux exec'ing the script while any process holds
+// it open for writing fails with ETXTBSY ("Text file busy").
+// See https://go.dev/issue/22315.
+func writeTempFile(dir, pattern, body string) (string, error) {
+	syscall.ForkLock.RLock()
+	defer syscall.ForkLock.RUnlock()
+
+	tmp, err := os.CreateTemp(dir, pattern)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	if _, err := tmp.WriteString(body); err != nil {
+		tmp.Close()
+		return tmp.Name(), errors.WithStack(err)
+	}
+	return tmp.Name(), errors.WithStack(tmp.Close())
 }
 
 func ScriptPath(projectDir, scriptName string) string {

@@ -15,13 +15,11 @@ import (
 	"sort"
 	"strings"
 	"text/template"
-	"time"
 
 	"al.essio.dev/pkg/shellescape"
 	"github.com/pkg/errors"
 	"go.jetify.com/devbox/internal/devbox/devopt"
 	"go.jetify.com/devbox/internal/shellgen"
-	"go.jetify.com/devbox/internal/telemetry"
 
 	"go.jetify.com/devbox/internal/envir"
 	"go.jetify.com/devbox/internal/nix"
@@ -63,9 +61,6 @@ type DevboxShell struct {
 	userShellrcPath string
 
 	historyFile string
-
-	// shellStartTime is the unix timestamp for when the command was invoked
-	shellStartTime time.Time
 }
 
 type ShellOption func(*DevboxShell)
@@ -163,7 +158,7 @@ func initShellBinaryFields(path string) *DevboxShell {
 	case "fish":
 		shell.name = shFish
 		shell.userShellrcPath = fishConfig()
-	case "dash", "ash", "shell":
+	case "dash", "ash", "sh":
 		shell.name = shPosix
 		shell.userShellrcPath = os.Getenv(envir.Env)
 
@@ -194,12 +189,6 @@ func WithEnvVariables(envVariables map[string]string) ShellOption {
 func WithProjectDir(projectDir string) ShellOption {
 	return func(s *DevboxShell) {
 		s.projectDir = projectDir
-	}
-}
-
-func WithShellStartTime(t time.Time) ShellOption {
-	return func(s *DevboxShell) {
-		s.shellStartTime = t
 	}
 }
 
@@ -323,7 +312,6 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		OriginalInit     string
 		OriginalInitPath string
 		HooksFilePath    string
-		ShellStartTime   string
 		HistoryFile      string
 		ExportEnv        string
 		ShellName        string
@@ -338,7 +326,6 @@ func (s *DevboxShell) writeDevboxShellrc() (path string, err error) {
 		OriginalInit:       string(bytes.TrimSpace(userShellrc)),
 		OriginalInitPath:   s.userShellrcPath,
 		HooksFilePath:      shellgen.ScriptPath(s.projectDir, shellgen.HooksFilename),
-		ShellStartTime:     telemetry.FormatShellStart(s.shellStartTime),
 		HistoryFile:        strings.TrimSpace(s.historyFile),
 		ExportEnv:          exportify(s.devbox.stderr, s.env),
 		ShellName:          string(s.name),

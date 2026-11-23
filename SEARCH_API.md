@@ -22,7 +22,8 @@ truth for the response schemas.
 | ----------------- | ----------------------------------------------------------------------------------------------------- |
 | `GET /v2/resolve` | Writing `devbox.lock` (`devbox add`, `devbox update`, `devbox install`), `devbox init --auto`         |
 | `GET /v1/resolve` | `devbox search <name>@<version>`, `devbox info`, and `devbox.lock` when `DEVBOX_FEATURE_RESOLVE_V2=0` |
-| `GET /v1/search`  | `devbox search <query>`                                                                               |
+| `GET /v2/search`  | `devbox search <query>`                                                                               |
+| `GET /v2/pkg`     | `devbox search <query>`, once for each search result without `releases`                               |
 
 ## Conventions
 
@@ -175,47 +176,106 @@ When `/v1/resolve` is used to write a lock file, `resolved` is
 `github:NixOS/nixpkgs/<commit_hash>#<attr_paths[0]>` from the same system
 selection described for `/v2/resolve`.
 
-## `GET /v1/search`
+## `GET /v2/search`
 
-Free-text package search, used by `devbox search <query>`.
+Free-text package search, used by `devbox search <query>`. Each result
+carries its newest releases and the systems each runs on, so one request is
+enough.
 
 ### Parameters
 
-| Name | Required | Description                                                    |
-| ---- | -------- | -------------------------------------------------------------- |
-| `q`  | yes      | Search query. Devbox never sends an empty query. |
+| Name       | Required | Description                                                                                                                                              |
+| ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `q`        | yes      | Search query. Devbox never sends an empty query.                                                                                                         |
+| `releases` | yes      | How many of each result's newest releases to return, as a positive integer, or `all`. Devbox sends `11` to show 10 and know there are more, and `all` with `--show-all`. |
 
 ### Response
 
 ```json
 {
-  "num_results": 14,
-  "packages": [
+  "query": "hello",
+  "total_results": 15,
+  "results": [
     {
       "name": "hello",
-      "num_versions": 5,
-      "versions": [
-        { "name": "hello", "version": "2.12.3", "summary": "Program that produces a familiar, friendly greeting" },
-        { "name": "hello", "version": "2.12.2" }
+      "summary": "Program that produces a familiar, friendly greeting",
+      "last_updated": "2026-10-17T03:39:59Z",
+      "releases": [
+        {
+          "version": "2.12.3",
+          "systems": ["aarch64-darwin", "aarch64-linux", "x86_64-darwin", "x86_64-linux"]
+        }
       ]
     }
   ]
 }
 ```
 
-| Field                        | Required | Description                                                                                            |
-| ---------------------------- | -------- | ------------------------------------------------------------------------------------------------------ |
-| `num_results`                | yes      | Result count, displayed as `Found <n>+ results`.                                                      |
-| `packages`                   | yes      | Matching packages, most relevant first. An empty list prints `No results found`.                      |
-| `packages[].name`            | yes      | Package name, as a user would pass it to `devbox add`.                                                 |
-| `packages[].num_versions`    | yes      | Total versions available. Used to decide whether to show a `...` after truncated version lists.       |
-| `packages[].versions`        | yes      | Available versions, newest first. Entries use the same shape as the `/v1/resolve` response.           |
-| `packages[].versions[].version` | yes   | Version string to display. Empty versions are skipped.                                                |
+| Field                           | Required | Description                                                                                                         |
+| ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
+| `total_results`                 | yes      | Total number of matches, displayed as `Found <n>+ results`.                                                         |
+| `results`                       | yes      | Matching packages, most relevant first. An empty list prints `No results found`.                                    |
+| `results[].name`                | yes      | Package name, as a user would pass it to `devbox add`. Passed to `/v2/pkg` as `name`.                               |
+| `results[].releases`            | no       | The package's newest releases, newest first, at most as many as `releases` asked for. Without it, Devbox calls `/v2/pkg` for the package. |
+| `results[].releases[].version`  | yes      | Version string to display. Releases with an empty version are skipped.                                              |
+| `results[].releases[].systems`  | yes      | Nix systems the release is available on, such as `aarch64-darwin`. May be empty.                                    |
+| `query`, `results[].summary`, `results[].last_updated`, and other result fields | no | Informational. Not read by Devbox.                           |
 
-Devbox displays packages and versions in the order returned and doesn't
-re-sort them, so ranking is entirely up to the server. By default it shows the
-first 10 packages and the first 10 versions of each. `--show-all` shows
-everything returned.
+## `GET /v2/pkg`
+
+Returns every release of a single package, with the platforms each release is
+available on. Devbox calls it, several at a time, only for `/v2/search` results
+without `releases`, so a service that returns `releases` doesn't need it.
+
+### Parameters
+
+| Name   | Required | Description                                      |
+| ------ | -------- | ------------------------------------------------ |
+| `name` | yes      | Exact package name, from `/v2/search` `results[].name`. |
+
+### Response
+
+```json
+{
+  "name": "hello",
+  "summary": "Program that produces a familiar, friendly greeting",
+  "homepage_url": "https://www.gnu.org/software/hello/manual/",
+  "license": "GPL-3.0-or-later",
+  "releases": [
+    {
+      "version": "2.12.3",
+      "last_updated": "2026-10-17T03:39:59Z",
+      "platforms": [
+        { "arch": "arm64", "os": "macOS" },
+        { "arch": "arm64", "os": "Linux" },
+        { "arch": "x86-64", "os": "macOS" },
+        { "arch": "x86-64", "os": "Linux" }
+      ]
+    }
+  ]
+}
+```
+
+| Field                           | Required | Description                                                                                                       |
+| ------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `name`                          | yes      | Package name to display.                                                                                          |
+| `releases`                      | yes      | Available versions, newest first.                                                                                 |
+| `releases[].version`            | yes      | Version string to display. Releases with an empty version are skipped.                                            |
+| `releases[].platforms`          | yes      | Platforms the release is available on. May be empty.                                                              |
+| `releases[].platforms[].arch`   | yes      | CPU architecture, such as `arm64` or `x86-64`. Devbox displays `arm64` as `aarch64` and `-` as `_`.               |
+| `releases[].platforms[].os`     | yes      | Operating system, such as `Linux` or `macOS`. Devbox lowercases it and displays `macOS` as `darwin`.              |
+| `summary`, `homepage_url`, `license`, `releases[].last_updated`, and other platform fields | no | Informational. Not read by Devbox. |
+
+A package whose lookup fails, including with `404 Not Found`, is dropped from
+the search results. The search fails only when every lookup fails with
+something other than a `404`.
+
+Devbox shows each package's versions next to the Nix systems they are available
+on (for example `aarch64-darwin`), grouping consecutive releases that have the
+same platforms. It displays packages and releases in the order returned and
+doesn't re-sort them, so ranking is entirely up to the server. By default it
+shows the first 10 packages and the first 10 versions of each. `--show-all`
+shows everything returned.
 
 ## Testing a search service
 
@@ -224,7 +284,7 @@ Point Devbox at the server and exercise each endpoint:
 ```sh
 export DEVBOX_SEARCH_HOST=http://localhost:8080
 
-devbox search ripgrep             # /v1/search
+devbox search ripgrep             # /v2/search, and /v2/pkg without releases
 devbox search go@1.21             # /v1/resolve
 devbox info hello                 # /v1/resolve
 devbox init && devbox add hello   # /v2/resolve, check devbox.lock

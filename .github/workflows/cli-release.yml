@@ -21,7 +21,8 @@ on:
 permissions:
   contents: write
   pull-requests: read
-  id-token: write # Needed for aws-actions/configure-aws-credentials@v6
+  id-token: write # Needed for aws-actions/configure-aws-credentials@v6 and attestations
+  attestations: write # Needed for actions/attest-build-provenance
 
 jobs:
   tests:
@@ -77,6 +78,30 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      # Install the archive that's about to be published with install.sh and
+      # check it reports the edge tag. This is the exact artifact users download;
+      # cli-tests only smoke-tests a goreleaser build of the same commit.
+      - name: Smoke test the release archive
+        env:
+          # This build has the real telemetry keys; don't report CI runs.
+          DO_NOT_TRACK: "1"
+        run: |
+          for platform in linux_amd64 linux_arm64 linux_386 linux_armv7l darwin_amd64 darwin_arm64; do
+            archive="devbox_${EDGE_TAG}_${platform}.tar.gz"
+            if ! grep -q " ${archive}$" dist/checksums.txt; then
+              echo "::error::dist/checksums.txt has no ${archive}, which install.sh and the launcher download"
+              exit 1
+            fi
+          done
+          scripts/smoke-test.sh dist "${EDGE_TAG}"
+      # Sign a SLSA build provenance attestation (keyless, via Sigstore) for
+      # every archive listed in checksums.txt, so downloads can be verified as
+      # built by this workflow:
+      #   gh attestation verify devbox_<version>_linux_amd64.tar.gz --repo jetify-com/devbox
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-checksums: dist/checksums.txt
       - name: Create Sentry release
         uses: getsentry/action-release@v3
         env:
@@ -98,12 +123,18 @@ jobs:
           files: |
             dist/checksums.txt
             dist/*.tar.gz
-      - name: Configure AWS Credentials
+      # Legacy: devbox 0.20.0 and older (and the old bash launcher) read the
+      # edge channel from releases.jetify.com, which is served from this S3
+      # bucket. Newer versions don't need it, so failures here don't fail the
+      # release. Remove these steps once those versions are gone.
+      - name: Configure AWS Credentials (legacy)
+        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: us-west-2
-      - name: Update edge version in s3
+      - name: Update edge version in s3 (legacy)
+        continue-on-error: true
         run: |
           tmp_file=$(mktemp)
           echo "${{ env.EDGE_TAG }}" > $tmp_file
@@ -149,6 +180,30 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      # Install the archive that's about to be published with install.sh and
+      # check it reports the tag. This is the exact artifact users download;
+      # cli-tests only smoke-tests a goreleaser build of the same commit.
+      - name: Smoke test the release archive
+        env:
+          # This build has the real telemetry keys; don't report CI runs.
+          DO_NOT_TRACK: "1"
+        run: |
+          for platform in linux_amd64 linux_arm64 linux_386 linux_armv7l darwin_amd64 darwin_arm64; do
+            archive="devbox_${GITHUB_REF_NAME#v}_${platform}.tar.gz"
+            if ! grep -q " ${archive}$" dist/checksums.txt; then
+              echo "::error::dist/checksums.txt has no ${archive}, which install.sh and the launcher download"
+              exit 1
+            fi
+          done
+          scripts/smoke-test.sh dist "${GITHUB_REF_NAME#v}"
+      # Sign a SLSA build provenance attestation (keyless, via Sigstore) for
+      # every archive listed in checksums.txt, so downloads can be verified as
+      # built by this workflow:
+      #   gh attestation verify devbox_<version>_linux_amd64.tar.gz --repo jetify-com/devbox
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-checksums: dist/checksums.txt
       # `release.disable` is set in .goreleaser.yaml, so goreleaser only builds
       # dist/ — the GitHub release belongs to this step. Both ways of cutting a
       # release land here and both work:
@@ -181,7 +236,12 @@ jobs:
           fi
           # --clobber so a re-run of this workflow replaces the assets instead of
           # failing on the ones already uploaded.
-          gh release upload "$TAG" dist/*.tar.gz dist/checksums.txt \
+          gh release upload "$TAG" dist/*.tar.gz \
+            --repo "$GITHUB_REPOSITORY" --clobber
+          # checksums.txt goes last: the installer and launcher find a release's
+          # version and archives through it, and release.ts won't publish a
+          # release without it.
+          gh release upload "$TAG" dist/checksums.txt \
             --repo "$GITHUB_REPOSITORY" --clobber
       - name: Notify jetpack.io slack of release status
         id: slack

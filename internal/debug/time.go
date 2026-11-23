@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -16,7 +17,7 @@ var timerEnabled, _ = strconv.ParseBool(os.Getenv(devboxPrintExecTime))
 
 const devboxPrintExecTime = "DEVBOX_PRINT_EXEC_TIME"
 
-var headerPrinted = false
+var printHeader sync.Once
 
 type timer struct {
 	name string
@@ -49,10 +50,9 @@ func (t *timer) End() {
 	if t == nil {
 		return
 	}
-	if !headerPrinted {
+	printHeader.Do(func() {
 		fmt.Fprintln(os.Stderr, "\nExec times over 1ms:")
-		headerPrinted = true
-	}
+	})
 	if time.Since(t.time) >= time.Millisecond {
 		fmt.Fprintf(os.Stderr, "\"%s\" took %s\n", t.name, time.Since(t.time))
 	}

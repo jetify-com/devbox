@@ -44,7 +44,6 @@ import (
 	"go.jetify.com/devbox/internal/searcher"
 	"go.jetify.com/devbox/internal/services"
 	"go.jetify.com/devbox/internal/shellgen"
-	"go.jetify.com/devbox/internal/telemetry"
 	"go.jetify.com/devbox/internal/ux"
 	"go.jetify.com/devbox/internal/vercheck"
 	"go.jetify.com/devbox/nix/flake"
@@ -53,8 +52,7 @@ import (
 const (
 
 	// shellHistoryFile keeps the history of commands invoked inside devbox shell
-	shellHistoryFile     = ".devbox/shell_history"
-	arbitraryCmdFilename = ".cmd"
+	shellHistoryFile = ".devbox/shell_history"
 )
 
 type Devbox struct {
@@ -73,6 +71,12 @@ type Devbox struct {
 	// packagesBeingUpdated tracks which packages are being updated so that
 	// installNixPackagesToStore only refreshes those, not all packages.
 	packagesBeingUpdated []*devpkg.Package
+
+	// cachedStateStatus memoizes lockfile.StateStatus for the duration of a
+	// single ensureStateIsUpToDate[AndComputeEnv] call, which would otherwise
+	// compute it (hashing the lockfile, config, print-dev-env cache and nix
+	// profile) more than once. See stateStatus.
+	cachedStateStatus *lock.StateStatus
 }
 
 var legacyPackagesWarningHasBeenShown = false
@@ -288,7 +292,6 @@ func (d *Devbox) Shell(ctx context.Context, envOpts devopt.EnvOptions) error {
 		WithHistoryFile(filepath.Join(d.projectDir, shellHistoryFile)),
 		WithProjectDir(d.projectDir),
 		WithEnvVariables(envs),
-		WithShellStartTime(telemetry.ShellStart()),
 	}
 
 	shell, err := d.newShell(envOpts, opts...)
@@ -370,11 +373,11 @@ func (d *Devbox) RunScript(ctx context.Context, envOpts devopt.EnvOptions, cmdNa
 		if err != nil {
 			return err
 		}
-		err = shellgen.WriteScriptFile(d, arbitraryCmdFilename, scriptBody)
+		err = shellgen.WriteScriptFile(d, shellgen.ArbitraryCmdFilename, scriptBody)
 		if err != nil {
 			return err
 		}
-		script := shellgen.ScriptPath(d.ProjectDir(), arbitraryCmdFilename)
+		script := shellgen.ScriptPath(d.ProjectDir(), shellgen.ArbitraryCmdFilename)
 		cmdWithArgs = []string{strconv.Quote(script)}
 		env["DEVBOX_RUN_CMD"] = strings.Join(append([]string{runCmd}, cmdArgs...), " ")
 	}
@@ -769,14 +772,6 @@ func (d *Devbox) computeEnv(
 		return nil, err
 	}
 
-	// check if contents of .envrc is old and print warning
-	if !usePrintDevEnvCache {
-		err := d.checkOldEnvrc()
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	slog.Debug("current environment PATH", "path", env["PATH"])
 
 	originalEnv := make(map[string]string, len(env))
@@ -791,6 +786,9 @@ func (d *Devbox) computeEnv(
 		for k, v := range nixEnv {
 			env[k] = v
 		}
+
+		// Let user-set passthrough vars win over Nix fallbacks.
+		preservePassthroughEnvVars(env, originalEnv)
 	}
 	slog.Debug("nix environment PATH", "path", env["PATH"])
 
@@ -904,8 +902,10 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	envOpts devopt.EnvOptions,
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
+	// The status computed here is reused by ensureStateIsUpToDate below.
+	defer d.invalidateStateStatus()
 
-	status, err := d.lockfile.StateStatus(isFishShell())
+	status, err := d.stateStatus()
 	if err != nil {
 		return nil, err
 	}
@@ -915,6 +915,7 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 		if err := d.refreshNonNixState(ctx); err != nil {
 			return nil, err
 		}
+		d.invalidateStateStatus()
 		status = lock.StateUpToDate
 	}
 	if status != lock.StateUpToDate {
@@ -949,6 +950,26 @@ func (d *Devbox) ensureStateIsUpToDateAndComputeEnv(
 	// doing some non-nix work twice if lockfile is not up to date.
 	// TODO: Improve this to avoid extra work.
 	return d.computeEnv(ctx, true /*usePrintDevEnvCache*/, envOpts)
+}
+
+// stateStatus returns lockfile.StateStatus, memoized until the next
+// invalidateStateStatus. Callers that populate the cache must invalidate it
+// when they return, so that the cached value never outlives a change to the
+// config, lockfile or state.
+func (d *Devbox) stateStatus() (lock.StateStatus, error) {
+	if d.cachedStateStatus != nil {
+		return *d.cachedStateStatus, nil
+	}
+	status, err := d.lockfile.StateStatus(isFishShell())
+	if err != nil {
+		return status, err
+	}
+	d.cachedStateStatus = &status
+	return status, nil
+}
+
+func (d *Devbox) invalidateStateStatus() {
+	d.cachedStateStatus = nil
 }
 
 func (d *Devbox) nixPrintDevEnvCachePath() string {
@@ -1032,35 +1053,6 @@ func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
 		)
 	}
 	return lo.Keys(results)[0], nil
-}
-
-func (d *Devbox) checkOldEnvrc() error {
-	envrcPath := filepath.Join(d.ProjectDir(), ".envrc")
-	noUpdate, err := strconv.ParseBool(os.Getenv("DEVBOX_NO_ENVRC_UPDATE"))
-	if err != nil {
-		// DEVBOX_NO_ENVRC_UPDATE is either not set or invalid
-		// so we consider it the same as false
-		noUpdate = false
-	}
-	// check if user has an old version of envrc
-	if fileutil.Exists(envrcPath) && !noUpdate {
-		isNewEnvrc, err := fileutil.FileContains(
-			envrcPath,
-			"eval \"$(devbox generate direnv --print-envrc)\"",
-		)
-		if err != nil {
-			return err
-		}
-		if !isNewEnvrc {
-			ux.Fwarningf(
-				d.stderr,
-				"Your .envrc file seems to be out of date. "+
-					"Run `devbox generate direnv --force` to update it.\n"+
-					"Or silence this warning by setting DEVBOX_NO_ENVRC_UPDATE=1 env variable.\n",
-			)
-		}
-	}
-	return nil
 }
 
 // configEnvs takes the existing environment (nix + plugin) and adds env
@@ -1174,6 +1166,21 @@ var ignoreDevEnvVar = map[string]bool{
 	"UID":     true,
 }
 
+// passthroughEnvVars are vars that Nix setup hooks only set as a fallback
+// (e.g. cacert's `${NIX_SSL_CERT_FILE:-...}`). print-dev-env can't see the
+// user's value, so we restore it ourselves. See #2604.
+var passthroughEnvVars = []string{"NIX_SSL_CERT_FILE", "SSL_CERT_FILE"}
+
+// preservePassthroughEnvVars copies non-empty passthroughEnvVars from userEnv
+// into env.
+func preservePassthroughEnvVars(env, userEnv map[string]string) {
+	for _, key := range passthroughEnvVars {
+		if val := userEnv[key]; val != "" {
+			env[key] = val
+		}
+	}
+}
+
 func (d *Devbox) ProjectDirHash() string {
 	return cachehash.Bytes([]byte(d.projectDir))
 }
@@ -1262,6 +1269,11 @@ func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 				}
 			}
 		}
+	}
+	// Most projects have no runx packages. Don't touch the filesystem for
+	// them unless a previous run left links behind that need removing.
+	if len(links) == 0 && !fileutil.Exists(runxBinPath) {
+		return runxBinPath, nil
 	}
 	if err := syncSymlinks(runxBinPath, links); err != nil {
 		return "", err

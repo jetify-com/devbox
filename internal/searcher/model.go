@@ -9,15 +9,65 @@ import (
 	"go.jetify.com/devbox/nix/flake"
 )
 
+type SearchResultsV2 struct {
+	Query        string           `json:"query"`
+	TotalResults int              `json:"total_results"`
+	Results      []SearchResultV2 `json:"results"`
+}
+
+type SearchResultV2 struct {
+	Name        string    `json:"name"`
+	Summary     string    `json:"summary"`
+	LastUpdated time.Time `json:"last_updated"`
+
+	// Releases is nil when the search service doesn't support the releases
+	// parameter, and the package's releases must come from /v2/pkg instead.
+	Releases []SearchRelease `json:"releases"`
+}
+
+type SearchRelease struct {
+	Version string   `json:"version"`
+	Systems []string `json:"systems"`
+}
+
+type PackageV2 struct {
+	Name        string    `json:"name"`
+	Summary     string    `json:"summary"`
+	HomepageURL string    `json:"homepage_url"`
+	License     string    `json:"license"`
+	Releases    []Release `json:"releases"`
+}
+
+type Release struct {
+	Version     string     `json:"version"`
+	LastUpdated time.Time  `json:"last_updated"`
+	Platforms   []Platform `json:"platforms"`
+}
+
+type Platform struct {
+	Arch          string    `json:"arch"`
+	OS            string    `json:"os"`
+	AttributePath string    `json:"attribute_path"`
+	CommitHash    string    `json:"commit_hash"`
+	Date          time.Time `json:"date"`
+	Outputs       []Output  `json:"outputs"`
+}
+
+type Output struct {
+	Name    string `json:"name"`
+	Path    string `json:"path"`
+	Default bool   `json:"default"`
+	Nar     string `json:"nar"`
+}
+
 type SearchResults struct {
 	NumResults int       `json:"num_results"`
 	Packages   []Package `json:"packages,omitempty"`
 }
 
 type Package struct {
-	Name        string           `json:"name"`
-	NumVersions int              `json:"num_versions"`
-	Versions    []PackageVersion `json:"versions,omitempty"`
+	Name     string          `json:"name"`
+	Versions []SearchRelease `json:"versions,omitempty"`
 }
 
 type PackageVersion struct {
