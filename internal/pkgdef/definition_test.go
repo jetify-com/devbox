@@ -337,6 +337,18 @@ func TestParseInstallErrors(t *testing.T) {
 			wantErr: "install.version_overrides[0].versions: invalid term",
 		},
 		{
+			name:    "bad version in constraint",
+			install: `{"type": "archive", "url": "u", "version_overrides": [{"versions": "<1/2", "url": "v"}]}`,
+			wantErr: "install.version_overrides[0].versions: invalid version \"1/2\"",
+		},
+		{
+			name: "version override lookup with system override checksum",
+			install: `{"type": "archive", "url": "u",
+			  "overrides": {"x86_64-linux": {"checksum": {"type": "none"}}},
+			  "version_overrides": [{"versions": "<1", "lookup": {"url": "i", "select": ".x"}}]}`,
+			wantErr: "install.version_overrides[0]+install.overrides.x86_64-linux.checksum is not used with .lookup",
+		},
+		{
 			name:    "nested version overrides",
 			install: `{"type": "archive", "url": "u", "version_overrides": [{"versions": "<1", "version_overrides": [{"versions": "<1"}]}]}`,
 			wantErr: "install.version_overrides[0] may not contain version_overrides",

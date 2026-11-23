@@ -334,6 +334,21 @@ func (d *Definition) Validate() error {
 		merged := d.Install.merge(&override.Install)
 		errs = append(errs, merged.validate(path)...)
 		errs = append(errs, d.validateSystemOverrides(path, merged, override.Overrides)...)
+		// InstallFor applies the definition's system override between the
+		// version override and the version override's own system override,
+		// so validate that combination too (for example, a version
+		// override's lookup with a system override's checksum).
+		for _, sys := range d.Platforms {
+			sysOverride := d.Install.Overrides[sys]
+			if sysOverride == nil {
+				continue
+			}
+			effective := merged.merge(sysOverride)
+			if own := override.Overrides[sys]; own != nil {
+				effective = effective.merge(own)
+			}
+			errs = append(errs, effective.validate(path+"+install.overrides."+sys)...)
+		}
 	}
 
 	if len(errs) == 0 {
