@@ -4,6 +4,7 @@
 package devpkg
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -312,5 +313,103 @@ func TestEligibleForBinaryCacheResolvesConcurrently(t *testing.T) {
 	want := []string{"hello@1", "jq@1", "curl@1"}
 	if !slices.Equal(gotRaws, want) {
 		t.Errorf("got eligible packages %v, want %v", gotRaws, want)
+	}
+}
+
+// narInfoSequenceServer starts a binary cache that answers the nth narinfo
+// request with statuses[n], and the last status after that.
+func narInfoSequenceServer(t *testing.T, statuses ...int) (*httptest.Server, *atomic.Int32) {
+	t.Helper()
+	var requests atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n := int(requests.Add(1)) - 1
+		w.WriteHeader(statuses[min(n, len(statuses)-1)])
+	}))
+	t.Cleanup(srv.Close)
+	return srv, &requests
+}
+
+func TestFetchNarInfoStatusRetriesTransientStatuses(t *testing.T) {
+	for _, testCase := range []struct {
+		name     string
+		statuses []int
+		inCache  bool
+		requests int32
+	}{
+		{"5xx then 200 is a hit", []int{http.StatusServiceUnavailable, http.StatusServiceUnavailable, http.StatusOK}, true, 3},
+		{"429 then 200 is a hit", []int{http.StatusTooManyRequests, http.StatusOK}, true, 2},
+		{"404 is a miss at once", []int{http.StatusNotFound}, false, 1},
+		{"403 is a miss at once", []int{http.StatusForbidden}, false, 1},
+		{"429 every time is a miss after the retries", []int{http.StatusTooManyRequests}, false, 3},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Setenv("XDG_CACHE_HOME", t.TempDir())
+			clearNarInfoMemoryCache(t)
+			srv, requests := narInfoSequenceServer(t, testCase.statuses...)
+
+			if got := fetchNarInfo(t, srv.URL, "abc"); got != testCase.inCache {
+				t.Errorf("inCache = %v, want %v", got, testCase.inCache)
+			}
+			if got := requests.Load(); got != testCase.requests {
+				t.Errorf("got %d requests, want %d", got, testCase.requests)
+			}
+		})
+	}
+}
+
+func TestRunNarInfoFetchesBoundsConcurrency(t *testing.T) {
+	const total = maxConcurrentNarInfoFetches*2 + 5
+	var active, peak, done atomic.Int32
+	started := make(chan struct{}, total)
+	release := make(chan struct{})
+	unblock := sync.OnceFunc(func() { close(release) })
+	// Don't leave fetches blocked if the test fails early.
+	t.Cleanup(unblock)
+
+	fetches := make([]func() error, total)
+	for i := range fetches {
+		fetches[i] = func() error {
+			n := active.Add(1)
+			for {
+				old := peak.Load()
+				if n <= old || peak.CompareAndSwap(old, n) {
+					break
+				}
+			}
+			started <- struct{}{}
+			<-release
+			active.Add(-1)
+			done.Add(1)
+			return nil
+		}
+	}
+
+	result := make(chan error, 1)
+	go func() { result <- runNarInfoFetches(context.Background(), fetches) }()
+
+	// The limit's worth of fetches must start; with no limit, all would.
+	timeout := time.After(10 * time.Second)
+	for range maxConcurrentNarInfoFetches {
+		select {
+		case <-started:
+		case <-timeout:
+			t.Fatal("fetches did not start concurrently")
+		}
+	}
+	// Give any fetch past the limit a chance to start before checking.
+	time.Sleep(50 * time.Millisecond)
+	if got := peak.Load(); got != maxConcurrentNarInfoFetches {
+		t.Fatalf("got %d fetches in flight, want %d", got, maxConcurrentNarInfoFetches)
+	}
+
+	unblock()
+	if err := <-result; err != nil {
+		t.Fatal(err)
+	}
+	if got := done.Load(); got != total {
+		t.Errorf("got %d fetches done, want %d", got, total)
+	}
+	if got := peak.Load(); got > maxConcurrentNarInfoFetches {
+		t.Errorf("got %d fetches in flight at once, want at most %d", got, maxConcurrentNarInfoFetches)
 	}
 }
