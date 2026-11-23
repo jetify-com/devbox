@@ -146,7 +146,13 @@ jobs:
         uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
-          version: latest
+          # Pinned so an unreviewed goreleaser release can't change the dist/
+          # layout or archive names (devbox_<version>_<os>_<arch>.tar.gz,
+          # checksums.txt) that install.sh and internal/launcher rely on.
+          # To bump: change every pin (cli-release.yml edge + release,
+          # cli-tests.yaml smoke) in one PR so the "Release smoke test" job
+          # exercises the new version before a release uses it.
+          version: v2.20.2
           args: build --snapshot --single-target --clean
         env:
           # .goreleaser.yaml names snapshots after EDGE_TAG.
