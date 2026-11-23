@@ -40,7 +40,7 @@ release" still happens first.
 ## Pipeline
 
 ```
-Tue 16:17 UTC  release-weekly.yml (schedule)
+Tue 08:17 PST  release-weekly.yml (schedule)
    │  any shippable commits since last tag?  ── no ──▶ exit
    │  compute next version (release.ts --next-version --json)
    │  close any stale bump-flake-* PRs
@@ -84,21 +84,23 @@ release: published / released  ── existing ──
 Reuse its logic rather than re-implementing it in YAML:
 
 - `--next-version --json`: prints `{ prev, version, bump, reason, commits, shippable }`.
-  `shippable` is false when the only commits since the last tag are
-  `chore(release): bump flake …` commits, so a quiet week doesn't release.
-  Optional, decided by us: also ignore `docs:`- and `examples`-only changes.
+  `shippable` is false when every commit since the last tag is one of:
+  a `chore(release): bump flake …` commit, a `docs:` commit, or a commit that
+  only touches `examples/` or docs paths. A week with only those changes
+  doesn't release; they ship with the next real release.
 - `--bump-flake --version <v> --no-pr`: rewrites `lastTag` and runs
   `update-hash` and `nix flake update`, without the git and PR work. The
-  workflow does the commit and PR with the App token. Note: also running
-  `nix flake update` makes every weekly release bump nixpkgs. Keep that (it is
-  current behaviour) or drop it so a release bump only changes devbox.
+  workflow does the commit and PR with the App token. Running
+  `nix flake update` here bumps nixpkgs with every release, as releases do
+  today (decided: keep it).
 - Keep the existing interactive flows as they are. Humans can still cut an
   out-of-band release, and the automation must tolerate that (see §7).
 
 ### 3. `release-weekly.yml` (new)
 
-- Triggers: `schedule: '17 16 * * 2'` (Tuesday, off the hour, away from the
-  Thursday edge build and the 08:30 nightly tests), plus `workflow_dispatch`
+- Triggers: `schedule: '17 16 * * 2'`, which is Tuesday 08:17 PST. It's off
+  the hour and away from the Thursday edge build and the 08:30 UTC nightly
+  tests. GitHub cron is UTC, so it runs at 09:17 during PDT. Plus `workflow_dispatch`
   with an optional `version` override and a `dry_run` flag.
 - `concurrency: release-weekly`.
 - Steps: checkout `fetch-depth: 0` → install Nix
@@ -228,8 +230,11 @@ for `version` / `init` / `add` / `run`, check that `nix build` reports the same
 version as the tag, and run install.sh against the built archive. All of these
 run in parallel with existing jobs so CI doesn't get slower.
 
-## Open questions
+## Decisions
 
-1. Should `docs:`/`examples`-only weeks skip the release?
-2. Keep `nix flake update` (nixpkgs bump) in every release PR?
-3. Day and time for the weekly cut (proposed Tue 16:17 UTC).
+1. Weeks with only `docs:` or `examples/` changes skip the release.
+2. Each release PR also runs `nix flake update`, so nixpkgs is bumped every
+   release.
+3. The weekly run is Tuesday 08:17 PST (16:17 UTC).
+4. Greptile approves automatically. If it ever stops, the CI approval fallback
+   in §4 takes over.
