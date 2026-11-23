@@ -18,6 +18,14 @@ jobs:
     #   github.event.pull_request.user.login == 'new-developer' ||
     #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
 
+    # Skip the automatic weekly release PRs (release-weekly.yml). They're a
+    # mechanical flake.nix / flake.lock / vendor-hash bump that Greptile
+    # reviews and approves, and claude-code-action refuses to run for bot
+    # authors anyway ("Workflow initiated by non-human actor"), which left a
+    # red check on every release PR. A job skipped by `if` counts as passing
+    # for required checks, so this never blocks auto-merge.
+    if: github.event.pull_request.user.login != format('{0}[bot]', vars.RELEASE_APP_SLUG)
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
