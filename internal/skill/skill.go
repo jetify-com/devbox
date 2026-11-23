@@ -121,16 +121,22 @@ func Install(scope Scope, root string, force bool) ([]Result, error) {
 			seen[key] = true
 		}
 
+		if scope == ScopeProject {
+			if err := checkInside(root, path); err != nil {
+				return results, err
+			}
+		}
+
 		status := StatusCreated
-		existing, err := os.ReadFile(path)
+		existing, err := readRegularFile(path)
 		switch {
 		case err == nil && bytes.Equal(existing, content):
 			results = append(results, Result{path, StatusUnchanged})
 			continue
-		case err == nil && !isManaged(existing) && !force:
+		case (err == nil && !isManaged(existing) || errors.Is(err, errSymlink)) && !force:
 			results = append(results, Result{path, StatusSkipped})
 			continue
-		case err == nil:
+		case err == nil || errors.Is(err, errSymlink):
 			status = StatusUpdated
 		case !errors.Is(err, fs.ErrNotExist):
 			return results, err
@@ -139,7 +145,7 @@ func Install(scope Scope, root string, force bool) ([]Result, error) {
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			return results, err
 		}
-		if err := os.WriteFile(path, content, 0o644); err != nil {
+		if err := replaceFile(path, content); err != nil {
 			return results, err
 		}
 		results = append(results, Result{path, status})
@@ -165,14 +171,23 @@ func Uninstall(scope Scope, root string, force bool) ([]Result, error) {
 			seen[key] = true
 		}
 
-		existing, err := os.ReadFile(path)
+		if scope == ScopeProject {
+			if err := checkInside(root, path); err != nil {
+				return results, err
+			}
+		}
+		if _, err := os.Lstat(path); errors.Is(err, fs.ErrNotExist) {
+			results = append(results, Result{path, StatusNotFound})
+			continue
+		}
+		existing, err := readRegularFile(path)
 		if errors.Is(err, fs.ErrNotExist) {
 			results = append(results, Result{path, StatusNotFound})
 			continue
-		} else if err != nil {
+		} else if err != nil && !errors.Is(err, errSymlink) {
 			return results, err
 		}
-		if !isManaged(existing) && !force {
+		if (err != nil || !isManaged(existing)) && !force {
 			results = append(results, Result{path, StatusSkipped})
 			continue
 		}
@@ -200,6 +215,68 @@ func IsInstalled(scope Scope, root string) bool {
 		}
 	}
 	return true
+}
+
+// errSymlink is returned by readRegularFile for a symlink. Callers treat a
+// symlinked SKILL.md as one devbox didn't write.
+var errSymlink = errors.New("SKILL.md is a symlink")
+
+// readRegularFile reads path without following a symlink at path itself, so a
+// repository can't point SKILL.md at a file elsewhere on the machine.
+func readRegularFile(path string) ([]byte, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return nil, err
+	}
+	if info.Mode()&fs.ModeSymlink != 0 {
+		return nil, errSymlink
+	}
+	return os.ReadFile(path)
+}
+
+// replaceFile atomically replaces path with a regular file holding content.
+// Renaming over path replaces a symlink itself instead of writing through it.
+func replaceFile(path string, content []byte) error {
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".SKILL.md-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmp.Name()) //nolint:errcheck // already renamed on success
+	if _, err := tmp.Write(content); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Chmod(0o644); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmp.Name(), path)
+}
+
+// checkInside returns an error if path, after resolving symlinked
+// directories, isn't inside root. Symlinks between directories within the
+// project (such as .claude/skills -> ../.agents/skills) are fine.
+func checkInside(root, path string) error {
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return err
+	}
+	realRoot, err := filepath.EvalSymlinks(absRoot)
+	if err != nil {
+		return err
+	}
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+	rel, err := filepath.Rel(realRoot, resolve(absPath))
+	if err != nil || !filepath.IsLocal(rel) {
+		return fmt.Errorf("refusing to install the skill to %s: it resolves outside the project %s", path, root)
+	}
+	return nil
 }
 
 func isManaged(content []byte) bool {

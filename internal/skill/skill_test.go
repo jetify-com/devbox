@@ -173,3 +173,67 @@ func writeFile(t *testing.T, path, content string) {
 		t.Fatal(err)
 	}
 }
+
+func TestInstallDoesNotWriteThroughSymlinks(t *testing.T) {
+	root := t.TempDir()
+	outside := filepath.Join(t.TempDir(), "bashrc")
+	writeFile(t, outside, "export SECRET=1\n")
+
+	link := filepath.Join(root, ".agents/skills/devbox/SKILL.md")
+	if err := os.MkdirAll(filepath.Dir(link), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, link); err != nil {
+		t.Skip("symlinks not supported:", err)
+	}
+
+	results, err := Install(ScopeProject, root, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertStatuses(t, results, StatusSkipped, StatusCreated)
+
+	// --force replaces the link with a regular file and leaves the target alone.
+	if _, err := Install(ScopeProject, root, true); err != nil {
+		t.Fatal(err)
+	}
+	if b, _ := os.ReadFile(outside); string(b) != "export SECRET=1\n" {
+		t.Errorf("install wrote through a symlink to %s", outside)
+	}
+	if info, err := os.Lstat(link); err != nil || info.Mode()&os.ModeSymlink != 0 {
+		t.Errorf("SKILL.md symlink was not replaced with a regular file")
+	}
+
+	// A dangling link is not followed either.
+	dangling := filepath.Join(t.TempDir(), "created-by-devbox")
+	other := filepath.Join(root, ".claude/skills/devbox/SKILL.md")
+	if err := os.Remove(other); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(dangling, other); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Install(ScopeProject, root, false); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(dangling); !os.IsNotExist(err) {
+		t.Errorf("install created %s through a dangling symlink", dangling)
+	}
+}
+
+func TestInstallRejectsSkillDirOutsideProject(t *testing.T) {
+	root := t.TempDir()
+	outside := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, ".agents"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(root, ".agents/skills")); err != nil {
+		t.Skip("symlinks not supported:", err)
+	}
+	if _, err := Install(ScopeProject, root, true); err == nil {
+		t.Fatal("Install succeeded for a skills directory outside the project")
+	}
+	if _, err := os.Stat(filepath.Join(outside, "devbox")); !os.IsNotExist(err) {
+		t.Error("install created files outside the project")
+	}
+}

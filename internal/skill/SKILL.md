@@ -86,10 +86,14 @@ one-off setup in a script instead.
 
 ## Language notes
 
-- **Python**: the plugin creates a venv at `$VENV_DIR` (`.venv`). Install with
-  `devbox run -- pip install ...` (or `uv`), never the system pip.
-- **Node**: add `nodejs@<v>`; pnpm/yarn come via Corepack (plugin). Use
-  `nodejs-slim` with `--disable-plugin` if you only need `node`.
+- **Python**: the plugin creates a venv at `$VENV_DIR` (`.venv`) but doesn't
+  activate it. Add `". $VENV_DIR/bin/activate"` to `init_hook`, or call it
+  directly: `devbox run -- sh -c '$VENV_DIR/bin/pip install ...'`. Never use
+  the system pip. `uv` uses the venv automatically.
+- **Node**: add `nodejs@<v>`. For pnpm/yarn either `devbox add pnpm`, or use
+  Corepack: set `"DEVBOX_COREPACK_ENABLED": "1"` in `env` and pin
+  `packageManager` in `package.json` (Node 25+ and `nodejs-slim` also need
+  `devbox add corepack`). Use `nodejs-slim --disable-plugin` for just `node`.
 - **Go/Rust**: add the toolchain; module/crate deps are managed as usual.
 
 ## Native libraries and compatibility
