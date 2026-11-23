@@ -254,7 +254,12 @@ plugin manager with no new machinery. `create_files` sources are resolved
 relative to the definition file; they are only supported for local
 definitions. The plugin's `{{ .Virtenv }}` and `{{ .DevboxDir }}` are
 namespaced as `pkgdef-<name>` so they never collide with a built-in plugin
-or nix package of the same name.
+or nix package of the same name. If two definitions in one project have the
+same `name`, only the first one's activation applies; the other is skipped
+with a warning so the two never write into the same directory. Its binaries
+are still installed. Editing a `create_files` source of a local definition
+re-creates the file, as for local plugins. `disable_plugin` in
+`devbox.json` turns off a definition's activation.
 
 A definition that cannot be loaded (deleted file, unreachable URL, changed
 remote content) does not prevent `devbox.json` from loading, so
@@ -303,7 +308,13 @@ the definition: a hash of the install strategy, `bin`, `hooks`, `os_map`
 and `arch_map`. When a definition's install recipe changes for a version
 that is already installed, the next install redoes it. Activation-only
 edits (`env`, `shell`, `create_files`) do not trigger a reinstall; they are
-applied at shell time.
+applied at shell time. When a local definition file no longer matches its
+`definition_hash`, the install step re-locks the entry at the locked version
+first, so `url` and `sha256` follow an edited install recipe.
+
+`pkg-def` entries also set `last_modified` (the time the entry was
+resolved, unchanged when re-resolving yields the same entry) so that
+multi-project lockfile sync can pick the newest one.
 
 Trust-on-first-use digests are written to `devbox.lock` only by the install
 step (`devbox add`, `devbox install`, `devbox update`), never while
@@ -755,7 +766,7 @@ A leaf package with no dependency on `devpkg`, `lock` or `plugin`.
 ### PR 3: wiring, lockfile, env, plugins, testscripts
 
 Behind the `DEVBOX_FEATURE_PKG_DEFS` flag (on in dev builds). While the
-flag is off, `pkg:` strings are not recognized at all.
+flag is off, `pkg:` strings fail with an error that says to set it.
 
 - `pkgtype.IsPkgDef`; excluded from flake detection like runx.
 - `devpkg.Package`: `IsPkgDef`, `IsNix` false so shellgen skips it,
@@ -769,8 +780,9 @@ flag is off, `pkg:` strings are not recognized at all.
   template variables available in both. The plugin's virtenv directory is
   `pkgdef-<name>`. Definitions excluded on the current platform get no
   plugin config.
-- Local definition file hashes feed the config hash so edits trigger
-  reinstall.
+- Local definition file hashes feed the config hash so edits re-run the
+  install step, which re-locks the entry and reinstalls when the install
+  recipe changed.
 - `devbox update` re-resolves through the same lockfile branch and records
   a changed `definition_hash` even when the version and artifacts are the
   same.
@@ -780,6 +792,8 @@ flag is off, `pkg:` strings are not recognized at all.
   unsupported system, bad checksum) instead of falling back to nixpkgs.
 - A definition whose `platforms` exclude the current system fails at
   install time with a hint to use `--exclude-platform`.
+- `devbox info` and `devbox search` handle `pkg:` locally and never
+  contact the search service.
 
 ### Later
 
