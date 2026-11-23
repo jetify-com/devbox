@@ -5,6 +5,34 @@ description: Cut a Devbox CLI release — recommend the version bump, write the 
 
 # Release the Devbox CLI
 
+## Releases are automatic now
+
+Every Tuesday at 08:17 PST, `release-weekly.yml` checks for shippable changes
+since the last release. A week with only `docs:`, `examples/` or release-bump
+commits is skipped. Otherwise:
+
+1. `release-weekly` opens `bump-flake-<version>` as the release App (label
+   `auto-release`) with auto-merge on.
+2. Greptile approves it and `cli-tests` passes, so GitHub merges it.
+   (`release-approve.yml` approves in CI if Greptile only comments.)
+3. `release-tag` creates the draft with generated notes and tags the merge
+   commit.
+4. `cli-release` runs the tests (including macOS), builds, smoke-checks
+   `devbox version`, and publishes the release as latest.
+
+Nobody has to do anything unless something fails. Slack gets a message for
+each stage. Use this skill when:
+
+- **A release is stuck.** See "If something is stuck" below.
+- **A release is needed off-cycle.** Run `release-weekly` with
+  `workflow_dispatch` (optionally with a `version`), or drive the manual flow
+  below. Releases from the manual flow aren't auto-published: `cli-release`
+  only publishes tags that the release App pushed.
+- **Someone wants hand-written notes.** Edit the published release on GitHub
+  afterwards, in the house style below.
+
+## Manual release
+
 `scripts/release.ts` owns every mechanical step and the order they run in. Your
 job is the judgment: read what's shipping, recommend a version, write the title
 and notes, and help the user pick how to release.
@@ -181,9 +209,11 @@ Don't work around these; they're why the script exists.
   which re-runs `cli-tests` there — so a result read before the bump is about a
   commit that won't be released. Settling the bump first also means a red `main`
   doesn't hide the fact that a bump PR is needed.
-- **Publish from local credentials, not CI.** GitHub doesn't trigger workflows
-  from events raised by `GITHUB_TOKEN`. That's why CI-created edge releases never
-  trigger `docker-image-release`, and why publishing can't just be a CI step.
+- **Never publish with `GITHUB_TOKEN`.** GitHub doesn't trigger workflows from
+  events raised by `GITHUB_TOKEN`. That's why CI-created edge releases never
+  trigger `docker-image-release`. Manual releases publish with your own
+  credentials. The automatic flow publishes with the release App's token,
+  which does trigger them.
 
 ## If something is stuck
 
@@ -192,6 +222,10 @@ result and the current `flake.nix` version in one shot.
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
+| No release PR this week | Nothing shippable (docs/examples only), or `release-weekly` failed | `gh run list --workflow=release-weekly.yml --limit 3`; re-run with `workflow_dispatch` |
+| Release PR open for days | Greptile didn't approve, or `cli-tests` is red on it | Fix main or address Greptile's findings; next week's run supersedes the PR anyway |
+| Release PR merged, no tag | `release-tag` failed or skipped | `gh run list --workflow=release-tag.yml --limit 3`; re-run it (idempotent) |
+| Auto release built but still a draft | `publish` job in `cli-release` failed (missing assets, smoke check) | Check its log. If the smoke check says the version is wrong, `flake.nix` `lastTag` didn't match the tag |
 | `cli-release` never started | Tag push didn't land | Re-run the same command |
 | `cli-release` failed in `tests` | Red `main` (see below) | Fix the test, re-run |
 | Draft has 0 assets | The upload step didn't run or failed | Check `cli-release`'s "Attach artifacts" step, re-run |

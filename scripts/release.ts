@@ -33,10 +33,13 @@
 //      bump has to merge into main, which re-runs cli-tests there, so any
 //      result read before the bump is about a commit that won't be released.
 //
-//   4. Publishing happens here, from your own credentials, not from CI. GitHub
-//      does not trigger workflows from events raised by GITHUB_TOKEN, so a
-//      release published by a workflow would never reach cli-post-release or
-//      docker-image-release.
+//   4. Publishing happens here, from your own credentials, not with CI's
+//      GITHUB_TOKEN. GitHub does not trigger workflows from events raised by
+//      GITHUB_TOKEN, so a release published that way would never reach
+//      cli-post-release or docker-image-release. The automatic weekly release
+//      (release-weekly.yml -> release-tag.yml -> cli-release.yml) publishes
+//      from CI with a GitHub App token instead, which does trigger them. It
+//      uses --next-version and --bump-flake from this script.
 //
 // Every step is idempotent, so re-running after a failure partway through
 // resumes rather than duplicating work.
@@ -331,6 +334,56 @@ function recommendVersion(prev: string, commits: Commit[]): Recommendation {
   };
 }
 
+// Paths whose changes alone never justify a release: they don't change the
+// devbox binary or what users install. Weeks with only these changes skip the
+// automatic release; they ship with the next real one.
+const NON_SHIPPING_PATHS = [/^examples\//, /^docs\//, /\.md$/i];
+
+const RELEASE_BUMP_RE = /^chore\(release\): bump flake lastTag to /;
+
+type ShippableCommit = { sha: string; subject: string; files: string[] };
+
+// Commits since tag that warrant a release: anything except flake bumps,
+// `docs:` commits, and commits that only touch NON_SHIPPING_PATHS.
+function shippableCommits(tag: string): ShippableCommit[] {
+  const raw = git("log", "--no-merges", "--format=%x1e%H%x1f%s", "--name-only", `${tag}..HEAD`);
+  if (!raw) return [];
+  return raw
+    .split("\x1e")
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .map((chunk) => {
+      const [header = "", ...files] = chunk.split("\n");
+      const [sha = "", subject = ""] = header.split("\x1f");
+      return { sha, subject, files: files.map((f) => f.trim()).filter(Boolean) };
+    })
+    .filter((c) => {
+      if (RELEASE_BUMP_RE.test(c.subject)) return false;
+      if (/^docs(\([^)]*\))?!?:/.test(c.subject)) return false;
+      if (c.files.length === 0) return false;
+      return !c.files.every((f) => NON_SHIPPING_PATHS.some((re) => re.test(f)));
+    });
+}
+
+// Machine-readable answer to "should this week release, and as what?", for
+// the release-weekly workflow.
+function nextVersionReport(): void {
+  const prev = previousTag();
+  const commits = commitsSince(prev);
+  const shippable = shippableCommits(prev);
+  const rec = commits.length > 0 ? recommendVersion(prev, commits) : null;
+  console.log(JSON.stringify({
+    prev,
+    version: rec?.version ?? null,
+    bump: rec?.bump ?? null,
+    reason: rec?.reason ?? `no commits since ${prev}`,
+    commits: commits.length,
+    shippableCommits: shippable.length,
+    shippable: shippable.length > 0 && rec !== null,
+    flakeLastTag: flakeLastTag(),
+  }, null, 2));
+}
+
 function summarizeChanges(prev: string, commits: Commit[]): void {
   info(`${bold(String(commits.length))} commits since ${bold(prev)}:`);
   const breaking = commits.filter((c) => c.breaking);
@@ -607,19 +660,7 @@ async function stepFlakeBump(version: string, mode: Mode, autoYes: boolean): Pro
     fail(`flake.nix is out of date — bump lastTag to ${version} and merge before releasing`);
   }
 
-  const flakePath = path.join(ROOT, "flake.nix");
-  const flake = fs.readFileSync(flakePath, "utf8");
-  const updated = flake.replace(`lastTag = "${current}";`, `lastTag = "${version}";`);
-  if (updated === flake) fail("failed to rewrite lastTag in flake.nix");
-  fs.writeFileSync(flakePath, updated);
-  ok(`flake.nix lastTag ${current} -> ${version}`);
-
-  info("Refreshing vendor-hash (devbox run update-hash)...");
-  if (stream("devbox", ["run", "update-hash"]) !== 0) fail("devbox run update-hash failed");
-  ok("vendor-hash refreshed");
-
-  info("Updating flake.lock...");
-  if (stream("nix", ["flake", "update"]) !== 0) warn("nix flake update failed — leaving flake.lock as is");
+  bumpFlakeFiles(version);
 
   console.log();
   console.log(git("--no-pager", "diff", "--stat", "--", "flake.nix", "flake.lock", "vendor-hash"));
@@ -636,6 +677,29 @@ async function stepFlakeBump(version: string, mode: Mode, autoYes: boolean): Pro
   }
 
   openFlakeBumpPR(version, current, mode);
+}
+
+// Rewrites flake.nix lastTag to version and refreshes vendor-hash and
+// flake.lock to match, in the working tree only. Shared by the interactive
+// flow and `--bump-flake`, which the release-weekly workflow runs.
+function bumpFlakeFiles(version: string): void {
+  const current = flakeLastTag();
+  if (current !== version) {
+    const flakePath = path.join(ROOT, "flake.nix");
+    const flake = fs.readFileSync(flakePath, "utf8");
+    const updated = flake.replace(`lastTag = "${current}";`, `lastTag = "${version}";`);
+    if (updated === flake) fail("failed to rewrite lastTag in flake.nix");
+    fs.writeFileSync(flakePath, updated);
+    ok(`flake.nix lastTag ${current} -> ${version}`);
+  }
+
+  info("Refreshing vendor-hash (devbox run update-hash)...");
+  if (stream("devbox", ["run", "update-hash"]) !== 0) fail("devbox run update-hash failed");
+  ok("vendor-hash refreshed");
+
+  // This bumps nixpkgs along with every release, on purpose.
+  info("Updating flake.lock...");
+  if (stream("nix", ["flake", "update"]) !== 0) warn("nix flake update failed — leaving flake.lock as is");
 }
 
 // Commits the working-tree bump onto its own branch, pushes it and opens the
@@ -1044,6 +1108,13 @@ ${bold("Direct invocation")}
   node scripts/release.ts --changes            What would ship, and the
                                                recommended version bump
   node scripts/release.ts --status  [version]  Where a release currently stands
+  node scripts/release.ts --next-version       JSON: next version and whether
+                                               anything shippable changed
+                                               (used by release-weekly)
+  node scripts/release.ts --bump-flake --version <x.y.z>
+                                               Rewrite flake.nix lastTag and
+                                               refresh vendor-hash/flake.lock
+                                               in the working tree only
 
 ${bold("Flags")}   (each one skips the prompt it answers)
 
@@ -1118,6 +1189,18 @@ async function main(): Promise<void> {
 
   if (argv[0] === "--changes") {
     changesReport();
+    return;
+  }
+
+  if (argv[0] === "--next-version") {
+    nextVersionReport();
+    return;
+  }
+
+  if (argv[0] === "--bump-flake") {
+    const version = flag("version");
+    if (!version) fail("--bump-flake requires --version");
+    bumpFlakeFiles(validateVersion(version));
     return;
   }
 

@@ -1,0 +1,183 @@
+name: release-weekly
+# Starts the weekly automatic release of the Devbox CLI.
+#
+# If anything shippable merged since the last release, this picks the next
+# version (scripts/release.ts --next-version), bumps flake.nix to it, and opens
+# a `bump-flake-<version>` PR with auto-merge on. After that it's hands-off:
+#
+#   1. Greptile approves the PR and cli-tests goes green -> GitHub merges it.
+#      (release-approve.yml approves in CI if Greptile ever only comments.)
+#   2. release-tag.yml creates the draft and tags the merge commit.
+#   3. cli-release.yml tests, builds, smoke-checks and publishes the release.
+#
+# The flake bump has to land before the tag: flake.nix hard-codes lastTag, so
+# the tagged commit must already carry the new version.
+#
+# Everything runs as the release GitHub App, not GITHUB_TOKEN. Events raised by
+# GITHUB_TOKEN don't trigger other workflows, so a PR it opened would get no
+# cli-tests run, and its merge and tag wouldn't start release-tag or
+# cli-release.
+
+on:
+  schedule:
+    # Tuesdays 16:17 UTC = 08:17 PST (09:17 PDT; GitHub cron is always UTC).
+    - cron: "17 16 * * 2"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (default: what release.ts recommends). Bare semver, e.g. 0.23.0."
+        required: false
+        type: string
+
+concurrency: release-weekly
+
+permissions:
+  contents: read
+
+jobs:
+  open-release-pr:
+    runs-on: ubuntu-latest
+    environment: release
+    timeout-minutes: 30
+    steps:
+      - name: Mint release App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Checkout source code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # release.ts reads tags and history.
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24 # Runs scripts/release.ts via type stripping.
+
+      - name: Decide what to release
+        id: next
+        env:
+          VERSION_OVERRIDE: ${{ inputs.version }}
+        run: |
+          node scripts/release.ts --next-version > "$RUNNER_TEMP/next.json"
+          cat "$RUNNER_TEMP/next.json"
+
+          prev=$(jq -r '.prev' "$RUNNER_TEMP/next.json")
+          if [ -n "$VERSION_OVERRIDE" ]; then
+            version="${VERSION_OVERRIDE#v}"
+          elif [ "$(jq -r '.shippable' "$RUNNER_TEMP/next.json")" = true ]; then
+            version=$(jq -r '.version' "$RUNNER_TEMP/next.json")
+          else
+            echo "Nothing shippable since $prev (only docs, examples or release bumps). Skipping this week."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid version: $version"
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/$version" >/dev/null; then
+            echo "::error::Tag $version already exists. Pass a different version to workflow_dispatch."
+            exit 1
+          fi
+          echo "Releasing $version (previous: $prev)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prev=$prev" >> "$GITHUB_OUTPUT"
+
+      # One release PR at a time. A PR for this version from an earlier run is
+      # still the answer, so just make sure auto-merge is on. Older ones (a
+      # previous week that never merged) are superseded by this one.
+      - name: Reconcile open release PRs
+        id: existing
+        if: steps.next.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          VERSION: ${{ steps.next.outputs.version }}
+        run: |
+          branch="bump-flake-$VERSION"
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open --label auto-release \
+            --json number,headRefName > "$RUNNER_TEMP/open.json"
+          while read -r number head; do
+            [ -z "$number" ] && continue
+            if [ "$head" = "$branch" ]; then
+              echo "Release PR #$number for $VERSION is already open; re-enabling auto-merge."
+              gh pr merge "$number" --repo "$GITHUB_REPOSITORY" --auto --squash
+              echo "already_open=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "Closing stale release PR #$number ($head)."
+              gh pr close "$number" --repo "$GITHUB_REPOSITORY" --delete-branch \
+                --comment "Superseded by the weekly release for $VERSION."
+            fi
+          done < <(jq -r '.[] | "\(.number) \(.headRefName)"' "$RUNNER_TEMP/open.json")
+
+      - name: Install devbox
+        if: steps.next.outputs.skip != 'true' && steps.existing.outputs.already_open != 'true'
+        uses: jetify-com/devbox-install-action@v0.16.0
+        with:
+          enable-cache: true
+
+      - name: Bump flake.nix, vendor-hash and flake.lock
+        if: steps.next.outputs.skip != 'true' && steps.existing.outputs.already_open != 'true'
+        env:
+          VERSION: ${{ steps.next.outputs.version }}
+        run: node scripts/release.ts --bump-flake --version "$VERSION"
+
+      - name: Open the release PR
+        if: steps.next.outputs.skip != 'true' && steps.existing.outputs.already_open != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          VERSION: ${{ steps.next.outputs.version }}
+          PREV: ${{ steps.next.outputs.prev }}
+        run: |
+          bot_login="${APP_SLUG}[bot]"
+          bot_id=$(gh api "/users/${bot_login}" --jq .id)
+          git config user.name "$bot_login"
+          git config user.email "${bot_id}+${bot_login}@users.noreply.github.com"
+
+          branch="bump-flake-$VERSION"
+          title="chore(release): bump flake lastTag to $VERSION"
+          git switch -C "$branch"
+          if git diff --quiet; then
+            echo "::error::Bumping to $VERSION changed nothing. Is flake.nix already at $VERSION?"
+            exit 1
+          fi
+          git commit -a -m "$title"
+          # Force: the branch is ours, and a leftover from a failed run is stale.
+          git push --force -u origin "$branch"
+
+          gh label create auto-release --repo "$GITHUB_REPOSITORY" --force \
+            --color 0E8A16 --description "Automatic weekly release PR"
+
+          cat > "$RUNNER_TEMP/body.md" <<EOF
+          Automatic weekly release of **$VERSION** (previous: $PREV).
+
+          Bumps \`flake.nix\` \`lastTag\` to \`$VERSION\` and refreshes \`vendor-hash\` and \`flake.lock\` (including nixpkgs).
+
+          This merges automatically once it's approved and \`cli-tests\` passes. The merge triggers \`release-tag\`, which drafts the release and tags the merge commit. \`cli-release\` then tests, builds and publishes it.
+
+          Changes since $PREV: https://github.com/$GITHUB_REPOSITORY/compare/$PREV...main
+
+          Opened by \`.github/workflows/release-weekly.yml\`.
+          EOF
+          url=$(gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$branch" \
+            --title "$title" --body-file "$RUNNER_TEMP/body.md" --label auto-release)
+          echo "Opened $url"
+          gh pr merge "$url" --repo "$GITHUB_REPOSITORY" --auto --squash
+          echo "### Opened release PR for $VERSION: $url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notify slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v4.0.0
+        with:
+          webhook: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "status": "release-weekly failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }

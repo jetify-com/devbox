@@ -1,6 +1,6 @@
 # Automatic Devbox CLI releases
 
-Status: proposal
+Status: implemented (needs the one-time setup in §1)
 
 ## Goal
 
@@ -68,11 +68,16 @@ release: published / released  ── existing ──
 
 ### 1. Release GitHub App (one-time setup, admin)
 
-- Create a GitHub App `devbox-release-bot` with these permissions: contents:
-  write, pull-requests: write, workflows: read, checks: read. Install it on
-  `jetify-com/devbox` only.
-- Store `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` in the existing
-  `release` environment.
+- Create a GitHub App (e.g. `devbox-release-bot`) with these repository
+  permissions: contents: write, pull-requests: write, issues: write (to create
+  the `auto-release` label), checks: read. Install it on `jetify-com/devbox`
+  only.
+- In the existing `release` environment, store the variables `RELEASE_APP_ID`
+  and `RELEASE_APP_SLUG` (the App's slug, e.g. `devbox-release-bot`) and the
+  secret `RELEASE_APP_PRIVATE_KEY`. `RELEASE_APP_SLUG` can also be a repo-level
+  variable. `release-approve.yml` reads it without the environment.
+- Repo settings: turn on "Allow auto-merge", and turn on "Allow GitHub Actions
+  to create and approve pull requests" (only the §4 fallback uses that).
 - Each workflow mints a short-lived token with `actions/create-github-app-token`.
   Use this token for every push, PR, merge, tag and publish. That is what lets
   the downstream workflows fire.
@@ -83,7 +88,7 @@ release: published / released  ── existing ──
 
 Reuse its logic rather than re-implementing it in YAML:
 
-- `--next-version --json`: prints `{ prev, version, bump, reason, commits, shippable }`.
+- `--next-version`: prints JSON `{ prev, version, bump, reason, commits, shippable }`.
   `shippable` is false when every commit since the last tag is one of:
   a `chore(release): bump flake …` commit, a `docs:` commit, or a commit that
   only touches `examples/` or docs paths. A week with only those changes
@@ -101,11 +106,10 @@ Reuse its logic rather than re-implementing it in YAML:
 - Triggers: `schedule: '17 16 * * 2'`, which is Tuesday 08:17 PST. It's off
   the hour and away from the Thursday edge build and the 08:30 UTC nightly
   tests. GitHub cron is UTC, so it runs at 09:17 during PDT. Plus `workflow_dispatch`
-  with an optional `version` override and a `dry_run` flag.
+  with an optional `version` override.
 - `concurrency: release-weekly`.
-- Steps: checkout `fetch-depth: 0` → install Nix
-  (`DeterminateSystems/nix-installer-action`) → install devbox →
-  `release.ts --next-version --json` → exit early if not shippable → skip if
+- Steps: checkout `fetch-depth: 0` → Node 24 →
+  `release.ts --next-version` → exit early if not shippable → skip if
   tag `<v>` already exists → close any older open `auto-release` PRs with a
   "superseded by" comment → bump → commit `chore(release): bump flake lastTag to <v>`
   on `bump-flake-<v>` → push with the App token → `gh pr create --label auto-release`
@@ -147,12 +151,16 @@ Things to confirm when setting this up:
 
 ### 5. `release-tag.yml` (new)
 
-- Trigger: `pull_request: types: [closed]`. Runs only when `merged == true`,
-  the PR has the `auto-release` label, the head branch matches `bump-flake-*`,
-  and the author is the App. All four conditions are required, so nobody can
-  start a release by labelling their own PR.
-- Read `<v>` from the merged `flake.nix` (`lastTag`) at `merge_commit_sha`.
-  Don't use the branch name.
+- Trigger: the merge's `push` to `main` (paths: `flake.nix`), not
+  `pull_request: closed`. A `pull_request` run's ref is `refs/pull/N/merge`,
+  which the `release` environment's branch rules may not allow. The push comes
+  from the App, which enabled auto-merge, so it triggers workflows.
+- Looks up the PR for the pushed commit, and continues only when it merged, it
+  has the `auto-release` label, its head branch matches `bump-flake-*`, and its
+  author is the App. All four conditions are required, so nobody can start a
+  release by labelling their own PR.
+- Read `<v>` from the merged `flake.nix` (`lastTag`), and check that it matches
+  the branch name.
 - **Notes:** create the draft *before* tagging, because `cli-release` attaches
   assets to an existing draft. Use `gh api …/releases/generate-notes` against
   the previous tag, so the notes include everything merged up to the merge
@@ -160,19 +168,19 @@ Things to confirm when setting this up:
   existing Claude action (`claude.yml`) to rewrite the notes in the house style
   from the `release-devbox` skill, falling back to the generated notes if it
   fails. Notes are never a reason to block a release.
-- Push the tag to `merge_commit_sha` with the App token. That triggers
+- Push an annotated tag on the merge commit with the App token. That triggers
   `cli-release`.
 
 ### 6. `cli-release.yml` changes
 
 - `tests: uses: ./.github/workflows/cli-tests.yaml` with
-  `with: { run-mac-tests: true }`. Today the release gate skips macOS: the
+  `run-mac-tests: true` for tag pushes (the weekly edge build is unchanged). Today the release gate skips macOS: the
   `workflow_call` path excludes `macos-latest` unless that input is set. "All
   tests pass" should include macOS before we ship to macOS users without a
   human looking.
 - New `publish` job after `release`, using `environment: release`:
   - Runs only when the tag push came from the App
-    (`github.actor == 'devbox-release-bot[bot]'`). Humans running
+    (`github.actor == '<RELEASE_APP_SLUG>[bot]'`). Humans running
     `draft-release` keep their draft. `release.ts --publish` already treats
     "already published" as success, so the two paths don't conflict.
   - Use the same checks as `stepPublish`: the release has assets and
@@ -216,10 +224,12 @@ Things to confirm when setting this up:
 
 ## Rollout
 
-1. Ship `release.ts` flags, the App, and the workflows with `dry_run` on.
-   The weekly job opens the PR but `release-tag` only logs what it would do.
-2. Run one release end to end via `workflow_dispatch`, watched by a human.
-3. Turn on the schedule. Review the first two automatic releases afterwards.
+No dry run. Once the App, variables and repo settings from §1 are in place:
+
+1. Start the first release with `workflow_dispatch` on `release-weekly`, and
+   watch it end to end.
+2. After that the Tuesday schedule takes over. Review the first couple of
+   automatic releases afterwards.
 
 ## Test confidence (in progress)
 

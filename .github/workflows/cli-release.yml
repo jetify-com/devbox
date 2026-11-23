@@ -27,6 +27,10 @@ permissions:
 jobs:
   tests:
     uses: ./.github/workflows/cli-tests.yaml
+    with:
+      # Stable releases ship to macOS with nobody looking, so gate them on the
+      # macOS tests too. The cli-tests workflow_call path skips them otherwise.
+      run-mac-tests: ${{ startsWith(github.ref, 'refs/tags/') }}
 
   report-test-failures:
     runs-on: ubuntu-latest
@@ -223,4 +227,101 @@ jobs:
           payload: |
             {
               "status": "release ${{ job.status }}"
+            }
+
+  # Publishes automatic releases: the ones whose tag release-tag.yml pushed as
+  # the release App. Releases cut by hand with scripts/release.ts stay drafts
+  # here. The script publishes them itself, or leaves them as drafts in
+  # --draft mode.
+  #
+  # Published with the App token, not GITHUB_TOKEN, so the release event
+  # triggers docker-image-release and cli-post-release.
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    needs: release
+    if: >-
+      startsWith(github.ref, 'refs/tags/') &&
+      github.actor == format('{0}[bot]', vars.RELEASE_APP_SLUG)
+    timeout-minutes: 10
+    steps:
+      - name: Mint release App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      # Same checks as stepPublish in scripts/release.ts. Docker builds from the
+      # tarballs as soon as the release is published, and the installer and
+      # launcher find a release through checksums.txt.
+      - name: Check the draft has its artifacts
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '[.assets[].name]' > "$RUNNER_TEMP/assets.json"
+          cat "$RUNNER_TEMP/assets.json"
+          if ! jq -e 'index("checksums.txt")' "$RUNNER_TEMP/assets.json" >/dev/null; then
+            echo "::error::$TAG has no checksums.txt. Not publishing."
+            exit 1
+          fi
+          if ! jq -e 'map(select(endswith(".tar.gz"))) | length > 0' "$RUNNER_TEMP/assets.json" >/dev/null; then
+            echo "::error::$TAG has no archives. Not publishing."
+            exit 1
+          fi
+
+      # The archive that ships must report the version it's tagged as. This
+      # catches a stale flake.nix lastTag or broken ldflags.
+      #
+      # Release builds include the launcher (build.Launcher=true). On a clean
+      # runner the launcher would otherwise download and run the latest
+      # *published* release, i.e. the previous one. DEVBOX_USE_VERSION makes it
+      # run this binary when the binary really is $TAG. If it isn't, the
+      # launcher tries to download $TAG, which isn't published yet, so the
+      # check fails.
+      - name: Smoke-check the released binary
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cd "$RUNNER_TEMP"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "devbox_${TAG}_linux_amd64.tar.gz" --pattern checksums.txt
+          sha256sum --check --ignore-missing checksums.txt
+          tar -xzf "devbox_${TAG}_linux_amd64.tar.gz" devbox
+          got=$(DEVBOX_USE_VERSION="$TAG" ./devbox version)
+          echo "devbox version: $got"
+          if [ "$got" != "$TAG" ]; then
+            echo "::error::The $TAG archive reports version '$got'"
+            exit 1
+          fi
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [ "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" != true ]; then
+            echo "$TAG is already published."
+            exit 0
+          fi
+          # Publishing a non-prerelease as latest is what makes it the stable
+          # version: the installer and launcher read
+          # releases/latest/download/checksums.txt.
+          latest=--latest
+          case "$TAG" in *-*) latest=--latest=false ;; esac
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false "$latest"
+          echo "### Published $TAG" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notify jetpack.io slack of publish status
+        if: always()
+        uses: slackapi/slack-github-action@v4.0.0
+        with:
+          webhook: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "status": "publish ${{ github.ref_name }} ${{ job.status }}"
             }
