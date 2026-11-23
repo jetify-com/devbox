@@ -1,0 +1,9 @@
+# devbox info doesn't need a devbox.json.
+! exists devbox.json
+exec devbox info hello
+stdout 'hello '
+! exists devbox.json
+! exists .devbox
+
+! exec devbox info notapackage
+stderr 'Package "notapackage" not found'

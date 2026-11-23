@@ -68,8 +68,12 @@ func GetPkgDefConfigsForPackages(
 	lockfile *lock.File,
 ) ([]*Config, error) {
 	configs := []*Config{}
+	// owners maps a plugin directory name (pkgdef-<name>) to the package
+	// that uses it, so two definitions with the same name never write
+	// into each other's virtenv and devbox.d directories.
+	owners := map[string]string{}
 	for _, pkg := range devpkg.PackagesFromConfig(packages, lockfile) {
-		if !pkg.IsPkgDef() || !pkg.IsInstallable() {
+		if !pkg.IsPkgDef() || !pkg.IsInstallable() || pkg.DisablePlugin {
 			continue
 		}
 		config, err := getPkgDefConfig(pkg, lockfile.ProjectDir())
@@ -82,9 +86,18 @@ func GetPkgDefConfigsForPackages(
 			warnPkgDefConfig(pkg.Raw, err)
 			continue
 		}
-		if config != nil {
-			configs = append(configs, config)
+		if config == nil {
+			continue
 		}
+		name := config.Source.CanonicalName()
+		if owner, ok := owners[name]; ok {
+			warnPkgDefConfig(pkg.Raw, fmt.Errorf(
+				"its definition has the same name as %s; rename one of the definitions", owner,
+			))
+			continue
+		}
+		owners[name] = pkg.Raw
+		configs = append(configs, config)
 	}
 	return configs, nil
 }

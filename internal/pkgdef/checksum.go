@@ -56,7 +56,7 @@ func (c *Client) fetchChecksumHTTPJSON(ctx context.Context, src *Checksum, rawUR
 	if err := json.Unmarshal(body, &input); err != nil {
 		return "", fmt.Errorf("checksum: %s: response is not JSON: %w", rawURL, err)
 	}
-	results, err := runJQ(code, expr, input)
+	results, err := runJQ(ctx, code, expr, input)
 	if err != nil {
 		return "", fmt.Errorf("checksum: %w", err)
 	}

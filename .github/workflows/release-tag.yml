@@ -1,0 +1,154 @@
+name: release-tag
+# Second step of the automatic weekly release (see release-weekly.yml).
+#
+# When the release App's `bump-flake-<version>` PR merges into main, this creates the
+# draft release with generated notes, then tags the merge commit. The tag push
+# starts cli-release, which tests, builds, uploads to this draft and publishes.
+#
+# Draft before tag: cli-release uploads its artifacts to the release it finds
+# for the tag. The tag is pushed with the App token, because a tag pushed with
+# GITHUB_TOKEN wouldn't trigger cli-release.
+
+on:
+  # The merge's push to main, not `pull_request: closed`. A pull_request run's
+  # ref is refs/pull/N/merge, which the release environment's branch rules may
+  # not allow. The push comes from the App, which enabled auto-merge, so it
+  # triggers workflows.
+  push:
+    branches: [main]
+    paths: [flake.nix]
+
+concurrency: release-tag
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    # Cheap pre-filter. The step below checks the PR itself.
+    if: >-
+      startsWith(github.event.head_commit.message, 'chore(release): bump flake lastTag to ')
+    runs-on: ubuntu-latest
+    environment: release
+    timeout-minutes: 10
+    steps:
+      - name: Mint release App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Find the release PR for this commit
+        id: pr
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          BOT_LOGIN: ${{ steps.app-token.outputs.app-slug }}[bot]
+        run: |
+          # All four conditions are required, so a human can't start a release
+          # by labelling or naming their own PR this way.
+          gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" > "$RUNNER_TEMP/pulls.json"
+          pr=$(jq -c --arg sha "$GITHUB_SHA" --arg bot "$BOT_LOGIN" '
+            [.[] | select(.merged_at != null
+                          and .merge_commit_sha == $sha
+                          and .user.login == $bot
+                          and (.head.ref | startswith("bump-flake-"))
+                          and ([.labels[].name] | index("auto-release")))] | first // empty
+          ' "$RUNNER_TEMP/pulls.json")
+          if [ -z "$pr" ]; then
+            echo "$GITHUB_SHA isn't the merge of an automatic release PR. Nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "head_ref=$(jq -r .head.ref <<<"$pr")" >> "$GITHUB_OUTPUT"
+          echo "Release PR: $(jq -r .html_url <<<"$pr")"
+
+      - name: Checkout the merge commit
+        if: steps.pr.outputs.skip != 'true'
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # Needed to find the previous release tag.
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Work out the version
+        id: version
+        if: steps.pr.outputs.skip != 'true'
+        env:
+          HEAD_REF: ${{ steps.pr.outputs.head_ref }}
+        run: |
+          # The version is whatever actually merged into flake.nix, not the
+          # branch name. The two must agree, though.
+          version=$(sed -n 's/^ *lastTag = "\([^"]*\)";.*/\1/p' flake.nix)
+          if [ -z "$version" ]; then
+            echo "::error::Could not read lastTag from flake.nix"
+            exit 1
+          fi
+          if [ "bump-flake-$version" != "$HEAD_REF" ]; then
+            echo "::error::flake.nix lastTag ($version) doesn't match branch $HEAD_REF"
+            exit 1
+          fi
+          prev=$(git tag --merged HEAD --sort=-creatordate | grep -v -e '-edge\.' -e "^${version}\$" | head -n 1)
+          echo "Version $version, previous release $prev"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prev=$prev" >> "$GITHUB_OUTPUT"
+
+      - name: Create the draft release
+        if: steps.pr.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PREV: ${{ steps.version.outputs.prev }}
+          SHA: ${{ github.sha }}
+        run: |
+          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists. Leaving it as it is."
+            exit 0
+          fi
+          # Notes cover everything up to the merge commit, including work that
+          # merged while the release PR waited for review.
+          gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+            -f tag_name="$VERSION" -f previous_tag_name="$PREV" -f target_commitish="$SHA" \
+            --jq '.body' > "$RUNNER_TEMP/notes.md"
+          prerelease=()
+          case "$VERSION" in *-*) prerelease=(--prerelease) ;; esac
+          gh release create "$VERSION" --repo "$GITHUB_REPOSITORY" --draft \
+            --title "$VERSION" --notes-file "$RUNNER_TEMP/notes.md" --target "$SHA" "${prerelease[@]}"
+          echo "Created draft release $VERSION"
+
+      - name: Tag the merge commit
+        if: steps.pr.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          VERSION: ${{ steps.version.outputs.version }}
+          SHA: ${{ github.sha }}
+        run: |
+          existing=$(git ls-remote --tags origin "refs/tags/$VERSION^{}" "refs/tags/$VERSION" | head -n 1 | cut -f1)
+          if [ -n "$existing" ]; then
+            target=$(git rev-parse "refs/tags/$VERSION^{commit}" 2>/dev/null || true)
+            if [ "$target" = "$SHA" ]; then
+              echo "Tag $VERSION already points at $SHA. Nothing to do."
+              exit 0
+            fi
+            echo "::error::Tag $VERSION already exists and points at ${target:-another commit}, not $SHA"
+            exit 1
+          fi
+          bot_login="${APP_SLUG}[bot]"
+          bot_id=$(gh api "/users/${bot_login}" --jq .id)
+          git config user.name "$bot_login"
+          git config user.email "${bot_id}+${bot_login}@users.noreply.github.com"
+          # Annotated, like scripts/release.ts makes.
+          git tag -a "$VERSION" -m "Release $VERSION" "$SHA"
+          git push origin "refs/tags/$VERSION"
+          echo "### Tagged $SHA as $VERSION; cli-release is now building" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notify slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v4.0.0
+        with:
+          webhook: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "status": "release-tag failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }

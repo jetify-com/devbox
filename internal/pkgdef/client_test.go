@@ -7,6 +7,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -742,7 +743,7 @@ func TestJQNumbersKeepTheirDigits(t *testing.T) {
 	require.NoError(t, err)
 	var input any
 	require.NoError(t, json.Unmarshal([]byte(`[20240101, 1000000, 1.10, "1.2", true, null, [7, "8"]]`), &input))
-	got, err := runJQ(code, ".[]", input)
+	got, err := runJQ(context.Background(), code, ".[]", input)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"20240101", "1000000", "1.1", "1.2", "7", "8"}, got)
 }
@@ -868,4 +869,76 @@ func TestInstallRedoneWhenRecipeChanges(t *testing.T) {
 	require.NoError(t, err, "the old install is untouched")
 	assert.True(t, cli.IsInstalled(def, "1.2.0", testSystem, art))
 	assert.Equal(t, 2, vendor.hitCount("/dl/hello-1.2.0-linux-amd64.tar.gz"))
+}
+
+// TestRelativeFileURLInstallDirsDependOnDefinitionDir checks that the same
+// relative file:// URL in definitions from different directories installs
+// into different directories, since it names different files.
+func TestRelativeFileURLInstallDirsDependOnDefinitionDir(t *testing.T) {
+	cli := NewClient()
+	cli.CacheDir = t.TempDir()
+	def := func(dir string) *Definition {
+		d, err := Parse([]byte(`{
+		  "schema": 1, "name": "tool", "platforms": ["x86_64-linux"],
+		  "versions": {"type": "static", "versions": ["1.0.0"]},
+		  "install": {"type": "binary", "url": "file://vendor/tool"}
+		}`))
+		require.NoError(t, err)
+		d.baseDir = dir
+		return d
+	}
+	art := Artifact{URL: "file://vendor/tool"}
+	a, err := cli.InstallDir(def("/project-a"), "1.0.0", testSystem, art)
+	require.NoError(t, err)
+	b, err := cli.InstallDir(def("/project-b"), "1.0.0", testSystem, art)
+	require.NoError(t, err)
+	assert.NotEqual(t, a, b)
+}
+
+func TestInstallIgnoresArchiveMarker(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("sh is required")
+	}
+	vendor := newFakeVendor(t)
+	// The archive ships its own marker claiming a finished install.
+	vendor.tarball = makeTarGz(t, map[string]string{
+		"hello-1.2.0/bin/hello":     "#!/bin/sh\necho hello 1.2.0\n",
+		"hello-1.2.0/" + markerFile: `{}`,
+	})
+	vendor.tarSHA = sha256Hex(vendor.tarball)
+	cli := vendor.client(t)
+	def := vendor.archiveDef(t)
+	def.Hooks.PostInstall = []string{"exit 3"}
+
+	art := Artifact{Sha256: vendor.tarSHA}
+	_, err := cli.Install(t.Context(), def, "1.2.0", testSystem, art)
+	require.Error(t, err)
+	dir := installDir(t, cli, def, "1.2.0", art)
+	_, err = os.Stat(filepath.Join(dir, markerFile))
+	assert.ErrorIs(t, err, os.ErrNotExist, "the archive's marker is removed")
+	_, err = cli.Install(t.Context(), def, "1.2.0", testSystem, art)
+	require.Error(t, err, "the failed install is retried, not accepted")
+}
+
+func TestDownloadDirIsPerInstall(t *testing.T) {
+	cli := NewClient()
+	cli.CacheDir = t.TempDir()
+	url := "https://example.com/tool.tar.gz"
+	// Two versions of one definition with a fixed URL share an install
+	// key but not an install directory, so they must not share a download.
+	a := filepath.Join(cli.CacheDir, "tool", "1.0.0", "x86_64-linux-abc")
+	b := filepath.Join(cli.CacheDir, "tool", "2.0.0", "x86_64-linux-abc")
+	assert.NotEqual(t, cli.downloadDir(a, url), cli.downloadDir(b, url))
+}
+
+func TestRunJQStopsOnCancel(t *testing.T) {
+	code, err := compileJQ("repeat(1)")
+	require.NoError(t, err)
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	_, err = runJQ(ctx, code, "repeat(1)", nil)
+	require.Error(t, err)
+
+	_, err = runJQ(t.Context(), code, "repeat(1)", nil)
+	require.ErrorContains(t, err, "more than")
 }

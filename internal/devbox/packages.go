@@ -367,7 +367,14 @@ func (d *Devbox) removeFromConfig(pkgs ...string) error {
 	for _, pkg := range lo.Uniq(pkgs) {
 		found, _ := d.findPackageByName(pkg)
 		if found != nil {
-			removed = append(removed, found.Raw)
+			if found.IsPkgDef() {
+				// A package definition's plugin files live under its
+				// plugin name (pkgdef-<name>), not under the raw
+				// package string.
+				removed = append(removed, d.pkgDefPluginNames(found.Raw)...)
+			} else {
+				removed = append(removed, found.Raw)
+			}
 			d.cfg.PackageMutator().Remove(found.Raw)
 		} else {
 			missingPkgs = append(missingPkgs, pkg)
@@ -383,6 +390,18 @@ func (d *Devbox) removeFromConfig(pkgs ...string) error {
 	}
 
 	return plugin.Remove(d.projectDir, removed)
+}
+
+// pkgDefPluginNames returns the plugin directory names of the package
+// definition raw (normally one).
+func (d *Devbox) pkgDefPluginNames(raw string) []string {
+	names := []string{}
+	for _, cfg := range d.cfg.IncludedPluginConfigs() {
+		if cfg.Source != nil && cfg.Source.LockfileKey() == raw {
+			names = append(names, cfg.Source.CanonicalName())
+		}
+	}
+	return names
 }
 
 // forgetLockEntry drops pkg's lockfile entry so that a package removed and
