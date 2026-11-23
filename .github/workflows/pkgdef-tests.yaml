@@ -13,9 +13,12 @@ on:
     paths:
       - pkgs/**
       - internal/pkgdef/**
-      - internal/devbox/pkgdef.go
-      - internal/lock/pkgdef.go
-      - internal/plugin/pkgdef.go
+      - internal/devbox/**
+      - internal/devpkg/**
+      - internal/devconfig/**
+      - internal/lock/**
+      - internal/plugin/**
+      - internal/nix/**
       - testscripts/testrunner/pkgdefs.go
       - .github/workflows/pkgdef-tests.yaml
   push:
@@ -24,9 +27,12 @@ on:
     paths:
       - pkgs/**
       - internal/pkgdef/**
-      - internal/devbox/pkgdef.go
-      - internal/lock/pkgdef.go
-      - internal/plugin/pkgdef.go
+      - internal/devbox/**
+      - internal/devpkg/**
+      - internal/devconfig/**
+      - internal/lock/**
+      - internal/plugin/**
+      - internal/nix/**
       - testscripts/testrunner/pkgdefs.go
       - .github/workflows/pkgdef-tests.yaml
   workflow_dispatch:
