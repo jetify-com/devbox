@@ -6,6 +6,7 @@ package pkgdef
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"net/url"
 	"path"
 	"strings"
@@ -107,4 +108,12 @@ func filenameFromURL(rawURL string) string {
 		return path.Base(rawURL)
 	}
 	return path.Base(parsed.Path)
+}
+
+// TemplateFuncs returns the functions available to package definition
+// templates, for callers that render definition fields with their own
+// variables (the plugin manager renders env, shell and create_files with
+// both these variables and the plugin ones).
+func TemplateFuncs() template.FuncMap {
+	return maps.Clone(templateFuncs)
 }

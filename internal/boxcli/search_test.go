@@ -114,3 +114,21 @@ func TestColumnizeAlignsColumns(t *testing.T) {
 		t.Errorf("columnize() = %q, want %q", got, want)
 	}
 }
+
+// TestSearchPkgDefIsLocal checks that `devbox search pkg:...` answers
+// without contacting the search service.
+func TestSearchPkgDefIsLocal(t *testing.T) {
+	// An unreachable search host makes any request fail the test.
+	t.Setenv("DEVBOX_SEARCH_HOST", "http://127.0.0.1:1")
+	cmd := searchCmd()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs([]string{"pkg:./go.pkg.jsonc@1.22"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "not searchable") || !strings.Contains(out.String(), "devbox info pkg:./go.pkg.jsonc@1.22") {
+		t.Errorf("got output %q, want a pointer to devbox info", out.String())
+	}
+}

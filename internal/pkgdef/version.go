@@ -6,6 +6,7 @@ package pkgdef
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -20,30 +21,48 @@ const Latest = "latest"
 // requested constraint.
 var ErrVersionNotFound = errors.New("version not found")
 
+// versionRegexp is what every version must look like. Versions become path
+// components of the install directory and are rendered into templates
+// (URLs, post_install hooks), so they may not contain "/", whitespace or
+// shell metacharacters.
+var versionRegexp = regexp.MustCompile(`^[0-9A-Za-z][0-9A-Za-z.+_-]*$`)
+
+// IsValidVersion reports whether v is an acceptable version string. Version
+// sources drop versions that are not, and requested versions must be.
+func IsValidVersion(v string) bool {
+	return versionRegexp.MatchString(v)
+}
+
 // MatchVersion picks the version from available that best satisfies
 // requested, following the rules in the spec:
 //
 //   - "latest" picks the highest non-pre-release version.
-//   - An exact match wins when present.
-//   - Otherwise requested is a prefix: "1.22" matches the highest
-//     "1.22.x" that is not a pre-release.
+//   - Otherwise the candidates are an exact match, if present, and every
+//     version that has requested as a prefix ("1.22" matches "1.22.x")
+//     and is not a pre-release. The highest candidate wins, so "1.20"
+//     picks "1.20.14" even when the vendor names 1.20.0 "1.20".
 //
 // A version is a pre-release when it contains a letter or a hyphen, for
-// example "1.23.0-rc1" or "1.21rc2".
+// example "1.23.0-rc1" or "1.21rc2". Pre-releases only match exactly.
+// Versions that are not IsValidVersion are ignored.
 func MatchVersion(available []string, requested string) (string, error) {
 	if requested == "" {
 		requested = Latest
 	}
-	if slices.Contains(available, requested) {
-		return requested, nil
+	if !IsValidVersion(requested) {
+		return "", fmt.Errorf("%w: invalid version %q", ErrVersionNotFound, requested)
 	}
 
 	best := ""
 	for _, v := range available {
-		if v == "" || IsPrerelease(v) {
+		if !IsValidVersion(v) {
 			continue
 		}
-		if requested != Latest && !strings.HasPrefix(v, requested+".") {
+		exact := requested != Latest && v == requested
+		if !exact && IsPrerelease(v) {
+			continue
+		}
+		if requested != Latest && !exact && !strings.HasPrefix(v, requested+".") {
 			continue
 		}
 		if best == "" || CompareVersions(v, best) > 0 {

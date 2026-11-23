@@ -14,7 +14,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"maps"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -91,6 +93,10 @@ type Definition struct {
 	// baseDir is the directory of the definition file for local
 	// definitions. Relative file:// URLs are resolved against it.
 	baseDir string
+
+	// remote is set for definitions loaded over https. They may not read
+	// local files, so every file:// URL is rejected (see checkURL).
+	remote bool
 }
 
 // ResolveURL makes a relative file:// URL ("file://artifacts/x.tar.gz")
@@ -412,7 +418,8 @@ func (in *Install) ChecksumType() string {
 // affects what an install of a version on system contains: the install
 // strategy, the bin layout, hooks and platform maps. Activation fields
 // (env, shell, create_files) are excluded because they are applied at
-// shell time. A changed fingerprint makes Install redo an existing install.
+// shell time. It is part of the install directory's key (see
+// Client.InstallDir).
 func (d *Definition) InstallFingerprint(system string) string {
 	install := d.InstallFor(system)
 	payload, err := json.Marshal(struct {
@@ -427,6 +434,48 @@ func (d *Definition) InstallFingerprint(system string) string {
 	}
 	sum := sha256.Sum256(payload)
 	return hex.EncodeToString(sum[:8])
+}
+
+// ErrFileURLInRemoteDefinition is returned when a definition loaded over
+// https references a file:// URL, which would let it read local files.
+var ErrFileURLInRemoteDefinition = errors.New("remote package definitions may not use file:// URLs")
+
+// checkURL rejects rawURL when the definition is remote and rawURL is a
+// file:// URL, absolute or relative. It is called on every URL after
+// rendering, since a template can build a file:// URL from parts.
+func (d *Definition) checkURL(field, rawURL string) error {
+	if d.remote && isFileURL(rawURL) {
+		return fmt.Errorf("%s %q: %w", field, rawURL, ErrFileURLInRemoteDefinition)
+	}
+	return nil
+}
+
+func isFileURL(rawURL string) bool {
+	return hasPrefixFold(strings.TrimSpace(rawURL), "file:")
+}
+
+// checkRemoteURLs rejects a remote definition whose URL fields (before
+// rendering) are file:// URLs, so the error shows up when it is loaded.
+func (d *Definition) checkRemoteURLs() error {
+	urls := [][2]string{{"versions.url", d.Versions.URL}}
+	addInstall := func(path string, in *Install) {
+		urls = append(urls, [2]string{path + ".url", in.URL})
+		if in.Checksum != nil {
+			urls = append(urls, [2]string{path + ".checksum.url", in.Checksum.URL})
+		}
+	}
+	addInstall("install", &d.Install)
+	for _, sys := range slices.Sorted(maps.Keys(d.Install.Overrides)) {
+		if o := d.Install.Overrides[sys]; o != nil {
+			addInstall("install.overrides."+sys, o)
+		}
+	}
+	for _, u := range urls {
+		if err := d.checkURL(u[0], u[1]); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // UsesScripts reports whether the definition runs shell that the user

@@ -35,6 +35,41 @@ func TestMatchVersion(t *testing.T) {
 	}
 }
 
+func TestMatchVersionPrefersHighestOverExact(t *testing.T) {
+	// go.dev names x.y.0 releases "x.y".
+	available := []string{"1.19", "1.19.13", "1.20", "1.20.1", "1.20.14", "1.21.0", "1.21rc2"}
+	tests := map[string]string{
+		"1.20":    "1.20.14",
+		"1.19":    "1.19.13",
+		"1.20.1":  "1.20.1",
+		"1.21":    "1.21.0",
+		"1.21rc2": "1.21rc2",
+		"latest":  "1.21.0",
+	}
+	for requested, want := range tests {
+		got, err := MatchVersion(available, requested)
+		require.NoError(t, err, requested)
+		assert.Equal(t, want, got, requested)
+	}
+}
+
+func TestMatchVersionInvalid(t *testing.T) {
+	_, err := MatchVersion([]string{"1.0.0"}, "../1.0.0")
+	require.ErrorIs(t, err, ErrVersionNotFound)
+	assert.Contains(t, err.Error(), "invalid version")
+
+	got, err := MatchVersion([]string{"1.0.0", "99+/../../evil"}, Latest)
+	require.NoError(t, err)
+	assert.Equal(t, "1.0.0", got, "invalid versions are never picked")
+
+	for v, want := range map[string]bool{
+		"1.22.3": true, "1.0.0-rc1": true, "1.24.0+build_2": true, "v1": true,
+		"": false, "-1": false, ".1": false, "1/2": false, "1.0+$(x)": false, "1 2": false, "1.0\n": false,
+	} {
+		assert.Equal(t, want, IsValidVersion(v), v)
+	}
+}
+
 func TestMatchVersionNotFound(t *testing.T) {
 	_, err := MatchVersion([]string{"1.22.3"}, "1.24")
 	require.ErrorIs(t, err, ErrVersionNotFound)
