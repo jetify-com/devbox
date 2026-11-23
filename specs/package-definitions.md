@@ -122,7 +122,7 @@ hatch.
 | `schema` | yes | Format version. Currently `1`. Devbox rejects unknown values. |
 | `name` | yes | Package name. `^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`. Used for the cache directory and the plugin virtenv directory. |
 | `description`, `homepage`, `license` | no | Informational. `devbox info` showing `homepage` is planned. |
-| `platforms` | yes | Non-empty list of nix system names the definition supports. |
+| `platforms` | yes | Non-empty list of nix system names the definition supports: `aarch64-darwin`, `x86_64-darwin`, `aarch64-linux`, `x86_64-linux`. |
 | `os_map`, `arch_map` | no | Overrides for the `{{.OS}}` and `{{.Arch}}` template variables. Keys are the nix OS (`darwin`, `linux`) and nix arch (`x86_64`, `aarch64`). |
 | `versions` | yes | A version source. See below. |
 | `install` | yes | An install strategy. See below. |
@@ -140,9 +140,11 @@ hatch.
 | `github_releases` | `repo` (`owner/name`), `strip_prefix` (default `"v"`) | List releases through the GitHub API, skip drafts and pre-releases, strip the prefix from tag names. Honors `GITHUB_TOKEN`. |
 | `script` | `run` | Planned. Run `run` with `sh -c`; one version per output line. |
 
-Version strings are compared as dotted numeric segments, falling back to
-string comparison. Versions containing a hyphen (`1.23.0-rc1`) are treated as
-pre-releases and only match when requested exactly.
+Version strings are compared segment by segment on `.`: numerically when
+both segments are numbers, as strings otherwise. A version that is a prefix
+of another sorts first (`1.22` < `1.22.1`). Versions containing a letter or a
+hyphen (`1.23.0-rc1`, `1.21rc2`) are treated as pre-releases and only match
+when requested exactly.
 
 Matching a requested version against the list:
 
@@ -214,6 +216,8 @@ verification through sum.golang.org, so it stays an alternate definition.
 | `http_json` | `url`, `select` | GET `url`, evaluate the jq expression; the first string result is the hex sha256. |
 | `sha256_url` | `url` | GET `url`. The body is either a bare hex digest or a `sha256sum`-style list (`<hex>  <filename>` per line) matched by `{{.Filename}}`. Covers nodejs `SHASUMS256.txt` and the common `<asset>.sha256` convention. |
 | `none` | | No vendor-published checksum. `devbox add` records the digest it observes for the current system (trust on first use). Other systems are filled in lazily when a machine of that system installs, matching how nix store paths are backfilled today. |
+
+Omitting `install.checksum` is the same as `{"type": "none"}`.
 
 Checksums are mandatory when installing from an existing lockfile entry that
 records a digest: the downloaded artifact must match the digest recorded for
@@ -337,12 +341,14 @@ needs Nix:
   in the shell. It also always adds `.devbox/nix/profile/default/bin` to
   `PATH`, and sets `DEVBOX_PACKAGES_DIR` and `XDG_DATA_DIRS` from the
   profile.
-- `nix.System()` shells out to `nix` and returns `""` without it. Package
-  definitions depend on it in two places:
-  - `installPkgDef` fails with "does not support".
-  - `GetPkgDefConfigsForPackages` logs the plugin error at debug level and
-    drops the definition, so its env and init hook are silently lost.
-  - `IsEnabledOnPlatform` has the same dependency.
+- `nix.System()` shells out to `nix` and returns `""` without it. Before
+  PR 3, package definitions depended on it in two places:
+  - `installPkgDef` failed with "does not support".
+  - `GetPkgDefConfigsForPackages` logged the plugin error at debug level and
+    dropped the definition, so its env and init hook were silently lost.
+
+  PR 3 moved both to `nix.SystemOrHost`. `IsEnabledOnPlatform` still calls
+  `nix.System()`.
 - `--pure` requires `nix` on `PATH` and builds bash from nixpkgs.
 - `devbox update` always refreshes the stdenv.
 - `devbox services` adds `process-compose` from nixpkgs.
@@ -409,10 +415,10 @@ Gaps in the stack today:
 - `pkg:go@1.22` already has a meaning. `ParseRef` reads it as the relative
   file `./go` and fails with "file does not exist", or "is a directory" in a
   Go repo. This namespace should be reserved before the flag is removed.
-- A ref with `@` in its source and no version splits wrongly. For example
-  `pkg:https://user@host/x.pkg.json` gets version `host/x.pkg.json`, and
-  `Versioned()` then never appends `@latest`. A version must not contain
-  `/`.
+- (Fixed in PR 2.) A ref with `@` in its source and no version used to
+  split wrongly. For example `pkg:https://user@host/x.pkg.json` got version
+  `host/x.pkg.json`, and `Versioned()` then never appended `@latest`.
+  `ParseRef` now splits only when the last `@` comes after the last `/`.
 - Path sources are not normalized. `pkg:go.pkg.jsonc` and
   `pkg:./go.pkg.jsonc` are different packages, so both are installed, and
   both map to the same `pkgdef-<name>` virtenv.
@@ -478,18 +484,19 @@ Design:
   `--exclude-platform` stay.
 - **Commands.**
   - `devbox info` loads the definition and prints name, resolved version,
-    description, homepage and platforms. Today it sends the `pkg:` string
-    to the search service and reports "not found".
+    description, homepage and platforms. Since PR 3 it loads the
+    definition locally instead of sending the `pkg:` string to the search
+    service.
   - `devbox list` marks native packages.
   - `devbox.schema.json` documents `pkg:` and `package_source`.
   - Builtin plugins match on canonical name, so none fire for `pkg:`
     packages. Registry names should match builtins (e.g. `nodejs`) where
     the plugin still makes sense.
 
-Work: reserve the registry namespace and fix ref parsing (`/` in version,
-path normalization) before the flag is removed; embedded registry and
-`definition_url`; aliases; `package_source` and the prompt; identity rules
-for add/rm; flag validation; `devbox info`.
+Work: reserve the registry namespace and normalize path refs before the
+flag is removed; embedded registry and `definition_url`; aliases;
+`package_source` and the prompt; identity rules for add/rm; flag
+validation.
 
 ### Search returns nix and native packages
 
@@ -499,8 +506,9 @@ service is not in this repo.
 
 Gaps:
 
-- `devbox search pkg:./go.pkg.jsonc@1.22` sends the local path to the
-  search service and always gets "No results".
+- (Fixed in PR 3.) `devbox search pkg:./go.pkg.jsonc@1.22` used to send
+  the local path to the search service. It now prints a notice pointing at
+  `devbox info` and never contacts the service.
 - `devbox list --outdated` resolves package definitions with
   `FetchResolvedPackage`, which runs `Lock`. That fetches checksums for
   every platform just to compare a version, and spends GitHub API quota.
@@ -538,18 +546,21 @@ Recommendation: (c) feeding (a).
 - The index is only for discovery. `devbox add` always re-resolves through
   the definition, so what is installed is what the definition says.
 - `devbox search pkg:...` and `devbox info pkg:...` never contact the
-  service. They load the definition and call `ResolveVersion`.
+  service (done in PR 3). `info` loads the definition and resolves the
+  version locally.
 - `devbox list --outdated` uses `ResolveVersion` (no `Lock`) for
   definitions. Multi-project sync compares `version` and `definition_hash`.
 
 Work: the index generator in CI; `Source`/`Ref` on the searcher types;
-`devbox search` output; local handling of `pkg:` in `search` and `info`;
-cheaper outdated; the sync fix. Server: ingest the index and add the fields.
+`devbox search` output; cheaper outdated; the sync fix. Server: ingest the index and add the fields.
 
 ### Cache layout and garbage collection
 
-Today installs go to `$XDG_CACHE_HOME/devbox/pkgs/<name>/<version>/<system>/`.
-That key leaves out the definition's identity:
+Before PR 2, installs went to
+`$XDG_CACHE_HOME/devbox/pkgs/<name>/<version>/<system>/`. The findings below
+are against that layout; the keyed layout, immutable installs and download
+handling in the design (all done in PR 2) address the first list and the
+download items of the second. That key left out the definition's identity:
 
 - A fingerprint mismatch `RemoveAll`s the directory, under any shell that
   is using it.
@@ -655,7 +666,7 @@ with tests.
      `~/.docker/config.json` to its own host, without hooks and without a
      warning.
    - Fix: accept only `https://` definitions. Reject every `file://` URL in
-     a remote definition. (The spec already says they must be absolute.)
+     a remote definition, absolute or relative.
 4. **Activation templates fail silently** *Fixed in PR 3.* (PR 3, `plugin/pkgdef.go`).
    - The definition is JSON-marshalled before templating, so
      `{{ if eq .OS "darwin" }}` becomes `\"darwin\"` and fails to parse.
@@ -689,8 +700,9 @@ with tests.
       `nix.Search` fallback, because the canonical name contains `.`.
       Existing lock entries later fail with `unsupported flake reference
       URL scheme: pkg`.
-    - Fix: with the flag off, fail early with "set
-      DEVBOX_FEATURE_PKG_DEFS=1".
+    - Fix: `devbox info` loads the definition locally and `devbox search`
+      prints a notice instead of querying. With the flag off, fail early
+      with "set DEVBOX_FEATURE_PKG_DEFS=1".
 11. **PATH order** *Fixed in PR 3.* (PR 3). See *Nix is opt-in* above. The
     order is now: definition `bin` dirs, the nix profile, then the
     `print-dev-env` and inherited `PATH`. `env.PATH` from `devbox.json` is
