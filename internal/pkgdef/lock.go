@@ -73,9 +73,12 @@ func (c *Client) lockSystem(ctx context.Context, def *Definition, version, syste
 	if err != nil {
 		return Artifact{}, err
 	}
+	if err := def.checkURL("install.url", rawURL); err != nil {
+		return Artifact{}, err
+	}
 	vars = vars.withURL(rawURL)
 
-	sha, err := c.fetchChecksum(ctx, install.Checksum, vars)
+	sha, err := c.fetchChecksum(ctx, def, install.Checksum, vars)
 	if err != nil {
 		return Artifact{}, err
 	}

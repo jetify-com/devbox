@@ -48,6 +48,9 @@ func (c *Client) Load(ctx context.Context, ref Ref, projectDir, pinnedHash strin
 	if ref.IsLocal() {
 		return loadLocal(ref, projectDir)
 	}
+	if !ref.IsRemote() {
+		return nil, fmt.Errorf("package definition %s: remote package definitions must use https://", ref.Source)
+	}
 	return c.loadRemote(ctx, ref, pinnedHash)
 }
 
@@ -121,6 +124,10 @@ func (c *Client) loadRemote(ctx context.Context, ref Ref, pinnedHash string) (*L
 func (c *Client) parseRemote(ref Ref, content []byte) (*Loaded, error) {
 	def, err := Parse(content)
 	if err != nil {
+		return nil, fmt.Errorf("%s: %w", ref.Source, err)
+	}
+	def.remote = true
+	if err := def.checkRemoteURLs(); err != nil {
 		return nil, fmt.Errorf("%s: %w", ref.Source, err)
 	}
 	return &Loaded{

@@ -12,13 +12,25 @@ import (
 )
 
 // ListVersions returns every version the definition's version source knows
-// about, unsorted and including pre-releases.
+// about, unsorted and including pre-releases. Versions that are not
+// IsValidVersion are dropped.
 func (c *Client) ListVersions(ctx context.Context, def *Definition) ([]string, error) {
+	versions, err := c.listSource(ctx, def)
+	if err != nil {
+		return nil, err
+	}
+	return slices.DeleteFunc(versions, func(v string) bool { return !IsValidVersion(v) }), nil
+}
+
+func (c *Client) listSource(ctx context.Context, def *Definition) ([]string, error) {
 	src := def.Versions
 	switch src.Type {
 	case VersionsStatic:
 		return slices.Clone(src.Versions), nil
 	case VersionsHTTPJSON:
+		if err := def.checkURL("versions.url", src.URL); err != nil {
+			return nil, err
+		}
 		return c.listVersionsHTTPJSON(ctx, src)
 	case VersionsGitHubReleases:
 		return c.listVersionsGitHub(ctx, src)

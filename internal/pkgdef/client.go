@@ -36,8 +36,8 @@ type Client struct {
 	HTTPClient *http.Client
 
 	// CacheDir is the root under which packages are installed
-	// (<CacheDir>/<name>/<version>/<system>) and where remote definitions
-	// and downloads are cached.
+	// (<CacheDir>/<name>/<version>/<system>-<key>, see InstallDir) and
+	// where remote definitions and downloads are cached.
 	CacheDir string
 
 	// GitHubAPIURL is the base URL of the GitHub REST API. Tests point it
@@ -71,12 +71,6 @@ func githubTokenFromEnv() string {
 		return token
 	}
 	return os.Getenv("DEVBOX_GITHUB_API_TOKEN")
-}
-
-// InstallDir returns the directory a version of a package is installed to
-// on a system. It does not check whether the package is installed.
-func (c *Client) InstallDir(name, version, system string) string {
-	return filepath.Join(c.CacheDir, name, version, system)
 }
 
 func (c *Client) userAgent() string {

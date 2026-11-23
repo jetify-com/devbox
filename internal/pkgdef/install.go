@@ -46,6 +46,9 @@ type Installed struct {
 	// Dir is the install root.
 	Dir string
 
+	// URL is the artifact the install came from.
+	URL string
+
 	// Sha256 is the digest of the artifact that was installed. When the
 	// lockfile had no digest (checksum type "none"), callers should record
 	// this one.
@@ -56,9 +59,10 @@ type Installed struct {
 }
 
 // Install makes version of def available on system and returns where it
-// landed. It is idempotent: a completed install is returned as is without
-// any network access. Concurrent installs of the same package (from other
-// processes too) are serialized with a file lock.
+// landed (see InstallDir). It is idempotent: a completed install is
+// returned as is without any network access, and is never deleted or
+// replaced. Concurrent installs of the same package (from other processes
+// too) are serialized with a file lock on <dir>.lock.
 //
 // artifact.URL may be empty, in which case the URL is rendered from the
 // definition. When artifact.Sha256 is set the download must match it.
@@ -67,7 +71,10 @@ func (c *Client) Install(ctx context.Context, def *Definition, version, system s
 		return nil, fmt.Errorf("%s@%s: %w (%s; supported: %s)",
 			def.Name, version, ErrUnsupportedSystem, system, strings.Join(def.Platforms, ", "))
 	}
-	dir := c.InstallDir(def.Name, version, system)
+	dir, artifact, err := c.installTarget(def, version, system, artifact)
+	if err != nil {
+		return nil, err
+	}
 
 	// Fast path: no lock needed to read a finished install.
 	if m, ok := readMarker(dir); ok {
@@ -87,12 +94,20 @@ func (c *Client) Install(ctx context.Context, def *Definition, version, system s
 	return c.install(ctx, def, version, system, dir, artifact)
 }
 
+// installedFromMarker returns the completed install in dir. artifact.URL is
+// the locked (or rendered) URL: an install made from another URL is never
+// accepted, so a trust-on-first-use caller can only record a digest that
+// was observed for its own URL.
 func (c *Client) installedFromMarker(def *Definition, version, dir string, m marker, artifact Artifact) (*Installed, error) {
+	if m.URL != artifact.URL {
+		return nil, fmt.Errorf("%s@%s: %s was installed from %s but the lockfile expects %s; remove the directory to reinstall",
+			def.Name, version, dir, m.URL, artifact.URL)
+	}
 	if artifact.Sha256 != "" && m.Sha256 != "" && !strings.EqualFold(artifact.Sha256, m.Sha256) {
 		return nil, fmt.Errorf("%s@%s: %w: %s was installed from an artifact with sha256 %s but the lockfile expects %s; remove the directory to reinstall",
 			def.Name, version, ErrChecksumMismatch, dir, m.Sha256, artifact.Sha256)
 	}
-	return c.installed(def, dir, m.Sha256), nil
+	return c.installed(def, dir, m.URL, m.Sha256), nil
 }
 
 func (c *Client) install(ctx context.Context, def *Definition, version, system, dir string, artifact Artifact) (*Installed, error) {
@@ -112,30 +127,35 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 		return nil, fmt.Errorf("%s: install.type %q is not supported", def.Name, install.Type)
 	}
 
-	if artifact.URL == "" {
-		artifact.URL, err = Render(install.URL, vars)
-		if err != nil {
-			return nil, err
-		}
-	}
 	vars = vars.withURL(artifact.URL)
 
-	// Download next to the install dir so that a rename into place stays on
-	// one filesystem.
-	downloadDir := filepath.Join(c.CacheDir, ".downloads", def.Name, version, system)
-	archivePath := filepath.Join(downloadDir, vars.Filename)
+	// Download into the cache so that it stays on one filesystem with the
+	// install. The directory is keyed by URL so that a file of the same
+	// name from another URL is never reused, and the archive is removed
+	// once it has been unpacked or rejected.
+	downloadDir := filepath.Join(c.CacheDir, ".downloads", shortHash(artifact.URL))
+	archivePath := filepath.Join(downloadDir, downloadName(vars.Filename))
+	defer os.Remove(downloadDir) // only succeeds once empty
+	defer os.Remove(archivePath)
 	sha, err := c.download(ctx, artifact.URL, archivePath)
 	if err != nil {
 		return nil, fmt.Errorf("%s@%s: %w", def.Name, version, err)
 	}
 	if artifact.Sha256 != "" && !strings.EqualFold(sha, artifact.Sha256) {
-		_ = os.Remove(archivePath)
 		return nil, fmt.Errorf("%s@%s: %w: %s has sha256 %s, lockfile expects %s",
 			def.Name, version, ErrChecksumMismatch, artifact.URL, sha, artifact.Sha256)
 	}
 
 	// Unpack into a staging directory and rename it into place so that a
-	// crash never leaves a half-populated install dir behind.
+	// crash never leaves a half-populated install dir behind. dir has no
+	// marker (we hold its lock and checked), so it is a failed or
+	// interrupted install and safe to replace.
+	if !isStrictlyInside(c.CacheDir, dir) {
+		return nil, fmt.Errorf("%s@%s: install directory %s is outside the cache %s", def.Name, version, dir, c.CacheDir)
+	}
+	if _, ok := readMarker(dir); ok {
+		return nil, fmt.Errorf("%s@%s: refusing to replace the completed install in %s", def.Name, version, dir)
+	}
 	if err := os.RemoveAll(dir); err != nil {
 		return nil, err
 	}
@@ -166,7 +186,6 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 	if err != nil {
 		return nil, fmt.Errorf("%s@%s: unpacking %s: %w", def.Name, version, vars.Filename, err)
 	}
-	_ = os.Remove(archivePath)
 
 	if err := os.Rename(staging, dir); err != nil {
 		return nil, err
@@ -182,21 +201,97 @@ func (c *Client) install(ctx context.Context, def *Definition, version, system, 
 	if err := writeMarker(dir, m); err != nil {
 		return nil, err
 	}
-	return c.installed(def, dir, sha), nil
+	return c.installed(def, dir, artifact.URL, sha), nil
 }
 
-// IsInstalled reports whether version of def is fully installed on system.
-func (c *Client) IsInstalled(def *Definition, version, system string) bool {
-	_, ok := readMarker(c.InstallDir(def.Name, version, system))
-	return ok
+// IsInstalled reports whether version of def is fully installed on system
+// from artifact (as passed to Install).
+func (c *Client) IsInstalled(def *Definition, version, system string, artifact Artifact) bool {
+	dir, artifact, err := c.installTarget(def, version, system, artifact)
+	if err != nil {
+		return false
+	}
+	m, ok := readMarker(dir)
+	return ok && m.URL == artifact.URL
 }
 
-func (c *Client) installed(def *Definition, dir, sha string) *Installed {
+// InstallDir returns the directory that version of def is installed to on
+// system from artifact, the entry locked in devbox.lock (an empty URL is
+// rendered from the definition, as Install does). It does not check
+// whether the package is installed.
+//
+// The layout is <CacheDir>/<name>/<version>/<system>-<key>, where key
+// covers the definition's InstallFingerprint, the system and the
+// artifact's URL and digest, so two projects share an install only when
+// they would install the same bytes the same way. With trust on first use
+// the key is computed with the empty digest; once the observed digest is
+// recorded in the lockfile the key changes and the next install creates a
+// new directory. That costs one extra install and keeps installs
+// immutable.
+func (c *Client) InstallDir(def *Definition, version, system string, artifact Artifact) (string, error) {
+	dir, _, err := c.installTarget(def, version, system, artifact)
+	return dir, err
+}
+
+// installTarget validates version, fills in artifact.URL when it is empty
+// and returns the install directory together with the completed artifact.
+func (c *Client) installTarget(def *Definition, version, system string, artifact Artifact) (string, Artifact, error) {
+	if !IsValidVersion(version) {
+		return "", artifact, fmt.Errorf("%s: invalid version %q", def.Name, version)
+	}
+	if artifact.URL == "" {
+		vars, err := def.TemplateVars(system, version)
+		if err != nil {
+			return "", artifact, err
+		}
+		artifact.URL, err = Render(def.InstallFor(system).URL, vars)
+		if err != nil {
+			return "", artifact, err
+		}
+	}
+	if err := def.checkURL("install.url", artifact.URL); err != nil {
+		return "", artifact, fmt.Errorf("%s@%s: %w", def.Name, version, err)
+	}
+	key := shortHash(strings.Join([]string{
+		def.InstallFingerprint(system),
+		system,
+		artifact.URL,
+		strings.ToLower(artifact.Sha256),
+	}, "\x00"))
+	dir := filepath.Join(c.CacheDir, def.Name, version, system+"-"+key)
+	if !isStrictlyInside(c.CacheDir, dir) || filepath.Dir(filepath.Dir(filepath.Dir(dir))) != filepath.Clean(c.CacheDir) {
+		return "", artifact, fmt.Errorf("%s@%s: install directory %s is outside the cache %s", def.Name, version, dir, c.CacheDir)
+	}
+	return dir, artifact, nil
+}
+
+// shortHash returns the first 12 hex digits of the sha256 of s.
+func shortHash(s string) string {
+	sum := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(sum[:6])
+}
+
+// downloadName is the file name to save a download as. The URL's base name
+// is kept because archive detection uses the extension as a hint.
+func downloadName(filename string) string {
+	if filename == "" || filename == "." || filename == ".." || strings.ContainsAny(filename, `/\`) {
+		return "download"
+	}
+	return filename
+}
+
+// isStrictlyInside reports whether p is below root (and not root itself).
+func isStrictlyInside(root, p string) bool {
+	rel, err := filepath.Rel(root, p)
+	return err == nil && rel != "." && isInside(root, p)
+}
+
+func (c *Client) installed(def *Definition, dir, url, sha string) *Installed {
 	bins := make([]string, 0, len(def.BinDirs()))
 	for _, b := range def.BinDirs() {
 		bins = append(bins, filepath.Join(dir, b))
 	}
-	return &Installed{Dir: dir, Sha256: sha, BinDirs: bins}
+	return &Installed{Dir: dir, URL: url, Sha256: sha, BinDirs: bins}
 }
 
 // lockDir takes an exclusive advisory lock on <dir>.lock so that only one

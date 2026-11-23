@@ -13,12 +13,15 @@ import (
 
 // fetchChecksum returns the lowercase hex sha256 for the artifact described
 // by vars, or "" when the checksum type is "none".
-func (c *Client) fetchChecksum(ctx context.Context, src *Checksum, vars Vars) (string, error) {
+func (c *Client) fetchChecksum(ctx context.Context, def *Definition, src *Checksum, vars Vars) (string, error) {
 	if src == nil || src.Type == ChecksumNone {
 		return "", nil
 	}
 	rawURL, err := Render(src.URL, vars)
 	if err != nil {
+		return "", err
+	}
+	if err := def.checkURL("checksum.url", rawURL); err != nil {
 		return "", err
 	}
 	switch src.Type {
