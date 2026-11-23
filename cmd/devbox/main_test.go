@@ -12,8 +12,10 @@ import (
 	"regexp"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -76,13 +78,45 @@ func TestReleaseBuildWithTelemetryKeys(t *testing.T) {
 	})
 	env := releaseEnv(t, version)
 	env = slices.DeleteFunc(env, func(kv string) bool { return strings.HasPrefix(kv, "DO_NOT_TRACK=") })
+	stateHome := strings.TrimPrefix(env[slices.IndexFunc(env, func(kv string) bool {
+		return strings.HasPrefix(kv, "XDG_STATE_HOME=")
+	})], "XDG_STATE_HOME=")
+
+	// Pretend telemetry was just uploaded, so that the command's event stays
+	// buffered on disk (uploads are throttled) instead of being picked up by
+	// a background upload process.
+	lastUpload := filepath.Join(stateHome, "devbox", "telemetry", "last-upload")
+	if err := os.MkdirAll(filepath.Dir(lastUpload), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(lastUpload, []byte(strconv.FormatInt(time.Now().Unix(), 10)), 0o600); err != nil {
+		t.Fatal(err)
+	}
 
 	if got := strings.TrimSpace(runBin(t, bin, env, "version")); got != version {
 		t.Errorf("`devbox version` = %q, want %q", got, version)
 	}
 
-	// A command that fails reports the error to Sentry. It must still fail
-	// with the usual error and exit code, not crash or hang.
+	// Telemetry only starts when the build has both keys. Check that the
+	// command was recorded, so that this test can't pass without exercising
+	// the telemetry code.
+	events, _ := filepath.Glob(filepath.Join(stateHome, "devbox", "segment", "*.json"))
+	recorded := false
+	for _, file := range events {
+		data, err := os.ReadFile(file)
+		if err == nil && strings.Contains(string(data), "Command: devbox version") &&
+			strings.Contains(string(data), `"version":"`+version+`"`) {
+			recorded = true
+		}
+	}
+	if !recorded {
+		t.Errorf("a release build with telemetry keys didn't record the `devbox version` command (buffered events: %v)", events)
+	}
+
+	// A failing command goes through the error-reporting path (user errors
+	// like this one aren't sent to Sentry; internal/telemetry's unit tests
+	// cover building Sentry events). It must still fail with the usual error
+	// and exit code, not crash or hang.
 	var stderr bytes.Buffer
 	cmd := exec.Command(bin, "run", "--list")
 	cmd.Env = env
@@ -98,16 +132,6 @@ func TestReleaseBuildWithTelemetryKeys(t *testing.T) {
 	}
 	if !strings.Contains(stderr.String(), "Error:") {
 		t.Errorf("`devbox run --list` didn't print an error:\n%s", stderr.String())
-	}
-
-	// Telemetry only starts when the build has both keys, and it then records
-	// a device ID. Check it did, so that this test can't pass without
-	// exercising the telemetry code.
-	stateHome := strings.TrimPrefix(env[slices.IndexFunc(env, func(kv string) bool {
-		return strings.HasPrefix(kv, "XDG_STATE_HOME=")
-	})], "XDG_STATE_HOME=")
-	if _, err := os.Stat(filepath.Join(stateHome, "devbox", "telemetry", "device-id")); err != nil {
-		t.Errorf("telemetry didn't start in a build with telemetry keys: %v", err)
 	}
 }
 
