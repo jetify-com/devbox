@@ -1,0 +1,89 @@
+# Tests for env_from with exec: commands.
+
+chmod 755 bin/secrets
+env PATH=$WORK/bin:$PATH
+
+# Test 1: the command's JSON values are available in devbox run.
+exec devbox run test_db
+stdout 'secret123'
+
+# Test 2: numeric values.
+exec devbox run test_port
+stdout '5432'
+
+# Test 3: devbox.json env overrides exec values.
+exec devbox run test_override
+stdout 'overridden'
+
+# Test 4: the command runs only once per devbox command.
+rm $WORK/calls
+exec devbox run test_db
+grep -count=1 call $WORK/calls
+
+# Test 5: values are not expanded, and devbox.json env can reference them.
+exec devbox run test_pass
+stdout '^pa\$\$word$'
+exec devbox run test_dsn
+stdout '^db://u:secret123@h$'
+
+# Test 6: shellenv exports the values.
+exec devbox shellenv
+stdout 'export DB_PASSWORD="secret123";'
+
+# Test 7: a failing command only prints a warning, other sources still apply.
+env SECRETS_MOCK_FAIL=1
+exec devbox run test_plain
+stdout 'from_env_file'
+stderr 'could not decrypt'
+stderr 'command failed'
+env SECRETS_MOCK_FAIL=
+
+# Test 8: sources are merged in order, and the command can use a pipe.
+exec devbox run test_token
+stdout '^from_override_env$'
+exec devbox run test_piped
+stdout '^piped$'
+
+-- bin/secrets --
+#!/bin/sh
+# Mock secret manager that outputs known JSON.
+echo call >> "$WORK/calls"
+if [ -n "$SECRETS_MOCK_FAIL" ]; then
+  echo "could not decrypt" >&2
+  exit 1
+fi
+echo '{"DB_PASSWORD":"secret123","PASS":"pa$$word","PORT":5432,"OVERRIDE_ME":"from_exec","TOKEN":"from_exec"}'
+
+-- devbox.json --
+{
+  "packages": [],
+  "env": {
+    "OVERRIDE_ME": "overridden",
+    "DSN": "db://u:$DB_PASSWORD@h"
+  },
+  "shell": {
+    "scripts": {
+      "test_db": "echo $DB_PASSWORD",
+      "test_port": "echo $PORT",
+      "test_override": "echo $OVERRIDE_ME",
+      "test_pass": "echo \"$PASS\"",
+      "test_dsn": "echo $DSN",
+      "test_plain": "echo $PLAIN",
+      "test_token": "echo $TOKEN",
+      "test_piped": "echo $PIPED"
+    }
+  },
+  "env_from": [
+    "base.env",
+    "exec:secrets",
+    "exec:echo '{\"PIPED\":\"piped\"}' | cat",
+    "override.env"
+  ]
+}
+
+-- base.env --
+PLAIN=from_env_file
+TOKEN=from_base_env
+
+-- override.env --
+TOKEN=from_override_env

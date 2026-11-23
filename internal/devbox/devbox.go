@@ -33,6 +33,7 @@ import (
 	"go.jetify.com/devbox/internal/devbox/envpath"
 	"go.jetify.com/devbox/internal/devbox/generate"
 	"go.jetify.com/devbox/internal/devconfig"
+	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/devpkg/pkgtype"
 	"go.jetify.com/devbox/internal/envir"
@@ -77,6 +78,11 @@ type Devbox struct {
 	// compute it (hashing the lockfile, config, print-dev-env cache and nix
 	// profile) more than once. See stateStatus.
 	cachedStateStatus *lock.StateStatus
+
+	execCache map[string]map[string]string
+	// secretEnvKeys hold values from env_from commands and must not be
+	// written to disk.
+	secretEnvKeys []string
 }
 
 var legacyPackagesWarningHasBeenShown = false
@@ -808,8 +814,14 @@ func (d *Devbox) computeEnv(
 	env["DEVBOX_CONFIG_DIR"] = d.projectDir + "/devbox.d"
 	env["DEVBOX_PACKAGES_DIR"] = d.projectDir + "/" + nix.ProfilePath
 
+	// Synced before configEnvs because env_from commands may need runx binaries.
+	runXPaths, err := d.RunXPaths(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Include env variables in devbox.json
-	configEnv, err := d.configEnvs(env)
+	configEnv, err := d.configEnvs(ctx, env)
 	if err != nil {
 		return nil, err
 	}
@@ -858,14 +870,11 @@ func (d *Devbox) computeEnv(
 		slog.Debug("PATH after glibc-patch hack", "path", devboxEnvPath)
 	}
 
-	runXPaths, err := d.RunXPaths(ctx)
-	if err != nil {
-		return nil, err
-	}
 	devboxEnvPath = envpath.JoinPathLists(devboxEnvPath, runXPaths)
 
 	pathStack := envpath.Stack(env, originalEnv)
 	pathStack.Push(env, d.ProjectDirHash(), devboxEnvPath, envOpts.PreservePathStack)
+	d.markPathStackSecret()
 	env["PATH"] = pathStack.Path(env)
 	slog.Debug("new path stack is", "path_stack", pathStack)
 
@@ -1062,52 +1071,88 @@ func (d *Devbox) findPackageByName(name string) (*devpkg.Package, error) {
 // allow env variables from outside the shell to be referenced so
 // no leaked variables are caused by this function.
 func (d *Devbox) configEnvs(
+	ctx context.Context,
 	existingEnv map[string]string,
 ) (map[string]string, error) {
 	defer debug.FunctionTimer().End()
-	env := map[string]string{}
 	if d.cfg.IsJetifyCloudEnvFrom() {
 		ux.Fwarningf(
 			d.stderr,
-			"Ignoring env_from = %q. Jetify Cloud secrets are no longer "+
+			"Ignoring Jetify Cloud env_from. Jetify Cloud secrets are no longer "+
 				"supported by Devbox.\n",
-			d.cfg.Root.EnvFrom,
 		)
-	} else if d.cfg.Root.IsdotEnvEnabled() {
-		// if env_from points to a .env file, parse and add it
-		parsedEnvs, err := d.cfg.Root.ParseEnvsFromDotEnv()
-		if errors.Is(err, os.ErrNotExist) {
-			// A missing env_from file should not stop Devbox from enabling the
-			// environment. The referenced file is often untracked and may be
-			// created by a command in init_hook (e.g. `cp -n .env.example
-			// .env`). Warn and continue instead of erroring out. See #2504.
-			ux.Fwarningf(
-				d.stderr,
-				"Ignoring env_from directive: file %q does not exist.\n",
-				d.cfg.Root.EnvFrom,
-			)
-		} else if err != nil {
-			// it's fine to include the error ParseEnvsFromDotEnv here because
-			// the error message is relevant to the user
+	}
+
+	// Sources are merged in order, so a later source overrides an earlier one.
+	// Values from exec commands are secrets, unless a later .env file
+	// overrides them.
+	env := map[string]string{}
+	secrets := map[string]string{}
+	for _, source := range d.cfg.Root.EnvFrom {
+		if source == "" {
+			continue
+		}
+		if command, ok := configfile.ExecCommand(source); ok {
+			if command == "" {
+				return nil, usererr.New("env_from %q is missing the command to run", source)
+			}
+			// .env values are expanded as in the final environment, secrets
+			// are used verbatim.
+			lookupEnv := maps.Clone(existingEnv)
+			maps.Copy(lookupEnv, secrets)
+			sourcesEnv := conf.OSExpandEnvMap(env, lookupEnv, d.ProjectDir())
+			maps.Copy(sourcesEnv, secrets)
+			for k, v := range d.execEnv(ctx, command, d.execProcessEnv(existingEnv, sourcesEnv)) {
+				secrets[k] = v
+				delete(env, k)
+			}
+		} else if configfile.IsDotEnvSource(source) {
+			parsedEnvs, err := d.cfg.Root.ParseEnvsFromDotEnv(source)
+			if errors.Is(err, os.ErrNotExist) {
+				// A missing env_from file should not stop Devbox from enabling the
+				// environment. The referenced file is often untracked and may be
+				// created by a command in init_hook (e.g. `cp -n .env.example
+				// .env`). Warn and continue instead of erroring out. See #2504.
+				ux.Fwarningf(
+					d.stderr,
+					"Ignoring env_from directive: file %q does not exist.\n",
+					source,
+				)
+			} else if err != nil {
+				// it's fine to include the error ParseEnvsFromDotEnv here because
+				// the error message is relevant to the user
+				return nil, usererr.New(
+					"failed parsing %s file. Error: %v",
+					source,
+					err,
+				)
+			}
+			for k, v := range parsedEnvs {
+				env[k] = v
+				delete(secrets, k)
+			}
+		} else if !configfile.IsJetifyCloudSource(source) {
 			return nil, usererr.New(
-				"failed parsing %s file. Error: %v",
-				d.cfg.Root.EnvFrom,
-				err,
+				"unknown env_from value: %s. It must be a path to a file ending in \".env\" or \"exec:<command>\"",
+				source,
 			)
 		}
-		for k, v := range parsedEnvs {
-			env[k] = v
+	}
+	maps.Copy(env, d.cfg.Env())
+
+	d.secretEnvKeys = collectSecretEnvKeys(slices.Collect(maps.Keys(secrets)), env)
+	lookupEnv := make(map[string]string, len(existingEnv)+len(secrets))
+	maps.Copy(lookupEnv, existingEnv)
+	maps.Copy(lookupEnv, secrets)
+	expanded := conf.OSExpandEnvMap(env, lookupEnv, d.ProjectDir())
+	// Secrets are used verbatim: expanding them would mangle any value
+	// containing a $.
+	for k, v := range secrets {
+		if _, ok := expanded[k]; !ok {
+			expanded[k] = v
 		}
-	} else if d.cfg.Root.EnvFrom != "" {
-		return nil, usererr.New(
-			"unknown env_from value: %s. It must be a path to a file ending in \".env\"",
-			d.cfg.Root.EnvFrom,
-		)
 	}
-	for k, v := range d.cfg.Env() {
-		env[k] = v
-	}
-	return conf.OSExpandEnvMap(env, existingEnv, d.ProjectDir()), nil
+	return expanded, nil
 }
 
 // ignoreCurrentEnvVar contains environment variables that Devbox should remove
@@ -1186,7 +1231,16 @@ func (d *Devbox) ProjectDirHash() string {
 }
 
 func (d *Devbox) addHashToEnv(env map[string]string) error {
-	hash, err := cachehash.JSON(env)
+	hashed := env
+	if len(d.secretEnvKeys) > 0 {
+		// The hash is written to the shellrc, where it would allow
+		// brute-forcing low-entropy secrets offline.
+		hashed = maps.Clone(env)
+		for _, k := range d.secretEnvKeys {
+			delete(hashed, k)
+		}
+	}
+	hash, err := cachehash.JSON(hashed)
 	if err == nil {
 		env[d.shellEnvHashKey()] = hash
 	}
@@ -1239,8 +1293,12 @@ func (d *Devbox) Lockfile() *lock.File {
 	return d.lockfile
 }
 
+func runxBinPath(projectDir string) string {
+	return filepath.Join(projectDir, ".devbox", "virtenv", "runx", "bin")
+}
+
 func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
-	runxBinPath := filepath.Join(d.projectDir, ".devbox", "virtenv", "runx", "bin")
+	binPath := runxBinPath(d.projectDir)
 
 	// Map of symlink name -> target for every runx binary. If two packages
 	// provide a binary with the same name, the first one wins.
@@ -1272,13 +1330,13 @@ func (d *Devbox) RunXPaths(ctx context.Context) (string, error) {
 	}
 	// Most projects have no runx packages. Don't touch the filesystem for
 	// them unless a previous run left links behind that need removing.
-	if len(links) == 0 && !fileutil.Exists(runxBinPath) {
-		return runxBinPath, nil
+	if len(links) == 0 && !fileutil.Exists(binPath) {
+		return binPath, nil
 	}
-	if err := syncSymlinks(runxBinPath, links); err != nil {
+	if err := syncSymlinks(binPath, links); err != nil {
 		return "", err
 	}
-	return runxBinPath, nil
+	return binPath, nil
 }
 
 // syncSymlinks makes dir contain exactly the symlinks in links (name ->
