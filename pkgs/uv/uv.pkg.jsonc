@@ -1,0 +1,27 @@
+// Package definition for uv, installed from its GitHub releases.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "uv",
+  "description": "An extremely fast Python package and project manager",
+  "homepage": "https://docs.astral.sh/uv",
+  "license": "MIT OR Apache-2.0",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+  // Rust target triples.
+  "os_map": { "darwin": "apple-darwin", "linux": "unknown-linux-gnu" },
+  "arch_map": { "x86_64": "x86_64", "aarch64": "aarch64" },
+
+  // Tags have no "v" prefix.
+  "versions": { "type": "github_releases", "repo": "astral-sh/uv", "strip_prefix": "" },
+
+  "install": {
+    "type": "archive",
+    "url": "https://github.com/astral-sh/uv/releases/download/{{.Version}}/uv-{{.Arch}}-{{.OS}}.tar.gz",
+    "checksum": { "type": "sha256_url", "url": "{{.URL}}.sha256" },
+    "strip_components": 1
+  },
+
+  "bin": ["."],
+  "binaries": ["uv", "uvx"]
+}

@@ -1,0 +1,35 @@
+// Package definition for Zig, installed from ziglang.org.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "zig",
+  "description": "General-purpose programming language and toolchain",
+  "homepage": "https://ziglang.org",
+  "license": "MIT",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+  "os_map": { "darwin": "macos", "linux": "linux" },
+  "arch_map": { "x86_64": "x86_64", "aarch64": "aarch64" },
+
+  // index.json is keyed by version, plus a "master" entry for nightlies.
+  "versions": {
+    "type": "http_json",
+    "url": "https://ziglang.org/download/index.json",
+    "select": "keys[] | select(. != \"master\")"
+  },
+
+  // The index has the tarball URL and its sha256 per platform. Tarball
+  // names changed in 0.14 ("zig-macos-aarch64" became
+  // "zig-aarch64-macos"), which the lookup absorbs.
+  "install": {
+    "type": "archive",
+    "lookup": {
+      "url": "https://ziglang.org/download/index.json",
+      "select": ".[\"{{.Version}}\"][\"{{.Arch}}-{{.OS}}\"] // empty | {url: .tarball, checksum: .shasum}"
+    },
+    "strip_components": 1
+  },
+
+  "bin": ["."],
+  "binaries": ["zig"]
+}
