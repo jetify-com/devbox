@@ -27,7 +27,7 @@ func TestConcurrentRunScriptFiles(t *testing.T) {
 	box, err := Open(&devopt.Opts{Dir: dir, Stderr: os.Stderr})
 	require.NoError(t, err)
 
-	cmdBody, err := shellgen.ScriptBody(box, "eval $DEVBOX_RUN_CMD\n")
+	cmdBody, err := shellgen.ScriptBody(box, runCmdEval)
 	require.NoError(t, err)
 	script := shellgen.ScriptPath(dir, shellgen.ArbitraryCmdFilename)
 
