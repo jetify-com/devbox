@@ -1,0 +1,43 @@
+// Package definition for pnpm, installed as the standalone executable that
+// bundles its own Node.js, so it works with or without nodejs installed.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "pnpm",
+  "description": "Fast, disk space efficient package manager",
+  "homepage": "https://pnpm.io",
+  "license": "MIT",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+  "arch_map": { "x86_64": "x64", "aarch64": "arm64" },
+
+  "versions": { "type": "github_releases", "repo": "pnpm/pnpm" },
+
+  // Since v11 every GitHub release has a tarball per platform holding the
+  // pnpm executable and its dist/ directory. GitHub records a digest for
+  // each asset.
+  "install": {
+    "type": "archive",
+    "url": "https://github.com/pnpm/pnpm/releases/download/v{{.Version}}/pnpm-{{.OS}}-{{.Arch}}.tar.gz",
+    "checksum": { "type": "github_release", "repo": "pnpm/pnpm" },
+    "version_overrides": [
+      {
+        // Before v11 the executable was published to npm as
+        // @pnpm/<macos|linux>-<arch>, and npm has a sha512 for every
+        // version. (The GitHub assets of that era have no digest.)
+        "versions": "<11",
+        "url": "https://registry.npmjs.org/@pnpm/{{ .OS | replace \"darwin\" \"macos\" }}-{{.Arch}}/-/{{ .OS | replace \"darwin\" \"macos\" }}-{{.Arch}}-{{.Version}}.tgz",
+        "checksum": {
+          "type": "http_json",
+          "url": "https://registry.npmjs.org/@pnpm/{{ .OS | replace \"darwin\" \"macos\" }}-{{.Arch}}/{{.Version}}",
+          "select": ".dist.integrity"
+        },
+        "strip_components": 1
+      }
+    ]
+  },
+
+  // Both layouts put the executable at the root of the install.
+  "bin": ["."],
+  "binaries": ["pnpm"]
+}

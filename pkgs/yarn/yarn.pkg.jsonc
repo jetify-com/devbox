@@ -1,0 +1,54 @@
+// Package definition for Yarn, installed from the npm registry. Yarn is
+// JavaScript, so the project also needs nodejs.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "yarn",
+  "description": "Package manager for JavaScript",
+  "homepage": "https://yarnpkg.com",
+  "license": "BSD-2-Clause",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+
+  // Yarn 2 and later ("berry") is published as @yarnpkg/cli-dist; Yarn 1
+  // ("classic") stays in the yarn package.
+  "versions": [
+    {
+      "type": "http_json",
+      "url": "https://registry.npmjs.org/@yarnpkg/cli-dist",
+      "select": ".versions | keys[]"
+    },
+    {
+      "type": "http_json",
+      "url": "https://registry.npmjs.org/yarn",
+      "select": ".versions | keys[]"
+    }
+  ],
+
+  "install": {
+    "type": "archive",
+    "url": "https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-{{.Version}}.tgz",
+    "checksum": {
+      "type": "http_json",
+      "url": "https://registry.npmjs.org/@yarnpkg/cli-dist/{{.Version}}",
+      "select": ".dist.integrity"
+    },
+    "strip_components": 1,
+    "version_overrides": [
+      {
+        "versions": "<2",
+        "url": "https://registry.npmjs.org/yarn/-/yarn-{{.Version}}.tgz",
+        "checksum": {
+          "type": "http_json",
+          "url": "https://registry.npmjs.org/yarn/{{.Version}}",
+          "select": ".dist.integrity"
+        }
+      }
+    ]
+  },
+
+  "bin": ["bin"],
+  // The berry tarball ships bin/yarn without the executable bit; listing
+  // it here has Devbox set it.
+  "binaries": ["yarn"]
+}
