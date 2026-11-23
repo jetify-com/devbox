@@ -413,7 +413,7 @@ computing the environment for `devbox shell` or `devbox shellenv`.
 ## Shipped packages
 
 Definitions live in `pkgs/<name>/<name>.pkg.jsonc`, each next to a
-testscript (`<name>.test.txt`) that installs two versions and switches
+testscript (`<name>.test.txt`, added in PR 6) that installs two versions and switches
 between them. All of them support the four platforms; a version a vendor does
 not publish for a platform is skipped for it (see above).
 
@@ -423,7 +423,7 @@ not publish for a platform is skipped for it (see above).
 | `nodejs` | nodejs.org | `index.json` | `SHASUMS256.txt` | Includes npm (and corepack before 25). `npm install -g` goes to the project's virtenv. |
 | `pnpm` | GitHub releases (11+), npm `@pnpm/<os>-<arch>` (<11) | GitHub releases | GitHub asset digest; npm sha512 integrity | Standalone executable with its own Node.js. `version_overrides` for the layout change in 11. |
 | `yarn` | npm `@yarnpkg/cli-dist` (2+), `yarn` (1.x) | both npm packages (list of sources) | npm sha512 integrity | Needs `nodejs`. `binaries` restores the executable bit npm drops. |
-| `python` | python-build-standalone | uv's `download-metadata.json` | index (`lookup`) | Creates and activates `$VENV_DIR` (default `.venv`), recreating it when the version changes, so pip never writes to the shared install. |
+| `python` | python-build-standalone | uv's `download-metadata.json` | index (`lookup`) | Creates and activates `$VENV_DIR` (default `.venv`) so pip never writes to the shared install. On a version change it recreates only a venv Devbox created (marked by `.devbox-venv`); any other venv is left alone, not activated, and `PIP_REQUIRE_VIRTUALENV=1` keeps pip from installing into the shared Python. |
 | `uv` | GitHub releases | GitHub releases | `<asset>.sha256` | |
 | `rust` | static.rust-lang.org (rustup-init) | rust-lang/rust GitHub releases | `rustup-init.sha256`, then rustup's manifest | `post_install` runs rustup-init; toolchains share `RUSTUP_HOME` in the cache; `RUSTUP_TOOLCHAIN` selects the version. |
 | `java` | Adoptium (Eclipse Temurin JDK) | Adoptium API, paged | index (`lookup`) | Versions are `21.0.5+11`. `JAVA_HOME` is set. macOS builds are bundles, hence a per-system `strip_components`. |
