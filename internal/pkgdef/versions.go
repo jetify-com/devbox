@@ -127,7 +127,7 @@ func (c *Client) listVersionsHTTPJSON(ctx context.Context, rawURL, selectExpr st
 	if err := json.Unmarshal(body, &input); err != nil {
 		return nil, fmt.Errorf("%s: response is not JSON: %w", rawURL, err)
 	}
-	return runJQ(code, selectExpr, input)
+	return runJQ(ctx, code, selectExpr, input)
 }
 
 // githubRelease is the subset of the GitHub releases API response we need.

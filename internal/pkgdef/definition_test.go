@@ -130,6 +130,21 @@ func TestParseErrors(t *testing.T) {
 			want: "install.overrides.x86_64-linux may not contain overrides",
 		},
 		{
+			name: "binary escapes bin dir",
+			json: `{"schema": 1, "name": "x", "platforms": ["x86_64-linux"], "versions": {"type": "static", "versions": ["1"]}, "install": {"type": "archive", "url": "u"}, "binaries": ["../../etc/passwd"]}`,
+			want: "binaries: \"../../etc/passwd\" must be a plain file name",
+		},
+		{
+			name: "bin_name escapes bin",
+			json: `{"schema": 1, "name": "x", "platforms": ["x86_64-linux"], "versions": {"type": "static", "versions": ["1"]}, "install": {"type": "binary", "url": "u", "bin_name": "../../victim"}}`,
+			want: "install.bin_name \"../../victim\" must be a plain file name",
+		},
+		{
+			name: "override bin_name escapes bin",
+			json: `{"schema": 1, "name": "x", "platforms": ["x86_64-linux"], "versions": {"type": "static", "versions": ["1"]}, "install": {"type": "binary", "url": "u", "overrides": {"x86_64-linux": {"bin_name": ".."}}}}`,
+			want: "install.overrides.x86_64-linux.bin_name \"..\" must be a plain file name",
+		},
+		{
 			name: "bin escapes root",
 			json: `{"schema": 1, "name": "x", "platforms": ["x86_64-linux"], "versions": {"type": "static", "versions": ["1"]}, "install": {"type": "archive", "url": "u"}, "bin": ["../bin"]}`,
 			want: "bin: \"../bin\" must be a relative path",

@@ -4,16 +4,11 @@ name: cli-release
 concurrency: cli-release
 
 on:
-  # Build/Release on demand
+  # Re-run a release build by dispatching on its tag, e.g.
+  # `gh workflow run cli-release.yml --ref 0.22.1`. On a branch this only runs
+  # the tests. Stable releases are cut weekly by release-weekly.yml; there are
+  # no edge releases any more.
   workflow_dispatch:
-    inputs:
-      create_edge_release:
-        description: "Create edge release?"
-        required: false
-        default: false
-        type: boolean
-  schedule:
-    - cron: "45 8 * * 4" # Create edge weekly on Thursdays.
   push:
     tags:
       - "*" # Tags that trigger a new release version
@@ -25,8 +20,42 @@ permissions:
   attestations: write # Needed for actions/attest-build-provenance
 
 jobs:
+  # Decides whether this run tests. Always yes, except for an emergency release:
+  # `devbox run emergency-release` pushes an annotated tag whose message has a
+  # `Release-Skip-Tests: true` line (scripts/release.ts SKIP_TESTS_TRAILER).
+  # Only a person with tag push rights can do that. The release App never
+  # writes it.
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      skip_tests: ${{ steps.plan.outputs.skip_tests }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+      - name: Check for an emergency release
+        id: plan
+        run: |
+          skip=false
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            # Re-fetch the tag itself so its annotation is here, not just the commit.
+            git fetch --quiet --force --no-tags origin "+$GITHUB_REF:$GITHUB_REF"
+            if [ "$(git cat-file -t "$GITHUB_REF")" = tag ] &&
+               git for-each-ref --format='%(contents)' "$GITHUB_REF" | grep -qx 'Release-Skip-Tests: true'; then
+              skip=true
+              echo "::warning::EMERGENCY RELEASE: $GITHUB_REF_NAME was tagged with 'Release-Skip-Tests: true', so the test suite is skipped."
+              echo "### ⚠️ Emergency release: tests skipped for $GITHUB_REF_NAME" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          echo "skip_tests=$skip" >> "$GITHUB_OUTPUT"
+
   tests:
+    needs: plan
+    if: needs.plan.outputs.skip_tests != 'true'
     uses: ./.github/workflows/cli-tests.yaml
+    with:
+      # Stable releases ship to macOS with nobody looking, so gate them on the
+      # macOS tests too. The cli-tests workflow_call path skips them otherwise.
+      run-mac-tests: ${{ startsWith(github.ref, 'refs/tags/') }}
 
   report-test-failures:
     runs-on: ubuntu-latest
@@ -46,106 +75,19 @@ jobs:
               "status": "test ${{ needs.tests.result }}"
             }
 
-  edge:
-    runs-on: ubuntu-latest
-    environment: release
-    needs: tests
-    if: ${{ inputs.create_edge_release || github.event.schedule }}
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0 # Needed by goreleaser to browse history.
-      - name: Determine edge tag
-        # This tag is semver and works with semver.Compare
-        run: echo "EDGE_TAG=0.0.0-edge.$(date +%Y-%m-%d)" >> $GITHUB_ENV
-      - name: Set edge tag
-        # Force so a same-day rerun (the edge tag already exists) is idempotent.
-        run: |
-          git tag -f "$EDGE_TAG"
-          git push -f origin "refs/tags/$EDGE_TAG"
-      - name: Set up go
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: ./go.mod
-      - name: Build snapshot with goreleaser
-        uses: goreleaser/goreleaser-action@v7
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --clean --skip=announce,publish --snapshot
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-      # Install the archive that's about to be published with install.sh and
-      # check it reports the edge tag. This is the exact artifact users download;
-      # cli-tests only smoke-tests a goreleaser build of the same commit.
-      - name: Smoke test the release archive
-        env:
-          # This build has the real telemetry keys; don't report CI runs.
-          DO_NOT_TRACK: "1"
-        run: |
-          for platform in linux_amd64 linux_arm64 linux_386 linux_armv7l darwin_amd64 darwin_arm64; do
-            archive="devbox_${EDGE_TAG}_${platform}.tar.gz"
-            if ! grep -q " ${archive}$" dist/checksums.txt; then
-              echo "::error::dist/checksums.txt has no ${archive}, which install.sh and the launcher download"
-              exit 1
-            fi
-          done
-          scripts/smoke-test.sh dist "${EDGE_TAG}"
-      # Sign a SLSA build provenance attestation (keyless, via Sigstore) for
-      # every archive listed in checksums.txt, so downloads can be verified as
-      # built by this workflow:
-      #   gh attestation verify devbox_<version>_linux_amd64.tar.gz --repo jetify-com/devbox
-      - name: Attest build provenance
-        uses: actions/attest-build-provenance@v4
-        with:
-          subject-checksums: dist/checksums.txt
-      - name: Create Sentry release
-        uses: getsentry/action-release@v3
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
-        with:
-          environment: development
-          # v3 renamed `version`/`version_prefix` to `release`/`release_prefix`.
-          release: ${{ env.EDGE_TAG }}
-          release_prefix: "devbox@"
-      - name: Publish snapshot release to GitHub
-        uses: softprops/action-gh-release@v3
-        with:
-          prerelease: true
-          body: "${{ env.EDGE_TAG }} edge release"
-          fail_on_unmatched_files: true
-          tag_name: ${{ env.EDGE_TAG }}
-          files: |
-            dist/checksums.txt
-            dist/*.tar.gz
-      # Legacy: devbox 0.20.0 and older (and the old bash launcher) read the
-      # edge channel from releases.jetify.com, which is served from this S3
-      # bucket. Newer versions don't need it, so failures here don't fail the
-      # release. Remove these steps once those versions are gone.
-      - name: Configure AWS Credentials (legacy)
-        continue-on-error: true
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
-          aws-region: us-west-2
-      - name: Update edge version in s3 (legacy)
-        continue-on-error: true
-        run: |
-          tmp_file=$(mktemp)
-          echo "${{ env.EDGE_TAG }}" > $tmp_file
-          aws s3 cp $tmp_file s3://releases.jetpack.io/devbox/edge/version
-
   release:
     runs-on: ubuntu-latest
     environment: release
-    needs: tests
-    # Only release when there's a tag for the release.
-    if: startsWith(github.ref, 'refs/tags/')
+    needs: [plan, tests]
+    # Only release when there's a tag for the release, and only once the tests
+    # pass. The one exception is an emergency release (see `plan`), whose tests
+    # are skipped on purpose.
+    if: >-
+      !cancelled() &&
+      startsWith(github.ref, 'refs/tags/') &&
+      needs.plan.result == 'success' &&
+      (needs.tests.result == 'success' ||
+       (needs.tests.result == 'skipped' && needs.plan.outputs.skip_tests == 'true'))
     steps:
       - name: Checkout source code
         uses: actions/checkout@v7
@@ -172,7 +114,13 @@ jobs:
         uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
-          version: latest
+          # Pinned so an unreviewed goreleaser release can't change the dist/
+          # layout or archive names (devbox_<version>_<os>_<arch>.tar.gz,
+          # checksums.txt) that install.sh and internal/launcher rely on.
+          # To bump: change every pin (cli-release.yml release,
+          # cli-tests.yaml smoke) in one PR so the "Release smoke test" job
+          # exercises the new version before a release uses it.
+          version: v2.20.2
           args: release --clean
         env:
           DISCORD_WEBHOOK_ID: ${{ secrets.DISCORD_WEBHOOK_ID }}
@@ -255,4 +203,103 @@ jobs:
           payload: |
             {
               "status": "release ${{ job.status }}"
+            }
+
+  # Publishes automatic releases: the ones whose tag release-tag.yml pushed as
+  # the release App. Releases cut by hand with scripts/release.ts stay drafts
+  # here. The script publishes them itself, or leaves them as drafts in
+  # --draft mode.
+  #
+  # Published with the App token, not GITHUB_TOKEN, so the release event
+  # triggers docker-image-release and cli-post-release.
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    needs: release
+    if: >-
+      !cancelled() &&
+      needs.release.result == 'success' &&
+      startsWith(github.ref, 'refs/tags/') &&
+      github.actor == format('{0}[bot]', vars.RELEASE_APP_SLUG)
+    timeout-minutes: 10
+    steps:
+      - name: Mint release App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      # Same checks as stepPublish in scripts/release.ts. Docker builds from the
+      # tarballs as soon as the release is published, and the installer and
+      # launcher find a release through checksums.txt.
+      - name: Check the draft has its artifacts
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '[.assets[].name]' > "$RUNNER_TEMP/assets.json"
+          cat "$RUNNER_TEMP/assets.json"
+          if ! jq -e 'index("checksums.txt")' "$RUNNER_TEMP/assets.json" >/dev/null; then
+            echo "::error::$TAG has no checksums.txt. Not publishing."
+            exit 1
+          fi
+          if ! jq -e 'map(select(endswith(".tar.gz"))) | length > 0' "$RUNNER_TEMP/assets.json" >/dev/null; then
+            echo "::error::$TAG has no archives. Not publishing."
+            exit 1
+          fi
+
+      # The archive that ships must report the version it's tagged as. This
+      # catches a stale flake.nix lastTag or broken ldflags.
+      #
+      # Release builds include the launcher (build.Launcher=true). On a clean
+      # runner the launcher would otherwise download and run the latest
+      # *published* release, i.e. the previous one. DEVBOX_USE_VERSION makes it
+      # run this binary when the binary really is $TAG. If it isn't, the
+      # launcher tries to download $TAG, which isn't published yet, so the
+      # check fails.
+      - name: Smoke-check the released binary
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cd "$RUNNER_TEMP"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "devbox_${TAG}_linux_amd64.tar.gz" --pattern checksums.txt
+          sha256sum --check --ignore-missing checksums.txt
+          tar -xzf "devbox_${TAG}_linux_amd64.tar.gz" devbox
+          got=$(DEVBOX_USE_VERSION="$TAG" ./devbox version)
+          echo "devbox version: $got"
+          if [ "$got" != "$TAG" ]; then
+            echo "::error::The $TAG archive reports version '$got'"
+            exit 1
+          fi
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [ "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" != true ]; then
+            echo "$TAG is already published."
+            exit 0
+          fi
+          # Publishing a non-prerelease as latest is what makes it the stable
+          # version: the installer and launcher read
+          # releases/latest/download/checksums.txt.
+          latest=--latest
+          case "$TAG" in *-*) latest=--latest=false ;; esac
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false "$latest"
+          echo "### Published $TAG" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notify jetpack.io slack of publish status
+        if: always()
+        uses: slackapi/slack-github-action@v4.0.0
+        with:
+          webhook: ${{ secrets.SLACK_CLI_RELEASE_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "status": "publish ${{ github.ref_name }} ${{ job.status }}"
             }

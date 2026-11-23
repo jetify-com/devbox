@@ -6,6 +6,8 @@ package lock
 import (
 	"context"
 	"errors"
+	"maps"
+	"time"
 
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/pkgdef"
@@ -25,7 +27,41 @@ func (f *File) resolvePkgDef(ctx context.Context, raw string, refresh bool) (*Pa
 		return nil, usererr.WithUserMessage(err, "Invalid package %q", raw)
 	}
 
+	// Resolve can run concurrently for different packages; read the
+	// existing entry under the lock (resolving runs outside of it).
+	f.mu.Lock()
 	existing := f.Packages[raw]
+	f.mu.Unlock()
+	return f.resolvePkgDefRef(ctx, ref, raw, existing, refresh)
+}
+
+// RelockPkgDef re-resolves the lockfile entry of a local package definition
+// whose file changed since it was locked, keeping the locked version. A
+// changed install recipe may point at another artifact, and the entry's
+// URL and sha256 must follow it. The entry is updated in memory; callers
+// save the lockfile.
+func (f *File) RelockPkgDef(ctx context.Context, raw string) (*Package, error) {
+	ref, err := pkgdef.ParseRef(raw)
+	if err != nil {
+		return nil, usererr.WithUserMessage(err, "Invalid package %q", raw)
+	}
+	f.mu.Lock()
+	existing := f.Packages[raw]
+	f.mu.Unlock()
+	if existing != nil && existing.Version != "" {
+		ref.Version = existing.Version
+	}
+	locked, err := f.resolvePkgDefRef(ctx, ref, raw, existing, false /*refresh*/)
+	if err != nil {
+		return nil, err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.Packages[raw] = locked
+	return locked, nil
+}
+
+func (f *File) resolvePkgDefRef(ctx context.Context, ref pkgdef.Ref, raw string, existing *Package, refresh bool) (*Package, error) {
 	pinned := ""
 	if !refresh && existing != nil {
 		pinned = existing.DefinitionHash
@@ -65,6 +101,17 @@ func (f *File) resolvePkgDef(ctx context.Context, raw string, refresh bool) (*Pa
 			}
 		}
 		pkg.Systems[system] = info
+	}
+
+	// LastModified is what multi-project lockfile sync uses to pick the
+	// newest entry. Keep it when nothing changed so re-resolving does not
+	// churn devbox.lock.
+	pkg.LastModified = time.Now().UTC().Format(time.RFC3339)
+	if existing != nil && existing.LastModified != "" &&
+		existing.Version == pkg.Version &&
+		existing.DefinitionHash == pkg.DefinitionHash &&
+		maps.EqualFunc(existing.Systems, pkg.Systems, (*SystemInfo).Equals) {
+		pkg.LastModified = existing.LastModified
 	}
 	return pkg, nil
 }

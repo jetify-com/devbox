@@ -75,8 +75,18 @@ func (c *Config) Hash() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	local, ok := c.Source.(*LocalPlugin)
-	if !ok || len(c.CreateFiles) == 0 {
+	// Package definitions read create_files sources from the directory of
+	// a local definition file, so they are handled like local plugins.
+	var local interface {
+		FileContent(subpath string) ([]byte, error)
+	}
+	switch src := c.Source.(type) {
+	case *LocalPlugin:
+		local = src
+	case *pkgDefPlugin:
+		local = src
+	}
+	if local == nil || len(c.CreateFiles) == 0 {
 		return h, nil
 	}
 

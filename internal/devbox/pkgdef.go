@@ -6,6 +6,7 @@ package devbox
 import (
 	"context"
 	"fmt"
+	"io"
 	"maps"
 	"slices"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/samber/lo"
 	"go.jetify.com/devbox/internal/boxcli/usererr"
 	"go.jetify.com/devbox/internal/devpkg"
+	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/internal/pkgdef"
 	"go.jetify.com/devbox/internal/plugin"
@@ -22,8 +24,20 @@ import (
 // installPkgDefPackages installs every package-definition package
 // ("pkg:<ref>@<version>") that is not installed yet.
 func (d *Devbox) installPkgDefPackages(ctx context.Context) error {
-	_, err := d.pkgDefBinPaths(ctx, true /*recordDigest*/)
-	return err
+	// A "pkg:" entry added by editing devbox.json is locked by the install
+	// below. The config was loaded before that, without the definition's
+	// env, init hook and create_files, so reload it once the entries exist.
+	unlocked := lo.ContainsBy(
+		lo.Filter(d.InstallablePackages(), devpkg.IsPkgDef),
+		func(pkg *devpkg.Package) bool { return pkg.Locked() == nil },
+	)
+	if _, err := d.pkgDefBinPaths(ctx, true /*recordDigest*/); err != nil {
+		return err
+	}
+	if unlocked {
+		return d.cfg.LoadRecursive(d.lockfile)
+	}
+	return nil
 }
 
 // pkgDefBinPaths returns the bin directories of every package-definition
@@ -61,6 +75,15 @@ func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordD
 	loaded, err := client.Load(ctx, ref, d.projectDir, locked.DefinitionHash)
 	if err != nil {
 		return nil, err
+	}
+	// A local definition is not pinned by its hash: edits are picked up
+	// directly. If the install recipe changed, the locked URL and sha256
+	// may belong to the old recipe, so re-lock the entry first (only on
+	// the install path; computing the environment never writes the lock).
+	if recordDigest && ref.IsLocal() && loaded.Hash != locked.DefinitionHash {
+		if locked, err = d.lockfile.RelockPkgDef(ctx, pkg.Raw); err != nil {
+			return nil, err
+		}
 	}
 	def := loaded.Definition
 
@@ -117,19 +140,26 @@ func (d *Devbox) installPkgDef(ctx context.Context, pkg *devpkg.Package, recordD
 // pkgDefInfo is `devbox info` for a package definition. It loads the
 // definition and resolves the version with the definition's own version
 // source; it never contacts the search service.
-func (d *Devbox) pkgDefInfo(ctx context.Context, raw string, markdown bool) (string, error) {
+func pkgDefInfo(
+	ctx context.Context,
+	raw string,
+	markdown bool,
+	projectDir string,
+	locker lock.Locker,
+	stderr io.Writer,
+) (string, error) {
 	ref, err := pkgdef.ParseRef(raw)
 	if err != nil {
 		return "", usererr.WithUserMessage(err, "Invalid package %q", raw)
 	}
 
 	client := pkgdef.NewClient()
-	client.Stderr = d.stderr
+	client.Stderr = stderr
 	pinned := ""
-	if locked := d.lockfile.Packages[raw]; locked != nil {
+	if locked := locker.Get(raw); locked != nil {
 		pinned = locked.DefinitionHash
 	}
-	loaded, err := client.Load(ctx, ref, d.projectDir, pinned)
+	loaded, err := client.Load(ctx, ref, projectDir, pinned)
 	if err != nil {
 		return "", err
 	}
@@ -149,7 +179,7 @@ func (d *Devbox) pkgDefInfo(ctx context.Context, raw string, markdown bool) (str
 	}
 	fmt.Fprintf(&b, "Platforms: %s\n", strings.Join(def.Platforms, ", "))
 
-	readme, err := plugin.Readme(ctx, devpkg.PackageFromStringWithDefaults(raw, d.lockfile), d.projectDir, markdown)
+	readme, err := plugin.Readme(ctx, devpkg.PackageFromStringWithDefaults(raw, locker), projectDir, markdown)
 	if err != nil {
 		return "", err
 	}

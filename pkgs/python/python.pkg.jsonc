@@ -5,7 +5,7 @@
 {
   "schema": 1,
   "name": "python",
-  "description": "CPython. Devbox creates a virtual environment in $VENV_DIR (default .venv) and activates it, so pip installs stay out of the shared install. Switching versions recreates a virtual environment that Devbox created.",
+  "description": "CPython. Devbox creates a virtual environment in $VENV_DIR (default .venv) and activates it, so pip installs stay out of the shared install. Switching versions recreates a virtual environment that Devbox created (marked by .devbox-venv); any other one is left alone and pip refuses to install outside a virtual environment.",
   "homepage": "https://www.python.org",
   "license": "PSF-2.0",
 
@@ -38,12 +38,14 @@
   },
   "shell": {
     "init_hook": [
-      // Create the virtual environment, or recreate it when it was made
-      // by another version installed by Devbox. Leave any other one alone.
+      // Create the virtual environment, or recreate it when Devbox made it
+      // (it carries the .devbox-venv marker) from another version. Leave any
+      // other one alone, and then set PIP_REQUIRE_VIRTUALENV so pip3 from
+      // the shared install refuses to change it.
       // Hooks run with `set -e`, hence `|| true` when there is no venv yet.
       "_devbox_venv_home=\"$(sed -n 's/^home = //p' \"$VENV_DIR/pyvenv.cfg\" 2>/dev/null || true)\"",
-      "case \"$_devbox_venv_home\" in \"{{ .InstallDir }}/bin\") ;; \"{{ .CacheDir }}/python/\"*) \"{{ .InstallDir }}/bin/python3\" -m venv --clear \"$VENV_DIR\" ;; *) [ -e \"$VENV_DIR\" ] || \"{{ .InstallDir }}/bin/python3\" -m venv \"$VENV_DIR\" ;; esac",
-      "if [ \"$(sed -n 's/^home = //p' \"$VENV_DIR/pyvenv.cfg\" 2>/dev/null)\" = \"{{ .InstallDir }}/bin\" ]; then . \"$VENV_DIR/bin/activate\"; else echo \"devbox: not activating $VENV_DIR because it was not created from python {{ .Version }}; remove it to have Devbox recreate it\" >&2; fi",
+      "case \"$_devbox_venv_home\" in \"{{ .InstallDir }}/bin\") ;; \"{{ .CacheDir }}/python/\"*) if [ -e \"$VENV_DIR/.devbox-venv\" ]; then \"{{ .InstallDir }}/bin/python3\" -m venv --clear \"$VENV_DIR\" && touch \"$VENV_DIR/.devbox-venv\"; fi ;; *) if [ ! -e \"$VENV_DIR\" ]; then \"{{ .InstallDir }}/bin/python3\" -m venv \"$VENV_DIR\" && touch \"$VENV_DIR/.devbox-venv\"; fi ;; esac",
+      "if [ \"$(sed -n 's/^home = //p' \"$VENV_DIR/pyvenv.cfg\" 2>/dev/null)\" = \"{{ .InstallDir }}/bin\" ]; then . \"$VENV_DIR/bin/activate\"; else export PIP_REQUIRE_VIRTUALENV=1; echo \"devbox: not activating $VENV_DIR because it was not created from python {{ .Version }}; remove it to have Devbox recreate it\" >&2; fi",
       "unset _devbox_venv_home"
     ]
   }

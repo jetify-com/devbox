@@ -83,12 +83,23 @@ func (c *Client) fetchChecksumHTTPJSON(ctx context.Context, src *Checksum, rawUR
 		return digest{}, err
 	}
 	results, err := c.queryJSON(ctx, rawURL, expr)
+	if errors.Is(err, ErrNotFound) {
+		return digest{}, fmt.Errorf("checksum: %w: %w", ErrNoArtifact, err)
+	}
 	if err != nil {
 		return digest{}, fmt.Errorf("checksum: %w", err)
 	}
 	for _, r := range results {
-		if s, ok := r.(string); ok && s != "" {
-			return parseDigest(s, rawURL, "")
+		// Arrays are flattened one level, matching runJQ, so that
+		// "[... | .sha256]" works as well as "... | .sha256".
+		candidates := []any{r}
+		if arr, ok := r.([]any); ok {
+			candidates = arr
+		}
+		for _, v := range candidates {
+			if s, ok := v.(string); ok && s != "" {
+				return parseDigest(s, rawURL, "")
+			}
 		}
 	}
 	return digest{}, fmt.Errorf("checksum: %w: %s: jq expression %q matched nothing for %s",
