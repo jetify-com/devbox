@@ -204,8 +204,9 @@ its tarballs in 0.14. Their indexes list the exact URL and checksum instead.
 
 `url` and `select` are templates. `select` is a jq expression that must
 produce an object with `url` and, optionally, `checksum` (any digest format
-below). If it produces nothing, or `url` returns 404, the vendor has no
-artifact of that version for that system.
+below). If it produces nothing (or only `null`), or `url` returns 404, the
+vendor has no artifact of that version for that system. A remote definition's
+index may not return a `file://` URL.
 
 #### Overrides
 
@@ -292,7 +293,7 @@ verification through sum.golang.org, so it stays an alternate definition.
 
 | `type` | Fields | Behaviour |
 |---|---|---|
-| `http_json` | `url`, `select` | GET `url`, evaluate the jq expression; the first string result is the digest. Covers JSON indexes and the npm registry's `dist.integrity`. |
+| `http_json` | `url`, `select` | GET `url`, evaluate the jq expression; the first non-empty string result is the digest (an array result is flattened one level, so `[... | .sha256]` works). Covers JSON indexes and the npm registry's `dist.integrity`. |
 | `sha256_url` | `url` | GET `url`. The body is either a bare hex digest or a `sha256sum`-style list (`<hex>  <filename>` per line) matched by `{{.Filename}}`. Covers nodejs `SHASUMS256.txt` and the common `<asset>.sha256` convention. |
 | `sha512_url` | `url` | Like `sha256_url` for sha512 digests (Apache's `.sha512` files). |
 | `github_release` | `repo`, `tag` (default `v{{.Version}}`) | The digest GitHub computes for every release asset, read through the GitHub API (honors `GITHUB_TOKEN`). Assets uploaded before GitHub started computing digests (mid 2025) have none, which is treated like `none`. |
