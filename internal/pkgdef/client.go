@@ -164,13 +164,21 @@ func compileJQ(expr string) (*gojq.Code, error) {
 	return code, nil
 }
 
+// jqResultLimit bounds how many values a jq expression may produce, so a
+// mistaken or hostile expression cannot grow memory without bound.
+const jqResultLimit = 100_000
+
 // runJQ evaluates a compiled jq expression against input and returns every
 // string it emits. Numbers are formatted as strings; arrays are flattened
-// one level so that ".[].version" and "[.[].version]" both work.
-func runJQ(code *gojq.Code, expr string, input any) ([]string, error) {
+// one level so that ".[].version" and "[.[].version]" both work. It stops
+// when ctx is cancelled or the output exceeds jqResultLimit values.
+func runJQ(ctx context.Context, code *gojq.Code, expr string, input any) ([]string, error) {
 	var out []string
-	iter := code.Run(input)
+	iter := code.RunWithContext(ctx, input)
 	for {
+		if len(out) > jqResultLimit {
+			return nil, fmt.Errorf("jq expression %q: more than %d results", expr, jqResultLimit)
+		}
 		value, ok := iter.Next()
 		if !ok {
 			break
