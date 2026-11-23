@@ -71,6 +71,7 @@ func RootCmd() *cobra.Command {
 	command.AddCommand(servicesCmd())
 	command.AddCommand(setupCmd())
 	command.AddCommand(shellCmd(shellFlagDefaults{}))
+	command.AddCommand(skillCmd())
 	command.AddCommand(shellEnvCmd(shellenvFlagDefaults{
 		recomputeEnv: true,
 	}))
