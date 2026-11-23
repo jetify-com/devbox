@@ -1,7 +1,9 @@
 package testrunner
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/rogpeppe/go-internal/testscript"
@@ -15,6 +17,7 @@ import (
 func RunPackageDefinitionTestscripts(t *testing.T, pkgsDir string) {
 	pkgsDir, err := filepath.Abs(pkgsDir)
 	require.NoError(t, err)
+	CheckPackageDefinitionTestscripts(t, pkgsDir)
 	scripts := globScripts(filepath.Join(pkgsDir, "*", "*.test.txt"))
 	require.NotEmpty(t, scripts, "no package definition test scripts found")
 
@@ -33,4 +36,23 @@ func RunPackageDefinitionTestscripts(t *testing.T, pkgsDir string) {
 		return nil
 	}
 	testscript.Run(t, params)
+}
+
+// CheckPackageDefinitionTestscripts fails when a package definition in
+// pkgsDir (pkgs/<name>/<name>.pkg.jsonc) has no matching testscript
+// (pkgs/<name>/<name>.test.txt), so a package can't silently lose its
+// install and version switching coverage.
+func CheckPackageDefinitionTestscripts(t *testing.T, pkgsDir string) {
+	t.Helper()
+	defs, err := filepath.Glob(filepath.Join(pkgsDir, "*", "*.pkg.json*"))
+	require.NoError(t, err)
+	require.NotEmpty(t, defs, "no package definitions found in %s", pkgsDir)
+	for _, def := range defs {
+		base := filepath.Base(def)
+		name := base[:strings.Index(base, ".pkg.json")]
+		script := filepath.Join(filepath.Dir(def), name+".test.txt")
+		if _, err := os.Stat(script); err != nil {
+			t.Errorf("package definition %s has no testscript: want %s", def, script)
+		}
+	}
 }

@@ -65,6 +65,13 @@ func TestPackageDefinitions(t *testing.T) {
 	testrunner.RunPackageDefinitionTestscripts(t, "../pkgs")
 }
 
+// TestPackageDefinitionScriptsExist runs on every test run (unlike
+// TestPackageDefinitions) and fails when a package definition in pkgs/ has
+// no testscript.
+func TestPackageDefinitionScriptsExist(t *testing.T) {
+	testrunner.CheckPackageDefinitionTestscripts(t, "../pkgs")
+}
+
 // TestScriptFileNames fails when a file looks like a testscript but doesn't end
 // in .test.txt, which is the only suffix RunTestscripts picks up. Such a file
 // never runs, so a typo in its name silently drops its coverage (this happened

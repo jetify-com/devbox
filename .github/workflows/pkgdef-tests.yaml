@@ -19,7 +19,7 @@ on:
       - internal/lock/**
       - internal/plugin/**
       - internal/nix/**
-      - testscripts/testrunner/pkgdefs.go
+      - testscripts/**
       - .github/workflows/pkgdef-tests.yaml
   push:
     branches:
@@ -33,7 +33,7 @@ on:
       - internal/lock/**
       - internal/plugin/**
       - internal/nix/**
-      - testscripts/testrunner/pkgdefs.go
+      - testscripts/**
       - .github/workflows/pkgdef-tests.yaml
   workflow_dispatch:
   schedule:
