@@ -300,6 +300,11 @@ func (d *Definition) Validate() error {
 			fail("bin: %q must be a relative path inside the install root", dir)
 		}
 	}
+	for _, name := range d.Binaries {
+		if name == "" || name == "." || name == ".." || strings.ContainsAny(name, `/\`) {
+			fail("binaries: %q must be a plain file name", name)
+		}
+	}
 
 	if len(d.Versions) == 0 {
 		fail("versions is required")

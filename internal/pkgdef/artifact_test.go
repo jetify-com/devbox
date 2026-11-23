@@ -441,3 +441,34 @@ func TestGitHubReleasesPagination(t *testing.T) {
 	require.ErrorIs(t, err, ErrVersionNotFound)
 	assert.Equal(t, 0, srv.hitCount("/repos/acme/x/releases?per_page=100&page=3"))
 }
+
+// TestHTTPJSONChecksumPerPlatform checks that an http_json checksum
+// endpoint that 404s for one platform skips that platform instead of
+// failing the lock, and that a select expression producing an array of
+// digests is accepted.
+func TestHTTPJSONChecksumPerPlatform(t *testing.T) {
+	srv := newVendorServer(t)
+	digestHex := strings.Repeat("ab", 32)
+	srv.mux.HandleFunc("/sums/x86_64-linux.json", func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprintf(w, `{"files": [{"filename": "x-x86_64-linux", "sha256": %q}]}`, digestHex)
+	})
+	def := parseDef(t, `{
+	  "schema": 1, "name": "x", "platforms": ["x86_64-linux", "aarch64-linux"],
+	  "versions": {"type": "static", "versions": ["1.0.0"]},
+	  "install": {
+	    "type": "binary",
+	    "url": "%[1]s/x-{{.System}}",
+	    "checksum": {
+	      "type": "http_json",
+	      "url": "%[1]s/sums/{{.System}}.json",
+	      "select": "[.files[] | select(.filename == \"{{.Filename}}\") | .sha256]"
+	    }
+	  }
+	}`, srv.URL)
+
+	artifacts, err := srv.client(t).Lock(t.Context(), def, "1.0.0")
+	require.NoError(t, err)
+	require.Contains(t, artifacts, "x86_64-linux")
+	assert.NotContains(t, artifacts, "aarch64-linux")
+	assert.Equal(t, digestHex, artifacts["x86_64-linux"].Sha256)
+}

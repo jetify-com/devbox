@@ -130,6 +130,11 @@ func TestParseErrors(t *testing.T) {
 			want: "install.overrides.x86_64-linux may not contain overrides",
 		},
 		{
+			name: "binary escapes bin dir",
+			json: `{"schema": 1, "name": "x", "platforms": ["x86_64-linux"], "versions": {"type": "static", "versions": ["1"]}, "install": {"type": "archive", "url": "u"}, "binaries": ["../../etc/passwd"]}`,
+			want: "binaries: \"../../etc/passwd\" must be a plain file name",
+		},
+		{
 			name: "bin escapes root",
 			json: `{"schema": 1, "name": "x", "platforms": ["x86_64-linux"], "versions": {"type": "static", "versions": ["1"]}, "install": {"type": "archive", "url": "u"}, "bin": ["../bin"]}`,
 			want: "bin: \"../bin\" must be a relative path",
