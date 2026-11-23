@@ -36,6 +36,17 @@ func infoCmd() *cobra.Command {
 }
 
 func infoCmdFunc(cmd *cobra.Command, pkg string, flags infoCmdFlags) error {
+	// Package info comes from the search API, so it doesn't need a project.
+	// Use the project when there is one so plugin paths point into it.
+	if !hasProjectConfig(flags.config.path) {
+		info, err := devbox.PackageInfo(cmd.Context(), pkg, flags.markdown)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		fmt.Fprint(cmd.OutOrStdout(), info)
+		return nil
+	}
+
 	box, err := devbox.Open(&devopt.Opts{
 		Dir:         flags.config.path,
 		Environment: flags.config.environment,

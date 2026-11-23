@@ -194,6 +194,14 @@ func genReadmeCmd() *cobra.Command {
 		Short: "Generate markdown readme file for this project",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			outPath := ""
+			if len(args) > 0 {
+				outPath = args[0]
+			}
+			// Saving the default template doesn't read the project.
+			if flags.saveTemplate {
+				return docgen.SaveDefaultReadmeTemplate(outPath)
+			}
 			box, err := devbox.Open(&devopt.Opts{
 				Dir:         flags.config.path,
 				Environment: flags.config.environment,
@@ -201,13 +209,6 @@ func genReadmeCmd() *cobra.Command {
 			})
 			if err != nil {
 				return errors.WithStack(err)
-			}
-			outPath := ""
-			if len(args) > 0 {
-				outPath = args[0]
-			}
-			if flags.saveTemplate {
-				return docgen.SaveDefaultReadmeTemplate(outPath)
 			}
 			return docgen.GenerateReadme(box, outPath, flags.template)
 		},
