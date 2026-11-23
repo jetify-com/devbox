@@ -210,8 +210,8 @@ Don't work around these; they're why the script exists.
   commit that won't be released. Settling the bump first also means a red `main`
   doesn't hide the fact that a bump PR is needed.
 - **Never publish with `GITHUB_TOKEN`.** GitHub doesn't trigger workflows from
-  events raised by `GITHUB_TOKEN`. That's why CI-created edge releases never
-  trigger `docker-image-release`. Manual releases publish with your own
+  events raised by `GITHUB_TOKEN`, so a release published that way never
+  triggers `docker-image-release` or `cli-post-release`. Manual releases publish with your own
   credentials. The automatic flow publishes with the release App's token,
   which does trigger them.
 

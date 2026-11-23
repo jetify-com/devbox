@@ -82,7 +82,10 @@ release: published / released  ── existing ──
   Use this token for every push, PR, merge, tag and publish. That is what lets
   the downstream workflows fire.
 - Tag ruleset: only the App, plus admins as a manual fallback, may create
-  non-edge tags.
+  tags.
+- Edge releases are gone. The scheduled weekly edge build and the manual
+  `create_edge_release` option were removed from `cli-release.yml`, along with
+  goreleaser's snapshot config. Weekly stable releases replace them.
 
 ### 2. Make `release.ts` usable in CI (non-interactive)
 

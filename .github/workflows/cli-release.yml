@@ -4,14 +4,11 @@ name: cli-release
 concurrency: cli-release
 
 on:
-  # Build/Release on demand
+  # Re-run a release build by dispatching on its tag, e.g.
+  # `gh workflow run cli-release.yml --ref 0.22.1`. On a branch this only runs
+  # the tests. Stable releases are cut weekly by release-weekly.yml; there are
+  # no edge releases any more.
   workflow_dispatch:
-    inputs:
-      create_edge_release:
-        description: "Create edge release?"
-        required: false
-        default: false
-        type: boolean
   push:
     tags:
       - "*" # Tags that trigger a new release version
@@ -47,86 +44,6 @@ jobs:
             {
               "status": "test ${{ needs.tests.result }}"
             }
-
-  edge:
-    runs-on: ubuntu-latest
-    environment: release
-    needs: tests
-    # Manual only. The weekly scheduled edge build was dropped once stable
-    # releases became automatic and weekly (release-weekly.yml).
-    if: ${{ inputs.create_edge_release }}
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0 # Needed by goreleaser to browse history.
-      - name: Determine edge tag
-        # This tag is semver and works with semver.Compare
-        run: echo "EDGE_TAG=0.0.0-edge.$(date +%Y-%m-%d)" >> $GITHUB_ENV
-      - name: Set edge tag
-        # Force so a same-day rerun (the edge tag already exists) is idempotent.
-        run: |
-          git tag -f "$EDGE_TAG"
-          git push -f origin "refs/tags/$EDGE_TAG"
-      - name: Set up go
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: ./go.mod
-      - name: Build snapshot with goreleaser
-        uses: goreleaser/goreleaser-action@v7
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --clean --skip=announce,publish --snapshot
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TELEMETRY_KEY: ${{ secrets.TELEMETRY_KEY }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-      # Sign a SLSA build provenance attestation (keyless, via Sigstore) for
-      # every archive listed in checksums.txt, so downloads can be verified as
-      # built by this workflow:
-      #   gh attestation verify devbox_<version>_linux_amd64.tar.gz --repo jetify-com/devbox
-      - name: Attest build provenance
-        uses: actions/attest-build-provenance@v4
-        with:
-          subject-checksums: dist/checksums.txt
-      - name: Create Sentry release
-        uses: getsentry/action-release@v3
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
-        with:
-          environment: development
-          # v3 renamed `version`/`version_prefix` to `release`/`release_prefix`.
-          release: ${{ env.EDGE_TAG }}
-          release_prefix: "devbox@"
-      - name: Publish snapshot release to GitHub
-        uses: softprops/action-gh-release@v3
-        with:
-          prerelease: true
-          body: "${{ env.EDGE_TAG }} edge release"
-          fail_on_unmatched_files: true
-          tag_name: ${{ env.EDGE_TAG }}
-          files: |
-            dist/checksums.txt
-            dist/*.tar.gz
-      # Legacy: devbox 0.20.0 and older (and the old bash launcher) read the
-      # edge channel from releases.jetify.com, which is served from this S3
-      # bucket. Newer versions don't need it, so failures here don't fail the
-      # release. Remove these steps once those versions are gone.
-      - name: Configure AWS Credentials (legacy)
-        continue-on-error: true
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
-          aws-region: us-west-2
-      - name: Update edge version in s3 (legacy)
-        continue-on-error: true
-        run: |
-          tmp_file=$(mktemp)
-          echo "${{ env.EDGE_TAG }}" > $tmp_file
-          aws s3 cp $tmp_file s3://releases.jetpack.io/devbox/edge/version
 
   release:
     runs-on: ubuntu-latest
