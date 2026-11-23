@@ -51,6 +51,12 @@ paths keep working. `<ref>` is one of:
 
 If no `@version` is given, `devbox add` appends `@latest`.
 
+Adding a `pkg:` package whose `<ref>` matches one already in `devbox.json`
+replaces it, as with `devbox add go@1.22` today: `devbox add
+pkg:./go.pkg.jsonc@1.23` switches an existing `pkg:./go.pkg.jsonc@1.22` to
+1.23 in `devbox.json` and `devbox.lock`. Refs match textually, so
+`./go.pkg.jsonc` and `go.pkg.jsonc` are different packages.
+
 Naming alternatives that were considered: `vendor:` with `go.vendor.json`
 reads well but collides with Go's `vendor/` convention; `.ext` is too generic
 and has no editor support; `devpkg:` is unambiguous but verbose. JSON was
