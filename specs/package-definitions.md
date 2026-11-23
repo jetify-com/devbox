@@ -134,7 +134,7 @@ hatch.
 | `versions` | yes | A version source, or a list of them. See below. |
 | `install` | yes | An install strategy. See below. |
 | `bin` | no | Directories relative to the install root that go on `PATH`. Default `["bin"]`. |
-| `binaries` | no | Executable names expected in a `bin` directory after install. Install marks them executable (npm tarballs drop the bit) and fails if one is missing. |
+| `binaries` | no | Executable names expected in a `bin` directory after install. Install marks them executable (npm tarballs drop the bit) and fails if one is missing. The check runs after `post_install`, so a hook may create a listed binary. Each entry must be a plain file name. |
 | `env`, `shell`, `create_files` | no | Plugin-compatible activation. See Activation. |
 | `hooks.post_install` | no | Shell commands run once per installed version by `/bin/sh` in the install root, with `DEVBOX_PKG_INSTALL_DIR`, `DEVBOX_PKG_VERSION` and `DEVBOX_PKG_SYSTEM` set and `/usr/bin:/bin` appended to `PATH`. |
 
