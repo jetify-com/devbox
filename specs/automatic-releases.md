@@ -48,7 +48,7 @@ Tue 16:17 UTC  release-weekly.yml (schedule)
    │  open PR bump-flake-<v> as the release App, label `auto-release`
    │  enable auto-merge (squash)
    ▼
-PR: cli-tests (required) + Greptile review (required approval)
+PR: cli-tests (required) + Greptile approval (required)
    │  both green ──▶ GitHub auto-merge squashes into main (as the App)
    ▼
 release-tag.yml (pull_request: closed, merged, label auto-release)
@@ -112,34 +112,23 @@ Reuse its logic rather than re-implementing it in YAML:
 
 ### 4. Gate the merge on Greptile + tests
 
-Preferred: **native auto-merge plus a ruleset on `main`**. The ruleset requires
-1 approving review and the `cli-tests` checks. When Greptile submits an
-approving review and the checks go green, GitHub merges by itself. No polling,
-no extra workflow.
+Greptile submits an `APPROVED` review on its own when it finds no blocking
+issues, so the gate is just **native auto-merge plus a ruleset on `main`**:
 
-Things to check before building this:
+- The ruleset requires 1 approving review and the `cli-tests` checks.
+- The weekly job enables auto-merge (`gh pr merge --auto --squash`) when it
+  opens the PR. Once Greptile approves and the checks are green, GitHub merges
+  it. No polling and no extra workflow. The merge is attributed to the App,
+  since it enabled auto-merge, so the resulting push to `main` triggers
+  workflows normally.
+- If Greptile requests changes or never approves, the PR just stays open.
 
-- **Does Greptile submit an `APPROVED` review?** By default it posts a COMMENT
-  review with a confidence score. If it can be set to approve, enable that. If
-  it can't, add a small `release-approve.yml` on `pull_request_review` /
-  `issue_comment` from `greptile-apps[bot]`, restricted to `auto-release` PRs
-  authored by the App. When Greptile reports no blocking issues (for example,
-  confidence ≥ 4/5), it merges with the App token. The App can't approve a PR
-  it authored, so this workflow merges directly rather than approving.
-  Because nothing approves the PR in this fallback, a single approval rule on
-  `main` would keep it blocked. Split `main`'s protection into two rulesets:
-  - **Approval ruleset** (1 approving review). The App is on its bypass list,
-    so it can merge without an approval.
-  - **Status-check ruleset** (`cli-tests` required). Nobody can bypass it, so
-    the App still can't merge until the tests pass.
+Things to confirm when setting this up:
 
-  The workflow also checks that the commit Greptile reviewed is still the PR's
-  head commit, and that the required checks passed on that commit, before it
-  calls `gh pr merge --squash --match-head-commit <sha>`.
-- **Does Greptile review bot-authored PRs?** Some configurations skip them.
-  Allow the App's author in Greptile's settings.
-- Requiring 1 approval on `main` applies to human PRs as well. Confirm it
-  matches the current branch protection.
+- **Greptile reviews App-authored PRs.** Some configurations skip bot authors.
+  Allow the App in Greptile's settings.
+- **The ruleset matches `main`'s current protection.** Requiring 1 approval
+  applies to human PRs too.
 - **Timeout:** if the PR hasn't merged after 48h, post to Slack
   (`SLACK_CLI_RELEASE_WEBHOOK_URL`). The next weekly run supersedes it anyway.
 
@@ -230,8 +219,6 @@ run in parallel with existing jobs so CI doesn't get slower.
 
 ## Open questions
 
-1. Can Greptile be set to submit `APPROVED` reviews, and does it review
-   App-authored PRs? This decides between §4's two options.
-2. Should `docs:`/`examples`-only weeks skip the release?
-3. Keep `nix flake update` (nixpkgs bump) in every release PR?
-4. Day and time for the weekly cut (proposed Tue 16:17 UTC).
+1. Should `docs:`/`examples`-only weeks skip the release?
+2. Keep `nix flake update` (nixpkgs bump) in every release PR?
+3. Day and time for the weekly cut (proposed Tue 16:17 UTC).
