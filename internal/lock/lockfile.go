@@ -91,6 +91,10 @@ func (f *File) Remove(pkgs ...string) error {
 // and write the entry; the search or flake request runs outside of it.
 // Concurrent calls for the same package share a single request.
 func (f *File) Resolve(pkg string) (*Package, error) {
+	// Fail before an existing "pkg:" entry reaches the flake parser.
+	if err := pkgtype.CheckPkgDefEnabled(pkg); err != nil {
+		return nil, err
+	}
 	if entry := f.resolvedEntry(pkg); entry != nil {
 		return entry, nil
 	}

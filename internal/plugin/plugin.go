@@ -23,6 +23,7 @@ import (
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/lock"
 	"go.jetify.com/devbox/internal/nix"
+	"go.jetify.com/devbox/internal/pkgdef"
 	"go.jetify.com/devbox/internal/services"
 )
 
@@ -199,7 +200,13 @@ func (m *Manager) createFile(
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	tmpl, err := template.New(filePath + "-template").Parse(string(content))
+	tmpl := template.New(filePath + "-template")
+	if _, ok := pkg.(*pkgDefPlugin); ok {
+		// Package definitions get the same template functions as the
+		// rest of the definition (trimPrefix, replace, ...).
+		tmpl = tmpl.Funcs(pkgdef.TemplateFuncs())
+	}
+	tmpl, err = tmpl.Parse(string(content))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -264,13 +271,7 @@ func buildConfigWithVars(pkg Includable, projectDir, content string, extraVars m
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	vars := map[string]string{
-		"DevboxProjectDir":     projectDir,
-		"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
-		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
-		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
-		"Virtenv":              filepath.Join(projectDir, VirtenvPath, name),
-	}
+	vars := pluginTemplateVars(name, projectDir)
 	for k, v := range extraVars {
 		vars[k] = v
 	}
@@ -285,6 +286,17 @@ func buildConfigWithVars(pkg Includable, projectDir, content string, extraVars m
 	}
 
 	return cfg, errors.WithStack(json.Unmarshal(jsonb, cfg))
+}
+
+// pluginTemplateVars are the template variables every plugin.json can use.
+func pluginTemplateVars(name, projectDir string) map[string]string {
+	return map[string]string{
+		"DevboxProjectDir":     projectDir,
+		"DevboxDir":            filepath.Join(projectDir, devboxDirName, name),
+		"DevboxDirRoot":        filepath.Join(projectDir, devboxDirName),
+		"DevboxProfileDefault": filepath.Join(projectDir, nix.ProfilePath),
+		"Virtenv":              filepath.Join(projectDir, VirtenvPath, name),
+	}
 }
 
 func jsonPurifyPluginContent(content []byte) ([]byte, error) {
