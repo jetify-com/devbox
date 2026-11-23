@@ -92,11 +92,20 @@ This prints the commits since the last release grouped by kind (breaking /
 features / fixes / other), the recommended version, and whether `flake.nix`
 needs bumping. Read it before saying anything about the release.
 
-The recommendation follows devbox's own history: it's pre-1.0, so **breaking
-changes take a minor bump** (0.17.5 → 0.18.0) and **everything else takes a
-patch bump** — 0.17.4 shipped new features as a patch. Say what the script
-recommends and why, but sanity-check it against the actual diff. A release that
-removes whole subsystems deserves a minor bump even if nobody wrote `feat!:`.
+Devbox is pre-1.0, so there's no automatic major bump. The rule is: **any
+`feat` commit or any breaking change takes a minor bump** (0.22.3 → 0.23.0),
+and **everything else takes a patch bump**. A `feat` commit is `feat:` or
+`feat(scope):`, with or without `!`; a breaking change is `!` after any type
+(`fix!:`, `refactor(x)!:`) or `BREAKING CHANGE` in the body. The weekly
+automatic release uses the same rule (`--next-version`).
+
+PRs are squash-merged, so the PR title becomes the commit subject, and the
+title is what gets checked. **Title PRs that add a feature `feat: …`** (or
+`feat(scope): …`); a feature titled `Support X` or `fix: …` ships as a patch.
+
+Say what the script recommends and why, but sanity-check it against the actual
+diff. A release that adds features or removes whole subsystems deserves a minor
+bump even if nobody wrote `feat:` or `!`.
 
 ## 2. Ask how they want to release
 
@@ -106,7 +115,7 @@ Present the three options and let the user choose — don't assume:
    a draft. Right when the notes need review, or when the release is being
    coordinated with an announcement. This is the safe default.
 2. **Publish directly** (`devbox run publish-release`) — same pipeline, then
-   takes it live. Right for routine patch releases.
+   takes it live. Right for routine releases.
 3. **Publish an existing draft** (`devbox run publish-release`) — if a draft is
    already sitting there, the command lists it and offers to finish it. Check
    with `devbox run release-status` first.

@@ -299,39 +299,78 @@ function commitsSince(tag: string): Commit[] {
     .filter(Boolean)
     .map((chunk) => {
       const [subject = "", body = "", author = ""] = chunk.split("\x1f");
-      const conventional = /^(\w+)(\([^)]*\))?(!)?:/.exec(subject);
-      return {
-        subject,
-        body,
-        author,
-        type: conventional?.[1] ?? "other",
-        breaking: Boolean(conventional?.[3]) || body.includes("BREAKING CHANGE"),
-      };
+      return parseCommit(subject, body, author);
     });
+}
+
+// PRs are squash-merged, so the subject is the PR title: `feat(scope)!: …`.
+function parseCommit(subject: string, body: string, author: string): Commit {
+  const conventional = /^(\w+)(\([^)]*\))?(!)?:/.exec(subject);
+  return {
+    subject,
+    body,
+    author,
+    type: conventional?.[1] ?? "other",
+    breaking: Boolean(conventional?.[3]) || body.includes("BREAKING CHANGE"),
+  };
 }
 
 type Recommendation = { version: string; bump: "minor" | "patch"; reason: string };
 
-// Devbox is pre-1.0, so the convention in its history is: breaking changes take
-// a minor bump (0.17.5 -> 0.18.0), everything else takes a patch bump — 0.17.4
-// shipped new features as a patch.
+// Devbox is pre-1.0, so there's no automatic major bump. Any `feat` commit or
+// any breaking change (`type!:` or `BREAKING CHANGE` in the body) takes a minor
+// bump (0.22.3 -> 0.23.0); everything else takes a patch bump.
 function recommendVersion(prev: string, commits: Commit[]): Recommendation {
   const version = parseVersion(prev);
   if (!version) fail(`previous tag "${prev}" is not parseable semver`);
 
-  const breaking = commits.filter((c) => c.breaking);
-  if (breaking.length > 0) {
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  const features = commits.filter((c) => c.type === "feat").length;
+  const breaking = commits.filter((c) => c.breaking).length;
+  if (features > 0 || breaking > 0) {
+    const why = [
+      features > 0 ? plural(features, "feat commit") : "",
+      breaking > 0 ? plural(breaking, "breaking change") : "",
+    ].filter(Boolean).join(" and ");
     return {
       version: `${version.major}.${version.minor + 1}.0`,
       bump: "minor",
-      reason: `${breaking.length} breaking change${breaking.length === 1 ? "" : "s"} since ${prev}`,
+      reason: `${why} since ${prev}`,
     };
   }
   return {
     version: `${version.major}.${version.minor}.${version.patch + 1}`,
     bump: "patch",
-    reason: `no breaking changes since ${prev}`,
+    reason: `no feat commits or breaking changes since ${prev}`,
   };
+}
+
+// Synthetic commits run through parseCommit and recommendVersion, so the bump
+// rule can be checked without a test runner: `node scripts/release.ts --self-check`.
+function selfCheck(): void {
+  const cases: { subjects: string[]; body?: string; want: string }[] = [
+    { subjects: ["fix: a bug", "chore: deps"], want: "0.22.4" },
+    { subjects: ["docs: typo", "refactor(shell): tidy", "ci: cache"], want: "0.22.4" },
+    { subjects: ["fix: a bug", "feat: new thing"], want: "0.23.0" },
+    { subjects: ["feat(add): scoped feature"], want: "0.23.0" },
+    { subjects: ["feat!: breaking feature"], want: "0.23.0" },
+    { subjects: ["fix!: breaking fix"], want: "0.23.0" },
+    { subjects: ["refactor(x)!: breaking refactor"], want: "0.23.0" },
+    { subjects: ["fix: quiet"], body: "BREAKING CHANGE: removes --foo", want: "0.23.0" },
+    { subjects: ["feature: not a conventional feat type"], want: "0.22.4" },
+    { subjects: ["Add a feat: in the middle"], want: "0.22.4" },
+  ];
+  let failed = 0;
+  for (const tc of cases) {
+    const commits = tc.subjects.map((s) => parseCommit(s, tc.body ?? "", "test"));
+    const rec = recommendVersion("0.22.3", commits);
+    const pass = rec.version === tc.want;
+    if (!pass) failed++;
+    console.log(`${pass ? green("ok  ") : red("FAIL")} ${tc.subjects.join(" | ")}${tc.body ? ` [body: ${tc.body}]` : ""}`);
+    console.log(dim(`       -> ${rec.version} (${rec.bump} bump — ${rec.reason})${pass ? "" : `, want ${tc.want}`}`));
+  }
+  if (failed > 0) fail(`${failed} of ${cases.length} self-check cases failed`);
+  ok(`all ${cases.length} self-check cases passed`);
 }
 
 // Paths whose changes alone never justify a release: they don't change the
@@ -1135,6 +1174,8 @@ ${bold("Direct invocation")}
   node scripts/release.ts --next-version       JSON: next version and whether
                                                anything shippable changed
                                                (used by release-weekly)
+  node scripts/release.ts --self-check         Check the version-bump rule
+                                               against synthetic commits
   node scripts/release.ts --bump-flake --version <x.y.z>
                                                Rewrite flake.nix lastTag and
                                                refresh vendor-hash/flake.lock
@@ -1217,6 +1258,11 @@ async function main(): Promise<void> {
 
   if (argv[0] === "--changes") {
     changesReport();
+    return;
+  }
+
+  if (argv[0] === "--self-check") {
+    selfCheck();
     return;
   }
 

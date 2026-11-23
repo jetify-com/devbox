@@ -94,6 +94,11 @@ release: published / released  ── existing ──
 Reuse its logic rather than re-implementing it in YAML:
 
 - `--next-version`: prints JSON `{ prev, version, bump, reason, commits, shippable }`.
+  `bump` is `minor` when any commit since the last tag is a `feat` commit
+  (`feat:` / `feat(scope):`, with or without `!`) or a breaking change (`!`
+  after any type, or `BREAKING CHANGE` in the body), and `patch` otherwise;
+  pre-1.0, there is no automatic major bump. PRs are squash-merged, so the PR
+  title is the subject that gets checked.
   `shippable` is false when every commit since the last tag is one of:
   a `chore(release): bump flake …` commit, a `docs:` commit, or a commit that
   only touches `examples/` or docs paths. A week with only those changes
