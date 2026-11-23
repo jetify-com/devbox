@@ -1,0 +1,112 @@
+name: release-approve
+# Fallback approval for the automatic weekly release PR (see release-weekly.yml).
+#
+# Greptile normally approves the release PR on its own, and then this does
+# nothing. If it only comments, this approves in CI when Greptile's verdict
+# passes, so auto-merge can still fire. cli-tests is still required by the
+# ruleset on main, so this never lets a red PR merge.
+#
+# The approval comes from github-actions[bot] (GITHUB_TOKEN). It counts toward
+# the required review because the PR's author is the release App, not Actions.
+# This needs the repo setting "Allow GitHub Actions to create and approve pull
+# requests".
+#
+# Nothing from the comment body is interpolated into the shell: the job reads
+# Greptile's comment back through the API and only pattern-matches it.
+
+on:
+  issue_comment:
+    types: [created, edited]
+  pull_request_review:
+    types: [submitted]
+
+concurrency:
+  group: release-approve-${{ github.event.issue.number || github.event.pull_request.number }}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  approve:
+    if: >-
+      (github.event.comment.user.login == 'greptile-apps[bot]' && github.event.issue.pull_request) ||
+      github.event.review.user.login == 'greptile-apps[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Approve if Greptile's verdict passes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.issue.number || github.event.pull_request.number }}
+          BOT_LOGIN: ${{ vars.RELEASE_APP_SLUG }}[bot]
+          MIN_CONFIDENCE: "4"
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" > "$RUNNER_TEMP/pr.json"
+          author=$(jq -r .user.login "$RUNNER_TEMP/pr.json")
+          head_ref=$(jq -r .head.ref "$RUNNER_TEMP/pr.json")
+          head_sha=$(jq -r .head.sha "$RUNNER_TEMP/pr.json")
+          state=$(jq -r .state "$RUNNER_TEMP/pr.json")
+          labelled=$(jq -r '[.labels[].name] | index("auto-release") != null' "$RUNNER_TEMP/pr.json")
+
+          if [ "$state" != open ] || [ "$author" != "$BOT_LOGIN" ] || [ "$labelled" != true ] \
+             || [[ "$head_ref" != bump-flake-* ]]; then
+            echo "#$PR isn't an open automatic release PR. Nothing to do."
+            exit 0
+          fi
+
+          # --jq runs per page with --paginate, so stream the matches and count once.
+          approved=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/reviews" --paginate \
+            --jq ".[] | select(.state == \"APPROVED\" and .commit_id == \"$head_sha\") | .id" | wc -l)
+          if [ "$approved" -gt 0 ]; then
+            echo "#$PR is already approved at $head_sha. Nothing to do."
+            exit 0
+          fi
+
+          # The verdict must be about the current head commit. Timestamps can't
+          # show that: a review of an older commit can finish after a newer push.
+          # Greptile's PR review records the SHA it reviewed, so require one at
+          # head_sha. Its summary comment, which carries the score, is edited
+          # right after that review is submitted.
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/reviews" --paginate \
+            --jq '.[] | select(.user.login == "greptile-apps[bot]")' \
+            | jq -s 'sort_by(.submitted_at)' > "$RUNNER_TEMP/greptile-reviews.json"
+          latest_sha=$(jq -r 'last | .commit_id // empty' "$RUNNER_TEMP/greptile-reviews.json")
+          if [ "$latest_sha" != "$head_sha" ]; then
+            echo "Greptile's latest review is of ${latest_sha:-nothing}, not the head $head_sha. Waiting for it to review the head."
+            exit 0
+          fi
+          reviewed_at=$(jq -r 'last | .submitted_at' "$RUNNER_TEMP/greptile-reviews.json")
+
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.user.login == "greptile-apps[bot]" and (.body | contains("<!-- greptile_summary -->")))' \
+            | jq -s 'last // empty' > "$RUNNER_TEMP/summary.json"
+          if [ ! -s "$RUNNER_TEMP/summary.json" ]; then
+            echo "No Greptile summary on #$PR yet."
+            exit 0
+          fi
+          summary_at=$(jq -r .updated_at "$RUNNER_TEMP/summary.json")
+          if [[ "$summary_at" < "$reviewed_at" ]]; then
+            echo "Greptile's summary ($summary_at) hasn't been updated since its review of $head_sha ($reviewed_at). Waiting."
+            exit 0
+          fi
+          jq -r .body "$RUNNER_TEMP/summary.json" > "$RUNNER_TEMP/summary.md"
+
+          confidence=$(grep -oE 'Confidence Score: [0-9]/5' "$RUNNER_TEMP/summary.md" | head -n 1 | grep -oE '[0-9]' | head -n 1 || true)
+          if [ -z "$confidence" ]; then
+            echo "Couldn't find a confidence score in Greptile's summary."
+            exit 0
+          fi
+          if grep -qE 'badges/p[01]\.svg' "$RUNNER_TEMP/summary.md"; then
+            echo "Greptile reported P0/P1 findings. Not approving."
+            exit 0
+          fi
+          if [ "$confidence" -lt "$MIN_CONFIDENCE" ]; then
+            echo "Greptile confidence $confidence/5 is below $MIN_CONFIDENCE/5. Not approving."
+            exit 0
+          fi
+
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/reviews" \
+            -f commit_id="$head_sha" -f event=APPROVE \
+            -f body="Approved by release-approve: Greptile confidence $confidence/5 with no P0/P1 findings. Merges once cli-tests passes." >/dev/null
+          echo "Approved #$PR at $head_sha (Greptile confidence $confidence/5)."

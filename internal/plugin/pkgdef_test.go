@@ -156,3 +156,98 @@ func TestGetPkgDefConfigsWarns(t *testing.T) {
 		t.Errorf("warning = %q, want it to name the package and the template error", stderr.String())
 	}
 }
+
+// writePkgDefProject writes hello.pkg.json (with a create_files source) into
+// each of subdirs and locks "pkg:./<subdir>/hello.pkg.json@1" for each.
+func writePkgDefProject(t *testing.T, subdirs ...string) (string, *lock.File, []configfile.Package) {
+	t.Helper()
+	featureflag.PkgDefs.EnableForTest(t)
+	dir := t.TempDir()
+	lockfile, err := lock.GetFile(testProject{dir: dir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkgs := []configfile.Package{}
+	for _, sub := range subdirs {
+		if err := os.MkdirAll(filepath.Join(dir, sub, "files"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, sub, "hello.pkg.json"), []byte(pkgDefActivationTest), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		for _, osName := range []string{"darwin", "linux"} {
+			if err := os.WriteFile(filepath.Join(dir, sub, "files", osName+".txt"), []byte("v1"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		raw := "pkg:./" + sub + "/hello.pkg.json@1"
+		lockfile.Packages[raw] = &lock.Package{
+			Resolved: "pkg:./" + sub + "/hello.pkg.json@v1.2.0",
+			Version:  "v1.2.0",
+			Source:   pkgdef.Source,
+		}
+		pkgs = append(pkgs, configfile.NewVersionOnlyPackage(raw, ""))
+	}
+	return dir, lockfile, pkgs
+}
+
+func TestGetPkgDefConfigsSkipsDisabledPlugin(t *testing.T) {
+	_, lockfile, pkgs := writePkgDefProject(t, "a")
+	pkgs[0].DisablePlugin = true
+	configs, err := GetPkgDefConfigsForPackages(pkgs, lockfile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(configs) != 0 {
+		t.Errorf("got %d configs, want 0 for a package with disable_plugin", len(configs))
+	}
+}
+
+// TestGetPkgDefConfigsRejectsDuplicateNames checks that two definitions with
+// the same name don't share (and overwrite) one plugin directory.
+func TestGetPkgDefConfigsRejectsDuplicateNames(t *testing.T) {
+	_, lockfile, pkgs := writePkgDefProject(t, "a", "b")
+	var stderr bytes.Buffer
+	pkgDefWarningWriter = &stderr
+	t.Cleanup(func() { pkgDefWarningWriter = os.Stderr })
+
+	configs, err := GetPkgDefConfigsForPackages(pkgs, lockfile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(configs) != 1 {
+		t.Fatalf("got %d configs, want 1", len(configs))
+	}
+	if got := configs[0].Source.LockfileKey(); got != pkgs[0].VersionedName() {
+		t.Errorf("kept %s, want the first package %s", got, pkgs[0].VersionedName())
+	}
+	if !strings.Contains(stderr.String(), pkgs[1].VersionedName()) || !strings.Contains(stderr.String(), "same name") {
+		t.Errorf("warning = %q, want it to name the skipped package", stderr.String())
+	}
+}
+
+// TestPkgDefConfigHashIncludesCreateFiles checks that editing a create_files
+// source of a local definition changes the config hash.
+func TestPkgDefConfigHashIncludesCreateFiles(t *testing.T) {
+	dir, lockfile, pkgs := writePkgDefProject(t, "a")
+	hash := func() string {
+		configs, err := GetPkgDefConfigsForPackages(pkgs, lockfile)
+		if err != nil || len(configs) != 1 {
+			t.Fatalf("got %d configs, err %v", len(configs), err)
+		}
+		h, err := configs[0].Hash()
+		if err != nil {
+			t.Fatal(err)
+		}
+		return h
+	}
+	before := hash()
+	for _, osName := range []string{"darwin", "linux"} {
+		if err := os.WriteFile(filepath.Join(dir, "a", "files", osName+".txt"), []byte("v2"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if after := hash(); after == before {
+		t.Error("config hash did not change after editing a create_files source")
+	}
+}

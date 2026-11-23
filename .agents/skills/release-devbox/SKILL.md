@@ -5,6 +5,70 @@ description: Cut a Devbox CLI release — recommend the version bump, write the 
 
 # Release the Devbox CLI
 
+## Releases are automatic now
+
+Every Tuesday at 08:17 PST, `release-weekly.yml` checks for shippable changes
+since the last release. A week with only `docs:`, `examples/` or release-bump
+commits is skipped. Otherwise:
+
+1. `release-weekly` opens `bump-flake-<version>` as the release App (label
+   `auto-release`) with auto-merge on.
+2. Greptile approves it and `cli-tests` passes, macOS included (release PRs
+   always run the macOS tests), so GitHub merges it.
+   (`release-approve.yml` approves in CI if Greptile only comments.)
+3. `release-tag` creates the draft with generated notes and tags the merge
+   commit.
+4. `cli-release` runs the tests again (including macOS), builds, smoke-checks
+   `devbox version`, and publishes the release as latest.
+
+Nobody has to do anything unless something fails. Slack gets a message for
+each stage. Use this skill when:
+
+- **A release is stuck.** See "If something is stuck" below.
+- **A release is needed off-cycle.** Run `release-weekly` with
+  `workflow_dispatch` (optionally with a `version`), or drive the manual flow
+  below. Releases from the manual flow aren't auto-published: `cli-release`
+  only publishes tags that the release App pushed.
+- **Someone wants hand-written notes.** Edit the published release on GitHub
+  afterwards, in the house style below.
+
+## Emergency release (skips tests)
+
+For when a fix has to ship *now* and the tests can't pass, e.g. a broken test,
+a flaky macOS runner, or an outage in a service the tests use. It's the manual
+release with every test gate removed:
+
+```bash
+devbox run emergency-release --version 0.22.2
+```
+
+That is `node scripts/release.ts --publish --emergency`, and it takes the same
+flags (`--title`, `--notes-file`, `--yes`). Compared to `publish-release`, it:
+
+- **Skips the `cli-tests` check on `main`.**
+- **Skips the `flake.nix` bump.** The bump PR can't merge without green tests.
+  Only `nix build` / flake users see the stale version string; the release
+  binaries get their version from the tag. The next weekly release bumps it.
+- **Skips the test suite in `cli-release`.** The annotated tag's message gets a
+  `Release-Skip-Tests: true` line. `cli-release`'s `plan` job reads it, skips
+  `tests`, and lets `release` build anyway. The run summary shows a warning.
+
+Everything else is the same: draft before tag, build, wait for assets,
+publish. It releases whatever `main` is at, so merge the fix first.
+
+Rules:
+
+- **Get explicit sign-off from the user before running it,** and say plainly
+  that it skips all tests. Never pick it yourself to get past a red `main`
+  that should be fixed.
+- Only someone who can push tags can trigger it. The release App never writes
+  the line, so automatic releases always run the tests.
+- A tag that already exists without the line can't become an emergency
+  release. If it isn't pushed yet, delete it locally (`git tag -d <v>`) and
+  re-run. If it is pushed, release the next version instead.
+
+## Manual release
+
 `scripts/release.ts` owns every mechanical step and the order they run in. Your
 job is the judgment: read what's shipping, recommend a version, write the title
 and notes, and help the user pick how to release.
@@ -28,11 +92,20 @@ This prints the commits since the last release grouped by kind (breaking /
 features / fixes / other), the recommended version, and whether `flake.nix`
 needs bumping. Read it before saying anything about the release.
 
-The recommendation follows devbox's own history: it's pre-1.0, so **breaking
-changes take a minor bump** (0.17.5 → 0.18.0) and **everything else takes a
-patch bump** — 0.17.4 shipped new features as a patch. Say what the script
-recommends and why, but sanity-check it against the actual diff. A release that
-removes whole subsystems deserves a minor bump even if nobody wrote `feat!:`.
+Devbox is pre-1.0, so there's no automatic major bump. The rule is: **any
+`feat` commit or any breaking change takes a minor bump** (0.22.3 → 0.23.0),
+and **everything else takes a patch bump**. A `feat` commit is `feat:` or
+`feat(scope):`, with or without `!`; a breaking change is `!` after any type
+(`fix!:`, `refactor(x)!:`) or `BREAKING CHANGE` in the body. The weekly
+automatic release uses the same rule (`--next-version`).
+
+PRs are squash-merged, so the PR title becomes the commit subject, and the
+title is what gets checked. **Title PRs that add a feature `feat: …`** (or
+`feat(scope): …`); a feature titled `Support X` or `fix: …` ships as a patch.
+
+Say what the script recommends and why, but sanity-check it against the actual
+diff. A release that adds features or removes whole subsystems deserves a minor
+bump even if nobody wrote `feat:` or `!`.
 
 ## 2. Ask how they want to release
 
@@ -42,7 +115,7 @@ Present the three options and let the user choose — don't assume:
    a draft. Right when the notes need review, or when the release is being
    coordinated with an announcement. This is the safe default.
 2. **Publish directly** (`devbox run publish-release`) — same pipeline, then
-   takes it live. Right for routine patch releases.
+   takes it live. Right for routine releases.
 3. **Publish an existing draft** (`devbox run publish-release`) — if a draft is
    already sitting there, the command lists it and offers to finish it. Check
    with `devbox run release-status` first.
@@ -181,9 +254,11 @@ Don't work around these; they're why the script exists.
   which re-runs `cli-tests` there — so a result read before the bump is about a
   commit that won't be released. Settling the bump first also means a red `main`
   doesn't hide the fact that a bump PR is needed.
-- **Publish from local credentials, not CI.** GitHub doesn't trigger workflows
-  from events raised by `GITHUB_TOKEN`. That's why CI-created edge releases never
-  trigger `docker-image-release`, and why publishing can't just be a CI step.
+- **Never publish with `GITHUB_TOKEN`.** GitHub doesn't trigger workflows from
+  events raised by `GITHUB_TOKEN`, so a release published that way never
+  triggers `docker-image-release` or `cli-post-release`. Manual releases publish with your own
+  credentials. The automatic flow publishes with the release App's token,
+  which does trigger them.
 
 ## If something is stuck
 
@@ -192,6 +267,10 @@ result and the current `flake.nix` version in one shot.
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
+| No release PR this week | Nothing shippable (docs/examples only), or `release-weekly` failed | `gh run list --workflow=release-weekly.yml --limit 3`; re-run with `workflow_dispatch` |
+| Release PR open for days | Greptile didn't approve, or `cli-tests` is red on it | Fix main or address Greptile's findings; next week's run supersedes the PR anyway |
+| Release PR merged, no tag | `release-tag` failed or skipped | `gh run list --workflow=release-tag.yml --limit 3`; re-run it (idempotent) |
+| Auto release built but still a draft | `publish` job in `cli-release` failed (missing assets, smoke check) | Check its log. If the smoke check says the version is wrong, `flake.nix` `lastTag` didn't match the tag |
 | `cli-release` never started | Tag push didn't land | Re-run the same command |
 | `cli-release` failed in `tests` | Red `main` (see below) | Fix the test, re-run |
 | Draft has 0 assets | The upload step didn't run or failed | Check `cli-release`'s "Attach artifacts" step, re-run |

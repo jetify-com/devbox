@@ -438,6 +438,9 @@ func (in *Install) validate(path string) []string {
 		if in.Checksum != nil {
 			errs = append(errs, in.Checksum.validate(path+".checksum")...)
 		}
+		if in.BinName != "" && !isPlainFileName(in.BinName) {
+			errs = append(errs, fmt.Sprintf("%s.bin_name %q must be a plain file name", path, in.BinName))
+		}
 	case InstallManager:
 		if in.Requires == "" || in.InstallCmd == "" || in.Locate == "" {
 			errs = append(errs, path+".requires, .install and .locate are required for type manager")
@@ -453,6 +456,12 @@ func (in *Install) validate(path string) []string {
 			path, in.Type, InstallArchive, InstallBinary, InstallManager, InstallScript))
 	}
 	return errs
+}
+
+// isPlainFileName reports whether name is a single path component that
+// stays in the directory it is joined to.
+func isPlainFileName(name string) bool {
+	return name != "" && name != "." && name != ".." && !strings.ContainsAny(name, `/\`)
 }
 
 func (c *Checksum) validate(path string) []string {

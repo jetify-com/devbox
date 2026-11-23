@@ -163,7 +163,7 @@ func (c *Client) queryJSON(ctx context.Context, rawURL, expr string) ([]any, err
 	if err := json.Unmarshal(body, &input); err != nil {
 		return nil, fmt.Errorf("%s: response is not JSON: %w", rawURL, err)
 	}
-	return runJQValues(code, expr, input)
+	return runJQValues(ctx, code, expr, input)
 }
 
 // open starts a GET request and returns the response body. The caller must
@@ -218,12 +218,20 @@ func compileJQ(expr string) (*gojq.Code, error) {
 	return code, nil
 }
 
+// jqResultLimit bounds how many values a jq expression may produce, so a
+// mistaken or hostile expression cannot grow memory without bound.
+const jqResultLimit = 100_000
+
 // runJQValues evaluates a compiled jq expression against input and returns
-// every value it emits.
-func runJQValues(code *gojq.Code, expr string, input any) ([]any, error) {
+// every value it emits. It stops when ctx is cancelled or the output
+// exceeds jqResultLimit values.
+func runJQValues(ctx context.Context, code *gojq.Code, expr string, input any) ([]any, error) {
 	var out []any
-	iter := code.Run(input)
+	iter := code.RunWithContext(ctx, input)
 	for {
+		if len(out) > jqResultLimit {
+			return nil, fmt.Errorf("jq expression %q: more than %d results", expr, jqResultLimit)
+		}
 		value, ok := iter.Next()
 		if !ok {
 			break
@@ -239,8 +247,8 @@ func runJQValues(code *gojq.Code, expr string, input any) ([]any, error) {
 // runJQ evaluates a compiled jq expression against input and returns every
 // string it emits. Numbers are formatted as strings; arrays are flattened
 // one level so that ".[].version" and "[.[].version]" both work.
-func runJQ(code *gojq.Code, expr string, input any) ([]string, error) {
-	values, err := runJQValues(code, expr, input)
+func runJQ(ctx context.Context, code *gojq.Code, expr string, input any) ([]string, error) {
+	values, err := runJQValues(ctx, code, expr, input)
 	if err != nil {
 		return nil, err
 	}
