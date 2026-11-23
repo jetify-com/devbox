@@ -1,0 +1,40 @@
+// Package definition for Go, installed from the official builds on go.dev.
+// Format: see specs/package-definitions.md.
+{
+  "schema": 1,
+  "name": "go",
+  "description": "The Go programming language",
+  "homepage": "https://go.dev",
+  "license": "BSD-3-Clause",
+
+  "platforms": ["aarch64-darwin", "x86_64-darwin", "aarch64-linux", "x86_64-linux"],
+
+  // go.dev spells arches as amd64/arm64 (the defaults), so no arch_map is needed.
+
+  // go.dev publishes a JSON index of every release with per-file checksums.
+  // Versions look like "go1.22.3"; strip the prefix so "1.22" and "latest"
+  // resolve the way users expect.
+  "versions": {
+    "type": "http_json",
+    "url": "https://go.dev/dl/?mode=json&include=all",
+    "select": ".[] | select(.stable) | .version | ltrimstr(\"go\")"
+  },
+
+  "install": {
+    "type": "archive",
+    "url": "https://go.dev/dl/go{{.Version}}.{{.OS}}-{{.Arch}}.tar.gz",
+    "checksum": {
+      "type": "http_json",
+      "url": "https://go.dev/dl/?mode=json&include=all",
+      "select": ".[].files[] | select(.filename == \"{{.Filename}}\") | .sha256"
+    },
+    // The tarball unpacks into a single top-level "go/" directory.
+    "strip_components": 1
+  },
+
+  "bin": ["bin"],
+  "binaries": ["go", "gofmt"]
+
+  // GOROOT is intentionally not set: the go binary locates its own root and
+  // upstream discourages setting it.
+}
