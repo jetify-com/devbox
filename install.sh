@@ -12,13 +12,16 @@ set -euo pipefail
 # Customize install script
 # ========================
 
-# This script is published at get.jetify.com/devbox so users can install via:
-# curl -fsSL https://get.jetify.com/devbox | bash
+# Users install devbox with:
+# curl -fsSL https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh | bash
+#
+# Everything is downloaded from GitHub releases. The latest stable version is
+# whichever release GitHub marks as "latest" (never a draft or prerelease).
 
 readonly INSTALL_DIR="/usr/local/bin"
 readonly BIN="devbox"
-readonly RELEASES_URL="https://releases.jetify.com/devbox"
-readonly DOWNLOAD_URL="https://github.com/jetify-com/devbox/releases/download"
+# Must match releasesURL in internal/launcher/install.go.
+readonly RELEASES_URL="https://github.com/jetify-com/devbox/releases"
 # Must match the version files that devbox reads (internal/launcher/files.go).
 readonly CACHE_DIR="${XDG_CACHE_HOME:-${HOME}/.cache}/${BIN}"
 
@@ -201,7 +204,7 @@ intro_msg() {
 	printf "\n"
 	header "Confirm Installation Details"
 	plain "  Location:     ${GREEN}${INSTALL_DIR}/${BIN}${NO_COLOR}"
-	plain "  Download URL: ${UNDERLINE}${BLUE}${DOWNLOAD_URL}${NO_COLOR}"
+	plain "  Download URL: ${UNDERLINE}${BLUE}${RELEASES_URL}${NO_COLOR}"
 	printf "\n"
 }
 
@@ -214,22 +217,26 @@ install_flow() {
 	trap 'rm -rf "${TMP_DIR}"' EXIT
 	local -r tmp_dir="${TMP_DIR}"
 
+	# The latest release's checksums.txt names the latest version (in its
+	# archive names) and the checksum to verify, in one request.
 	start_task "Finding the latest version"
-	download "${RELEASES_URL}/stable/version" "${tmp_dir}/version"
+	download "${RELEASES_URL}/latest/download/checksums.txt" "${tmp_dir}/checksums.txt"
+	local -r platform="$(platform)"
 	local version
-	version="$(tr -d '[:space:]' <"${tmp_dir}/version")"
-	if [[ ! ${version} =~ ^v?[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+	version="$(awk -v suffix="_${platform}.tar.gz" '
+		index($2, "devbox_") == 1 && substr($2, length($2) - length(suffix) + 1) == suffix {
+			print substr($2, 8, length($2) - 7 - length(suffix)); exit
+		}' "${tmp_dir}/checksums.txt")"
+	if [[ ! ${version} =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
 		fail_task "Finding the latest version"
-		error "Unexpected version: ${version}"
+		error "The latest release has no ${BIN} for ${platform}"
 		exit 1
 	fi
-	version="${version#v}"
 	end_task "Finding the latest version (${version})"
 
-	local -r archive="${BIN}_${version}_$(platform).tar.gz"
+	local -r archive="${BIN}_${version}_${platform}.tar.gz"
 	start_task "Downloading ${BIN} ${version}"
-	download "${DOWNLOAD_URL}/${version}/checksums.txt" "${tmp_dir}/checksums.txt"
-	download "${DOWNLOAD_URL}/${version}/${archive}" "${tmp_dir}/${archive}"
+	download "${RELEASES_URL}/download/${version}/${archive}" "${tmp_dir}/${archive}"
 	end_task "Downloading ${BIN} ${version}"
 
 	start_task "Verifying checksum"

@@ -53,7 +53,6 @@ var commandSkipList = []string{
 	"devbox global shellenv",
 	"devbox shellenv",
 	"devbox version update",
-	"devbox log",
 }
 
 // CheckVersion checks the launcher and binary versions and prints a notice if
@@ -72,10 +71,6 @@ func CheckVersion(w io.Writer, commandPath string) {
 
 	// Don't use up the once-a-day launcher notice on a --quiet command.
 	if w == io.Discard {
-		return
-	}
-
-	if envir.IsDevboxCloud() {
 		return
 	}
 
@@ -114,7 +109,7 @@ func SelfUpdate(stdErr io.Writer, updateLauncher bool) error {
 		return usererr.New(
 			"Devbox can't update itself because it wasn't installed with the devbox installer. " +
 				"Update it with the package manager you installed it with, or reinstall it with " +
-				"`curl -fsSL https://get.jetify.com/devbox | bash`.",
+				"`curl -fsSL https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh | bash`.",
 		)
 	}
 

@@ -1,0 +1,36 @@
+# Testscript for adding a package when the search service is unreachable.
+
+exec devbox init
+
+# Point search at a port nothing listens on. After retrying, add should say
+# search failed and show how to install from nixpkgs directly, instead of
+# reporting that the package doesn't exist.
+env DEVBOX_SEARCH_HOST=http://127.0.0.1:1
+! exec devbox add hello
+stderr 'Failed to look up package "hello": the Devbox search service is unavailable'
+stderr 'devbox add github:NixOS/nixpkgs/.*#hello'
+! stderr 'Package "hello" not found'
+! stderr 'which may not match'
+
+# With a specific version, warn that nixpkgs can't pin it.
+! exec devbox add hello@2.12.1
+stderr 'devbox add github:NixOS/nixpkgs/.*#hello'
+stderr 'which may not match "hello@2.12.1"'
+
+json.superset devbox.json expected_devbox.json
+
+# A failed add must not remove a package that's already in devbox.json.
+cp devbox_with_hello.json devbox.json
+! exec devbox add hello@2.12.1
+! stderr 'Replacing package'
+json.superset devbox.json devbox_with_hello.json
+
+-- expected_devbox.json --
+{
+  "packages": []
+}
+
+-- devbox_with_hello.json --
+{
+  "packages": ["hello"]
+}

@@ -76,7 +76,7 @@ announce:
 
       Updating:
       If you installed devbox via our recommended installer
-      (`curl -fsSL https://get.jetpack.io/devbox | bash`) you will get the new version
+      (`curl -fsSL https://raw.githubusercontent.com/jetify-com/devbox/main/install.sh | bash`) you will get the new version
       _automatically_, the next time you run `devbox`
 
       Thanks,

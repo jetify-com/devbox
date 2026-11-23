@@ -8,15 +8,16 @@ require (
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/bmatcuk/doublestar/v4 v4.10.3
 	github.com/briandowns/spinner v1.23.2
+	github.com/creack/pty v1.1.24
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/f1bonacc1/process-compose v1.122.0
 	github.com/fatih/color v1.19.0
-	github.com/fsnotify/fsnotify v1.10.1
 	github.com/getsentry/sentry-go v0.50.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-envparse v0.1.0
 	github.com/itchyny/gojq v0.12.19
+	github.com/jedib0t/go-pretty/v6 v6.8.3
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-isatty v0.0.24
 	github.com/mholt/archives v0.1.5
@@ -35,6 +36,7 @@ require (
 	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e
 	golang.org/x/mod v0.42.0
 	golang.org/x/sync v0.24.0
+	golang.org/x/sys v0.49.0
 	golang.org/x/tools v0.52.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -69,7 +71,7 @@ require (
 	github.com/alfatraining/structtag v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/alingse/nilnesserr v0.2.0 // indirect
-	github.com/andybalholm/brotli v1.2.0 // indirect
+	github.com/andybalholm/brotli v1.2.7 // indirect
 	github.com/ashanbrown/forbidigo/v2 v2.3.1 // indirect
 	github.com/ashanbrown/makezero/v2 v2.2.1 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
@@ -102,7 +104,6 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/codeclysm/extract/v4 v4.0.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
-	github.com/creack/pty v1.1.24 // indirect
 	github.com/curioswitch/go-reassign v0.3.0 // indirect
 	github.com/daixiang0/gci v0.13.7 // indirect
 	github.com/dave/dst v0.28.0 // indirect
@@ -113,6 +114,7 @@ require (
 	github.com/f1bonacc1/go-health/v2 v2.1.6 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/firefart/nonamedreturns v1.0.8 // indirect
+	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/ghostiam/protogetter v1.0.1 // indirect
 	github.com/go-critic/go-critic v0.15.0 // indirect
@@ -174,7 +176,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kisielk/errcheck v1.30.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.6 // indirect
-	github.com/klauspost/compress v1.20.0 // indirect
+	github.com/klauspost/compress v1.20.2 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/kulti/thelper v0.7.1 // indirect
 	github.com/kunwardeep/paralleltest v1.0.16 // indirect
@@ -276,7 +278,6 @@ require (
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260811152304-ee035b5b010f // indirect
 	golang.org/x/oauth2 v0.33.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/term v0.47.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect

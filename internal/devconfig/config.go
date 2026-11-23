@@ -17,6 +17,7 @@ import (
 	"github.com/samber/lo/mutable"
 	"go.jetify.com/devbox/internal/build"
 	"go.jetify.com/devbox/internal/cachehash"
+	"go.jetify.com/devbox/internal/conf"
 	"go.jetify.com/devbox/internal/devbox/shellcmd"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/lock"
@@ -481,17 +482,32 @@ func createIncludableFromPluginConfig(pluginConfig *plugin.Config) *Config {
 }
 
 func OSExpandIfPossible(env, existingEnv map[string]string) map[string]string {
-	mapping := func(value string) string {
-		// If the value is not set in existingEnv, return the value wrapped in ${...}
-		if existingEnv == nil || existingEnv[value] == "" {
-			return fmt.Sprintf("${%s}", value)
+	var mapping func(value string) string
+	mapping = func(value string) string {
+		// Strip any ":-default" suffix so ${FOO:-bar} looks up FOO.
+		name, def, hasDefault := conf.SplitDefault(value)
+		if existingEnv != nil && existingEnv[name] != "" {
+			return existingEnv[name]
 		}
-		return existingEnv[value]
+		// If the value is not set in existingEnv, return the value wrapped in
+		// ${...} so it can be resolved later against the user's environment.
+		if hasDefault {
+			// Resolve what we can inside the default (e.g. variables set by
+			// plugins) but keep the outer default for later. The result is
+			// parsed again, so only do this if the substituted values don't
+			// unbalance the braces (e.g. a plugin value of "a}b" would end
+			// the outer reference early).
+			if expanded := conf.Expand(def, mapping); conf.BracesBalanced(expanded) {
+				def = expanded
+			}
+			return fmt.Sprintf("${%s:-%s}", name, def)
+		}
+		return fmt.Sprintf("${%s}", value)
 	}
 
 	res := map[string]string{}
 	for k, v := range env {
-		res[k] = os.Expand(v, mapping)
+		res[k] = conf.Expand(v, mapping)
 	}
 	return res
 }

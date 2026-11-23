@@ -1,8 +1,8 @@
 name: Package Issue
 description: Report a problem with an existing package on either Devbox or Nixhub
+type: Bug
 labels:
   - package
-  - bug
   - triage
 body:
   - type: input

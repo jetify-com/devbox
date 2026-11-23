@@ -18,9 +18,9 @@ import (
 	"go.jetify.com/devbox/internal/nix"
 	"go.jetify.com/devbox/internal/plugin"
 	"go.jetify.com/devbox/internal/searcher"
-	"go.jetify.com/devbox/internal/shellgen"
 	"go.jetify.com/devbox/internal/ux"
 	"go.jetify.com/devbox/nix/flake"
+	"golang.org/x/sync/errgroup"
 )
 
 func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
@@ -43,39 +43,19 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		return err
 	}
 
-	pendingPackagesToUpdate := []*devpkg.Package{}
-	for _, pkg := range inputs {
-		if pkg.IsLegacy() {
-			fmt.Fprintf(d.stderr, "Updating %s -> %s\n", pkg.Raw, pkg.LegacyToVersioned())
-
-			// Get the package from the config to get the Platforms and ExcludedPlatforms later
-			cfgPackage, ok := d.cfg.Root.GetPackage(pkg.Raw)
-			if !ok {
-				return fmt.Errorf("package %s not found in config", pkg.Raw)
-			}
-
-			if err := d.Remove(ctx, pkg.Raw); err != nil {
-				return err
-			}
-			// Calling Add function with the original package names, since
-			// Add will automatically append @latest if search is able to handle that.
-			// If not, it will fallback to the nixpkg format.
-			if err := d.Add(ctx, []string{pkg.Raw}, devopt.AddOpts{
-				Platforms:        cfgPackage.Platforms,
-				ExcludePlatforms: cfgPackage.ExcludedPlatforms,
-			}); err != nil {
-				return err
-			}
-		} else {
-			pendingPackagesToUpdate = append(pendingPackagesToUpdate, pkg)
-		}
-	}
-
-	if err := d.updatePendingPackages(pendingPackagesToUpdate); err != nil {
+	pendingPackagesToUpdate, migrated, err := d.migrateLegacyPackages(ctx, inputs)
+	if err != nil {
 		return err
 	}
 
-	d.packagesBeingUpdated = inputs
+	changed, err := d.updatePendingPackages(pendingPackagesToUpdate)
+	if err != nil {
+		return err
+	}
+
+	// Only packages whose lockfile entry changed are rebuilt with --refresh.
+	// Unchanged packages are built only if they're missing from the store.
+	d.packagesBeingUpdated = changed
 
 	mode := update
 	if opts.NoInstall {
@@ -85,20 +65,24 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 		return err
 	}
 
-	// With --no-install, skip the two post-update steps that shell out to Nix:
-	// "nix flake update" (via FlakeUpdate) and "nix path-info" (via
-	// FixMissingStorePaths). This keeps `devbox update --no-install` usable in
-	// environments where Nix isn't fully set up (e.g. CI/Renovate), where those
-	// calls would otherwise fail. Earlier steps in the update flow may still
-	// resolve flake refs via Nix; --no-install only avoids these install-like
-	// steps. See jetify-com/devbox#2585.
-	if !opts.NoInstall {
-		// I'm not entirely sure this is even needed, so ignoring the error.
-		// It's definitely not needed for non-flakes. (which is 99.9% of packages)
-		// It will return an error if .devbox/gen/flake is missing
-		// TODO: Remove this if it's not needed.
-		_ = nix.FlakeUpdate(shellgen.FlakePath(d))
+	if len(migrated) > 0 {
+		if err := d.saveCfg(); err != nil {
+			return err
+		}
+		for _, added := range migrated {
+			if err := d.printPostAddMessage(ctx, added.pkgs, added.unchangedPackageNames, added.opts); err != nil {
+				return err
+			}
+		}
+	}
 
+	// With --no-install, skip the post-update "nix path-info" (via
+	// FixMissingStorePaths). This keeps `devbox update --no-install` usable in
+	// environments where Nix isn't fully set up (e.g. CI/Renovate), where that
+	// call would otherwise fail. Earlier steps in the update flow may still
+	// resolve flake refs via Nix; --no-install only avoids install-like steps.
+	// See jetify-com/devbox#2585.
+	if !opts.NoInstall {
 		// fix any missing store paths.
 		if err = d.FixMissingStorePaths(ctx); err != nil {
 			return errors.WithStack(err)
@@ -106,6 +90,53 @@ func (d *Devbox) Update(ctx context.Context, opts devopt.UpdateOpts) error {
 	}
 
 	return plugin.Update()
+}
+
+// migrateLegacyPackages migrates legacy (unversioned) packages in inputs to
+// versioned ones by replacing them in the config. It only edits the config;
+// the caller installs packages once with ensureStateIsUpToDate. It returns the
+// non-legacy packages, whose lockfile entries still need updating, and what
+// was added for each migrated package.
+func (d *Devbox) migrateLegacyPackages(
+	ctx context.Context,
+	inputs []*devpkg.Package,
+) ([]*devpkg.Package, []*addedPackages, error) {
+	pending := []*devpkg.Package{}
+	var migrated []*addedPackages
+	for _, pkg := range inputs {
+		if !pkg.IsLegacy() {
+			pending = append(pending, pkg)
+			continue
+		}
+		fmt.Fprintf(d.stderr, "Updating %s -> %s\n", pkg.Raw, pkg.LegacyToVersioned())
+
+		// Get the package from the config to get the Platforms and ExcludedPlatforms later
+		cfgPackage, ok := d.cfg.Root.GetPackage(pkg.Raw)
+		if !ok {
+			return nil, nil, fmt.Errorf("package %s not found in config", pkg.Raw)
+		}
+
+		if err := d.removeFromConfig(pkg.Raw); err != nil {
+			return nil, nil, err
+		}
+		// Calling addToConfig with the original package names, since it will
+		// automatically append @latest if search is able to handle that.
+		// If not, it will fallback to the nixpkg format.
+		added, err := d.addToConfig(ctx, []string{pkg.Raw}, devopt.AddOpts{
+			Platforms:        cfgPackage.Platforms,
+			ExcludePlatforms: cfgPackage.ExcludedPlatforms,
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		if slices.Contains(added.addedNames, pkg.Raw) {
+			// Re-added under the same (unversioned) name: resolve it fresh.
+			d.forgetLockEntry(pkg.Raw)
+		}
+		migrated = append(migrated, added)
+	}
+
+	return pending, migrated, nil
 }
 
 func (d *Devbox) inputsToUpdate(
@@ -128,40 +159,89 @@ func (d *Devbox) inputsToUpdate(
 	return pkgsToUpdate, nil
 }
 
+// maxConcurrentResolves bounds how many packages `devbox update` resolves at
+// once. Each resolve is a search API request or a `nix flake metadata` call.
+const maxConcurrentResolves = 8
+
 // updatePendingPackages updates the lockfile entries for each package, using
 // the right strategy per package kind. Flake refs warn-and-continue on
 // failure (see #1180 / #1840); versioned nixpkgs packages abort the update on
 // failure. Unversioned non-flake entries are left alone.
-func (d *Devbox) updatePendingPackages(pkgs []*devpkg.Package) error {
-	for _, pkg := range pkgs {
-		if pkgtype.IsFlake(pkg.Raw) {
-			if err := d.updateDevboxPackage(pkg); err != nil {
-				ux.Fwarningf(d.stderr, "Failed to update %s: %s\n", pkg.Raw, err)
-			}
-			continue
-		}
-		if _, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw); isVersioned {
-			if err := d.updateDevboxPackage(pkg); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func (d *Devbox) updateDevboxPackage(pkg *devpkg.Package) error {
+//
+// Packages are resolved concurrently, then merged into the lockfile serially
+// in input order so output and error behavior match a serial update. It
+// returns the packages whose lockfile entry changed.
+func (d *Devbox) updatePendingPackages(pkgs []*devpkg.Package) ([]*devpkg.Package, error) {
 	// refresh=true so flake refs bypass nix's own metadata cache and re-query
 	// upstream. Without this, `devbox update` on a github: ref can return a
 	// stale commit that nix had cached from an earlier call.
-	resolved, err := d.lockfile.FetchResolvedPackage(pkg.Raw, true)
-	if err != nil {
-		return err
-	}
-	if resolved == nil {
-		return nil
-	}
+	return d.resolveAndMergePackages(pkgs, func(pkg *devpkg.Package) (*lock.Package, error) {
+		return d.lockfile.FetchResolvedPackage(pkg.Raw, true)
+	})
+}
 
-	return d.mergeResolvedPackageToLockfile(pkg, resolved, d.lockfile)
+// resolveAndMergePackages is updatePendingPackages with the resolver injected
+// for testing.
+func (d *Devbox) resolveAndMergePackages(
+	pkgs []*devpkg.Package,
+	fetch func(*devpkg.Package) (*lock.Package, error),
+) ([]*devpkg.Package, error) {
+	type result struct {
+		resolved *lock.Package
+		err      error
+	}
+	results := make([]*result, len(pkgs))
+
+	var group errgroup.Group
+	group.SetLimit(maxConcurrentResolves)
+	for i, pkg := range pkgs {
+		if !shouldUpdateLockEntry(pkg) {
+			continue
+		}
+		group.Go(func() error {
+			resolved, err := fetch(pkg)
+			results[i] = &result{resolved: resolved, err: err}
+			return nil
+		})
+	}
+	_ = group.Wait() // errors are carried in results
+
+	var changed []*devpkg.Package
+	for i, pkg := range pkgs {
+		res := results[i]
+		if res == nil {
+			continue
+		}
+		if res.err != nil {
+			if pkgtype.IsFlake(pkg.Raw) {
+				ux.Fwarningf(d.stderr, "Failed to update %s: %s\n", pkg.Raw, res.err)
+				continue
+			}
+			return nil, res.err
+		}
+		if res.resolved == nil {
+			continue
+		}
+		before := d.lockfile.Packages[pkg.Raw]
+		if err := d.mergeResolvedPackageToLockfile(pkg, res.resolved, d.lockfile); err != nil {
+			return nil, err
+		}
+		// Merging replaces the entry only when something changed.
+		if d.lockfile.Packages[pkg.Raw] != before {
+			changed = append(changed, pkg)
+		}
+	}
+	return changed, nil
+}
+
+// shouldUpdateLockEntry reports whether `devbox update` re-resolves pkg's
+// lockfile entry: flake refs and versioned packages.
+func shouldUpdateLockEntry(pkg *devpkg.Package) bool {
+	if pkgtype.IsFlake(pkg.Raw) {
+		return true
+	}
+	_, _, isVersioned := searcher.ParseVersionedPackage(pkg.Raw)
+	return isVersioned
 }
 
 func (d *Devbox) mergeResolvedPackageToLockfile(
