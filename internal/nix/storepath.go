@@ -16,6 +16,9 @@ type StorePathParts struct {
 	Output  string
 }
 
+// hashLength is the length of the hash at the start of a store path name.
+const hashLength = 32
+
 // NewStorePathParts splits a Nix store path into its hash, name and version
 // components in the same way that Nix does.
 //
@@ -24,7 +27,12 @@ func NewStorePathParts(path string) StorePathParts {
 	path = strings.TrimPrefix(path, "/nix/store/")
 	// path is now <hash>-<name>-<version>[-output]
 
-	hash, name := path[:32], path[33:]
+	// A lockfile output can have an empty or truncated path.
+	if len(path) <= hashLength || path[hashLength] != '-' {
+		return StorePathParts{}
+	}
+
+	hash, name := path[:hashLength], path[hashLength+1:]
 	dashIndex := 0
 	for i, char := range name {
 		if dashIndex != 0 && !unicode.IsLetter(char) {
