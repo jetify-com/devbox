@@ -72,6 +72,7 @@ func (d *DebugMiddleware) postRun(cmd *cobra.Command, args []string, runErr erro
 	var exitErr *exec.ExitError
 	if errors.As(runErr, &exitErr) {
 		slog.Error("command error", "stderr", exitErr.Stderr, "execid", telemetry.ExecutionID, "stack", st)
+	} else {
+		slog.Error("command error", "execid", telemetry.ExecutionID, "stack", st)
 	}
-	slog.Error("command error", "execid", telemetry.ExecutionID, "stack", st)
 }
