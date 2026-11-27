@@ -18,7 +18,7 @@ type TraceMiddleware struct {
 	task   *trace.Task
 }
 
-var _ Middleware = (*DebugMiddleware)(nil)
+var _ Middleware = (*TraceMiddleware)(nil)
 
 func (t *TraceMiddleware) AttachToFlag(flags *pflag.FlagSet, flagName string) {
 	flags.String(flagName, "", "write a trace to a file")
