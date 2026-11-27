@@ -264,3 +264,18 @@ func TestRunXPathsWithoutRunXPackages(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, entries)
 }
+
+func TestOpenDefaultsStderr(t *testing.T) {
+	path := t.TempDir()
+	_, err := devconfig.Init(path)
+	require.NoError(t, err)
+
+	d, err := Open(&devopt.Opts{Dir: path})
+	require.NoError(t, err)
+	assert.Equal(t, os.Stderr, d.stderr)
+
+	// Writes to stderr, such as warnings, must not panic.
+	assert.NotPanics(t, func() {
+		_ = d.removeFromConfig("not-in-config")
+	})
+}

@@ -147,7 +147,7 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		nix:                      &nix.NixInstance{},
 		projectDir:               filepath.Dir(cfg.Root.AbsRootPath),
 		pluginManager:            plugin.NewManager(),
-		stderr:                   opts.Stderr,
+		stderr:                   stderr,
 		customProcessComposeFile: opts.CustomProcessComposeFile,
 	}
 
@@ -159,10 +159,11 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 	if err := cfg.LoadRecursive(lock); err != nil {
 		return nil, err
 	}
+	box.lockfile = lock
 
 	// if lockfile has any allow insecure, we need to set the env var to ensure
 	// all nix commands work.
-	if err := box.moveAllowInsecureFromLockfile(box.stderr, lock, cfg); err != nil {
+	if err := box.moveAllowInsecureFromLockfile(); err != nil {
 		ux.Fwarningf(
 			box.stderr,
 			"Failed to move allow_insecure from devbox.lock to devbox.json. An insecure package may "+
@@ -176,7 +177,6 @@ func Open(opts *devopt.Opts) (*Devbox, error) {
 		plugin.WithDevbox(box),
 		plugin.WithLockfile(lock),
 	)
-	box.lockfile = lock
 
 	if !opts.IgnoreWarnings &&
 		!legacyPackagesWarningHasBeenShown &&

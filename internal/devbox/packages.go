@@ -6,7 +6,6 @@ package devbox
 import (
 	"context"
 	"fmt"
-	"io"
 	"io/fs"
 	"log/slog"
 	"os"
@@ -19,7 +18,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.jetify.com/devbox/internal/devbox/devopt"
-	"go.jetify.com/devbox/internal/devconfig"
 	"go.jetify.com/devbox/internal/devconfig/configfile"
 	"go.jetify.com/devbox/internal/devpkg"
 	"go.jetify.com/devbox/internal/devpkg/pkgtype"
@@ -773,13 +771,13 @@ func (d *Devbox) isBeingUpdated(pkg *devpkg.Package) bool {
 //
 // NOTE: ideally, this function would be in devconfig, but it leads to an import cycle with devpkg, so
 // leaving in this "top-level" devbox package where we can import devconfig, devpkg and lock.
-func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.File, cfg *devconfig.Config) error {
-	if !lockfile.HasAllowInsecurePackages() {
+func (d *Devbox) moveAllowInsecureFromLockfile() error {
+	if !d.lockfile.HasAllowInsecurePackages() {
 		return nil
 	}
 
 	insecurePackages := []string{}
-	for name, pkg := range lockfile.Packages {
+	for name, pkg := range d.lockfile.Packages {
 		if pkg.AllowInsecure {
 			insecurePackages = append(insecurePackages, name)
 		}
@@ -788,12 +786,12 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 
 	// Set the devbox.json packages to allow_insecure
 	for _, versionedName := range insecurePackages {
-		pkg := devpkg.PackageFromStringWithDefaults(versionedName, lockfile)
+		pkg := devpkg.PackageFromStringWithDefaults(versionedName, d.lockfile)
 		storeName, err := pkg.StoreName()
 		if err != nil {
 			return fmt.Errorf("failed to get package's store name for package %q with error %w", versionedName, err)
 		}
-		if err := cfg.PackageMutator().SetAllowInsecure(writer, versionedName, []string{storeName}); err != nil {
+		if err := d.cfg.PackageMutator().SetAllowInsecure(d.stderr, versionedName, []string{storeName}); err != nil {
 			return fmt.Errorf("failed to set allow_insecure in devbox.json for package %q with error %w", versionedName, err)
 		}
 	}
@@ -803,12 +801,12 @@ func (d *Devbox) moveAllowInsecureFromLockfile(writer io.Writer, lockfile *lock.
 	}
 
 	// Now, clear it from the lockfile
-	if err := lockfile.Save(); err != nil {
+	if err := d.lockfile.Save(); err != nil {
 		return err
 	}
 
 	ux.Finfof(
-		writer,
+		d.stderr,
 		"Modernized the allow_insecure setting for package %q by moving it from devbox.lock to devbox.json. Please commit the changes.\n",
 		strings.Join(insecurePackages, ", "),
 	)
