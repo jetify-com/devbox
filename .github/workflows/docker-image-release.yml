@@ -75,6 +75,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
       - name: Build and push root user
         uses: docker/build-push-action@v7
         with:
@@ -85,6 +86,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.metaroot.outputs.tags }}
+          labels: ${{ steps.metaroot.outputs.labels }}
       - name: Docker meta latest
         id: metalatest
         if: steps.latest.outputs.push == 'true'
@@ -105,6 +107,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.metalatest.outputs.tags }}
+          labels: ${{ steps.metalatest.outputs.labels }}
       - name: Docker meta root latest
         id: metarootlatest
         if: steps.latest.outputs.push == 'true'
@@ -125,3 +128,4 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.metarootlatest.outputs.tags }}
+          labels: ${{ steps.metarootlatest.outputs.labels }}
